@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:14.4
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-produccion}
+    volumes:
+      - ./backend/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-produccion}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks:
+      - unam-net
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - unam-net
+
+  backend:
+    build:
+      context: ./UNAM-escuela-backend
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-produccion}  # Changed to match db service
+      NODE_ENV: production
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - unam-net
+    restart: unless-stopped
+    
+  frontend:
+    build:
+      context: ./UNAM-escuela-frontend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:3000/graphql  # Explicit GraphQL endpoint
+    env_file:
+      - .env
+    ports:
+      - "5001:3000"
+    depends_on:
+      backend:
+        condition: service_started  # This ensures backend starts first
+    networks:
+      - unam-net
+
+networks:
+  unam-net:
+    driver: bridge

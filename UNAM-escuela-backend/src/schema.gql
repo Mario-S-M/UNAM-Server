@@ -1,0 +1,189 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Level {
+  id: ID!
+  name: String!
+  description: String!
+  isCompleted: Boolean!
+  percentaje: Int!
+  qualification: Int!
+  createdAt: String!
+  updatedAt: String!
+  userId: Int!
+}
+
+type Content {
+  id: ID!
+  name: String!
+  description: String!
+  isCompleted: Boolean!
+  createdAt: String!
+  updatedAt: String!
+  levelId: ID!
+  userId: Int!
+}
+
+type Activity {
+  id: ID!
+  name: String!
+  description: String!
+  indication: String!
+  example: String!
+  contentId: ID!
+  createdAt: String!
+  updatedAt: String!
+  userId: Int!
+}
+
+type Homework {
+  id: ID!
+  name: String!
+  exercise: String!
+  correctAnswer: String!
+  activityId: ID!
+  createdAt: String!
+  updatedAt: String!
+  userId: Int!
+}
+
+type User {
+  id: ID!
+  fullName: String!
+  email: String!
+  roles: [String!]!
+  isActive: Boolean!
+  lastUpdateBy: User
+}
+
+type AuthResponse {
+  token: String!
+  user: User!
+}
+
+type Lenguage {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+type Query {
+  levels: [Level!]!
+  level(id: ID!): Level!
+  contents: [Content!]!
+  contentsByLevel(levelId: ID!): [Content!]!
+  content(id: ID!): Content!
+  activities: [Activity!]!
+  activitiesByContent(contentId: ID!): [Activity!]!
+  activity(id: ID!): Activity!
+  homeworks: [Homework!]!
+  homework(id: Int!): Homework!
+  users(roles: [ValidRoles!] = []): [User!]!
+  user(id: ID!): User!
+  revalidate: AuthResponse!
+  lenguages: [Lenguage!]!
+  lenguage(id: Int!): Lenguage!
+}
+
+enum ValidRoles {
+  superUser
+  admin
+  docente
+  alumno
+  mortal
+}
+
+type Mutation {
+  createLevel(createLevelInput: CreateLevelInput!): Level!
+  updateLevel(updateLevelInput: UpdateLevelInput!): Level!
+  removeLevel(id: ID!): Level!
+  createContent(createContentInput: CreateContentInput!): Content!
+  updateContent(updateContentInput: UpdateContentInput!): Content!
+  removeContent(id: ID!): Content!
+  createActivity(createActivityInput: CreateActivityInput!): Activity!
+  updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
+  removeActivity(id: ID!): Activity!
+  createHomework(createHomeworkInput: CreateHomeworkInput!): Homework!
+  updateHomework(updateHomeworkInput: UpdateHomeworkInput!): Homework!
+  removeHomework(id: Int!): Homework!
+  blockUser(id: ID!): User!
+  signin(signUpInput: SignupInput!): AuthResponse!
+  login(loginInput: LoginInput!): AuthResponse!
+  createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!
+  updateLenguage(updateLenguageInput: UpdateLenguageInput!): Lenguage!
+  removeLenguage(id: Int!): Lenguage!
+}
+
+input CreateLevelInput {
+  name: String!
+  description: String!
+}
+
+input UpdateLevelInput {
+  id: ID!
+  name: String
+  description: String
+}
+
+input CreateContentInput {
+  name: String!
+  description: String!
+  levelId: ID!
+}
+
+input UpdateContentInput {
+  name: String
+  description: String
+  levelId: ID
+  id: ID!
+}
+
+input CreateActivityInput {
+  name: String!
+  description: String!
+  indication: String!
+  example: String!
+  contentId: ID!
+}
+
+input UpdateActivityInput {
+  name: String
+  description: String
+  indication: String
+  example: String
+  contentId: ID
+  id: ID!
+}
+
+input CreateHomeworkInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateHomeworkInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input SignupInput {
+  email: String!
+  fullName: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateLenguageInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateLenguageInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}

@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@heroui/react";
 import Link from "next/link";
+import LenguageList from "./lenguagees/lenguageList";
 
 const HomePage = () => {
   return (
@@ -9,6 +10,7 @@ const HomePage = () => {
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4 text-center">
           Bienvenido a mi sitio web
         </h1>
+        <LenguageList />
         <p className="text-base md:text-lg mb-4 md:mb-6 text-center">
           Este sitio web es totalmente accesible
         </p>

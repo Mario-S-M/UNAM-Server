@@ -15,7 +15,7 @@ export default function LevelList() {
   } = useQuery<LevelsResponse>({
     queryKey: ['levels'],
     queryFn: getAllLevels,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
   });
 
   if (error) {

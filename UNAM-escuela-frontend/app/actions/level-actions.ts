@@ -4,7 +4,6 @@ import { CREATE_LEVEL, DELETE_LEVEL, GET_LEVEL, GET_LEVELS } from "../queries";
 import {
   levelFormSchema,
   levelResponseSchema,
-  levelsResponseSchema,
   graphqlLevelsResponseSchema,
 } from "../schemas/level-schema";
 import {
@@ -12,7 +11,6 @@ import {
   Level,
   LevelsResponse,
   LevelQueryResponse,
-  LevelsQueryResponse,
 } from "../interfaces";
 
 const GRAPHQL_ENDPOINT =

@@ -7,7 +7,6 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class LenguagesService {
-
   constructor(
     @InjectRepository(Lenguage)
     private readonly lenguageRepository: Repository<Lenguage>,
@@ -17,23 +16,30 @@ export class LenguagesService {
     const newLenguage = this.lenguageRepository.create(createLenguageInput);
     return this.lenguageRepository.save(newLenguage);
   }
+  async findActive(): Promise<Lenguage[]> {
+    return await this.lenguageRepository.find({
+      where: { isActive: true },
+    });
+  }
 
-  async findAll() : Promise<Lenguage[]> {
+  async findAll(): Promise<Lenguage[]> {
     return await this.lenguageRepository.find();
   }
 
-  async findOne(id: string) : Promise<Lenguage> {
+  async findOne(id: string): Promise<Lenguage> {
     const lenguage = await this.lenguageRepository.findOneBy({ id });
     if (!lenguage) throw new NotFoundException(`Lenguaje no encontrado`);
     return lenguage;
   }
 
-  async update(id: string, updateLenguageInput: UpdateLenguageInput) : Promise<Lenguage> {
+  async update(
+    id: string,
+    updateLenguageInput: UpdateLenguageInput,
+  ): Promise<Lenguage> {
     const lenguage = await this.findOne(id);
     if (updateLenguageInput.name) lenguage.name = updateLenguageInput.name;
     return await this.lenguageRepository.save(lenguage);
   }
-
 
   async remove(id: string) {
     const lenguage = await this.findOne(id);

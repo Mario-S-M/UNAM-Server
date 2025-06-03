@@ -12,6 +12,7 @@ type Level {
   createdAt: String!
   updatedAt: String!
   userId: Int!
+  isActive: Boolean!
 }
 
 type Content {
@@ -85,6 +86,7 @@ type Query {
   user(id: ID!): User!
   revalidate: AuthResponse!
   lenguages: [Lenguage!]!
+  lenguagesActivate: [Lenguage!]!
   lenguage(id: ID!): Lenguage!
 }
 

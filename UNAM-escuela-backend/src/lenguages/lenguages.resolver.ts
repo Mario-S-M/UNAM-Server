@@ -18,6 +18,11 @@ export class LenguagesResolver {
     return this.lenguagesService.findAll();
   }
 
+  @Query(() => [Lenguage], { name: 'lenguagesActivate' })
+  findActivate() : Promise<Lenguage[]> {
+    return this.lenguagesService.findActive();
+  }
+
   @Query(() => Lenguage, { name: 'lenguage' })
   findOne(@Args('id', { type: () => ID }) id: string) {
     return this.lenguagesService.findOne(id);

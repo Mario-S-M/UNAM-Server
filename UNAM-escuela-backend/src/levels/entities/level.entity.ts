@@ -41,8 +41,11 @@ export class Level {
   @UpdateDateColumn()
   @Field(() => String)
   updatedAt: string;
-
-  @Column({default: -1})
+  @Column({ default: -1 })
   @Field(() => Int)
   userId: number;
+
+  @Column({ default: true })
+  @Field(() => Boolean)
+  isActive: boolean;
 }

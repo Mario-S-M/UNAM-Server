@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-produccion}
+    ports:
+      - "5432:5432"
     volumes:
       - ./backend/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -44,9 +46,6 @@ services:
       - .env
     ports:
       - "${BACKEND_PORT:-3000}:3000"
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
       - unam-net
     restart: unless-stopped
@@ -62,10 +61,7 @@ services:
     env_file:
       - .env
     ports:
-      - "5001:3000"
-    depends_on:
-      backend:
-        condition: service_started  # This ensures backend starts first
+      - "80:3000"
     networks:
       - unam-net
 

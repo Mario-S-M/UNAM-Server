@@ -3,43 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter } from "next/navigation";
-
-interface Level {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface LevelsResponse {
-  data: Level[];
-}
-
-const fetchLevels = async (): Promise<LevelsResponse> => {
-  const response = await fetch('http://localhost:3000/graphql', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query: `
-        query Levels {
-          levels {
-            id
-            name
-            description
-          }
-        }
-      `
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Error al cargar los niveles');
-  }
-
-  const result = await response.json();
-  return { data: result.data.levels };
-};
+import { getAllLevels } from '@/app/actions';
+import { Level, LevelsResponse } from "@/app/interfaces";
 
 export default function LevelList() {
   const router = useRouter();
@@ -49,8 +14,7 @@ export default function LevelList() {
     isLoading,
   } = useQuery<LevelsResponse>({
     queryKey: ['levels'],
-    queryFn: fetchLevels,
-    staleTime: 5000,
+    queryFn: getAllLevels,
     refetchOnWindowFocus: false,
   });
 

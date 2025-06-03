@@ -5,6 +5,7 @@ import {
   levelFormSchema,
   levelResponseSchema,
   levelsResponseSchema,
+  graphqlLevelsResponseSchema,
 } from "../schemas/level-schema";
 import {
   ActionResponse,
@@ -14,21 +15,39 @@ import {
   LevelsQueryResponse,
 } from "../interfaces";
 
+const GRAPHQL_ENDPOINT =
+  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
+
 export async function getAllLevels(): Promise<LevelsResponse> {
-  try {
-    const { data } = await client.query<LevelsQueryResponse>({
-      query: GET_LEVELS,
-      fetchPolicy: "network-only",
-    });
-    const validated = levelsResponseSchema.safeParse({ data: data.levels });
-    if (!validated.success) {
-      throw new Error("Formato de respuesta inválido del servidor");
-    }
-    return validated.data;
-  } catch (error) {
-    console.error("Error fetching levels:", error);
-    throw new Error(error instanceof Error ? error.message : "Unknown error");
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: `
+        query Levels {
+          levels {
+            id
+            name
+            description
+          }
+        }
+      `,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error("Error al cargar los niveles");
   }
+
+  const result = await response.json();
+  const validated = graphqlLevelsResponseSchema.safeParse(result);
+  if (!validated.success) {
+    console.error("Error de validación:", validated.error.errors);
+    throw new Error("Formato de respuesta inválido del servidor");
+  }
+
+  return { data: validated.data.data.levels };
 }
 
 export async function getLevel(id: string): Promise<ActionResponse<Level>> {

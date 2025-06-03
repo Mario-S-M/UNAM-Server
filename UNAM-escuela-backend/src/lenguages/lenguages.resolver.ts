@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { LenguagesService } from './lenguages.service';
 import { Lenguage } from './entities/lenguage.entity';
 import { CreateLenguageInput } from './dto/create-lenguage.input';
@@ -14,12 +14,12 @@ export class LenguagesResolver {
   }
 
   @Query(() => [Lenguage], { name: 'lenguages' })
-  findAll() {
+  findAll() : Promise<Lenguage[]> {
     return this.lenguagesService.findAll();
   }
 
   @Query(() => Lenguage, { name: 'lenguage' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
+  findOne(@Args('id', { type: () => ID }) id: string) {
     return this.lenguagesService.findOne(id);
   }
 
@@ -29,7 +29,7 @@ export class LenguagesResolver {
   }
 
   @Mutation(() => Lenguage)
-  removeLenguage(@Args('id', { type: () => Int }) id: number) {
+  removeLenguage(@Args('id', { type: () => ID }) id: string) {
     return this.lenguagesService.remove(id);
   }
 }

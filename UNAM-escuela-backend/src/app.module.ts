@@ -24,8 +24,7 @@ import { LenguagesModule } from './lenguages/lenguages.module';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       introspection: true,
-      
-      // Specify just one landing page plugin
+      playground: false, // Disable the default playground
       plugins: [
         ApolloServerPluginLandingPageLocalDefault(),
       ],

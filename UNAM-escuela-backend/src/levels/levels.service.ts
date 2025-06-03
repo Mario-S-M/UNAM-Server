@@ -12,8 +12,8 @@ export class LevelsService {
   ) {}
 
   async create(createLevelInput: CreateLevelInput): Promise<Level> {
-    const newItem = this.itemsRepository.create(createLevelInput);
-    return await this.itemsRepository.save(newItem);
+    const newLevel = this.itemsRepository.create(createLevelInput);
+    return await this.itemsRepository.save(newLevel);
   }
 
   async findAll(): Promise<Level[]> {
@@ -23,7 +23,6 @@ export class LevelsService {
   async findOne(id: string): Promise<Level> {
     const level = await this.itemsRepository.findOneBy({id});
     if (!level) throw new NotFoundException(`Nivel no encontrado`);
-
     return level;
   }
 

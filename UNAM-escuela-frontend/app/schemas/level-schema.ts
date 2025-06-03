@@ -21,5 +21,12 @@ export const levelsResponseSchema = z.object({
   data: z.array(levelResponseSchema),
 });
 
+export const graphqlLevelsResponseSchema = z.object({
+  data: z.object({
+    levels: z.array(levelResponseSchema),
+  }),
+});
+
 export type LevelFormData = z.infer<typeof levelFormSchema>;
 export type LevelResponse = z.infer<typeof levelResponseSchema>;
+export type GraphqlLevelsResponse = z.infer<typeof graphqlLevelsResponseSchema>;

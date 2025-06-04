@@ -15,7 +15,6 @@ export class LenguagesResolver {
 
   @Query(() => [Lenguage], { name: 'lenguages' })
   findAll() : Promise<Lenguage[]> {
-    console.log("Llega al backend")
     return this.lenguagesService.findAll();
   }
 

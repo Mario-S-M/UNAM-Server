@@ -2,10 +2,9 @@ import { LenguageResponse } from "../interfaces";
 import { graphqlLenguagesResponseSchema } from "../schemas/lenguage-schema";
 
 const GRAPHQL_ENDPOINT =
-  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://backend:3000/graphql";
+  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 export async function getAllLenguages(): Promise<LenguageResponse> {
-  console.log("Sale del front", GRAPHQL_ENDPOINT);
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {

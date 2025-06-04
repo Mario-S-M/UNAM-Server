@@ -56,8 +56,8 @@ services:
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
-      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:3000/graphql  # Explicit GraphQL endpoint
+      NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:3000
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:3000/graphql  # Explicit GraphQL endpoint
     env_file:
       - .env
     ports:

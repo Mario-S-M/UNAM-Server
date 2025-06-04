@@ -40,12 +40,12 @@ services:
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-produccion}  # Changed to match db service
+      DB_NAME: ${DB_NAME:-produccion}
       NODE_ENV: production
     env_file:
       - .env
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "3000:3000"  # Removí la variable para debugging
     networks:
       - unam-net
     restart: unless-stopped
@@ -54,10 +54,17 @@ services:
     build:
       context: ./UNAM-escuela-frontend
       dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      # Primero prueba con la red interna
+      NEXT_PUBLIC_BACKEND_URL: http://backend:3000
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://backend:3000/graphql
     env_file:
       - .env
     ports:
       - "80:3000"
+    depends_on:
+      - backend
     networks:
       - unam-net
 

@@ -27,7 +27,7 @@ export async function getAllLenguages(): Promise<LenguageResponse> {
   });
   if (!response.ok) throw new Error("Error al cargar los lenguajes");
   const result = await response.json();
-  console.log(response);
+  console.log("Error del servidor",response);
   const validated = graphqlLenguagesResponseSchema.safeParse(result);
   if (!validated.success) {
     console.error("Error de validación:", validated.error.errors);

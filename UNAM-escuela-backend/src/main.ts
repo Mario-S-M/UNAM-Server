@@ -8,7 +8,8 @@ async function bootstrap() {
     {
       origin: [
         'http://localhost', 
-        'http://132.247.186.91'
+        'http://132.247.186.91',
+        'http://localhost:3000',
       ],
       credentials: true
     }

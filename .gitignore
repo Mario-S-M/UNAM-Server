@@ -77,3 +77,5 @@ docker-compose.override.yml
 backend/postgres/
 postgres/
 pg_stat_tmp/
+
+./DB

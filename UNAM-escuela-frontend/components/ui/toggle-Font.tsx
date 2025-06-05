@@ -7,7 +7,7 @@ const GlobalFontSizeChanger: React.FC = () => {
   type FontSizeOption = 'sm' | 'base' | 'lg';
   
   const [mounted, setMounted] = useState(false);
-  const [fontSize, setFontSize] = useState<FontSizeOption>('base');
+  const [fontSize, setFontSize] = useState<FontSizeOption>('sm');
 
   useEffect(() => {
     // Retrieve saved font size from localStorage

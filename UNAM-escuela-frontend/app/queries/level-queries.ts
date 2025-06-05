@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_LEVELS = gql`
-  query Levels {
-    levels {
+  query LevelsByLanguage {
+    levelsByLenguage {
       id
       name
       description
@@ -16,6 +16,7 @@ export const GET_LEVEL = gql`
       id
       name
       description
+      status
     }
   }
 `;

@@ -26,19 +26,24 @@ import { getLevelsByLenguage } from "@/app/actions";
 import { LevelsResponse } from "@/app/interfaces";
 
 interface PageProps {
-  params: Promise<{
-    id: string;
-  }>;
+  lenguageId?: string;
 }
 
-function GlobalNavbar({ params }: PageProps) {
+function GlobalNavbar({ lenguageId }: PageProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const resolvedParams = React.use(params);
-  const { id } = resolvedParams;
+
   const { data, error, isLoading } = useQuery<LevelsResponse>({
-    queryKey: ["levels", id],
-    queryFn: () => getLevelsByLenguage(id),
+    queryKey: ["levels", lenguageId],
+    queryFn: async () => {
+      if (!lenguageId) {
+        console.log("No lenguageId provided");
+        return { data: [] };
+      }
+      const result = await getLevelsByLenguage(lenguageId);
+      return result;
+    },
+    enabled: !!lenguageId,
     refetchOnWindowFocus: true,
   });
 
@@ -118,6 +123,11 @@ function GlobalNavbar({ params }: PageProps) {
               classNames={{
                 title: "text-black dark:text-white",
                 base: "text-black dark:text-white",
+              }}
+              onPress={() => {
+                if (lenguageId) {
+                  router.replace(`/main/levels/${lenguageId}/admin`);
+                }
               }}
             >
               Opciones de Administrador

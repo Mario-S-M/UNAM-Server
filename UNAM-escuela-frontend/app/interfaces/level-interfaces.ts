@@ -2,6 +2,13 @@ export interface Level {
   id: string;
   name: string;
   description: string;
+  status?: "active" | "inactive" | "draft";
+  isCompleted?: boolean;
+  percentaje?: number;
+  qualification?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  userId?: string;
 }
 
 export interface LevelsResponse {

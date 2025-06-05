@@ -36,7 +36,7 @@ export default function LenguageList() {
                   variant="flat"
                   color="warning"
                   onPress={() =>
-                    router.push(`/main/levels/${lenguage.id}`)
+                    router.push(`/main/levels/${lenguage.id}/view`)
                   }
                 >
                   Ir al lenguaje

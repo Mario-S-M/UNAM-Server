@@ -13,22 +13,27 @@ export class LevelsResolver {
   }
 
   @Query(() => [Level], { name: 'levels' })
-  findAll(): Promise <Level[]> {
+  async findAll(): Promise <Level[]> {
     return this.levelsService.findAll();
   }
 
   @Query(() => Level, { name: 'level' })
-  findOne(@Args('id', { type: () => ID }) id: string) {
+  async findOne(@Args('id', { type: () => ID }) id: string) {
     return this.levelsService.findOne(id);
   }
 
+  @Query(() => [Level], { name: 'levelsByLenguage' })
+  async findByLenguage(@Args('lenguageId', { type: () => ID }) lenguageId: string): Promise<Level[]> {
+    return this.levelsService.findByLenguage(lenguageId);
+  }
+
   @Mutation(() => Level)
-  updateLevel(@Args('updateLevelInput') updateLevelInput: UpdateLevelInput):Promise<Level> {
+  async updateLevel(@Args('updateLevelInput') updateLevelInput: UpdateLevelInput):Promise<Level> {
     return this.levelsService.update(updateLevelInput.id, updateLevelInput);
   }
 
   @Mutation(() => Level)
-  removeLevel(@Args('id', { type: () => ID }) id: string):Promise<Level> {
+  async removeLevel(@Args('id', { type: () => ID }) id: string):Promise<Level> {
     return this.levelsService.remove(id);
   }
 }

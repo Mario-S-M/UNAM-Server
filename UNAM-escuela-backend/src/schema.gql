@@ -13,6 +13,7 @@ type Level {
   updatedAt: String!
   userId: Int!
   isActive: Boolean!
+  lenguageId: ID!
 }
 
 type Content {
@@ -74,6 +75,7 @@ type Lenguage {
 type Query {
   levels: [Level!]!
   level(id: ID!): Level!
+  levelsByLenguage(lenguageId: ID!): [Level!]!
   contents: [Content!]!
   contentsByLevel(levelId: ID!): [Content!]!
   content(id: ID!): Content!
@@ -122,6 +124,7 @@ type Mutation {
 input CreateLevelInput {
   name: String!
   description: String!
+  lenguageId: ID!
 }
 
 input UpdateLevelInput {

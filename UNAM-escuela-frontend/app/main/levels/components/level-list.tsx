@@ -1,20 +1,25 @@
 "use client";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter } from "next/navigation";
-import { getAllLevels } from '@/app/actions';
 import { Level, LevelsResponse } from "@/app/interfaces";
+import { getLevelsByLenguage } from "@/app/actions";
 
-export default function LevelList() {
+interface PageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default function LevelList({ params }: PageProps) {
   const router = useRouter();
-  const {
-    data,
-    error,
-    isLoading,
-  } = useQuery<LevelsResponse>({
-    queryKey: ['levels'],
-    queryFn: getAllLevels,
+  const resolvedParams = React.use(params);
+  const { id } = resolvedParams;
+  const { data, error, isLoading } = useQuery<LevelsResponse>({
+    queryKey: ["levels", id],
+    queryFn: () => getLevelsByLenguage(id),
     refetchOnWindowFocus: true,
   });
 
@@ -29,27 +34,25 @@ export default function LevelList() {
       {data.data
         .sort((a: Level, b: Level) => a.name.localeCompare(b.name))
         .map((level: Level) => (
-        <Card
-          key={level.id}
-          className="w-full max-w-sm border-gray-400 border-3 rounded-lg p-4 bg-transparent"
-        >
-          <CardBody className="gap-4 relative">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold">
-                {level.name}
-              </h2>
-              <p className="text-sm opacity-75">{level.description}</p>
-              <Button
-                variant="flat"
-                color="warning"
-                onPress={() => router.push(`/main/skills/${level.id}/view`)}
-              >
-                Ir al nivel
-              </Button>
-            </div>
-          </CardBody>
-        </Card>
-      ))}
+          <Card
+            key={level.id}
+            className="w-full max-w-sm border-gray-400 border-3 rounded-lg p-4 bg-transparent"
+          >
+            <CardBody className="gap-4 relative">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold">{level.name}</h2>
+                <p className="text-sm opacity-75">{level.description}</p>
+                <Button
+                  variant="flat"
+                  color="warning"
+                  onPress={() => router.push(`/main/skills/${level.id}/view`)}
+                >
+                  Ir al nivel
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        ))}
     </div>
   );
 }

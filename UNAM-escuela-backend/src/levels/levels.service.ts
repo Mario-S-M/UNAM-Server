@@ -26,6 +26,11 @@ export class LevelsService {
     if (!level) throw new NotFoundException(`Nivel no encontrado`);
     return level;
   }
+  async findByLenguage(lenguageId: string): Promise<Level[]> {
+    return await this.itemsRepository.find({
+      where: { lenguageId, isActive: true },
+    });
+  }
 
   async update(id: string, updateLevelInput: UpdateLevelInput): Promise<Level> {
     const level = await this.findOne(id);

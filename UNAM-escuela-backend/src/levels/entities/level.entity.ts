@@ -5,7 +5,10 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Lenguage } from '../../lenguages/entities/lenguage.entity';
 
 @Entity({ name: 'levels' })
 @ObjectType()
@@ -48,4 +51,8 @@ export class Level {
   @Column({ default: true })
   @Field(() => Boolean)
   isActive: boolean;
+
+  @Column()
+  @Field(() => ID)
+  lenguageId: string;
 }

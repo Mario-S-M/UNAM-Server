@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -19,17 +20,26 @@ import { Link } from "@heroui/link";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getAllLevels } from "@/app/actions";
 import { useState } from "react";
 import GlobalLogoUNAM from "./globalLogoUNAM";
+import { getLevelsByLenguage } from "@/app/actions";
+import { LevelsResponse } from "@/app/interfaces";
 
-function GlobalNavbar() {
+interface PageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+function GlobalNavbar({ params }: PageProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const { data: levels } = useQuery({
-    queryKey: ["levels"],
-    queryFn: getAllLevels,
+  const resolvedParams = React.use(params);
+  const { id } = resolvedParams;
+  const { data, error, isLoading } = useQuery<LevelsResponse>({
+    queryKey: ["levels", id],
+    queryFn: () => getLevelsByLenguage(id),
+    refetchOnWindowFocus: true,
   });
 
   return (
@@ -59,7 +69,7 @@ function GlobalNavbar() {
         <NavbarBrand>
           <GlobalLogoUNAM />
         </NavbarBrand>
-        {levels?.data
+        {data?.data
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((level, index) => (
             <NavbarItem key={`nav-${index}`}>
@@ -137,7 +147,7 @@ function GlobalNavbar() {
 
       {/* Menú móvil para pantallas pequeñas */}
       <NavbarMenu className="bg-primary/95 backdrop-blur-sm py-4">
-      {levels?.data
+        {data?.data
           .sort((a, b) => a.name.localeCompare(b.name))
           .map((level, index) => (
             <NavbarItem key={`nav-${index}`}>

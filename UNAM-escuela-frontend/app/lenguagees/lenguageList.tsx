@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter } from "next/navigation";
-import { getAllLenguages } from "@/app/actions";
+import { getActiveLenguages } from "@/app/actions";
 import { Lenguage, LenguageResponse } from "@/app/interfaces";
 
 export default function LenguageList() {
   const router = useRouter();
   const { data, error, isLoading } = useQuery<LenguageResponse>({
     queryKey: ["lenguages"],
-    queryFn: getAllLenguages,
+    queryFn: getActiveLenguages,
     refetchOnWindowFocus: true,
   });
 
@@ -36,7 +36,7 @@ export default function LenguageList() {
                   variant="flat"
                   color="warning"
                   onPress={() =>
-                    router.push(`/main/lenguages/${lenguage.id}/view`)
+                    router.push(`/main/levels/${lenguage.id}`)
                   }
                 >
                   Ir al lenguaje

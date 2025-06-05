@@ -11,8 +11,6 @@ export const lenguageFormSchema = z.object({
 export const lenguageResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
   isActive: z.boolean(),
 });
 
@@ -22,7 +20,7 @@ export const lenguagesResponseSchema = z.object({
 
 export const graphqlLenguagesResponseSchema = z.object({
   data: z.object({
-    lenguages: z.array(lenguageResponseSchema),
+    lenguagesActivate: z.array(lenguageResponseSchema),
   }),
 });
 

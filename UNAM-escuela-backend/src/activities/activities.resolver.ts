@@ -9,31 +9,31 @@ export class ActivitiesResolver {
   constructor(private readonly activitiesService: ActivitiesService) {}
 
   @Mutation(() => Activity)
-  createActivity(@Args('createActivityInput') createActivityInput: CreateActivityInput) :Promise<Activity> {
+  async createActivity(@Args('createActivityInput') createActivityInput: CreateActivityInput) :Promise<Activity> {
     return this.activitiesService.create(createActivityInput);
   }
 
   @Query(() => [Activity], { name: 'activities' })
-  findAll():Promise<Activity[]> {
+  async findAll():Promise<Activity[]> {
     return this.activitiesService.findAll();
   }
   @Query(() => [Activity], { name: 'activitiesByContent' })
-  findByContent(@Args('contentId', { type: () => ID }) contentId: string):Promise<Activity[]> {
+  async findByContent(@Args('contentId', { type: () => ID }) contentId: string):Promise<Activity[]> {
     return this.activitiesService.findByContent(contentId);
   }
 
   @Query(() => Activity, { name: 'activity' })
-  findOne(@Args('id', { type: () => ID }) id: string):Promise<Activity> {
+  async findOne(@Args('id', { type: () => ID }) id: string):Promise<Activity> {
     return this.activitiesService.findOne(id);
   }
 
   @Mutation(() => Activity)
-  updateActivity(@Args('updateActivityInput') updateActivityInput: UpdateActivityInput):Promise<Activity> {
+  async updateActivity(@Args('updateActivityInput') updateActivityInput: UpdateActivityInput):Promise<Activity> {
     return this.activitiesService.update(updateActivityInput.id, updateActivityInput);
   }
 
   @Mutation(() => Activity)
-  removeActivity(@Args('id', { type: () => ID }) id: string):Promise<Activity> {
+  async removeActivity(@Args('id', { type: () => ID }) id: string):Promise<Activity> {
     return this.activitiesService.remove(id);
   }
 }

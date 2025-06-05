@@ -23,7 +23,7 @@ export const levelsResponseSchema = z.object({
 
 export const graphqlLevelsResponseSchema = z.object({
   data: z.object({
-    levels: z.array(levelResponseSchema),
+    levelsByLenguage: z.array(levelResponseSchema),
   }),
 });
 

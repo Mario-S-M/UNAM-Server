@@ -1,19 +1,19 @@
 export interface Lenguage {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 export interface LenguageResponse {
-    data: Lenguage[];
+  data: Lenguage[]; // Para GraphQL, el campo puede ser lenguagesActivate
 }
 export interface ActionLenguageResponse<T> {
-    data?: T;
-    error?: string;
+  data?: T;
+  error?: string;
 }
 export interface LenguageQueryResponse {
-    lenguages: Lenguage[];
+  lenguages: Lenguage[];
 }
 
 export interface LenguageQueryResponse {
-    lenguage: Lenguage;
+  lenguage: Lenguage;
 }

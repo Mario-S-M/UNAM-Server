@@ -16,7 +16,7 @@ import {
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-export async function getAllLevels(): Promise<LevelsResponse> {
+export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {
@@ -24,14 +24,15 @@ export async function getAllLevels(): Promise<LevelsResponse> {
     },
     body: JSON.stringify({
       query: `
-        query Levels {
-          levels {
+        query LevelsByLenguage($lenguageId: ID!) {
+          levelsByLenguage(lenguageId: $lenguageId) {
             id
             name
             description
           }
         }
       `,
+      variables: { lenguageId: id },
     }),
   });
   if (!response.ok) {
@@ -45,7 +46,8 @@ export async function getAllLevels(): Promise<LevelsResponse> {
     throw new Error("Formato de respuesta inválido del servidor");
   }
 
-  return { data: validated.data.data.levels };
+  // El campo correcto es levelsByLenguage
+  return { data: validated.data.data.levelsByLenguage };
 }
 
 export async function getLevel(id: string): Promise<ActionResponse<Level>> {

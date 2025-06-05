@@ -3,8 +3,6 @@ import { HeroUIProvider } from "@heroui/react";
 import { ToastProvider } from "@heroui/toast";
 import { ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ApolloProvider } from "@apollo/client";
-import client from "@/src/lib/apollo-client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
@@ -14,7 +12,6 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
-      <ApolloProvider client={client}>
         <HeroUIProvider>
           <NextThemesProvider
             attribute="class"
@@ -26,7 +23,6 @@ export default function Providers({ children }: { children: ReactNode }) {
             {children}
           </NextThemesProvider>
         </HeroUIProvider>
-      </ApolloProvider>
     </QueryClientProvider>
   );
 }

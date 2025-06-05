@@ -4,7 +4,7 @@ import { graphqlLenguagesResponseSchema } from "../schemas/lenguage-schema";
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-export async function getAllLenguages(): Promise<LenguageResponse> {
+export async function getActiveLenguages(): Promise<LenguageResponse> {
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {
@@ -12,15 +12,13 @@ export async function getAllLenguages(): Promise<LenguageResponse> {
     },
     body: JSON.stringify({
       query: `
-                query Lenguages {
-                    lenguages {
-                        id
-                        name
-                        createdAt
-                        updatedAt
-                        isActive
-                    }
-                }
+      query LenguagesActivate {
+        lenguagesActivate {
+          id
+          name
+          isActive
+        }
+      }
             `,
     }),
   });
@@ -31,5 +29,5 @@ export async function getAllLenguages(): Promise<LenguageResponse> {
     console.error("Error de validación:", validated.error.errors);
     throw new Error("Formato de respuesta inválido del servidor");
   }
-  return { data: validated.data.data.lenguages };
+  return { data: validated.data.data.lenguagesActivate };
 }

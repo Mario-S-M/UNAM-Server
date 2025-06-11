@@ -37,7 +37,7 @@ interface SortDescriptor {
 type ColumnKey = keyof Level | "actions";
 
 // Define the columns for the level table
-export const columns = [
+const columns = [
   { name: "ID", uid: "id", sortable: true },
   { name: "NAME", uid: "name", sortable: true },
   { name: "DESCRIPTION", uid: "description", sortable: true },
@@ -46,7 +46,7 @@ export const columns = [
   { name: "ACTIONS", uid: "actions" as const },
 ];
 
-export const statusOptions = [
+const statusOptions = [
   { name: "Active", uid: "active" },
   { name: "Inactive", uid: "inactive" },
   { name: "Draft", uid: "draft" },

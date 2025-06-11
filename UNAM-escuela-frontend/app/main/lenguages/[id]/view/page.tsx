@@ -10,6 +10,7 @@ interface PageProps {
 function ContentLenguage({ params }: PageProps) {
   const resolvedParams = React.use(params);
   const { id } = resolvedParams;
+  console.log(id)
   
   return <div>Prueba</div>;
 }

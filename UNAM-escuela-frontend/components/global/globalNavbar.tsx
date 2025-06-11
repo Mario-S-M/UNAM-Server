@@ -33,7 +33,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const { data, error, isLoading } = useQuery<LevelsResponse>({
+  const { data } = useQuery<LevelsResponse>({
     queryKey: ["levels", lenguageId],
     queryFn: async () => {
       if (!lenguageId) {

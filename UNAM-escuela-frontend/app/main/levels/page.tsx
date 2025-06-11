@@ -1,10 +1,10 @@
 
-import LevelList from "@/app/main/levels/components/level-list"
+
 
 function LevelsPage() {
   return (
     <>
-      <LevelList/>
+      Estas en el Level Page
     </>
   )
 }

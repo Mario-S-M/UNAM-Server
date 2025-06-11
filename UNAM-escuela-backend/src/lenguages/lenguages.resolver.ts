@@ -20,6 +20,7 @@ export class LenguagesResolver {
 
   @Query(() => [Lenguage], { name: 'lenguagesActivate' })
   findActivate() : Promise<Lenguage[]> {
+    console.log("Fetching active languages");
     return this.lenguagesService.findActive();
   }
 

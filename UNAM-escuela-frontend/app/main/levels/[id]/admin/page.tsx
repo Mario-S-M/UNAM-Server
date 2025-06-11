@@ -26,7 +26,7 @@ import { useParams } from "next/navigation";
 type Key = string | number;
 type Selection = Set<Key> | "all";
 type SortDirection = "ascending" | "descending";
-type SharedSelection = Set<Key> & { anchorKey?: Key; currentKey?: Key };
+//type SharedSelection = Set<Key> & { anchorKey?: Key; currentKey?: Key };
 
 interface SortDescriptor {
   column: Key;

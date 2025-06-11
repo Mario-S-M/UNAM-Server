@@ -11,7 +11,11 @@ services:
     volumes:
       - ./DB/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-produccion}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-produccion}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -45,20 +49,20 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:3000"  # Removí la variable para debugging
+      - "3000:3000" # Removí la variable para debugging
     networks:
       - unam-net
     restart: unless-stopped
-    
+
   frontend:
     build:
       context: ./UNAM-escuela-frontend
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production
-      # Primero prueba con la red interna
-      NEXT_PUBLIC_BACKEND_URL: http://backend:3000
-      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://backend:3000/graphql
+      # Para producción, el frontend necesita usar la IP pública del servidor
+      NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:3000
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:3000/graphql
     env_file:
       - .env
     ports:

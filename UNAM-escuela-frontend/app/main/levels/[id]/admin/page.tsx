@@ -135,7 +135,7 @@ export default function LevelsAdminPage() {
     }
 
     return filteredLevels;
-  }, [levels, filterValue, statusFilter]);
+  }, [levels, filterValue, statusFilter, hasSearchFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage) || 1;
 
@@ -366,6 +366,7 @@ export default function LevelsAdminPage() {
     onRowsPerPageChange,
     levels?.data.length,
     onSearchChange,
+    onClear,
   ]);
 
   const bottomContent = React.useMemo(() => {

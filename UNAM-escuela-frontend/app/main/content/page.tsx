@@ -40,7 +40,7 @@ const markdown = `# The Verb "To Be" in English 🌟
 ---
 *Practice makes perfect! Keep learning and growing.* 🌱`;
 
-export const MilkdownEditor: FC = () => {
+const MilkdownEditor: FC = () => {
   const [editor, setEditor] = React.useState<Crepe | null>(null);
 
   useEditor((root) => {

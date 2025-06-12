@@ -1,6 +1,7 @@
 export interface Lenguage {
   id: string;
   name: string;
+  isActive: boolean;
 }
 
 export interface LenguageResponse {

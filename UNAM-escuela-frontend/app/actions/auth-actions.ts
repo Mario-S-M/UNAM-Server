@@ -1,10 +1,11 @@
-'use server';
+"use server";
 
-import { client } from "@/lib/apollo-client";
-import { LOGIN } from "../queries";
 import { loginFormSchema, loginResponseSchema } from "../schemas";
 import { cookies } from "next/headers";
 import { AuthResponse, Login, User } from "../interfaces/auth-interfaces";
+
+const GRAPHQL_ENDPOINT =
+  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 export async function loginAction(
   loginInput: Login
@@ -13,28 +14,57 @@ export async function loginAction(
     if (!loginInput) {
       throw new Error("Es necesario enviar datos en el formulario");
     }
-    
+
     const validLoginInput = loginFormSchema.safeParse(loginInput);
-    
+
     if (!validLoginInput.success) {
       throw new Error("Datos de inicio de sesión inválidos");
     }
 
-    const { data } = await client.mutate<{ login: { token: string } }>({
-      mutation: LOGIN,
-      variables: {
-        loginInput: {
-          email: validLoginInput.data.email,
-          password: validLoginInput.data.password,
-        },
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        query: `
+          mutation Login($loginInput: LoginInput!) {
+            login(loginInput: $loginInput) {
+              token
+              user {
+                id
+                fullName
+                email
+                roles
+                isActive
+              }
+            }
+          }
+        `,
+        variables: {
+          loginInput: {
+            email: validLoginInput.data.email,
+            password: validLoginInput.data.password,
+          },
+        },
+      }),
     });
 
-    if (!data || !data.login) {
+    if (!response.ok) {
+      throw new Error("Error al iniciar sesión");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    if (!result.data || !result.data.login) {
       throw new Error("No se recibió respuesta de autenticación");
     }
 
-    const validated = loginResponseSchema.parse(data.login);
+    const validated = loginResponseSchema.parse(result.data.login);
     if (!validated.token) {
       throw new Error("Token de autenticación inválido");
     }
@@ -50,8 +80,8 @@ export async function loginAction(
     return {
       redirect: {
         destination: "/main/levels/admin",
-        type: "replace"
-      }
+        type: "replace",
+      },
     };
   } catch (error) {
     console.error("Error en loginAction:", error);

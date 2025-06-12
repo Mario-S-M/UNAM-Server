@@ -1,17 +1,11 @@
 "use server";
-import { client } from "@/lib/apollo-client";
-import { CREATE_LEVEL, DELETE_LEVEL, GET_LEVEL, GET_LEVELS } from "../queries";
 import {
   levelFormSchema,
   levelResponseSchema,
   graphqlLevelsResponseSchema,
 } from "../schemas/level-schema";
-import {
-  ActionResponse,
-  Level,
-  LevelsResponse,
-  LevelQueryResponse,
-} from "../interfaces";
+import { ActionResponse, Level, LevelsResponse } from "../interfaces";
+import { GraphQLResponse } from "../types/graphql";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -46,7 +40,6 @@ export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
     throw new Error("Formato de respuesta inválido del servidor");
   }
 
-  // El campo correcto es levelsByLenguage
   return { data: validated.data.data.levelsByLenguage };
 }
 
@@ -56,12 +49,39 @@ export async function getLevel(id: string): Promise<ActionResponse<Level>> {
       throw new Error("ID inválido");
     }
 
-    const { data } = await client.query<LevelQueryResponse>({
-      query: GET_LEVEL,
-      variables: { levelId: id },
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          query Level($levelId: ID!) {
+            level(id: $levelId) {
+              id
+              name
+              description
+              status
+            }
+          }
+        `,
+        variables: { levelId: id },
+      }),
     });
 
-    const validated = levelResponseSchema.safeParse(data.level);
+    if (!response.ok) {
+      throw new Error("Error al cargar el nivel");
+    }
+
+    const result: GraphQLResponse = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err) => err.message).join(", "));
+    }
+
+    const validated = levelResponseSchema.safeParse(
+      (result.data as { level: unknown }).level
+    );
     if (!validated.success) {
       throw new Error("Formato de respuesta inválido del servidor");
     }
@@ -90,14 +110,38 @@ export async function createLevel(
       };
     }
 
-    const { data } = await client.mutate({
-      mutation: CREATE_LEVEL,
-      variables: validated.data,
-      refetchQueries: [{ query: GET_LEVELS }],
-      awaitRefetchQueries: true,
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation CreateLevel($name: String!, $description: String!) {
+            createLevel(createLevelInput: { name: $name, description: $description }) {
+              id
+              name
+              description
+            }
+          }
+        `,
+        variables: validated.data,
+      }),
     });
 
-    const validatedResponse = levelResponseSchema.safeParse(data.createLevel);
+    if (!response.ok) {
+      throw new Error("Error al crear el nivel");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    const validatedResponse = levelResponseSchema.safeParse(
+      result.data.createLevel
+    );
     if (!validatedResponse.success) {
       throw new Error("Formato de respuesta inválido del servidor");
     }
@@ -115,22 +159,50 @@ export async function deleteLevel(id: string): Promise<ActionResponse<Level>> {
     if (!id) {
       throw new Error("ID inválido");
     }
-    const response = await client.mutate({
-      mutation: DELETE_LEVEL,
-      variables: { removeLevelId: id },
-      refetchQueries: [{ query: GET_LEVELS }],
-      awaitRefetchQueries: true,
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation RemoveLevel($removeLevelId: ID!) {
+            removeLevel(id: $removeLevelId) {
+              id
+              name
+              description
+              isCompleted
+              percentaje
+              qualification
+              createdAt
+              updatedAt
+              userId
+            }
+          }
+        `,
+        variables: { removeLevelId: id },
+      }),
     });
 
-    if (response.errors) {
-      const errorMessage = response.errors.map((err) => err.message).join(", ");
+    if (!response.ok) {
+      throw new Error("Error al eliminar el nivel");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      const errorMessage = result.errors
+        .map((err: any) => err.message)
+        .join(", ");
       throw new Error(errorMessage);
     }
 
-    if (!response.data?.removeLevel) {
+    if (!result.data?.removeLevel) {
       throw new Error("No se pudo eliminar el nivel - respuesta vacía");
     }
-    return { data: response.data.removeLevel };
+
+    return { data: result.data.removeLevel };
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error detallado:", {

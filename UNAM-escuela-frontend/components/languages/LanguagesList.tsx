@@ -1,0 +1,69 @@
+"use client";
+import React from "react";
+import { useActiveLenguages } from "@/app/hooks";
+import { Card, CardBody, CardHeader } from "@heroui/react";
+import Link from "next/link";
+
+export function LanguagesList() {
+  const {
+    data: languagesData,
+    isLoading,
+    error,
+    refetch,
+  } = useActiveLenguages();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <span className="ml-2">Cargando lenguajes...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <strong className="font-bold">Error: </strong>
+        <span className="block sm:inline">{error.message}</span>
+        <button
+          onClick={() => refetch()}
+          className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">
+        Lenguajes Disponibles
+      </h1>
+
+      {languagesData?.data?.length ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {languagesData.data.map((language) => (
+            <Link
+              key={language.id}
+              href={`/main/lenguages/${language.id}/view`}
+            >
+              <Card className="hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-100 border-0 shadow-md">
+                <CardBody className="p-8 flex items-center justify-center">
+                  <h3 className="text-2xl font-bold text-gray-800 text-center">
+                    {language.name}
+                  </h3>
+                </CardBody>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No hay lenguajes disponibles</p>
+        </div>
+      )}
+    </div>
+  );
+}

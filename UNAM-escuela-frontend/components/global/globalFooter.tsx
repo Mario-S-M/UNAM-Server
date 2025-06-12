@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="text-primary-foreground py-8 px-6 bg-primary">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8">
         <div className="flex-1">
-          <GlobalLogoUNAM />
+          <GlobalLogoUNAM variant="footer" />
 
           <p className="text-primary-foreground/80 text-sm mb-3">
             Nuestra Gran Universidad Nacional Autónoma de México es una
@@ -14,16 +14,22 @@ export default function Footer() {
             difusión de la cultura.
           </p>
           <div className="text-xs text-primary-foreground/70 space-y-2">
-            <p>© 2025 Universidad Nacional Autónoma de México.</p>
-            <p className="mt-2">Nuestra Gran Universidad </p>
-            <p className="font-bold">
+            <p className="text-primary-foreground/70">
+              © 2025 Universidad Nacional Autónoma de México.
+            </p>
+            <p className="mt-2 text-primary-foreground/70">
+              Nuestra Gran Universidad{" "}
+            </p>
+            <p className="font-bold text-primary-foreground/70">
               Producto realizado con el apoyo del programa PAPIME PE405625
             </p>
           </div>
         </div>
 
         <div className="flex-1">
-          <h4 className="font-bold mb-3">Cursos y Acreeditaciones</h4>
+          <h4 className="font-bold mb-3 text-primary-foreground">
+            Cursos y Acreeditaciones
+          </h4>
           <div className="grid grid-cols-2 gap-x-4">
             <ul className="space-y-1 text-sm text-primary-foreground/80">
               {[
@@ -35,7 +41,10 @@ export default function Footer() {
                 "Ingles C2",
               ].map((item) => (
                 <li key={item}>
-                  <a href="#" className="hover:text-primary-foreground">
+                  <a
+                    href="#"
+                    className="hover:text-primary-foreground text-primary-foreground/80"
+                  >
                     {item}
                   </a>
                 </li>
@@ -45,7 +54,7 @@ export default function Footer() {
         </div>
 
         <div className="flex-1">
-          <h4 className="font-bold mb-3">Contacto</h4>
+          <h4 className="font-bold mb-3 text-primary-foreground">Contacto</h4>
 
           <div className="text-sm text-primary-foreground/80 mb-4">
             <p>Salida a Pátzcuaro, Morelia,</p>
@@ -70,21 +79,35 @@ export default function Footer() {
             Solicita información
           </button>
 
-          <h4 className="font-bold mb-2">Términos y Condiciones</h4>
+          <h4 className="font-bold mb-2 text-primary-foreground">
+            Términos y Condiciones
+          </h4>
           <div className="flex flex-wrap gap-3 text-xs text-primary-foreground/70">
-            <a href="#" className="hover:text-primary-foreground">
+            <a
+              href="#"
+              className="hover:text-primary-foreground text-primary-foreground/70"
+            >
               Aviso de Privacidad
             </a>
-            <span>•</span>
-            <a href="#" className="hover:text-primary-foreground">
+            <span className="text-primary-foreground/70">•</span>
+            <a
+              href="#"
+              className="hover:text-primary-foreground text-primary-foreground/70"
+            >
               Términos de Uso
             </a>
-            <span>•</span>
-            <a href="#" className="hover:text-primary-foreground">
+            <span className="text-primary-foreground/70">•</span>
+            <a
+              href="#"
+              className="hover:text-primary-foreground text-primary-foreground/70"
+            >
               Reglamentos
             </a>
-            <span>•</span>
-            <a href="#" className="hover:text-primary-foreground">
+            <span className="text-primary-foreground/70">•</span>
+            <a
+              href="#"
+              className="hover:text-primary-foreground text-primary-foreground/70"
+            >
               Mapa del Sitio
             </a>
           </div>

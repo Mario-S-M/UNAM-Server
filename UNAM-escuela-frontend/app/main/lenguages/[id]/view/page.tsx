@@ -38,7 +38,6 @@ function ContentLenguage({ params }: PageProps) {
           <Button
             onClick={() => router.back()}
             variant="bordered"
-            size="sm"
             className="border-divider text-foreground/70"
           >
             ← Regresar

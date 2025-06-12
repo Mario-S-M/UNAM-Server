@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Button
-} from "@heroui/react";
+import { Popover, PopoverTrigger, PopoverContent, Button } from "@heroui/react";
 import { PersonStanding } from "lucide-react";
 import { ToogleTheme } from "../ui/toggle-Theme";
 import FontSizeChanger from "../ui/toggle-Font";
@@ -18,8 +13,13 @@ export default function GlobalAccessMenu() {
   return (
     <Popover placement="left">
       <PopoverTrigger>
-        <Button isIconOnly radius="full" size="lg" className="text-background">
-          <PersonStanding size={54} />
+        <Button
+          isIconOnly
+          radius="full"
+          size="lg"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-primary-foreground/20 shadow-lg"
+        >
+          <PersonStanding size={52} />
         </Button>
       </PopoverTrigger>
       <PopoverContent>

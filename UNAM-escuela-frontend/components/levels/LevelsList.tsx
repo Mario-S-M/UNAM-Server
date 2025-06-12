@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { useLevelsByLanguage } from "@/app/hooks";
-import { Button, Pagination } from "@heroui/react";
+import { Button, Pagination, CircularProgress } from "@heroui/react";
 
 interface LevelsListProps {
   languageId: string;
@@ -32,8 +32,8 @@ export function LevelsList({ languageId }: LevelsListProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <span className="ml-2 text-foreground">Cargando niveles...</span>
+        <CircularProgress aria-label="Cargando niveles..." />
+        <span className="ml-4 text-foreground">Cargando niveles...</span>
       </div>
     );
   }

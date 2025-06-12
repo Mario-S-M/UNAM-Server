@@ -87,7 +87,7 @@ export function LanguagesList() {
 
                       {/* Content */}
                       <div className="text-center">
-                        <h3 className="text-2xl font-semibold text-foreground mb-6 leading-snug group-hover:text-primary transition-colors duration-300">
+                        <h3 className="text-2xl font-semibold text-foreground mb-6 leading-snug group transition-colors duration-300">
                           {language.name}
                         </h3>
                         <div className="w-12 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent mx-auto mb-6"></div>
@@ -122,11 +122,11 @@ export function LanguagesList() {
                   className="gap-2"
                   classNames={{
                     wrapper: "gap-2 overflow-visible shadow-none",
-                    item: "w-12 h-12 text-sm bg-transparent border-0 rounded-xl hover:bg-primary/10 text-default-600 hover:text-primary transition-all duration-200 font-medium",
+                    item: "w-12 h-12 text-sm bg-transparent border-0 rounded-xl text-default-600 transition-all duration-200 font-medium",
                     cursor:
                       "bg-gradient-to-br from-primary to-primary-600 text-primary-foreground font-semibold shadow-lg rounded-xl",
-                    prev: "bg-transparent hover:bg-primary/10 border-0 rounded-xl text-default-600 hover:text-primary transition-all duration-200",
-                    next: "bg-transparent hover:bg-primary/10 border-0 rounded-xl text-default-600 hover:text-primary transition-all duration-200",
+                    prev: "bg-transparent border-0 rounded-xl text-default-600 transition-all duration-200",
+                    next: "bg-transparent border-0 rounded-xl text-default-600 transition-all duration-200",
                     base: "gap-2",
                   }}
                 />

@@ -22,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${outfit.variable} antialiased unam-light-theme`}>
+      <body className={`${outfit.variable} antialiased`}>
         <Providers>
           {children}
           <div className="fixed top-[calc(45%-5px)] right-2 -mt-4">

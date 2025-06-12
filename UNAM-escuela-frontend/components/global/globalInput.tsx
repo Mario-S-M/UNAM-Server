@@ -13,7 +13,7 @@ const GlobalInput = React.forwardRef<HTMLInputElement, GlobalInputProps>(
         {...props}
         isInvalid={!!errorMessage}
         errorMessage={errorMessage}
-        className={`w-full ${className || ""} text-black dark:text-white`}
+        className={`w-full ${className || ""} text-foreground`}
         variant="bordered"
       />
     );

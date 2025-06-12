@@ -24,6 +24,12 @@ export const graphqlLenguagesResponseSchema = z.object({
   }),
 });
 
+export const graphqlSingleLenguageResponseSchema = z.object({
+  data: z.object({
+    lenguage: lenguageResponseSchema,
+  }),
+});
+
 export type LenguageFormData = z.infer<typeof lenguageFormSchema>;
 export type LenguageResponse = z.infer<typeof lenguageResponseSchema>;
 export type GraphqlLenguagesResponse = z.infer<

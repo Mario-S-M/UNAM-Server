@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Tabs, Tab } from "@heroui/react";
 import {
   AlignJustify,
   ArrowDownWideNarrow,
   ArrowDownSquare,
 } from "lucide-react";
+import { Tabs, Tab } from "@heroui/react";
 
 type SpacingType = "normal" | "increased" | "large";
 
@@ -64,64 +64,52 @@ export function LineSpacingToggle() {
     );
   };
 
-  const handleSpacingChange = (key: SpacingType): void => {
-    setSelected(key);
-    applyLineSpacing(key);
-  };
-
-  // Ejemplos visuales para las pestañas
-  const getSpacingExample = (type: SpacingType): { lineHeight: string } => {
-    switch (type) {
-      case "normal":
-        return { lineHeight: "1.5" };
-      case "increased":
-        return { lineHeight: "1.8" };
-      case "large":
-        return { lineHeight: "2.2" };
-      default:
-        return { lineHeight: "1.5" };
-    }
+  const handleSpacingChange = (key: string): void => {
+    const spacing = key as SpacingType;
+    setSelected(spacing);
+    applyLineSpacing(spacing);
   };
 
   return (
-    <div className="line-spacing-toggle">
-      <Tabs
-        aria-label="Opciones de espaciado entre líneas"
-        color="primary"
-        variant="bordered"
-        selectedKey={selected}
-        onSelectionChange={(key) =>
-          handleSpacingChange(key.toString() as SpacingType)
+    <Tabs
+      selectedKey={selected}
+      onSelectionChange={(key) => handleSpacingChange(key as string)}
+      variant="bordered"
+      classNames={{
+        tabList: "gap-2 w-full relative rounded-lg p-1 bg-transparent",
+        cursor: "w-full bg-primary rounded-lg shadow-md",
+        tab: "max-w-fit px-4 h-10 rounded-lg bg-transparent border-0",
+        tabContent:
+          "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-70",
+      }}
+    >
+      <Tab
+        key="normal"
+        title={
+          <div className="flex items-center space-x-2">
+            <AlignJustify size={18} />
+            <span>Normal</span>
+          </div>
         }
-      >
-        <Tab
-          key="normal"
-          title={
-            <div className="flex items-center space-x-2 hover:!text-inherit">
-              <AlignJustify />
-              <span style={getSpacingExample("normal")}>Normal</span>
-            </div>
-          }
-        />
-        <Tab
-          key="increased"
-          title={
-            <div className="flex items-center space-x-2 hover:!text-inherit">
-              <ArrowDownWideNarrow />
-              <span style={getSpacingExample("increased")}>Ampliado</span>
-            </div>
-          }
-        />
-        <Tab
-          key="large"
-          title={
-            <div className="flex items-center space-x-2 hover:!text-inherit">
-              <ArrowDownSquare />
-              <span style={getSpacingExample("large")}>Grande</span>
-            </div>
-          }
-        />
-      </Tabs>
-    </div>
+      />
+      <Tab
+        key="increased"
+        title={
+          <div className="flex items-center space-x-2">
+            <ArrowDownWideNarrow size={18} />
+            <span>Ampliado</span>
+          </div>
+        }
+      />
+      <Tab
+        key="large"
+        title={
+          <div className="flex items-center space-x-2">
+            <ArrowDownSquare size={18} />
+            <span>Grande</span>
+          </div>
+        }
+      />
+    </Tabs>
   );
 }

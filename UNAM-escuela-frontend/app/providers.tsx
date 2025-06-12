@@ -13,19 +13,18 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
+      <NextThemesProvider
+        attribute="class"
+        defaultTheme="unam-light-theme"
+        themes={["unam-light-theme", "unam-dark-theme", "contraste"]}
+        enableSystem={false}
+        storageKey="unam-theme"
+      >
         <HeroUIProvider>
-          <NextThemesProvider
-            attribute="class"
-            defaultTheme="unam-light-theme"
-            themes={["unam-light-theme", "unam-dark-theme", "contraste"]}
-            enableSystem={false}
-          >
-            <ToastProvider />
-            <MilkdownProvider>
-              {children}
-            </MilkdownProvider>
-          </NextThemesProvider>
+          <ToastProvider />
+          <MilkdownProvider>{children}</MilkdownProvider>
         </HeroUIProvider>
+      </NextThemesProvider>
     </QueryClientProvider>
   );
 }

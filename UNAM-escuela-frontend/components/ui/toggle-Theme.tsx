@@ -5,43 +5,39 @@ import { Contrast, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function ToogleTheme() {
-  const [, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const [selected, setSelected] = useState("unam-light-theme");
 
   // Efecto para asegurar que el componente está montado (evita problemas de SSR)
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Sincroniza el estado seleccionado con el tema actual
-  useEffect(() => {
-    if (theme) {
-      setSelected(theme);
-    }
-  }, [theme]);
-
   const handleThemeChange = (key: string) => {
-    setSelected(key);
     setTheme(key);
-    
-    // Forzar actualización del DOM (opcional, en algunos casos ayuda)
-    document.documentElement.style.setProperty('color-scheme', key.includes('dark') ? 'dark' : 'light');
   };
+
+  if (!mounted) return null; // Evitar hydration mismatch
 
   return (
     <Tabs
       aria-label="Opciones de tema"
       color="primary"
       variant="bordered"
-      selectedKey={selected}
+      selectedKey={theme || "unam-light-theme"}
       onSelectionChange={(key) => handleThemeChange(key.toString())}
-      className="p-2 rounded-lg shadow-soft transition-all duration-300 ease-in-out"
+      classNames={{
+        tabList: "gap-2 w-full relative rounded-lg p-1 bg-transparent",
+        cursor: "w-full bg-primary rounded-lg shadow-md",
+        tab: "max-w-fit px-4 h-10 rounded-lg bg-transparent border-0",
+        tabContent:
+          "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-70",
+      }}
     >
       <Tab
         key="unam-light-theme"
         title={
-          <div className="flex rounded-md transition-all duration-200">
+          <div className="flex items-center gap-2">
             <Sun className="w-5 h-5" aria-label="Tema claro" />
             <span>Claro</span>
           </div>
@@ -50,7 +46,7 @@ export function ToogleTheme() {
       <Tab
         key="unam-dark-theme"
         title={
-          <div className="flex rounded-md transition-all duration-200">
+          <div className="flex items-center gap-2">
             <Moon className="w-5 h-5" aria-label="Tema oscuro" />
             <span>Oscuro</span>
           </div>
@@ -59,7 +55,7 @@ export function ToogleTheme() {
       <Tab
         key="contraste"
         title={
-          <div className="flex rounded-md transition-all duration-200">
+          <div className="flex items-center gap-2">
             <Contrast className="w-5 h-5" aria-label="Tema de alto contraste" />
             <span>Contraste</span>
           </div>

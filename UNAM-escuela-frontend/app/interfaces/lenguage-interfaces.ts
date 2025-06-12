@@ -7,6 +7,10 @@ export interface Lenguage {
 export interface LenguageResponse {
   data: Lenguage[]; // Para GraphQL, el campo puede ser lenguagesActivate
 }
+
+export interface SingleLenguageResponse {
+  data: Lenguage; // Para un solo lenguaje
+}
 export interface ActionLenguageResponse<T> {
   data?: T;
   error?: string;

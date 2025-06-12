@@ -5,7 +5,7 @@ function GlobalLogoUNAM() {
   return (
     <>
       <Link href="/" className="flex items-center gap-3">
-        <div className="bg-white p-2 rounded-full">
+        <div className="bg-background p-2 rounded-full">
           <Image
             src="/Logo-UNAM.svg"
             alt="Logo UNAM"

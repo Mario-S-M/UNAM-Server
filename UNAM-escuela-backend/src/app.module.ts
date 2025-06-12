@@ -18,25 +18,26 @@ import { LenguagesModule } from './lenguages/lenguages.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '../.env'
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? '../.env.production'
+          : '../.env.development',
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       introspection: true,
       playground: false, // Disable the default playground
-      plugins: [
-        ApolloServerPluginLandingPageLocalDefault(),
-      ],
-      
+      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+
       formatError,
       csrfPrevention: false,
       cache: 'bounded',
       debug: true,
       buildSchemaOptions: {
         dateScalarMode: 'timestamp',
-        numberScalarMode: 'float'
-      }
+        numberScalarMode: 'float',
+      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -20,7 +20,6 @@ import { Link } from "@heroui/link";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import GlobalLogoUNAM from "./globalLogoUNAM";
 import { getLevelsByLenguage } from "@/app/actions";
 import { LevelsResponse } from "@/app/interfaces";
@@ -37,7 +36,6 @@ function GlobalNavbar({ lenguageId }: PageProps) {
     queryKey: ["levels", lenguageId],
     queryFn: async () => {
       if (!lenguageId) {
-        console.log("No lenguageId provided");
         return { data: [] };
       }
       const result = await getLevelsByLenguage(lenguageId);
@@ -51,37 +49,36 @@ function GlobalNavbar({ lenguageId }: PageProps) {
     <Navbar
       isBordered
       disableAnimation
-      className="bg-primary text-white"
+      className="bg-background border-b-2 border-divider shadow-lg"
       onMenuOpenChange={setIsMenuOpen}
     >
       {/* Toggle para pantallas pequeñas */}
       <NavbarContent className="sm:hidden" justify="start">
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
-          className="text-white"
+          className="text-foreground hover:text-primary"
         />
       </NavbarContent>
 
       {/* Logo centrado en pantallas pequeñas */}
       <NavbarContent className="sm:hidden pr-3" justify="center">
-        <NavbarBrand>
+        <NavbarBrand className="flex items-center gap-2">
           <GlobalLogoUNAM />
         </NavbarBrand>
       </NavbarContent>
 
       {/* Logo y menú de navegación para pantallas grandes */}
-      <NavbarContent className="hidden sm:flex gap-4">
-        <NavbarBrand>
+      <NavbarContent className="hidden sm:flex gap-6">
+        <NavbarBrand className="flex items-center gap-2 mr-8">
           <GlobalLogoUNAM />
         </NavbarBrand>
         {data?.data
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((level, index) => (
+          ?.sort((a: any, b: any) => a.name.localeCompare(b.name))
+          .map((level: any, index: number) => (
             <NavbarItem key={`nav-${index}`}>
               <Link
                 href={`/main/levels/${level.id}/view`}
-                color="foreground"
-                className="transition-colors text-base font-medium text-white"
+                className="text-base font-medium text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-content1"
               >
                 {level.name}
               </Link>
@@ -96,58 +93,35 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             <Avatar
               isBordered
               as="button"
-              className="transition-transform"
+              className="border-divider hover:border-primary bg-content1"
               color="default"
-              fallback={<User size={24} />}
+              fallback={<User size={24} className="text-foreground" />}
               size="md"
             />
           </DropdownTrigger>
-          <DropdownMenu
-            aria-label="Profile Actions"
-            variant="flat"
-            disabledKeys={["profile"]}
-          >
+          <DropdownMenu aria-label="Opciones de perfil" variant="flat">
             <DropdownItem
               key="profile"
-              color="primary"
-              className="gap-2"
-              classNames={{
-                title: "text-black dark:text-white",
-                base: "text-black dark:text-white",
-              }}
+              className="text-foreground hover:bg-content1"
             >
-              <p className="font-semibold">Hola:</p>
+              Mi Perfil
             </DropdownItem>
             <DropdownItem
-              key="settings"
-              classNames={{
-                title: "text-black dark:text-white",
-                base: "text-black dark:text-white",
-              }}
+              key="admin"
+              className="text-foreground hover:bg-content1"
               onPress={() => {
                 if (lenguageId) {
                   router.replace(`/main/levels/${lenguageId}/admin`);
                 }
               }}
             >
-              Opciones de Administrador
-            </DropdownItem>
-            <DropdownItem
-              key="team_settings"
-              classNames={{
-                title: "text-black dark:text-white",
-                base: "text-black dark:text-white",
-              }}
-              onPress={() => router.replace("/auth/login")}
-            >
-              Iniciar Sesión
+              Administrador
             </DropdownItem>
             <DropdownItem
               key="logout"
+              className="text-danger hover:bg-danger-50"
               color="danger"
-              classNames={{
-                base: "text-black dark:text-white",
-              }}
+              onPress={() => router.replace("/auth/login")}
             >
               Cerrar Sesión
             </DropdownItem>
@@ -156,24 +130,23 @@ function GlobalNavbar({ lenguageId }: PageProps) {
       </NavbarContent>
 
       {/* Menú móvil para pantallas pequeñas */}
-      <NavbarMenu className="bg-primary/95 backdrop-blur-sm py-4">
+      <NavbarMenu className="bg-background/95 backdrop-blur-sm py-4 border-r border-divider">
         {data?.data
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((level, index) => (
-            <NavbarItem key={`nav-${index}`}>
+          ?.sort((a: any, b: any) => a.name.localeCompare(b.name))
+          .map((level: any, index: number) => (
+            <NavbarMenuItem key={`mobile-nav-${index}`}>
               <Link
                 href={`/main/levels/${level.id}/view`}
-                color="foreground"
-                className="transition-colors text-base font-medium text-white"
+                className="w-full text-base font-medium text-foreground hover:text-primary py-3 px-4 rounded-lg hover:bg-content1"
+                size="lg"
               >
                 {level.name}
               </Link>
-            </NavbarItem>
+            </NavbarMenuItem>
           ))}
         <NavbarMenuItem>
           <Link
-            className="w-full text-white hover:text-gray-200 transition-colors text-lg"
-            color="danger"
+            className="w-full text-foreground hover:text-primary text-base font-medium py-3 px-4 rounded-lg hover:bg-content1"
             href="#"
             size="lg"
             onClick={() => router.replace("/auth/login")}
@@ -183,8 +156,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
         </NavbarMenuItem>
         <NavbarMenuItem>
           <Link
-            className="w-full text-white hover:text-gray-200 transition-colors text-lg"
-            color="danger"
+            className="w-full text-danger hover:text-danger-600 text-base font-medium py-3 px-4 rounded-lg hover:bg-danger-50"
             href="#"
             size="lg"
           >

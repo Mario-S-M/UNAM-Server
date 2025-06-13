@@ -11,6 +11,8 @@ const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
+  console.log("Cargando niveles para el lenguaje con ID:", id);
+  console.log(GRAPHQL_ENDPOINT)
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {

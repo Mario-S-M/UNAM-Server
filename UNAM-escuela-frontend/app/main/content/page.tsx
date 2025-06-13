@@ -6,6 +6,13 @@ import { Milkdown, useEditor } from "@milkdown/react";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 
+// Custom styles to use Outfit font for titles
+const customStyles = `
+  .milkdown {
+    --crepe-font-title: "Outfit", Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+`;
+
 const markdown = `# The Verb "To Be" in English 🌟
 
 > Understanding the foundation of English grammar
@@ -66,9 +73,9 @@ const MilkdownEditor: FC = () => {
       document.body.removeChild(a);
     }
   };
-
   return (
     <div>
+      <style>{customStyles}</style>
       <Milkdown />
       <button
         onClick={handleDownload}

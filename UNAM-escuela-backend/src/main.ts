@@ -12,6 +12,8 @@ async function bootstrap() {
       'http://132.247.186.91',
       'http://132.247.186.91:3000',
       'http://132.247.186.91:80',
+      'http://132.247.186.91',
+      "http://frontend",
       /^http:\/\/132\.247\.186\.91(:\d+)?$/,
     ],
     credentials: true,

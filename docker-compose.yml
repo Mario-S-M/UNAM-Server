@@ -34,7 +34,6 @@ services:
       - db
     networks:
       - unam-net
-
   backend:
     build:
       context: ./UNAM-escuela-backend
@@ -49,7 +48,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:11434" # Removí la variable para debugging
+      - "11434:3000" # Fixed port mapping: host:container
     networks:
       - unam-net
     restart: unless-stopped

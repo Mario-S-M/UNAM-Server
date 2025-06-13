@@ -29,7 +29,7 @@ import { LenguagesModule } from './lenguages/lenguages.module';
       introspection: true,
       playground: false, // Disable the default playground
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
-
+      context: ({ req, res }) => ({ req, res }),
       formatError,
       csrfPrevention: false,
       cache: 'bounded',

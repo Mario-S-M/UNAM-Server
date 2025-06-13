@@ -22,7 +22,6 @@ services:
       start_period: 30s
     networks:
       - unam-net
-
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -48,7 +47,7 @@ services:
     env_file:
       - .env
     ports:
-      - "11434:3000" # Fixed port mapping: host:container
+      - "11434:3000" # Backend en puerto 11434 como estaba originalmente
     networks:
       - unam-net
     restart: unless-stopped

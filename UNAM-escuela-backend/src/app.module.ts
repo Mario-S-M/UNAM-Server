@@ -18,6 +18,7 @@ import { LenguagesModule } from './lenguages/lenguages.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       envFilePath:
         process.env.NODE_ENV === 'production'
           ? '../.env.production'
@@ -27,9 +28,8 @@ import { LenguagesModule } from './lenguages/lenguages.module';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       introspection: true,
-      playground: false, // Disable the default playground
+      playground: false,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
-      context: ({ req, res }) => ({ req, res }),
       formatError,
       csrfPrevention: false,
       cache: 'bounded',
@@ -41,13 +41,16 @@ import { LenguagesModule } from './lenguages/lenguages.module';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST,
-      port: +(process.env.DB_PORT ?? '5432'),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      host: process.env.DB_HOST || 'db',
+      port: +(process.env.DB_PORT || '5432'),
+      username: process.env.DB_USERNAME || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      database: process.env.DB_NAME || 'produccion',
       synchronize: true,
       autoLoadEntities: true,
+      retryAttempts: 10,
+      retryDelay: 3000,
+      logging: process.env.NODE_ENV !== 'production',
     }),
     LevelsModule,
     ContentsModule,

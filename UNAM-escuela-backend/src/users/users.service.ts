@@ -22,12 +22,20 @@ export class UsersService {
 
   async create(signupInput: SignupInput): Promise<User> {
     try {
+      this.logger.log(`Creando nuevo usuario con email: ${signupInput.email}`);
       const newUser = this.usersRepository.create({
         ...signupInput,
         password: bcrypt.hashSync(signupInput.password, 10),
       });
-      return await this.usersRepository.save(newUser);
+      const savedUser = await this.usersRepository.save(newUser);
+      this.logger.log(
+        `Usuario creado exitosamente: ${savedUser.email} (ID: ${savedUser.id})`,
+      );
+      return savedUser;
     } catch (error) {
+      this.logger.error(
+        `Error creando usuario con email: ${signupInput.email} - ${error.message}`,
+      );
       this.handleDBError(error);
     }
   }
@@ -43,16 +51,26 @@ export class UsersService {
 
   async findOneByEmail(email: string): Promise<User> {
     try {
-      return await this.usersRepository.findOneByOrFail({ email });
+      this.logger.log(`Buscando usuario por email: ${email}`);
+      const user = await this.usersRepository.findOneByOrFail({ email });
+      this.logger.log(
+        `Usuario encontrado por email: ${email} (ID: ${user.id})`,
+      );
+      return user;
     } catch (error) {
+      this.logger.warn(`Usuario no encontrado con email: ${email}`);
       throw new NotFoundException(`El usuario con este email no existe`);
     }
   }
 
   async findOneById(id: string): Promise<User> {
     try {
-      return await this.usersRepository.findOneByOrFail({ id });
+      this.logger.log(`Buscando usuario por ID: ${id}`);
+      const user = await this.usersRepository.findOneByOrFail({ id });
+      this.logger.log(`Usuario encontrado por ID: ${id} (${user.email})`);
+      return user;
     } catch (error) {
+      this.logger.warn(`Usuario no encontrado con ID: ${id}`);
       throw new NotFoundException(`${id} no encontrado`);
     }
   }

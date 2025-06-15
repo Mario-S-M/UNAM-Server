@@ -5,15 +5,19 @@ export const loginFormSchema = z.object({
     .string()
     .min(1, "El nombre es requerido")
     .email("El email no es válido"),
-  password: z
-    .string()
-    .min(1, "La contraseña es requerida")
+  password: z.string().min(1, "La contraseña es requerida"),
 });
 
 export const loginResponseSchema = z.object({
-  token: z.string()
+  token: z.string(),
+  user: z.object({
+    id: z.string(),
+    fullName: z.string(),
+    email: z.string(),
+    roles: z.array(z.string()),
+    isActive: z.boolean(),
+  }),
 });
-
 
 export type LoginFormData = z.infer<typeof loginFormSchema>;
 export type LoginResponse = z.infer<typeof loginResponseSchema>;

@@ -1,11 +1,14 @@
 import { NestFactory } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   try {
-    console.log('Starting NestJS application...');
+    logger.log('Starting NestJS application...');
     const app = await NestFactory.create(AppModule);
-    console.log('Configuring CORS...');
+    logger.log('Configuring CORS...');
     app.enableCors({
       origin: [
         'http://localhost',
@@ -31,11 +34,11 @@ async function bootstrap() {
       optionsSuccessStatus: 200,
     });
 
-    console.log('Starting server on port 3000...');
+    logger.log('Starting server on port 3000...');
     await app.listen(3000, '0.0.0.0');
-    console.log('Server started successfully on http://0.0.0.0:3000');
+    logger.log('Server started successfully on http://0.0.0.0:3000');
   } catch (error) {
-    console.error('Error starting application:', error);
+    logger.error('Error starting application:', error);
     process.exit(1);
   }
 }

@@ -8,24 +8,23 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { ValidRoles } from './enums/valid-roles.enum';
 
-
 @Resolver()
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
-  @Mutation(()=> AuthResponse,{name: 'signin'})
-  signup(@Args('signUpInput') signupInput: SignupInput): Promise<AuthResponse>{
+  @Mutation(() => AuthResponse, { name: 'signin' })
+  signup(@Args('signUpInput') signupInput: SignupInput): Promise<AuthResponse> {
     return this.authService.signup(signupInput);
   }
 
-  @Mutation(()=>AuthResponse,{name: 'login'})
-  login(@Args('loginInput') loginInput: LoginInput): Promise<AuthResponse>{
+  @Mutation(() => AuthResponse, { name: 'login' })
+  login(@Args('loginInput') loginInput: LoginInput): Promise<AuthResponse> {
     return this.authService.login(loginInput);
   }
-  
-  @Query(()=>AuthResponse,{name: 'revalidate'})
+
+  @Query(() => AuthResponse, { name: 'revalidate' })
   @UseGuards(JwtAuthGuard)
-  revalidateToken(@CurrentUser([ValidRoles.mortal]) user : User): AuthResponse{
+  revalidateToken(@CurrentUser() user: User): AuthResponse {
     return this.authService.revalidateToken(user);
   }
 }

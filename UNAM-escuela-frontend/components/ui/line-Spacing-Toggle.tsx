@@ -55,13 +55,6 @@ export function LineSpacingToggle() {
 
     // Guardar la preferencia
     localStorage.setItem("line-spacing", spacing);
-
-    console.log(
-      "Espaciado entre líneas aplicado:",
-      spacing,
-      "con valor:",
-      lineHeightValue
-    );
   };
 
   const handleSpacingChange = (key: string): void => {

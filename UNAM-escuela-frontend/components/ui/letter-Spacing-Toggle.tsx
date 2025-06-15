@@ -38,8 +38,6 @@ export function LetterSpacingToggle() {
 
     // Guardar la preferencia en localStorage
     localStorage.setItem("letter-spacing", spacing);
-
-    console.log("Espaciado aplicado:", spacing, "con valor:", spacingValue);
   };
 
   const handleSpacingChange = (key: string) => {

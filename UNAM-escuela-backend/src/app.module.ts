@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
-// Import only ONE landing page plugin
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { LevelsModule } from './levels/levels.module';
 import { ConfigModule } from '@nestjs/config';
@@ -14,6 +13,8 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { formatError } from './graphql/format-errors';
 import { LenguagesModule } from './lenguages/lenguages.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 @Module({
   imports: [
@@ -61,6 +62,11 @@ import { LenguagesModule } from './lenguages/lenguages.module';
     LenguagesModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}

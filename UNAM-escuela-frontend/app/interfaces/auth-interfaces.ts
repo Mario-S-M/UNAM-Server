@@ -1,17 +1,21 @@
 export interface Login {
-    email: string;
-    password: string;
-  }
+  email: string;
+  password: string;
+}
 
-  export interface AuthResponse<T> {
-    data?: T;
-    error?: string;
-    redirect?: {
-      destination: string;
-      type: 'replace' | 'push';
-    };
-  }
+export interface AuthResponse<T> {
+  data?: T;
+  error?: string;
+  redirect?: {
+    destination: string;
+    type: "replace" | "push";
+  };
+}
 
-  export interface User {
-    token: string;
-  }
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  roles: string[];
+  isActive: boolean;
+}

@@ -31,4 +31,80 @@
   ::placeholder {
     @apply text-foreground/50;
   }
+
+  /* Remover shadows de modales */
+  [data-slot="base"] {
+    box-shadow: none !important;
+  }
+
+  [data-slot="wrapper"] {
+    box-shadow: none !important;
+  }
+
+  [data-slot="close-button"] {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  [data-slot="close-button"]:hover {
+    background: hsl(var(--heroui-default-100)) !important;
+  }
+
+  /* Remover shadows específicamente de todos los elementos de modal */
+  .heroui-modal,
+  .heroui-modal *,
+  .heroui-card,
+  .heroui-card * {
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+  }
+
+  /* Asegurar que no haya shadows en elementos con data-focus */
+  [data-focus="true"],
+  [data-focus-visible="true"] {
+    box-shadow: none !important;
+  }
+
+  /* Remover colores azules del toggle del navbar móvil */
+  [data-slot="toggle"],
+  .heroui-navbar-toggle,
+  button[aria-label*="menú"],
+  button[aria-label*="menu"] {
+    color: hsl(var(--heroui-foreground)) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+  }
+
+  [data-slot="toggle"]:hover,
+  .heroui-navbar-toggle:hover,
+  button[aria-label*="menú"]:hover,
+  button[aria-label*="menu"]:hover {
+    color: hsl(var(--heroui-default-700)) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* Remover focus ring azul del toggle */
+  [data-slot="toggle"]:focus,
+  [data-slot="toggle"]:focus-visible,
+  .heroui-navbar-toggle:focus,
+  .heroui-navbar-toggle:focus-visible,
+  button[aria-label*="menú"]:focus,
+  button[aria-label*="menu"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* Forzar transparencia en todos los estados del toggle */
+  [data-slot="toggle"][data-pressed="true"],
+  [data-slot="toggle"][data-focus="true"],
+  [data-slot="toggle"][data-focus-visible="true"] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
 }

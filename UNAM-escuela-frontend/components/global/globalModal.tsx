@@ -20,12 +20,18 @@ export const GlobalModal = ({
       onOpenChange={onOpenChange}
       placement="top-center"
       backdrop="blur"
+      classNames={{
+        base: "!shadow-none !border-none",
+        wrapper: "!shadow-none",
+        closeButton:
+          "!text-default-400 hover:!text-default-600 !bg-transparent hover:!bg-default-100 !shadow-none !border-none",
+      }}
     >
-      <ModalContent>
-          <>
-            <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
-            <ModalBody>{children}</ModalBody>
-          </>
+      <ModalContent className="!shadow-none !border-none">
+        <>
+          <ModalHeader className="flex flex-col gap-1">{title}</ModalHeader>
+          <ModalBody>{children}</ModalBody>
+        </>
       </ModalContent>
     </Modal>
   );

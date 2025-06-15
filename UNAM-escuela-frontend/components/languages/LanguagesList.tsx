@@ -29,8 +29,8 @@ export function LanguagesList() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <CircularProgress aria-label="Cargando lenguajes..." />
-        <span className="ml-4 text-foreground">Cargando lenguajes...</span>
+        <CircularProgress aria-label="Cargando idiomas..." />
+        <span className="ml-4 text-foreground">Cargando idiomas...</span>
       </div>
     );
   }
@@ -54,12 +54,12 @@ export function LanguagesList() {
     <div className="p-6">
       <div className="text-center mb-16">
         <h1 className="text-4xl font-light text-foreground mb-4">
-          Lenguajes Disponibles
+          Idiomas Disponibles
         </h1>
         <div className="w-24 h-px bg-divider mx-auto mb-6"></div>
         <p className="text-foreground/70 text-lg max-w-2xl mx-auto font-light">
-          Descubre los lenguajes que puedes aprender y dominar en nuestra
-          plataforma. Cada lenguaje ofrece una experiencia única y recursos
+          Descubre los idiomas que puedes aprender y dominar en nuestra
+          plataforma. Cada idioma ofrece una experiencia única y recursos
           diseñados para ayudarte a alcanzar tus metas de aprendizaje.
         </p>
       </div>
@@ -140,11 +140,11 @@ export function LanguagesList() {
                 <span className="text-4xl">💻</span>
               </div>
               <h3 className="text-2xl font-light text-foreground mb-4">
-                No hay lenguajes disponibles
+                No hay idiomas disponibles
               </h3>
               <div className="w-16 h-px bg-gradient-to-r from-transparent via-default-300 to-transparent mx-auto mb-6"></div>
               <p className="text-default-500 font-light text-lg">
-                Próximamente tendremos nuevos lenguajes para ti
+                Próximamente tendremos nuevos idiomas para ti
               </p>
             </div>
           </div>

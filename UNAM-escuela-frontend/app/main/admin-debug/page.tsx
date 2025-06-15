@@ -140,7 +140,7 @@ function AdminDashboardContent() {
               </CardHeader>
               <CardBody>
                 <p className="text-gray-700">
-                  Administra niveles, lenguajes y contenido educativo.
+                  Administra niveles, idiomas y contenido educativo.
                 </p>
                 <Link
                   href="/main/levels"

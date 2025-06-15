@@ -12,11 +12,11 @@ export function useSmartRedirect() {
    */
   const getRedirectPath = (user: User | null): string => {
     if (!user) {
-      return "/auth/login";
+      return "/";
     }
 
     if (!user.isActive) {
-      return "/auth/inactive";
+      return "/";
     }
 
     // Usar el DAL para obtener la página principal del usuario
@@ -36,7 +36,7 @@ export function useSmartRedirect() {
       role,
       roleInfo,
       displayName: roleInfo?.displayName || "Usuario",
-      shouldRedirect: path !== "/auth/login",
+      shouldRedirect: path !== "/",
     };
   };
 

@@ -30,7 +30,7 @@ function ContentLenguage({ params }: PageProps) {
               Inicio
             </Link>
             <span>/</span>
-            <span className="text-foreground/50">Lenguajes</span>
+            <span className="text-foreground/50">Idiomas</span>
             <span>/</span>
             <span className="text-foreground">Niveles</span>
           </nav>

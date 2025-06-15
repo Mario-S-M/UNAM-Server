@@ -3,10 +3,12 @@
 import { logoutAction, User } from "@/app/hooks/use-current-user";
 import { useAuth } from "@/components/providers/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
+import { RegisterModal } from "@/components/auth/register-modal";
 import { RoleBadge } from "@/components/ui/role-badge";
 import GlobalButton from "@/components/global/globalButton";
+import GlobalLogoUNAM from "@/components/global/globalLogoUNAM";
 import { Card, CardBody, Avatar, useDisclosure } from "@heroui/react";
-import { LogOut, User as UserIcon, Home } from "lucide-react";
+import { LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 
 interface ClientHeaderProps {
@@ -15,7 +17,8 @@ interface ClientHeaderProps {
 
 export function ClientHeader({ initialUser }: ClientHeaderProps) {
   const { user, isLoading } = useAuth();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const loginModal = useDisclosure();
+  const registerModal = useDisclosure();
 
   const handleLogout = () => {
     logoutAction();
@@ -23,14 +26,12 @@ export function ClientHeader({ initialUser }: ClientHeaderProps) {
 
   return (
     <>
-      <Card className="mb-6">
+      <Card className="mb-6 !shadow-none">
         <CardBody>
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <Link href="/">
-                <h1 className="text-2xl font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer">
-                  UNAM Inclusión
-                </h1>
+                <GlobalLogoUNAM variant="navbar" noLink />
               </Link>
             </div>
 
@@ -66,18 +67,35 @@ export function ClientHeader({ initialUser }: ClientHeaderProps) {
                   />
                 </div>
               ) : (
-                <GlobalButton
-                  onPress={onOpen}
-                  text="Iniciar Sesión"
-                  color="primary"
-                />
+                <div className="flex items-center space-x-3">
+                  <GlobalButton
+                    onPress={loginModal.onOpen}
+                    text="Iniciar Sesión"
+                    color="primary"
+                    size="sm"
+                  />
+                  <GlobalButton
+                    onPress={registerModal.onOpen}
+                    text="Crear Cuenta"
+                    variant="bordered"
+                    color="primary"
+                    size="sm"
+                  />
+                </div>
               )}
             </div>
           </div>
         </CardBody>
       </Card>
 
-      <LoginModal isOpen={isOpen} onOpenChange={onOpenChange} />
+      <LoginModal
+        isOpen={loginModal.isOpen}
+        onOpenChange={loginModal.onOpenChange}
+      />
+      <RegisterModal
+        isOpen={registerModal.isOpen}
+        onOpenChange={registerModal.onOpenChange}
+      />
     </>
   );
 }

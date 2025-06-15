@@ -23,6 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import GlobalLogoUNAM from "./globalLogoUNAM";
 import { getLevelsByLenguage } from "@/app/actions";
 import { LevelsResponse } from "@/app/interfaces";
+import { logoutAction } from "@/app/hooks/use-current-user";
 
 interface PageProps {
   lenguageId?: string;
@@ -56,21 +57,21 @@ function GlobalNavbar({ lenguageId }: PageProps) {
       <NavbarContent className="sm:hidden" justify="start">
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
-          className="text-foreground hover:text-primary"
+          className="!bg-transparent !text-foreground hover:!text-default-700 hover:!bg-transparent focus:!bg-transparent data-[pressed=true]:!bg-transparent data-[focus=true]:!bg-transparent"
         />
       </NavbarContent>
 
       {/* Logo centrado en pantallas pequeñas */}
       <NavbarContent className="sm:hidden pr-3" justify="center">
         <NavbarBrand className="flex items-center gap-2">
-          <GlobalLogoUNAM />
+          <GlobalLogoUNAM variant="navbar" />
         </NavbarBrand>
       </NavbarContent>
 
       {/* Logo y menú de navegación para pantallas grandes */}
       <NavbarContent className="hidden sm:flex gap-6">
         <NavbarBrand className="flex items-center gap-2 mr-8">
-          <GlobalLogoUNAM />
+          <GlobalLogoUNAM variant="navbar" />
         </NavbarBrand>
         {data?.data
           ?.sort((a: any, b: any) => a.name.localeCompare(b.name))
@@ -78,7 +79,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             <NavbarItem key={`nav-${index}`}>
               <Link
                 href={`/main/levels/${level.id}/view`}
-                className="text-base font-medium text-foreground hover:text-primary px-3 py-2 rounded-lg hover:bg-content1"
+                className="text-base font-medium text-foreground hover:text-default-700 px-3 py-2 rounded-lg hover:bg-content1"
               >
                 {level.name}
               </Link>
@@ -93,7 +94,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             <Avatar
               isBordered
               as="button"
-              className="border-divider hover:border-primary bg-content1"
+              className="border-divider hover:border-default-300 bg-content1"
               color="default"
               fallback={<User size={24} className="text-foreground" />}
               size="md"
@@ -121,7 +122,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
               key="logout"
               className="text-danger hover:bg-danger-50"
               color="danger"
-              onPress={() => router.replace("/auth/login")}
+              onPress={() => logoutAction()}
             >
               Cerrar Sesión
             </DropdownItem>
@@ -137,7 +138,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             <NavbarMenuItem key={`mobile-nav-${index}`}>
               <Link
                 href={`/main/levels/${level.id}/view`}
-                className="w-full text-base font-medium text-foreground hover:text-primary py-3 px-4 rounded-lg hover:bg-content1"
+                className="w-full text-base font-medium text-foreground hover:text-default-700 py-3 px-4 rounded-lg hover:bg-content1"
                 size="lg"
               >
                 {level.name}
@@ -146,10 +147,9 @@ function GlobalNavbar({ lenguageId }: PageProps) {
           ))}
         <NavbarMenuItem>
           <Link
-            className="w-full text-foreground hover:text-primary text-base font-medium py-3 px-4 rounded-lg hover:bg-content1"
-            href="#"
+            className="w-full text-foreground hover:text-default-700 text-base font-medium py-3 px-4 rounded-lg hover:bg-content1"
+            href="/"
             size="lg"
-            onClick={() => router.replace("/auth/login")}
           >
             Iniciar Sesión
           </Link>
@@ -159,6 +159,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             className="w-full text-danger hover:text-danger-600 text-base font-medium py-3 px-4 rounded-lg hover:bg-danger-50"
             href="#"
             size="lg"
+            onClick={() => logoutAction()}
           >
             Cerrar Sesión
           </Link>

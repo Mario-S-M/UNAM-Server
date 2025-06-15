@@ -26,10 +26,11 @@ export class UsersService {
       const newUser = this.usersRepository.create({
         ...signupInput,
         password: bcrypt.hashSync(signupInput.password, 10),
+        roles: ['alumno'], // Asignar automáticamente el rol de alumno
       });
       const savedUser = await this.usersRepository.save(newUser);
       this.logger.log(
-        `Usuario creado exitosamente: ${savedUser.email} (ID: ${savedUser.id})`,
+        `Usuario creado exitosamente: ${savedUser.email} (ID: ${savedUser.id}) con rol de alumno`,
       );
       return savedUser;
     } catch (error) {

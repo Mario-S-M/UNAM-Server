@@ -114,7 +114,7 @@ export class AuthDAL {
    * Verifica si el usuario tiene acceso a una página específica
    */
   static canAccessPage(user: User | null, page: string): AuthorizationResult {
-    // Si no hay usuario, redirigir a login
+    // Si no hay usuario, redirigir a la página principal
     if (!user) {
       return {
         hasAccess: false,

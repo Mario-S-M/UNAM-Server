@@ -25,7 +25,7 @@ export async function getActiveLenguages(): Promise<LenguageResponse> {
             `,
     }),
   });
-  if (!response.ok) throw new Error("Error al cargar los lenguajes");
+  if (!response.ok) throw new Error("Error al cargar los idiomas");
   const result = await response.json();
   const validated = graphqlLenguagesResponseSchema.safeParse(result);
   if (!validated.success) {

@@ -18,7 +18,7 @@ export default function LenguageList() {
     return <div>Error: {(error as Error).message}</div>;
   }
   if (isLoading) return <div>Cargando...</div>;
-  if (!data?.data) return <div>No hay lenguajes disponibles</div>;
+  if (!data?.data) return <div>No hay idiomas disponibles</div>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">

@@ -7,28 +7,37 @@ import GlobalInput from "@/components/global/globalInput";
 import { Card, CardBody, addToast } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { loginAction } from "@/app/actions";
+import { registerAction } from "@/app/actions";
 
-interface LoginModalProps {
+interface RegisterModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
+export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      console.log("🔐 Modal: Iniciando login con:", credentials.email);
-      const result = await loginAction(credentials);
-      console.log("📋 Modal: Resultado del login:", result);
+  const registerMutation = useMutation({
+    mutationFn: async (credentials: {
+      fullName: string;
+      email: string;
+      password: string;
+    }) => {
+      console.log(
+        "📝 Modal: Iniciando registro con:",
+        credentials.email,
+        credentials.fullName
+      );
+      const result = await registerAction(credentials);
+      console.log("📋 Modal: Resultado del registro:", result);
       return result;
     },
     onSuccess: (result) => {
-      console.log("✅ Modal: Login exitoso:", result);
+      console.log("✅ Modal: Registro exitoso:", result);
 
       if (result.error) {
         console.error("❌ Modal: Error en resultado:", result.error);
@@ -40,15 +49,16 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
         queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
         addToast({
-          title: "¡Bienvenid@!",
+          title: "¡Cuenta creada exitosamente!",
           color: "success",
-          description: `Hola ${result.data.fullName}! Inicio de sesión exitoso`,
-          timeout: 3000,
+          description: `¡Bienvenid@ ${result.data.fullName}! Tu cuenta ha sido creada como alumno`,
+          timeout: 4000,
           shouldShowTimeoutProgress: true,
         });
 
         // Cerrar modal y limpiar formulario
         onOpenChange(false);
+        setFullName("");
         setEmail("");
         setPassword("");
 
@@ -67,14 +77,14 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
       }
     },
     onError: (error) => {
-      console.error("❌ Modal: Error en login:", error);
+      console.error("❌ Modal: Error en registro:", error);
       addToast({
-        title: "Error de Inicio de Sesión",
+        title: "Error al crear cuenta",
         color: "danger",
         description:
           error instanceof Error
             ? error.message
-            : "Error desconocido al iniciar sesión",
+            : "Error desconocido al crear la cuenta",
         timeout: 5000,
         shouldShowTimeoutProgress: true,
       });
@@ -84,7 +94,7 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    if (!fullName || !email || !password) {
       addToast({
         title: "Campos requeridos",
         description: "Por favor completa todos los campos",
@@ -94,19 +104,47 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
       return;
     }
 
-    console.log("📤 Modal: Enviando formulario de login");
-    loginMutation.mutate({ email, password });
+    if (password.length < 6) {
+      addToast({
+        title: "Contraseña muy corta",
+        description: "La contraseña debe tener al menos 6 caracteres",
+        color: "warning",
+        timeout: 3000,
+      });
+      return;
+    }
+
+    console.log("📤 Modal: Enviando formulario de registro");
+    registerMutation.mutate({ fullName, email, password });
   };
 
   return (
     <GlobalModal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      title="Iniciar Sesión"
+      title="Crear Cuenta Nueva"
     >
       <Card className="!shadow-none">
         <CardBody className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <GlobalInput
+                name="fullName"
+                type="text"
+                label="Nombre Completo"
+                color="default"
+                isRequired={true}
+                value={fullName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFullName(e.target.value)
+                }
+                isDisabled={registerMutation.isPending}
+                classNames={{
+                  label: "text-content",
+                }}
+              />
+            </div>
+
             <div>
               <GlobalInput
                 name="email"
@@ -118,7 +156,7 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setEmail(e.target.value)
                 }
-                isDisabled={loginMutation.isPending}
+                isDisabled={registerMutation.isPending}
                 classNames={{
                   label: "text-content",
                 }}
@@ -135,10 +173,11 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setPassword(e.target.value)
                 }
-                isDisabled={loginMutation.isPending}
+                isDisabled={registerMutation.isPending}
                 classNames={{
                   label: "text-content",
                 }}
+                description="Mínimo 6 caracteres"
               />
             </div>
 
@@ -147,20 +186,31 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
                 onPress={() => onOpenChange(false)}
                 text="Cancelar"
                 variant="bordered"
-                isDisabled={loginMutation.isPending}
+                isDisabled={registerMutation.isPending}
               />
               <GlobalButton
                 type="submit"
                 text={
-                  loginMutation.isPending
-                    ? "Iniciando sesión..."
-                    : "Iniciar Sesión"
+                  registerMutation.isPending
+                    ? "Creando cuenta..."
+                    : "Crear Cuenta"
                 }
                 variant="solid"
-                isLoading={loginMutation.isPending}
-                isDisabled={loginMutation.isPending}
+                isLoading={registerMutation.isPending}
+                isDisabled={registerMutation.isPending}
               />
             </div>
+
+            {/* Debug info */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="mt-4 p-2 rounded text-sm">
+                {registerMutation.error && (
+                  <p className="text-red-600">
+                    <strong>Error:</strong> {registerMutation.error.message}
+                  </p>
+                )}
+              </div>
+            )}
           </form>
         </CardBody>
       </Card>

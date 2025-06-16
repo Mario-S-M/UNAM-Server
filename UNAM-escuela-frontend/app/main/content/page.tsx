@@ -1,18 +1,8 @@
-"use client";
 import React from "react";
 import type { FC } from "react";
-import { Crepe } from "@milkdown/crepe";
-import { Milkdown, useEditor } from "@milkdown/react";
-import "@milkdown/crepe/theme/common/style.css";
-import "@milkdown/crepe/theme/frame.css";
+import MilkdownEditorClient from "../../../components/global/milkdown-editor-client";
 
-// Custom styles to use Outfit font for titles
-const customStyles = `
-  .milkdown {
-    --crepe-font-title: "Outfit", Georgia, Cambria, "Times New Roman", Times, serif;
-  }
-`;
-
+// Server component that provides the markdown content
 const markdown = `# The Verb "To Be" in English 🌟
 
 > Understanding the foundation of English grammar
@@ -39,7 +29,7 @@ const markdown = `# The Verb "To Be" in English 🌟
 
 1. *"I am* happy to learn English!"
 2. *"You are* making great progress."
-3. *"She is* the best student in class.
+3. *"She is* the best student in class."
 
 > Remember: The verb "to be" is one of the most important verbs in English.
 > It helps us express who we are and describe the world around us.
@@ -47,44 +37,26 @@ const markdown = `# The Verb "To Be" in English 🌟
 ---
 *Practice makes perfect! Keep learning and growing.* 🌱`;
 
-const MilkdownEditor: FC = () => {
-  const [editor, setEditor] = React.useState<Crepe | null>(null);
-
-  useEditor((root) => {
-    const crepe = new Crepe({
-      root,
-      defaultValue: markdown,
-    });
-    setEditor(crepe);
-    return crepe;
-  }, []);
-
-  const handleDownload = () => {
-    if (editor) {
-      const markdownContent = editor.getMarkdown();
-      const blob = new Blob([markdownContent], { type: "text/markdown" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "verb-to-be-english.md";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    }
-  };
+// Server Component
+const ContentPage: FC = () => {
   return (
-    <div>
-      <style>{customStyles}</style>
-      <Milkdown />
-      <button
-        onClick={handleDownload}
-        className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-      >
-        Download Markdown
-      </button>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto p-6 max-w-6xl">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-foreground mb-3">
+            English Grammar Content Editor
+          </h1>
+          <p className="text-default-500 text-lg">
+            Edit and download your English grammar lessons
+          </p>
+        </div>
+          <MilkdownEditorClient
+            defaultValue={markdown}
+            downloadFileName="verb-to-be-english.md"
+          />
+      </div>
     </div>
   );
 };
 
-export default MilkdownEditor;
+export default ContentPage;

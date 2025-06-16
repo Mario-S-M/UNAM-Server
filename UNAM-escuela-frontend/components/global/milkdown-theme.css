@@ -1,0 +1,1004 @@
+/* milkdown-theme.css */
+/* Custom theme for Milkdown that uses HeroUI/Tailwind colors */
+
+.milkdown {
+  /* Typography */
+  --crepe-font-title: "Outfit", Georgia, Cambria, "Times New Roman", Times,
+    serif;
+  --crepe-font-default: system-ui, -apple-system, sans-serif;
+
+  /* Background Colors - Forzar fondos más sólidos */
+  --crepe-color-background: hsl(var(--heroui-content1)) !important;
+  --crepe-color-surface: hsl(var(--heroui-content2)) !important;
+  --crepe-color-surface-low: hsl(var(--heroui-content3)) !important;
+
+  /* Text Colors - using HeroUI foreground tokens */
+  --crepe-color-on-background: hsl(var(--heroui-foreground));
+  --crepe-color-on-surface: hsl(var(--heroui-foreground));
+  --crepe-color-on-surface-variant: hsl(var(--heroui-default-400));
+
+  /* Force solid background for the entire editor */
+  background-color: hsl(var(--heroui-content1)) !important;
+  color: hsl(var(--heroui-foreground)) !important;
+
+  /* Accent Colors - using HeroUI primary and secondary */
+  --crepe-color-primary: hsl(var(--heroui-primary));
+  --crepe-color-secondary: hsl(
+    var(--heroui-secondary, var(--heroui-default-100))
+  );
+  --crepe-color-on-secondary: hsl(
+    var(--heroui-secondary-foreground, var(--heroui-foreground))
+  );
+
+  /* UI Colors */
+  --crepe-color-outline: hsl(var(--heroui-foreground, #2d2d2d));
+  --crepe-color-inverse: hsl(var(--heroui-foreground));
+  --crepe-color-on-inverse: hsl(var(--heroui-background));
+  --crepe-color-inline-code: hsl(var(--heroui-warning, var(--heroui-primary)));
+  --crepe-color-error: hsl(var(--heroui-danger, #ba1a1a));
+
+  /* Interactive Colors */
+  --crepe-color-hover: hsl(var(--heroui-default-100));
+  --crepe-color-selected: hsl(
+    var(--heroui-primary-100, var(--heroui-default-200))
+  );
+  --crepe-color-inline-area: hsl(var(--heroui-default-50));
+
+  /* Additional customizations for better integration */
+  border-radius: 0;
+}
+
+/* Dark theme overrides */
+[data-theme="unam-dark-theme"] .milkdown,
+[data-theme="dark"] .milkdown,
+.dark .milkdown {
+  --crepe-color-background: hsl(var(--heroui-content1)) !important;
+  --crepe-color-surface: hsl(var(--heroui-content2)) !important;
+  --crepe-color-surface-low: hsl(var(--heroui-content3)) !important;
+  --crepe-color-hover: hsl(var(--heroui-default-200));
+  --crepe-color-selected: hsl(var(--heroui-primary-300));
+  --crepe-color-inline-area: hsl(var(--heroui-content4));
+}
+
+/* Dark theme specific elements */
+[data-theme="unam-dark-theme"] .milkdown blockquote,
+[data-theme="dark"] .milkdown blockquote,
+.dark .milkdown blockquote {
+  background-color: hsl(var(--heroui-content3)) !important;
+}
+
+/* Dark theme table rows */
+[data-theme="unam-dark-theme"] .milkdown tr:nth-child(even) td,
+[data-theme="dark"] .milkdown tr:nth-child(even) td,
+.dark .milkdown tr:nth-child(even) td,
+[data-theme="unam-dark-theme"]
+  .milkdown
+  .milkdown-table-block
+  tr:nth-child(even)
+  td,
+[data-theme="dark"] .milkdown .milkdown-table-block tr:nth-child(even) td,
+.dark .milkdown .milkdown-table-block tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+[data-theme="unam-dark-theme"] .milkdown tr:hover td,
+[data-theme="dark"] .milkdown tr:hover td,
+.dark .milkdown tr:hover td,
+[data-theme="unam-dark-theme"] .milkdown .milkdown-table-block tr:hover td,
+[data-theme="dark"] .milkdown .milkdown-table-block tr:hover td,
+.dark .milkdown .milkdown-table-block tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  transition: all 0.2s ease;
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Dark theme table cells */
+[data-theme="unam-dark-theme"] .milkdown td,
+[data-theme="dark"] .milkdown td,
+.dark .milkdown td,
+[data-theme="unam-dark-theme"] .milkdown .milkdown-table-block td,
+[data-theme="dark"] .milkdown .milkdown-table-block td,
+.dark .milkdown .milkdown-table-block td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Dark theme table headers */
+[data-theme="unam-dark-theme"] .milkdown th,
+[data-theme="dark"] .milkdown th,
+.dark .milkdown th {
+  color: white !important;
+}
+
+/* Force text color in all table elements for dark theme */
+[data-theme="unam-dark-theme"] .milkdown table,
+[data-theme="dark"] .milkdown table,
+.dark .milkdown table {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Light theme specific */
+[data-theme="unam-light-theme"] .milkdown,
+[data-theme="light"] .milkdown {
+  --crepe-color-background: #ffffff !important;
+  --crepe-color-surface: #f8f9fa !important;
+  --crepe-color-surface-low: #f1f3f4 !important;
+
+  /* Better text colors for light theme */
+  --crepe-color-on-background: #1a1a1a !important;
+  --crepe-color-on-surface: #2d2d2d !important;
+  --crepe-color-on-surface-variant: #666666 !important;
+  --crepe-color-outline: #6b7280 !important;
+
+  /* Interactive colors */
+  --crepe-color-hover: #f3f4f6 !important;
+  --crepe-color-selected: #e5e7eb !important;
+  --crepe-color-inline-area: #f9fafb !important;
+}
+
+/* Light theme specific elements */
+[data-theme="unam-light-theme"] .milkdown blockquote,
+[data-theme="light"] .milkdown blockquote {
+  background-color: #f8f9fa !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown tr:hover td,
+[data-theme="light"] .milkdown tr:hover td,
+[data-theme="unam-light-theme"] .milkdown .milkdown-table-block tr:hover td,
+[data-theme="light"] .milkdown .milkdown-table-block tr:hover td {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease;
+}
+
+/* Light theme table cells */
+[data-theme="unam-light-theme"] .milkdown tr:nth-child(even) td,
+[data-theme="light"] .milkdown tr:nth-child(even) td,
+[data-theme="unam-light-theme"]
+  .milkdown
+  .milkdown-table-block
+  tr:nth-child(even)
+  td,
+[data-theme="light"] .milkdown .milkdown-table-block tr:nth-child(even) td {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown td,
+[data-theme="light"] .milkdown td,
+[data-theme="unam-light-theme"] .milkdown .milkdown-table-block td,
+[data-theme="light"] .milkdown .milkdown-table-block td {
+  background: transparent !important;
+}
+
+/* Light theme table headers */
+[data-theme="unam-light-theme"] .milkdown th,
+[data-theme="light"] .milkdown th {
+  background-color: hsl(var(--heroui-primary)) !important;
+  color: white !important;
+}
+
+/* High contrast theme overrides */
+[data-theme="contraste"] .milkdown {
+  --crepe-color-background: #000000;
+  --crepe-color-on-background: #ffff00;
+  --crepe-color-surface: #1a1a1a;
+  --crepe-color-on-surface: #ffff00;
+  --crepe-color-primary: #ffffff;
+  --crepe-color-outline: #666666;
+  --crepe-color-hover: #333333;
+  --crepe-color-selected: #4d4d4d;
+}
+
+/* Additional styling for better UX */
+.milkdown {
+  min-height: 500px;
+  background: var(--crepe-color-background) !important;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+/* Optimize content container spacing */
+.milkdown .crepe {
+  min-height: 500px;
+  background: var(--crepe-color-background) !important;
+  border: 2px solid hsl(var(--heroui-divider));
+  border-radius: 0;
+  padding: 16px !important; /* Reduced padding for better space utilization */
+  line-height: 1.6 !important;
+}
+
+/* Fix editor content area */
+.milkdown .crepe-editor {
+  background: var(--crepe-color-background) !important;
+  min-height: 450px;
+  /* Ensure consistent baseline alignment */
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+}
+
+/* Optimize content container spacing */
+.milkdown .crepe {
+  min-height: 500px;
+  background: var(--crepe-color-background) !important;
+  border: 2px solid hsl(var(--heroui-divider));
+  border-radius: 0;
+  padding: 16px !important; /* Reduced padding for better space utilization */
+  line-height: 1.6 !important;
+}
+
+/* Fix alignment between editor controls and content */
+.milkdown [role="button"],
+.milkdown [role="menuitem"] {
+  vertical-align: baseline !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.4 !important;
+}
+
+/* Force all editor elements to have proper background */
+.milkdown .milkdown-editor {
+  background: hsl(var(--heroui-content1)) !important;
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+.milkdown .crepe .milkdown {
+  background: hsl(var(--heroui-content1)) !important;
+}
+
+.milkdown [data-node-type="doc"] {
+  background: hsl(var(--heroui-content1)) !important;
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Ensure proper text contrast */
+.milkdown h1,
+.milkdown h2,
+.milkdown h3,
+.milkdown h4,
+.milkdown h5,
+.milkdown h6 {
+  color: hsl(var(--heroui-foreground)) !important;
+  font-family: var(--crepe-font-title);
+  margin: 1em 0 0.5em 0;
+  text-align: left;
+}
+
+.milkdown h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+}
+
+.milkdown h2 {
+  font-size: 2em;
+  font-weight: 600;
+}
+
+.milkdown p {
+  color: hsl(var(--heroui-foreground)) !important;
+  line-height: 1.6 !important;
+  margin: 0.8em 0 !important;
+  padding: 0 !important;
+  text-align: left;
+  vertical-align: baseline !important;
+}
+
+.milkdown blockquote {
+  border-left: 3px solid hsl(var(--heroui-primary));
+  background-color: hsl(var(--heroui-content2)) !important;
+  color: hsl(var(--heroui-foreground));
+  margin: 1em 0;
+  padding: 8px 12px 8px 16px; /* Much thinner padding for sleek appearance */
+  border-radius: 0;
+}
+
+/* Better table styling - Override Milkdown defaults */
+.milkdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  background: hsl(var(--heroui-content1)) !important;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+/* Override Milkdown table block styling */
+.milkdown .milkdown-table-block {
+  margin: 1.5em 0 !important;
+}
+
+/* Default table headers with UNAM blue - Override Crepe styles */
+.milkdown th,
+.milkdown .milkdown-table-block th {
+  background-color: hsl(var(--heroui-primary)) !important;
+  color: hsl(var(--heroui-primary-foreground)) !important;
+  padding: 12px 16px !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  border: 1px solid hsl(var(--heroui-divider)) !important;
+}
+
+/* Force all text content in table headers to use correct color */
+.milkdown th *,
+.milkdown .milkdown-table-block th * {
+  color: hsl(var(--heroui-primary-foreground)) !important;
+}
+
+/* Table cells styling */
+.milkdown td,
+.milkdown .milkdown-table-block td {
+  padding: 12px 16px !important;
+  border: 1px solid hsl(var(--heroui-divider)) !important;
+  color: hsl(var(--heroui-foreground)) !important;
+  background: transparent !important;
+}
+
+/* THEME-SPECIFIC OVERRIDES */
+
+/* Light theme table headers */
+[data-theme="unam-light-theme"] .milkdown th,
+[data-theme="light"] .milkdown th,
+[data-theme="unam-light-theme"] .milkdown .milkdown-table-block th,
+[data-theme="light"] .milkdown .milkdown-table-block th {
+  background-color: #2c4d71 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown th *,
+[data-theme="light"] .milkdown th *,
+[data-theme="unam-light-theme"] .milkdown .milkdown-table-block th *,
+[data-theme="light"] .milkdown .milkdown-table-block th * {
+  color: #ffffff !important;
+}
+
+/* Dark theme table headers */
+[data-theme="unam-dark-theme"] .milkdown th,
+[data-theme="dark"] .milkdown th,
+.dark .milkdown th,
+[data-theme="unam-dark-theme"] .milkdown .milkdown-table-block th,
+[data-theme="dark"] .milkdown .milkdown-table-block th,
+.dark .milkdown .milkdown-table-block th {
+  background-color: #2c4d71 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="unam-dark-theme"] .milkdown th *,
+[data-theme="dark"] .milkdown th *,
+.dark .milkdown th *,
+[data-theme="unam-dark-theme"] .milkdown .milkdown-table-block th *,
+[data-theme="dark"] .milkdown .milkdown-table-block th *,
+.dark .milkdown .milkdown-table-block th * {
+  color: #ffffff !important;
+}
+
+/* CONTRAST THEME - WHITE BACKGROUND WITH BLACK TEXT */
+[data-theme="contraste"] .milkdown table,
+[data-theme="contraste"] .milkdown .milkdown-table-block {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+[data-theme="contraste"] .milkdown th,
+[data-theme="contraste"] .milkdown .milkdown-table-block th {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  border-color: #000000 !important;
+  padding: 12px 16px !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+[data-theme="contraste"] .milkdown th *,
+[data-theme="contraste"] .milkdown .milkdown-table-block th * {
+  color: #000000 !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+[data-theme="contraste"] .milkdown td,
+[data-theme="contraste"] .milkdown .milkdown-table-block td {
+  padding: 12px 16px !important;
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
+  background: #ffffff !important;
+}
+
+[data-theme="contraste"] .milkdown tr:nth-child(even) td,
+[data-theme="contraste"] .milkdown .milkdown-table-block tr:nth-child(even) td {
+  background-color: #f8f8f8 !important;
+  color: #000000 !important;
+}
+
+[data-theme="contraste"] .milkdown tr:hover td,
+[data-theme="contraste"] .milkdown .milkdown-table-block tr:hover td {
+  background-color: #e0e0e0 !important;
+  color: #000000 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* LIGHT THEME TOOLBAR AND MENU IMPROVEMENTS */
+/* Fix toolbar button text visibility in light theme */
+[data-theme="unam-light-theme"] .milkdown [role="button"],
+[data-theme="light"] .milkdown [role="button"] {
+  color: #111827 !important;
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  font-weight: 400 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown [role="button"]:hover,
+[data-theme="light"] .milkdown [role="button"]:hover {
+  background: #2c4d71 !important;
+  color: #ffffff !important;
+  border-color: #2c4d71 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown [role="menuitem"],
+[data-theme="light"] .milkdown [role="menuitem"] {
+  color: #111827 !important;
+  background: transparent !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
+  margin: 2px 0 !important;
+  font-weight: 400 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown [role="menuitem"]:hover,
+[data-theme="light"] .milkdown [role="menuitem"]:hover {
+  background: #2c4d71 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown [role="menuitem"].active,
+[data-theme="light"] .milkdown [role="menuitem"].active {
+  background: #2c4d71 !important;
+  color: #ffffff !important;
+}
+
+/* Fix toolbar and popup styling */
+[data-theme="unam-light-theme"] .milkdown .crepe-menu,
+[data-theme="light"] .milkdown .crepe-menu {
+  color: #111827 !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown .crepe-menu-item,
+[data-theme="light"] .milkdown .crepe-menu-item {
+  color: #111827 !important;
+  font-weight: 400 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown .crepe-toolbar-item,
+[data-theme="light"] .milkdown .crepe-toolbar-item {
+  color: #111827 !important;
+  font-weight: 400 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown .crepe-popup,
+[data-theme="light"] .milkdown .crepe-popup {
+  color: #111827 !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown .crepe-popup *,
+[data-theme="light"] .milkdown .crepe-popup * {
+  color: #111827 !important;
+}
+
+/* Button styling for light theme */
+[data-theme="unam-light-theme"] .milkdown button,
+[data-theme="light"] .milkdown button {
+  color: #111827 !important;
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  font-weight: 400 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown button:hover,
+[data-theme="light"] .milkdown button:hover {
+  background: #2c4d71 !important;
+  color: #ffffff !important;
+  border-color: #2c4d71 !important;
+}
+
+/* GLOBAL FIXES FOR LIGHT THEME */
+/* Remove unwanted list styling from all toolbar/menu elements */
+[data-theme="unam-light-theme"] .milkdown li:not(.milkdown-content li),
+[data-theme="light"] .milkdown li:not(.milkdown-content li) {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown ul:not(.milkdown-content ul),
+[data-theme="light"] .milkdown ul:not(.milkdown-content ul) {
+  list-style: none !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Force all interactive text elements to have good contrast */
+[data-theme="unam-light-theme"] .milkdown *[role],
+[data-theme="light"] .milkdown *[role] {
+  color: #111827 !important;
+  font-weight: 400 !important;
+}
+
+/* Ensure toolbar has no background dots/patterns */
+[data-theme="unam-light-theme"] .milkdown .crepe,
+[data-theme="light"] .milkdown .crepe {
+  background-image: none !important;
+  background-pattern: none !important;
+}
+
+/* Fix any pseudo-elements that might create dots */
+[data-theme="unam-light-theme"] .milkdown *::before,
+[data-theme="light"] .milkdown *::before,
+[data-theme="unam-light-theme"] .milkdown *::after,
+[data-theme="light"] .milkdown *::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Re-enable necessary pseudo-elements for content */
+[data-theme="unam-light-theme"] .milkdown .milkdown-content li::before,
+[data-theme="light"] .milkdown .milkdown-content li::before {
+  content: initial !important;
+  display: initial !important;
+}
+
+/* NUCLEAR OPTION - Force ALL text to be dark in light theme */
+/* This will override any internal Milkdown/Crepe styling */
+[data-theme="unam-light-theme"] .milkdown * {
+  color: #111827 !important;
+}
+
+/* But allow content area to have its own colors */
+[data-theme="unam-light-theme"] .milkdown .milkdown-content *,
+[data-theme="unam-light-theme"] .milkdown [data-node-type="doc"] *,
+[data-theme="unam-light-theme"] .milkdown .ProseMirror * {
+  color: #1f2937 !important;
+}
+
+/* Keep table headers white text on blue background */
+[data-theme="unam-light-theme"] .milkdown th,
+[data-theme="unam-light-theme"] .milkdown th * {
+  color: #ffffff !important;
+}
+
+/* Same aggressive approach for "light" theme */
+[data-theme="light"] .milkdown * {
+  color: #111827 !important;
+}
+
+[data-theme="light"] .milkdown .milkdown-content *,
+[data-theme="light"] .milkdown [data-node-type="doc"] *,
+[data-theme="light"] .milkdown .ProseMirror * {
+  color: #1f2937 !important;
+}
+
+[data-theme="light"] .milkdown th,
+[data-theme="light"] .milkdown th * {
+  color: #ffffff !important;
+}
+
+/* REMOVE ALL BULLET POINTS AND DOTS */
+[data-theme="unam-light-theme"] .milkdown *::before,
+[data-theme="light"] .milkdown *::before {
+  content: "" !important;
+  display: none !important;
+}
+
+[data-theme="unam-light-theme"] .milkdown *::after,
+[data-theme="light"] .milkdown *::after {
+  content: "" !important;
+  display: none !important;
+}
+
+/* Allow only necessary pseudo-elements for content lists */
+[data-theme="unam-light-theme"] .milkdown .milkdown-content li::before,
+[data-theme="light"] .milkdown .milkdown-content li::before {
+  content: initial !important;
+  display: initial !important;
+}
+
+/* ========================================
+   VERTICAL ALIGNMENT FIXES
+   ======================================== */
+
+/* ========================================
+   LIST MARKER VISIBILITY FIXES
+   ======================================== */
+/* Fix list marker visibility across all themes */
+.milkdown .milkdown-list-item-block li .label-wrapper,
+.milkdown .milkdown-list-item-block li .label-wrapper .label {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+.milkdown .milkdown-list-item-block li .label-wrapper svg {
+  fill: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Dark theme specific list markers */
+[data-theme="unam-dark-theme"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper,
+[data-theme="dark"] .milkdown .milkdown-list-item-block li .label-wrapper,
+.dark .milkdown .milkdown-list-item-block li .label-wrapper {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+[data-theme="unam-dark-theme"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper
+  svg,
+[data-theme="dark"] .milkdown .milkdown-list-item-block li .label-wrapper svg,
+.dark .milkdown .milkdown-list-item-block li .label-wrapper svg {
+  fill: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Light theme specific list markers - Force dark color for visibility */
+[data-theme="unam-light-theme"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper,
+[data-theme="light"] .milkdown .milkdown-list-item-block li .label-wrapper {
+  color: #1f2937 !important;
+}
+
+[data-theme="unam-light-theme"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper
+  .label,
+[data-theme="light"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper
+  .label {
+  color: #1f2937 !important;
+}
+
+[data-theme="unam-light-theme"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper
+  svg,
+[data-theme="light"] .milkdown .milkdown-list-item-block li .label-wrapper svg {
+  fill: #1f2937 !important;
+}
+
+/* High contrast theme list markers */
+[data-theme="contraste"] .milkdown .milkdown-list-item-block li .label-wrapper,
+[data-theme="contraste"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper
+  .label {
+  color: #ffff00 !important;
+}
+
+[data-theme="contraste"]
+  .milkdown
+  .milkdown-list-item-block
+  li
+  .label-wrapper
+  svg {
+  fill: #ffff00 !important;
+}
+
+/* ========================================
+   CONTENT LIST STYLING (UL/OL)
+   ======================================== */
+/* Ensure content lists have proper markers */
+.milkdown .milkdown-content ul li::marker,
+.milkdown .milkdown-content ol li::marker,
+.milkdown .ProseMirror ul li::marker,
+.milkdown .ProseMirror ol li::marker {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Dark theme content list markers */
+[data-theme="unam-dark-theme"] .milkdown .milkdown-content ul li::marker,
+[data-theme="unam-dark-theme"] .milkdown .milkdown-content ol li::marker,
+[data-theme="dark"] .milkdown .milkdown-content ul li::marker,
+[data-theme="dark"] .milkdown .milkdown-content ol li::marker,
+.dark .milkdown .milkdown-content ul li::marker,
+.dark .milkdown .milkdown-content ol li::marker {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Light theme content list markers */
+[data-theme="unam-light-theme"] .milkdown .milkdown-content ul li::marker,
+[data-theme="unam-light-theme"] .milkdown .milkdown-content ol li::marker,
+[data-theme="light"] .milkdown .milkdown-content ul li::marker,
+[data-theme="light"] .milkdown .milkdown-content ol li::marker {
+  color: #1f2937 !important;
+}
+
+/* High contrast theme content list markers */
+[data-theme="contraste"] .milkdown .milkdown-content ul li::marker,
+[data-theme="contraste"] .milkdown .milkdown-content ol li::marker {
+  color: #ffff00 !important;
+}
+
+/* ========================================
+   PROSEMIRROR LIST STYLING
+   ======================================== */
+/* Default ProseMirror list styling */
+.milkdown .ProseMirror ul,
+.milkdown .ProseMirror ol {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+.milkdown .ProseMirror ul li,
+.milkdown .ProseMirror ol li {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Dark theme ProseMirror lists */
+[data-theme="unam-dark-theme"] .milkdown .ProseMirror ul,
+[data-theme="unam-dark-theme"] .milkdown .ProseMirror ol,
+[data-theme="dark"] .milkdown .ProseMirror ul,
+[data-theme="dark"] .milkdown .ProseMirror ol,
+.dark .milkdown .ProseMirror ul,
+.dark .milkdown .ProseMirror ol {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Light theme ProseMirror lists */
+[data-theme="unam-light-theme"] .milkdown .ProseMirror ul,
+[data-theme="unam-light-theme"] .milkdown .ProseMirror ol,
+[data-theme="light"] .milkdown .ProseMirror ul,
+[data-theme="light"] .milkdown .ProseMirror ol {
+  color: #1f2937 !important;
+}
+
+/* High contrast theme ProseMirror lists */
+[data-theme="contraste"] .milkdown .ProseMirror ul,
+[data-theme="contraste"] .milkdown .ProseMirror ol {
+  color: #ffff00 !important;
+}
+
+/* ========================================
+   VERTICAL ALIGNMENT FIXES
+   ======================================== */
+
+/* Fix overall editor layout and alignment */
+.milkdown {
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+}
+
+/* Ensure consistent line-height for all editor elements */
+.milkdown * {
+  line-height: inherit !important;
+  vertical-align: baseline !important;
+  box-sizing: border-box !important;
+}
+
+/* Fix ProseMirror content area alignment */
+.milkdown .ProseMirror {
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+  /* Restored original padding to fix toolbar positioning */
+  padding: 60px 120px !important;
+}
+
+/* Fix toolbar and control elements alignment - MINIMAL CHANGES */
+.milkdown .milkdown-toolbar,
+.milkdown .crepe-toolbar {
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.4 !important;
+  /* Removed margin: 0 and padding overrides that were causing positioning issues */
+}
+
+.milkdown .milkdown-toolbar .toolbar-item,
+.milkdown .crepe-toolbar .toolbar-item,
+.milkdown .crepe-toolbar-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  /* Removed size and margin overrides that were interfering with toolbar positioning */
+}
+
+/* Fix list items alignment - CRITICAL */
+.milkdown ul,
+.milkdown ol {
+  margin: 1em 0 !important;
+  padding-left: 1.5rem !important; /* Restored to 1.5rem for better alignment */
+  line-height: 1.6 !important;
+}
+
+.milkdown li {
+  margin: 0.4em 0 !important;
+  padding: 0 !important;
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+  display: list-item !important;
+}
+
+/* Fix list item blocks specifically */
+.milkdown .milkdown-list-item-block {
+  margin: 0.4em 0 !important;
+  padding: 0 !important;
+  line-height: 1.6 !important;
+}
+
+.milkdown .milkdown-list-item-block > .list-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  line-height: 1.6 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.milkdown .milkdown-list-item-block > .list-item > .children {
+  flex: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.6 !important;
+}
+
+.milkdown .milkdown-list-item-block li .label-wrapper {
+  height: auto !important;
+  width: 24px !important;
+  min-height: 24px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  margin-top: 2px !important; /* Align bullet with first line of text */
+  padding: 0 !important;
+}
+
+/* Fix paragraph alignment within lists */
+.milkdown li p {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+}
+
+/* Fix headings alignment */
+.milkdown h1,
+.milkdown h2,
+.milkdown h3,
+.milkdown h4,
+.milkdown h5,
+.milkdown h6 {
+  line-height: 1.3 !important;
+  margin: 1.2em 0 0.6em 0 !important;
+  padding: 0 !important;
+  vertical-align: baseline !important;
+}
+
+/* Fix menu and popup alignment */
+.milkdown .crepe-menu,
+.milkdown .crepe-popup,
+.milkdown .milkdown-slash-menu {
+  line-height: 1.4 !important;
+}
+
+.milkdown .crepe-menu-item,
+.milkdown .milkdown-slash-menu .menu-groups .menu-group li {
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.4 !important;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+/* Fix block handle alignment */
+.milkdown .milkdown-block-handle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+/* Fix table cell alignment */
+.milkdown table th,
+.milkdown table td,
+.milkdown .milkdown-table-block th,
+.milkdown .milkdown-table-block td {
+  vertical-align: top !important;
+  line-height: 1.6 !important;
+  padding: 12px 16px !important;
+}
+
+/* Fix code block alignment */
+.milkdown .milkdown-code-block {
+  margin: 1em 0 !important;
+  line-height: 1.4 !important;
+}
+
+.milkdown .milkdown-code-block .cm-editor {
+  line-height: 1.4 !important;
+}
+
+/* Fix image block alignment */
+.milkdown .milkdown-image-block {
+  margin: 1em 0 !important;
+  line-height: 1 !important;
+  vertical-align: baseline !important;
+}
+
+/* Fix blockquote alignment */
+.milkdown blockquote {
+  margin: 1em 0 !important;
+  padding: 8px 12px 8px 16px !important; /* Ultra-thin padding for sleek, modern look */
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+}
+
+/* Fix input and button alignment */
+.milkdown input,
+.milkdown button,
+.milkdown [role="button"] {
+  vertical-align: middle !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+}
+
+/* Ensure consistent baseline for all inline elements */
+.milkdown span,
+.milkdown a,
+.milkdown code,
+.milkdown strong,
+.milkdown em {
+  vertical-align: baseline !important;
+  line-height: inherit !important;
+}
+
+/* Fix nested list alignment */
+.milkdown ul ul,
+.milkdown ol ol,
+.milkdown ul ol,
+.milkdown ol ul {
+  margin: 0.2em 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+/* Special fix for Milkdown's custom list components */
+.milkdown .milkdown-list-item-block .ProseMirror {
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1.6 !important;
+}
+
+/* Fix for editor controls container */
+.milkdown .crepe-editor-container {
+  line-height: 1.6 !important;
+  vertical-align: baseline !important;
+}
+
+/* Ensure all text nodes have consistent alignment */
+.milkdown .ProseMirror-textnode {
+  vertical-align: baseline !important;
+  line-height: inherit !important;
+}

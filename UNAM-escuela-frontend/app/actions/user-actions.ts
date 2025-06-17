@@ -1,7 +1,29 @@
 "use server";
 
+import { cookies } from "next/headers";
+
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
+
+// Helper function to get auth headers
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.warn("Could not get auth token:", error);
+  }
+
+  return headers;
+}
 
 export interface User {
   id: string;
@@ -9,8 +31,10 @@ export interface User {
   email: string;
   roles: string[];
   isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  lastUpdateBy?: {
+    id: string;
+    fullName: string;
+  };
 }
 
 export interface UsersResponse {
@@ -23,10 +47,9 @@ export interface ActionResponse<T> {
 }
 
 export async function getUsers(token?: string): Promise<UsersResponse> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headers = await getAuthHeaders();
 
+  // Si se proporciona un token específico, usarlo en su lugar
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -36,28 +59,34 @@ export async function getUsers(token?: string): Promise<UsersResponse> {
     headers,
     body: JSON.stringify({
       query: `
-        query Users {
-          users {
+        query Users($roles: [ValidRoles!]) {
+          users(roles: $roles) {
             id
             fullName
             email
             roles
             isActive
-            createdAt
-            updatedAt
+            lastUpdateBy {
+              id
+              fullName
+            }
           }
         }
       `,
+      variables: { roles: [] }, // Array vacío para obtener todos los usuarios
     }),
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error("❌ Error response body:", errorText);
     throw new Error("Error al cargar los usuarios");
   }
 
   const result = await response.json();
 
   if (result.errors) {
+    console.error("❌ GraphQL errors:", result.errors);
     throw new Error(result.errors.map((err: any) => err.message).join(", "));
   }
 
@@ -73,10 +102,9 @@ export async function getUser(
       throw new Error("ID inválido");
     }
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const headers = await getAuthHeaders();
 
+    // Si se proporciona un token específico, usarlo en su lugar
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -93,8 +121,10 @@ export async function getUser(
               email
               roles
               isActive
-              createdAt
-              updatedAt
+              lastUpdateBy {
+                id
+                fullName
+              }
             }
           }
         `,
@@ -129,10 +159,9 @@ export async function blockUser(
       throw new Error("ID inválido");
     }
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
+    const headers = await getAuthHeaders();
 
+    // Si se proporciona un token específico, usarlo en su lugar
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -149,8 +178,10 @@ export async function blockUser(
               email
               roles
               isActive
-              createdAt
-              updatedAt
+              lastUpdateBy {
+                id
+                fullName
+              }
             }
           }
         `,
@@ -224,4 +255,55 @@ export async function revalidateToken(
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
+}
+
+export async function getUsersByRole(
+  roles: string[],
+  token?: string
+): Promise<UsersResponse> {
+  const headers = await getAuthHeaders();
+
+  // Si se proporciona un token específico, usarlo en su lugar
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query Users($roles: [ValidRoles!]!) {
+          users(roles: $roles) {
+            id
+            fullName
+            email
+            roles
+            isActive
+            lastUpdateBy {
+              id
+              fullName
+            }
+          }
+        }
+      `,
+      variables: { roles },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al cargar los usuarios");
+  }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  return { data: result.data.users || [] };
+}
+
+export async function getTeachers(token?: string): Promise<UsersResponse> {
+  return getUsersByRole(["docente"], token);
 }

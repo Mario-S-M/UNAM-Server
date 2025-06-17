@@ -27,7 +27,7 @@ const ROLE_HIERARCHY: RoleHierarchy = {
       "user_management",
       "debug",
     ],
-    redirectTo: "/main/admin-debug",
+    redirectTo: "/main/admin-dashboard",
     displayName: "Super Administrador",
   },
   admin: {
@@ -38,7 +38,7 @@ const ROLE_HIERARCHY: RoleHierarchy = {
       "content_management",
       "user_management",
     ],
-    redirectTo: "/main/admin",
+    redirectTo: "/main/admin-dashboard",
     displayName: "Administrador",
   },
   docente: {

@@ -1,5 +1,5 @@
 import { InputType, Int, Field, ID } from '@nestjs/graphql';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, IsOptional } from 'class-validator';
 
 @InputType()
 export class CreateContentInput {
@@ -17,4 +17,14 @@ export class CreateContentInput {
   @IsString()
   @Field(() => ID)
   levelId: string;
+
+  @IsOptional()
+  @IsArray()
+  @Field(() => [ID], { nullable: true })
+  teacherIds?: string[];
+
+  @IsOptional()
+  @IsString()
+  @Field(() => String, { nullable: true })
+  status?: string;
 }

@@ -65,3 +65,50 @@ export async function getLanguageById(
   }
   return { data: validated.data.data.lenguage };
 }
+
+export async function createLenguage(
+  formData: FormData
+): Promise<{ data?: any; error?: string }> {
+  try {
+    const name = formData.get("name")?.toString() || "";
+
+    if (!name.trim()) {
+      return { error: "El nombre es requerido" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation CreateLenguage($name: String!) {
+            createLenguage(createLenguageInput: { name: $name }) {
+              id
+              name
+              isActive
+            }
+          }
+        `,
+        variables: { name },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al crear el lenguaje");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    return { data: result.data.createLenguage };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}

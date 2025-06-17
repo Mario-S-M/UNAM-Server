@@ -7,9 +7,26 @@ import { RegisterModal } from "@/components/auth/register-modal";
 import { RoleBadge } from "@/components/ui/role-badge";
 import GlobalButton from "@/components/global/globalButton";
 import GlobalLogoUNAM from "@/components/global/globalLogoUNAM";
-import { Card, CardBody, Avatar, useDisclosure } from "@heroui/react";
-import { LogOut, User as UserIcon } from "lucide-react";
+import {
+  Card,
+  CardBody,
+  Avatar,
+  useDisclosure,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownSection,
+} from "@heroui/react";
+import {
+  LogOut,
+  User as UserIcon,
+  Settings,
+  Home,
+  ChevronDown,
+} from "lucide-react";
 import Link from "next/link";
+import { usePermissions } from "@/app/hooks/use-authorization";
 
 interface ClientHeaderProps {
   initialUser?: User | null;
@@ -17,6 +34,7 @@ interface ClientHeaderProps {
 
 export function ClientHeader({ initialUser }: ClientHeaderProps) {
   const { user, isLoading } = useAuth();
+  const { canAccessAdminPanel, userMainPage } = usePermissions();
   const loginModal = useDisclosure();
   const registerModal = useDisclosure();
 
@@ -41,47 +59,103 @@ export function ClientHeader({ initialUser }: ClientHeaderProps) {
                   <div className="h-8 w-24 bg-gray-200 rounded"></div>
                 </div>
               ) : user ? (
-                <div className="flex items-center space-x-3">
-                  <Avatar
-                    icon={<UserIcon className="h-6 w-6" />}
-                    size="sm"
-                    classNames={{
-                      base: "bg-gradient-to-br from-[#FFB457] to-[#FF705B]",
-                      icon: "text-black/80",
-                    }}
-                  />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{user.fullName}</span>
-                    {user.roles &&
-                      user.roles.length > 0 &&
-                      !user.roles.every(
-                        (role: string) => role === "mortal"
-                      ) && <RoleBadge roles={user.roles} />}
-                  </div>
-                  <GlobalButton
-                    onPress={handleLogout}
-                    variant="bordered"
-                    size="sm"
-                    startContent={<LogOut className="h-4 w-4" />}
-                    text="Cerrar Sesión"
-                  />
-                </div>
+                <Dropdown placement="bottom-end">
+                  <DropdownTrigger>
+                    <div className="flex items-center space-x-3 cursor-pointer hover:bg-content1 p-2 rounded-lg transition-colors">
+                      <Avatar
+                        icon={<UserIcon className="h-6 w-6" />}
+                        size="sm"
+                        classNames={{
+                          base: "bg-gradient-to-br from-[#FFB457] to-[#FF705B]",
+                          icon: "text-black/80",
+                        }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {user.fullName}
+                        </span>
+                        {user.roles &&
+                          user.roles.length > 0 &&
+                          !user.roles.every(
+                            (role: string) => role === "mortal"
+                          ) && <RoleBadge roles={user.roles} />}
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-default-400" />
+                    </div>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label="Opciones de usuario"
+                    variant="faded"
+                  >
+                    <DropdownSection title="Navegación" showDivider>
+                      <DropdownItem
+                        key="main-page"
+                        startContent={<Home className="h-4 w-4" />}
+                        as={Link}
+                        href={userMainPage}
+                      >
+                        Panel Principal
+                      </DropdownItem>
+                      {canAccessAdminPanel ? (
+                        <DropdownItem
+                          key="dashboard"
+                          startContent={<Settings className="h-4 w-4" />}
+                          as={Link}
+                          href="/main/admin-dashboard"
+                        >
+                          Dashboard Admin
+                        </DropdownItem>
+                      ) : null}
+                    </DropdownSection>
+                    <DropdownSection title="Cuenta">
+                      <DropdownItem
+                        key="logout"
+                        className="text-danger"
+                        color="danger"
+                        startContent={<LogOut className="h-4 w-4" />}
+                        onPress={handleLogout}
+                      >
+                        Cerrar Sesión
+                      </DropdownItem>
+                    </DropdownSection>
+                  </DropdownMenu>
+                </Dropdown>
               ) : (
-                <div className="flex items-center space-x-3">
-                  <GlobalButton
-                    onPress={loginModal.onOpen}
-                    text="Iniciar Sesión"
-                    color="primary"
-                    size="sm"
-                  />
-                  <GlobalButton
-                    onPress={registerModal.onOpen}
-                    text="Crear Cuenta"
-                    variant="bordered"
-                    color="primary"
-                    size="sm"
-                  />
-                </div>
+                <Dropdown placement="bottom-end">
+                  <DropdownTrigger>
+                    <div className="flex items-center space-x-2 cursor-pointer hover:bg-content1 p-2 rounded-lg transition-colors">
+                      <Avatar
+                        icon={<UserIcon className="h-6 w-6" />}
+                        size="sm"
+                        classNames={{
+                          base: "bg-default-200",
+                          icon: "text-default-600",
+                        }}
+                      />
+                      <span className="text-sm font-medium">Invitado</span>
+                      <ChevronDown className="h-4 w-4 text-default-400" />
+                    </div>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label="Opciones de invitado"
+                    variant="faded"
+                  >
+                    <DropdownItem
+                      key="login"
+                      startContent={<UserIcon className="h-4 w-4" />}
+                      onPress={loginModal.onOpen}
+                    >
+                      Iniciar Sesión
+                    </DropdownItem>
+                    <DropdownItem
+                      key="register"
+                      startContent={<UserIcon className="h-4 w-4" />}
+                      onPress={registerModal.onOpen}
+                    >
+                      Crear Cuenta
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
               )}
             </div>
           </div>

@@ -53,19 +53,19 @@ export function RoleBasedNavigation() {
 
     // Opciones para Super Usuarios y Admins
     {
+      href: "/main/admin-dashboard",
+      label: "Dashboard Admin",
+      icon: <Settings className="h-5 w-5" />,
+      description: "Panel principal de administración",
+      color: "bg-blue-100 text-blue-600 hover:bg-blue-200",
+    },
+    {
       href: "/main/admin-debug",
       label: "Panel Debug",
       icon: <Bug className="h-5 w-5" />,
       description: "Panel de debugging avanzado",
       color: "bg-red-100 text-red-600 hover:bg-red-200",
       permission: "debug",
-    },
-    {
-      href: "/main/admin",
-      label: "Administración",
-      icon: <Settings className="h-5 w-5" />,
-      description: "Panel de administración",
-      color: "bg-orange-100 text-orange-600 hover:bg-orange-200",
     },
 
     // Gestión de usuarios
@@ -135,6 +135,7 @@ export function RoleBasedNavigation() {
     switch (item.href) {
       case "/main/admin":
       case "/main/admin-debug":
+      case "/main/admin-dashboard":
         return canAccessAdminPanel;
       case "/main/users":
         return canManageUsers;

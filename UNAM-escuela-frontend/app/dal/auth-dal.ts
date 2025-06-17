@@ -34,7 +34,7 @@ export class AuthDAL {
         "user_management",
         "debug",
       ],
-      redirectTo: "/main/admin-debug",
+      redirectTo: "/main/admin-dashboard",
       displayName: "Super Administrador",
     },
     admin: {
@@ -45,7 +45,7 @@ export class AuthDAL {
         "content_management",
         "user_management",
       ],
-      redirectTo: "/main/admin",
+      redirectTo: "/main/admin-dashboard",
       displayName: "Administrador",
     },
     docente: {
@@ -145,6 +145,7 @@ export class AuthDAL {
     // Definir reglas de acceso por página
     const pageAccessRules: { [key: string]: Role[] } = {
       "/main/admin-debug": ["superUser", "admin"],
+      "/main/admin-dashboard": ["superUser", "admin"],
       "/main/admin": ["superUser", "admin"],
       "/main/teacher": ["superUser", "admin", "docente"],
       "/main/student": ["superUser", "admin", "docente", "alumno"],

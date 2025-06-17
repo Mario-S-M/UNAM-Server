@@ -1,212 +1,132 @@
 "use client";
 
-import { Card, CardBody, CardHeader } from "@heroui/react";
-import { Users, BookOpen, Settings, BarChart3 } from "lucide-react";
-import Link from "next/link";
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardBody, CardHeader, Spinner, Button } from "@heroui/react";
+import { BookOpen, ArrowRight } from "lucide-react";
 import { RouteGuard } from "@/components/auth/route-guard";
-import { useAuthorization } from "@/app/hooks/use-authorization";
+import { usePermissions } from "@/app/hooks/use-authorization";
 
-export default function AdminDashboardDebug() {
+export default function AdminDebugPage() {
   return (
-    <RouteGuard requiredPage="/main/admin-debug">
-      <AdminDashboardContent />
+    <RouteGuard requiredPage="/main/admin">
+      <AdminDebugContent />
     </RouteGuard>
   );
 }
 
-function AdminDashboardContent() {
-  const { user, getHighestRole, hasPermission, canPerformOperation } =
-    useAuthorization();
+function AdminDebugContent() {
+  const { canManageContent } = usePermissions();
+  const router = useRouter();
 
-  const userRole = getHighestRole();
-  const canManageUsers = canPerformOperation("read", "users");
-  const canManageContent = canPerformOperation("read", "content");
+  useEffect(() => {
+    // Redirect to the integrated content management page after a brief moment
+    const redirectTimer = setTimeout(() => {
+      router.push("/main/admin/levels");
+    }, 3000);
+
+    return () => clearTimeout(redirectTimer);
+  }, [router]);
+
+  if (!canManageContent) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Card className="max-w-md">
+          <CardBody className="text-center py-8">
+            <p className="text-default-500">
+              No tienes permisos para acceder a esta página.
+            </p>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            Debug Admin Dashboard
-          </h1>
-
-          <div className="bg-gray-100 p-4 rounded-lg mb-4">
-            <h3 className="font-semibold mb-2">
-              Estado de autenticación (DAL):
-            </h3>
-            <p>
-              <strong>user:</strong> {user ? "existe" : "null"}
-            </p>
-            {user && (
-              <>
-                <p>
-                  <strong>fullName:</strong> {user.fullName}
-                </p>
-                <p>
-                  <strong>email:</strong> {user.email}
-                </p>
-                <p>
-                  <strong>roles:</strong> {JSON.stringify(user.roles)}
-                </p>
-                <p>
-                  <strong>isActive:</strong> {user.isActive ? "true" : "false"}
-                </p>
-                <p>
-                  <strong>Rol más alto:</strong> {userRole}
-                </p>
-              </>
-            )}
+    <div className="max-w-4xl mx-auto p-6">
+      <Card className="shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <BookOpen className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Sistema de Gestión de Contenido Educativo
+              </h1>
+              <p className="text-default-600 mt-1">
+                Redirigiendo al panel integrado de administración...
+              </p>
+            </div>
           </div>
+        </CardHeader>
 
-          <div className="bg-blue-100 p-4 rounded-lg mb-4">
-            <h3 className="font-semibold mb-2">
-              Verificación de permisos (DAL):
-            </h3>
-            <p>
-              <strong>Permiso debug:</strong>{" "}
-              {hasPermission("debug") ? "SÍ" : "NO"}
-            </p>
-            <p>
-              <strong>Permiso admin:</strong>{" "}
-              {hasPermission("admin") ? "SÍ" : "NO"}
-            </p>
-            <p>
-              <strong>Puede gestionar usuarios:</strong>{" "}
-              {canManageUsers ? "SÍ" : "NO"}
-            </p>
-            <p>
-              <strong>Puede gestionar contenido:</strong>{" "}
-              {canManageContent ? "SÍ" : "NO"}
-            </p>
-          </div>
+        <CardBody className="pt-4">
+          <div className="flex flex-col items-center justify-center py-12 space-y-6">
+            <Spinner size="lg" color="primary" />
 
-          <div className="bg-green-100 p-4 rounded-lg mb-4">
-            <h3 className="font-semibold text-green-800 mb-2">
-              ¡Acceso concedido por DAL!
-            </h3>
-            <p>
-              El sistema DAL verificó que el usuario tiene permisos de
-              administrador.
-            </p>
-          </div>
-        </div>
+            <div className="text-center space-y-3">
+              <h3 className="text-lg font-semibold text-foreground">
+                Sistema Integrado de Gestión
+              </h3>
+              <p className="text-default-600 max-w-md">
+                Te estamos redirigiendo al nuevo sistema integrado donde podrás:
+              </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Gestión de Usuarios */}
-          {canManageUsers && (
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader className="pb-2">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-blue-100 p-3 rounded-full">
-                    <Users className="h-6 w-6 text-blue-600" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div className="bg-default-50 dark:bg-default-100 rounded-lg p-4">
+                  <div className="flex items-center justify-center mb-2">
+                    <BookOpen className="h-8 w-8 text-primary" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Usuarios</h3>
-                    <p className="text-sm text-gray-600">
-                      Gestionar usuarios del sistema
-                    </p>
-                  </div>
+                  <h4 className="font-medium text-sm text-foreground mb-1">
+                    Gestionar Lenguajes
+                  </h4>
+                  <p className="text-xs text-default-600">
+                    Crear y administrar idiomas disponibles
+                  </p>
                 </div>
-              </CardHeader>
-              <CardBody>
-                <p className="text-gray-700">
-                  Administra usuarios, roles y permisos del sistema.
-                </p>
-                <Link
-                  href="/main/users"
-                  className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Gestionar Usuarios
-                </Link>
-              </CardBody>
-            </Card>
-          )}
 
-          {/* Gestión de Contenido */}
-          {canManageContent && (
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader className="pb-2">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-green-100 p-3 rounded-full">
-                    <BookOpen className="h-6 w-6 text-green-600" />
+                <div className="bg-default-50 dark:bg-default-100 rounded-lg p-4">
+                  <div className="flex items-center justify-center mb-2">
+                    <ArrowRight className="h-8 w-8 text-secondary" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Contenido</h3>
-                    <p className="text-sm text-gray-600">
-                      Gestionar niveles y actividades
-                    </p>
-                  </div>
+                  <h4 className="font-medium text-sm text-foreground mb-1">
+                    Gestionar Niveles
+                  </h4>
+                  <p className="text-xs text-default-600">
+                    Organizar niveles por cada lenguaje
+                  </p>
                 </div>
-              </CardHeader>
-              <CardBody>
-                <p className="text-gray-700">
-                  Administra niveles, idiomas y contenido educativo.
-                </p>
-                <Link
-                  href="/main/levels"
-                  className="mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                >
-                  Gestionar Contenido
-                </Link>
-              </CardBody>
-            </Card>
-          )}
 
-          {/* Reportes */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-2">
-              <div className="flex items-center space-x-3">
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <BarChart3 className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Reportes</h3>
-                  <p className="text-sm text-gray-600">
-                    Estadísticas y análisis
+                <div className="bg-default-50 dark:bg-default-100 rounded-lg p-4">
+                  <div className="flex items-center justify-center mb-2">
+                    <BookOpen className="h-8 w-8 text-success" />
+                  </div>
+                  <h4 className="font-medium text-sm text-foreground mb-1">
+                    Gestionar Contenidos
+                  </h4>
+                  <p className="text-xs text-default-600">
+                    Crear contenido y asignar profesores
                   </p>
                 </div>
               </div>
-            </CardHeader>
-            <CardBody>
-              <p className="text-gray-700">
-                Ve estadísticas de uso y progreso de los estudiantes.
-              </p>
-              <button
-                className="mt-4 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-                disabled
-              >
-                Próximamente
-              </button>
-            </CardBody>
-          </Card>
 
-          {/* Configuración del Sistema */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-2">
-              <div className="flex items-center space-x-3">
-                <div className="bg-orange-100 p-3 rounded-full">
-                  <Settings className="h-6 w-6 text-orange-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Configuración</h3>
-                  <p className="text-sm text-gray-600">Ajustes del sistema</p>
-                </div>
+              <div className="mt-6 pt-4 border-t border-default-200 space-y-3">
+                <Button
+                  color="primary"
+                  variant="solid"
+                  onClick={() => router.push("/main/admin/levels")}
+                  startContent={<ArrowRight className="h-4 w-4" />}
+                  className="font-medium"
+                >
+                  Ir Ahora al Panel Principal
+                </Button>
+                <p className="text-xs text-default-500">
+                  O espera 3 segundos para redirección automática
+                </p>
               </div>
-            </CardHeader>
-            <CardBody>
-              <p className="text-gray-700">
-                Configura parámetros globales del sistema.
-              </p>
-              <button
-                className="mt-4 bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700"
-                disabled
-              >
-                Próximamente
-              </button>
-            </CardBody>
-          </Card>
-        </div>
-      </div>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   );
 }

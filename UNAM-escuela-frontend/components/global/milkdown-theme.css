@@ -7,19 +7,19 @@
     serif;
   --crepe-font-default: system-ui, -apple-system, sans-serif;
 
-  /* Background Colors - Forzar fondos más sólidos */
-  --crepe-color-background: hsl(var(--heroui-content1)) !important;
-  --crepe-color-surface: hsl(var(--heroui-content2)) !important;
-  --crepe-color-surface-low: hsl(var(--heroui-content3)) !important;
+  /* Background Colors - Fondo oscuro más agradable */
+  --crepe-color-background: #1e1e1e !important; /* Fondo gris oscuro suave */
+  --crepe-color-surface: #2d2d2d !important;
+  --crepe-color-surface-low: #383838 !important;
 
   /* Text Colors - using HeroUI foreground tokens */
   --crepe-color-on-background: hsl(var(--heroui-foreground));
   --crepe-color-on-surface: hsl(var(--heroui-foreground));
   --crepe-color-on-surface-variant: hsl(var(--heroui-default-400));
 
-  /* Force solid background for the entire editor */
-  background-color: hsl(var(--heroui-content1)) !important;
-  color: hsl(var(--heroui-foreground)) !important;
+  /* Force better background for the entire editor */
+  background-color: #1e1e1e !important; /* Fondo oscuro agradable */
+  color: #e5e5e5 !important; /* Texto claro para contraste */
 
   /* Accent Colors - using HeroUI primary and secondary */
   --crepe-color-primary: hsl(var(--heroui-primary));
@@ -46,6 +46,10 @@
 
   /* Additional customizations for better integration */
   border-radius: 0;
+
+  /* Full height styles */
+  height: 100vh !important;
+  min-height: 100vh !important;
 }
 
 /* Dark theme overrides */
@@ -221,11 +225,12 @@
 /* Optimize content container spacing */
 .milkdown .crepe {
   min-height: 500px;
-  background: var(--crepe-color-background) !important;
-  border: 2px solid hsl(var(--heroui-divider));
-  border-radius: 0;
-  padding: 16px !important; /* Reduced padding for better space utilization */
+  background: #1e1e1e !important; /* Fondo oscuro suave */
+  border: 1px solid #404040 !important; /* Borde gris oscuro */
+  border-radius: 8px !important; /* Bordes redondeados suaves */
+  padding: 24px !important; /* Más padding para mejor legibilidad */
   line-height: 1.6 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important; /* Sombra más marcada para tema oscuro */
 }
 
 /* Fix alignment between editor controls and content */
@@ -244,22 +249,22 @@
 }
 
 .milkdown .crepe .milkdown {
-  background: hsl(var(--heroui-content1)) !important;
+  background: #1e1e1e !important; /* Mismo fondo oscuro */
 }
 
 .milkdown [data-node-type="doc"] {
-  background: hsl(var(--heroui-content1)) !important;
-  color: hsl(var(--heroui-foreground)) !important;
+  background: #1e1e1e !important; /* Mismo fondo oscuro */
+  color: #e5e5e5 !important; /* Texto claro */
 }
 
-/* Ensure proper text contrast */
+/* Ensure proper text contrast and better title colors */
 .milkdown h1,
 .milkdown h2,
 .milkdown h3,
 .milkdown h4,
 .milkdown h5,
 .milkdown h6 {
-  color: hsl(var(--heroui-foreground)) !important;
+  color: #60a5fa !important; /* Azul claro para títulos en fondo oscuro */
   font-family: var(--crepe-font-title);
   margin: 1em 0 0.5em 0;
   text-align: left;
@@ -268,6 +273,7 @@
 .milkdown h1 {
   font-size: 2.5em;
   font-weight: 700;
+  color: #60a5fa !important; /* Azul claro específico para h1 */
 }
 
 .milkdown h2 {
@@ -276,7 +282,7 @@
 }
 
 .milkdown p {
-  color: hsl(var(--heroui-foreground)) !important;
+  color: #d1d5db !important; /* Gris claro para texto normal en fondo oscuro */
   line-height: 1.6 !important;
   margin: 0.8em 0 !important;
   padding: 0 !important;
@@ -806,15 +812,32 @@
   padding: 60px 120px !important;
 }
 
-/* Fix toolbar and control elements alignment - MINIMAL CHANGES */
-.milkdown .milkdown-toolbar,
-.milkdown .crepe-toolbar {
-  display: flex !important;
-  align-items: center !important;
-  line-height: 1.4 !important;
-  /* Removed margin: 0 and padding overrides that were causing positioning issues */
+/* COMPORTAMIENTO ORIGINAL RESTAURADO - SOLO OCULTAR BOLD/ITALIC */
+/* Solo ocultar botones específicos sin interferir con el toolbar */
+.milkdown .crepe-toolbar-item[title*="Bold"],
+.milkdown .crepe-toolbar-item[title*="Italic"],
+.milkdown .crepe-toolbar-item[title*="Strong"],
+.milkdown .crepe-toolbar-item[title*="Emphasis"],
+.milkdown button[aria-label*="Bold"],
+.milkdown button[aria-label*="Italic"],
+.milkdown .crepe-toolbar-item[data-command="ToggleStrong"],
+.milkdown .crepe-toolbar-item[data-command="ToggleEmphasis"],
+.milkdown button[title*="Bold"],
+.milkdown button[title*="Italic"] {
+  display: none !important;
 }
 
+/* Estilos básicos para toolbar sin interferir con funcionalidad */
+.milkdown .milkdown-toolbar,
+.milkdown .crepe-toolbar {
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Restaurar estilos normales del toolbar */
 .milkdown .milkdown-toolbar .toolbar-item,
 .milkdown .crepe-toolbar .toolbar-item,
 .milkdown .crepe-toolbar-item {
@@ -822,7 +845,29 @@
   align-items: center !important;
   justify-content: center !important;
   line-height: 1 !important;
-  /* Removed size and margin overrides that were interfering with toolbar positioning */
+  color: #ffffff !important;
+  background-color: transparent !important;
+  border: 1px solid #374151 !important;
+  padding: 8px !important;
+  margin: 2px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+
+/* Hover states para toolbar */
+.milkdown .milkdown-toolbar .toolbar-item:hover,
+.milkdown .crepe-toolbar .toolbar-item:hover,
+.milkdown .crepe-toolbar-item:hover {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+/* Active states para toolbar */
+.milkdown .milkdown-toolbar .toolbar-item.active,
+.milkdown .crepe-toolbar .toolbar-item.active,
+.milkdown .crepe-toolbar-item.active {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
 }
 
 /* Fix list items alignment - CRITICAL */
@@ -1001,4 +1046,69 @@
 .milkdown .ProseMirror-textnode {
   vertical-align: baseline !important;
   line-height: inherit !important;
+}
+
+/* ESTILOS ESPECÍFICOS PARA TOOLBAR EN TEMA OSCURO */
+.milkdown .crepe-toolbar {
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.milkdown .crepe-menu {
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  color: #e5e5e5 !important;
+}
+
+.milkdown .crepe-menu-item {
+  color: #e5e5e5 !important;
+  padding: 8px 12px !important;
+}
+
+.milkdown .crepe-menu-item:hover {
+  background: #404040 !important;
+  color: #ffffff !important;
+}
+
+.milkdown .crepe-popup {
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 6px !important;
+  color: #e5e5e5 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.milkdown .milkdown-block-handle {
+  background: #404040 !important;
+  border: 1px solid #555555 !important;
+  color: #e5e5e5 !important;
+}
+
+.milkdown .milkdown-block-handle:hover {
+  background: #555555 !important;
+  color: #ffffff !important;
+}
+
+/* Estilos para el slash menu */
+.milkdown .milkdown-slash-menu {
+  background: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 6px !important;
+  color: #e5e5e5 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.milkdown .milkdown-slash-menu-item {
+  color: #e5e5e5 !important;
+  padding: 8px 12px !important;
+}
+
+.milkdown .milkdown-slash-menu-item:hover {
+  background: #404040 !important;
+  color: #ffffff !important;
 }

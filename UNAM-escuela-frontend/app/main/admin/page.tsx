@@ -78,22 +78,57 @@ function AdminDashboardContent() {
                     <BookOpen className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Contenido</h3>
+                    <h3 className="font-semibold text-lg">
+                      Gestión de Niveles
+                    </h3>
                     <p className="text-sm text-gray-600">
-                      Gestionar niveles y actividades
+                      Administrar niveles y contenido
                     </p>
                   </div>
                 </div>
               </CardHeader>
               <CardBody>
                 <p className="text-gray-700">
-                  Administra niveles, idiomas y contenido educativo.
+                  Administra niveles, contenido educativo y asignación de
+                  profesores.
+                </p>
+                <Link
+                  href="/main/admin/levels"
+                  className="mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                  Gestionar Niveles
+                </Link>
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Gestión de Contenido Tradicional */}
+          {canManageContent && (
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader className="pb-2">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-blue-100 p-3 rounded-full">
+                    <BookOpen className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">
+                      Contenido Tradicional
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Vista tradicional de niveles
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <p className="text-gray-700">
+                  Accede a la vista tradicional de gestión de contenido.
                 </p>
                 <Link
                   href="/main/levels"
-                  className="mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                  className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
-                  Gestionar Contenido
+                  Vista Tradicional
                 </Link>
               </CardBody>
             </Card>

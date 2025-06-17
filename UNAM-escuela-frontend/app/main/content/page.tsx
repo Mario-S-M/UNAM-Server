@@ -1,5 +1,6 @@
 import React from "react";
 import type { FC } from "react";
+import Link from "next/link";
 import MilkdownEditorClient from "../../../components/global/milkdown-editor-client";
 
 // Server component that provides the markdown content
@@ -46,14 +47,49 @@ const ContentPage: FC = () => {
           <h1 className="text-3xl font-bold text-foreground mb-3">
             English Grammar Content Editor
           </h1>
-          <p className="text-default-500 text-lg">
+          <p className="text-default-500 text-lg mb-6">
             Edit and download your English grammar lessons
           </p>
+
+          {/* Navigation cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
+              <h3 className="text-xl font-semibold text-blue-800 dark:text-blue-200 mb-3">
+                🔄 Editor con Auto-Guardado
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 mb-4">
+                Prueba el nuevo editor con guardado automático cada 5 segundos
+              </p>
+              <Link
+                href="/main/content/auto-save-demo"
+                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Ver Demo →
+              </Link>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                📝 Editor Estándar
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Editor tradicional con descarga manual de contenido
+              </p>
+              <div className="inline-block px-4 py-2 bg-gray-600 text-white rounded-lg">
+                Actual →
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Editor estándar */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold mb-4">Editor Estándar</h2>
           <MilkdownEditorClient
             defaultValue={markdown}
             downloadFileName="verb-to-be-english.md"
           />
+        </div>
       </div>
     </div>
   );

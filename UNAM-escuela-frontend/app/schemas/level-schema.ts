@@ -9,6 +9,7 @@ export const levelFormSchema = z.object({
     .string()
     .min(1, "La descripción es requerida")
     .max(500, "La descripción no puede tener más de 500 caracteres"),
+  lenguageId: z.string().min(1, "El lenguaje es requerido"),
 });
 
 export const levelResponseSchema = z.object({

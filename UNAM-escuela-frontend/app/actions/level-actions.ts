@@ -101,6 +101,7 @@ export async function createLevel(
     const rawData = {
       name: formData.get("name")?.toString() || "",
       description: formData.get("description")?.toString() || "",
+      lenguageId: formData.get("lenguageId")?.toString() || "",
     };
 
     const validated = levelFormSchema.safeParse(rawData);
@@ -117,8 +118,8 @@ export async function createLevel(
       },
       body: JSON.stringify({
         query: `
-          mutation CreateLevel($name: String!, $description: String!) {
-            createLevel(createLevelInput: { name: $name, description: $description }) {
+          mutation CreateLevel($name: String!, $description: String!, $lenguageId: ID!) {
+            createLevel(createLevelInput: { name: $name, description: $description, lenguageId: $lenguageId }) {
               id
               name
               description

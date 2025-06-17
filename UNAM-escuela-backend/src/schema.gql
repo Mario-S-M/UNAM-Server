@@ -16,6 +16,15 @@ type Level {
   lenguageId: ID!
 }
 
+type User {
+  id: ID!
+  fullName: String!
+  email: String!
+  roles: [String!]!
+  isActive: Boolean!
+  lastUpdateBy: User
+}
+
 type Content {
   id: ID!
   name: String!
@@ -25,6 +34,10 @@ type Content {
   updatedAt: String!
   levelId: ID!
   userId: Int!
+  markdownPath: String
+  assignedTeachers: [User!]
+  status: String!
+  publishedAt: String
 }
 
 type Activity {
@@ -50,15 +63,6 @@ type Homework {
   userId: Int!
 }
 
-type User {
-  id: ID!
-  fullName: String!
-  email: String!
-  roles: [String!]!
-  isActive: Boolean!
-  lastUpdateBy: User
-}
-
 type AuthResponse {
   token: String!
   user: User!
@@ -78,7 +82,10 @@ type Query {
   levelsByLenguage(lenguageId: ID!): [Level!]!
   contents: [Content!]!
   contentsByLevel(levelId: ID!): [Content!]!
+  contentsByTeacher(teacherId: ID!): [Content!]!
+  myAssignedContents: [Content!]!
   content(id: ID!): Content!
+  contentMarkdown(contentId: ID!): String!
   activities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
   activity(id: ID!): Activity!
@@ -106,7 +113,10 @@ type Mutation {
   removeLevel(id: ID!): Level!
   createContent(createContentInput: CreateContentInput!): Content!
   updateContent(updateContentInput: UpdateContentInput!): Content!
+  assignTeachersToContent(contentId: ID!, teacherIds: [ID!]!): Content!
+  removeTeacherFromContent(contentId: ID!, teacherId: ID!): Content!
   removeContent(id: ID!): Content!
+  updateContentMarkdown(contentId: ID!, markdownContent: String!): Boolean!
   createActivity(createActivityInput: CreateActivityInput!): Activity!
   updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
   removeActivity(id: ID!): Activity!
@@ -137,12 +147,16 @@ input CreateContentInput {
   name: String!
   description: String!
   levelId: ID!
+  teacherIds: [ID!]
+  status: String
 }
 
 input UpdateContentInput {
   name: String
   description: String
   levelId: ID
+  teacherIds: [ID!]
+  status: String
   id: ID!
 }
 

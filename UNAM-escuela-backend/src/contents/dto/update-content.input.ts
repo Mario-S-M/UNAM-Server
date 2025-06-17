@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsArray } from 'class-validator';
 import { CreateContentInput } from './create-content.input';
 import { InputType, Field, Int, PartialType, ID } from '@nestjs/graphql';
 
@@ -11,11 +11,21 @@ export class UpdateContentInput extends PartialType(CreateContentInput) {
 
   @IsString()
   @IsOptional()
-  @Field(() => String, {nullable: true})
+  @Field(() => String, { nullable: true })
   name: string;
-  
+
   @IsString()
   @IsOptional()
-  @Field(() => String, {nullable: true})
+  @Field(() => String, { nullable: true })
   description: string;
+
+  @IsOptional()
+  @IsArray()
+  @Field(() => [ID], { nullable: true })
+  teacherIds?: string[];
+
+  @IsOptional()
+  @IsString()
+  @Field(() => String, { nullable: true })
+  status?: string;
 }

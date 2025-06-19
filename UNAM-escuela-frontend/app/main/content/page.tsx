@@ -235,13 +235,28 @@ interface SkillCardProps {
 }
 
 function SkillCard({ skill, levelId, onSelect }: SkillCardProps) {
+  const { canTeach, canManageContent } = usePermissions();
+
   const { data: skillContents } = useQuery({
-    queryKey: ["skillContentsCount", skill.id, levelId],
+    queryKey: [
+      "skillContentsCount",
+      skill.id,
+      levelId,
+      canTeach,
+      canManageContent,
+    ],
     queryFn: () => {
+      // For admins and teachers, show all content count
+      const showAllContent = canTeach || canManageContent;
+
       if (levelId) {
-        return getContentsByLevelAndSkill(levelId, skill.id);
+        return showAllContent
+          ? getContentsByLevelAndSkill(levelId, skill.id)
+          : getValidatedContentsByLevelAndSkill(levelId, skill.id);
       } else {
-        return getContentsBySkill(skill.id);
+        return showAllContent
+          ? getContentsBySkill(skill.id)
+          : getValidatedContentsBySkill(skill.id);
       }
     },
   });

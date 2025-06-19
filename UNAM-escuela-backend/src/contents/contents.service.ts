@@ -38,6 +38,7 @@ export class ContentsService {
     const newContent = this.contentsRepository.create({
       ...contentData,
       status: contentData.status || 'draft',
+      validationStatus: 'sin validar', // Explicitly set as unvalidated
     });
 
     // Crear la carpeta de markdown

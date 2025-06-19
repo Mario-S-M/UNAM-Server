@@ -57,13 +57,17 @@ services:
       context: ./UNAM-escuela-frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:11434
-        NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:11434/graphql
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:11434
+        #NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:11434
+        NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:11434/graphql
+        #NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:11434/graphql
     environment:
       NODE_ENV: production
       # Para producción, el frontend necesita usar la IP pública del servidor
-      NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:11434
-      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:11434/graphql
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:11434
+      #NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:11434
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:11434/graphql
+      #NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:11434/graphql
     env_file:
       - .env
     ports:

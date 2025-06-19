@@ -209,9 +209,14 @@ export async function createContent(
     const description = formData.get("description")?.toString() || "";
     const levelId = formData.get("levelId")?.toString() || "";
     const status = formData.get("status")?.toString() || "draft";
+    const skillId = formData.get("skillId")?.toString() || "";
 
     if (!name || !description || !levelId) {
       throw new Error("Nombre, descripción y nivel son obligatorios");
+    }
+
+    if (!skillId) {
+      throw new Error("Skill es obligatorio");
     }
 
     const headers = await getAuthHeaders();
@@ -227,6 +232,12 @@ export async function createContent(
               description
               levelId
               status
+              skillId
+              skill {
+                id
+                name
+                color
+              }
               markdownPath
               createdAt
               updatedAt
@@ -239,6 +250,7 @@ export async function createContent(
             description,
             levelId,
             status,
+            skillId,
           },
         },
       }),

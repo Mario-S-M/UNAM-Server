@@ -8,7 +8,6 @@ import { Card, CardBody, addToast } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { loginAction } from "@/app/actions";
-import { reestablishAuthCookie } from "@/app/utils/cookie-recovery";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -37,29 +36,9 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
       }
 
       if (result.data) {
-        // Guardar el token para recuperación de cookies si es necesario
-        if (result.token) {
-          console.log("💾 Modal: Guardando token para recuperación:", {
-            hasToken: !!result.token,
-            tokenLength: result.token.length,
-          });
-
-          // También intentar establecer la cookie desde el cliente como respaldo
-          try {
-            reestablishAuthCookie({
-              token: result.token,
-              secure: process.env.NODE_ENV === "production",
-            });
-          } catch (error) {
-            console.warn(
-              "⚠️ Modal: No se pudo establecer cookie desde cliente:",
-              error
-            );
-          }
-        }
-
-        // Invalidar el query del usuario para que se actualice el estado
-        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+        console.log(
+          "✅ Modal: Login exitoso, preparando redirección simple..."
+        );
 
         addToast({
           title: "¡Inicio de sesión exitoso!",
@@ -74,59 +53,32 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
         setEmail("");
         setPassword("");
 
-        // Estrategia mejorada para asegurar que la cookie se mantenga
-        console.log(
-          "🔄 Modal: Preparando redirección después del login exitoso..."
-        );
-
-        // Primero: Forzar invalidación y refetch del usuario actual
+        // ESTRATEGIA SIMPLE: Solo invalidar UNA VEZ y redirigir
         queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-        // Segundo: Esperar un tiempo más largo para que la cookie se establezca
-        setTimeout(async () => {
-          // Tercero: Verificar que el usuario esté disponible antes de redirigir
-          console.log(
-            "🔍 Modal: Verificando estado de autenticación antes de redirigir..."
-          );
-
-          try {
-            // Forzar un refetch del usuario para asegurar que la cookie funciona
-            await queryClient.refetchQueries({ queryKey: ["currentUser"] });
-
-            if (result.redirect) {
-              console.log(
-                "🔄 Modal: Redirigiendo a:",
-                result.redirect.destination
-              );
-              // Usar push en lugar de replace para mejor manejo de cookies
-              router.push(result.redirect.destination);
-            } else {
-              // Fallback a dashboard de admin si es superUser o admin
-              const userRoles = result.data?.roles || [];
-              if (
-                userRoles.includes("superUser") ||
-                userRoles.includes("admin")
-              ) {
-                router.push("/main/admin-dashboard");
-              } else if (userRoles.includes("docente")) {
-                router.push("/main/teacher");
-              } else {
-                router.push("/main/student");
-              }
-            }
-          } catch (error) {
-            console.error(
-              "❌ Modal: Error verificando usuario antes de redirigir:",
-              error
+        // Redirección simple con un delay mínimo
+        setTimeout(() => {
+          if (result.redirect) {
+            console.log(
+              "🔄 Modal: Redirigiendo a:",
+              result.redirect.destination
             );
-            // Intentar redirección de todas formas
-            if (result.redirect) {
-              router.push(result.redirect.destination);
+            window.location.href = result.redirect.destination;
+          } else {
+            // Fallback simple
+            const userRoles = result.data?.roles || [];
+            if (
+              userRoles.includes("superUser") ||
+              userRoles.includes("admin")
+            ) {
+              window.location.href = "/main/admin-dashboard";
+            } else if (userRoles.includes("docente")) {
+              window.location.href = "/main/teacher";
             } else {
-              router.push("/main/student");
+              window.location.href = "/main/student";
             }
           }
-        }, 1500); // Aumentar significativamente el delay para producción
+        }, 1000); // Delay mínimo pero suficiente
       }
     },
     onError: (error) => {

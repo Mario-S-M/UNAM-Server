@@ -423,23 +423,11 @@ function ContentsManagementContent() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {content.validationStatus === "validado" ? (
-                                <Chip
-                                  size="sm"
-                                  color="success"
-                                  startContent={
-                                    <CheckCircle className="h-3 w-3" />
-                                  }
-                                >
+                                <Chip size="sm" color="success" variant="solid">
                                   Validado
                                 </Chip>
                               ) : (
-                                <Chip
-                                  size="sm"
-                                  color="warning"
-                                  startContent={
-                                    <AlertCircle className="h-3 w-3" />
-                                  }
-                                >
+                                <Chip size="sm" color="danger" variant="solid">
                                   Sin validar
                                 </Chip>
                               )}
@@ -607,14 +595,34 @@ function CreateContentModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate that a skill is selected
+    if (!selectedSkill) {
+      addToast({
+        title: "Error de validación",
+        description: "Debes seleccionar una skill para el contenido",
+        color: "danger",
+      });
+      return;
+    }
+
+    // Validate that skills are available
+    if (!skills?.data || skills.data.length === 0) {
+      addToast({
+        title: "Error",
+        description: "No hay skills disponibles. Crear una skill primero.",
+        color: "danger",
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
     formData.append("levelId", levelId);
     formData.append("status", status);
-    if (selectedSkill) {
-      formData.append("skillId", selectedSkill);
-    }
+    formData.append("skillId", selectedSkill);
+
     if (selectedTeachers.length > 0) {
       formData.append("teacherIds", JSON.stringify(selectedTeachers));
     }
@@ -648,12 +656,18 @@ function CreateContentModal({
 
         <GlobalSelect
           label="Skill"
-          placeholder="Selecciona una skill (opcional)"
+          placeholder={
+            !skills?.data || skills.data.length === 0
+              ? "No hay skills disponibles"
+              : "Selecciona una skill (obligatorio)"
+          }
           selectedKeys={selectedSkill ? new Set([selectedSkill]) : new Set()}
           onSelectionChange={(keys: any) => {
             const selectedArray = Array.from(keys);
             setSelectedSkill((selectedArray[0] as string) || "");
           }}
+          isRequired
+          isDisabled={!skills?.data || skills.data.length === 0}
         >
           {(skills?.data || []).map((skill: any) => (
             <SelectItem key={skill.id}>
@@ -667,6 +681,24 @@ function CreateContentModal({
             </SelectItem>
           ))}
         </GlobalSelect>
+
+        {(!skills?.data || skills.data.length === 0) && (
+          <div className="p-3 bg-orange-50 border border-orange-200 rounded-md">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <p className="text-sm text-orange-800">
+                No hay skills disponibles. Debes{" "}
+                <Link
+                  href="/main/admin-dashboard/skills"
+                  className="underline hover:no-underline"
+                >
+                  crear una skill
+                </Link>{" "}
+                antes de poder crear contenido.
+              </p>
+            </div>
+          </div>
+        )}
 
         <GlobalSelect
           label="Estado"
@@ -789,6 +821,11 @@ function CreateContentModal({
             color="primary"
             type="submit"
             isLoading={createContentMutation.isPending}
+            isDisabled={
+              createContentMutation.isPending ||
+              !skills?.data ||
+              skills.data.length === 0
+            }
           />
         </div>
       </form>

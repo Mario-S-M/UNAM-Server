@@ -28,4 +28,14 @@ export class UpdateContentInput extends PartialType(CreateContentInput) {
   @IsString()
   @Field(() => String, { nullable: true })
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  @Field(() => String, { nullable: true })
+  validationStatus?: string;
+
+  @IsOptional()
+  @IsString()
+  @Field(() => ID, { nullable: true })
+  skillId?: string;
 }

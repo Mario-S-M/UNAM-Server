@@ -52,6 +52,10 @@ export class Level {
   @Field(() => Boolean)
   isActive: boolean;
 
+  @Column({ default: 'beginner' })
+  @Field(() => String)
+  difficulty: string; // beginner, intermediate, advanced
+
   @Column()
   @Field(() => ID)
   lenguageId: string;

@@ -7,6 +7,7 @@ import { LevelsModule } from './levels/levels.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ContentsModule } from './contents/contents.module';
+import { SkillsModule } from './skills/skills.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { HomeworksModule } from './homeworks/homeworks.module';
 import { UsersModule } from './users/users.module';
@@ -55,6 +56,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     }),
     LevelsModule,
     ContentsModule,
+    SkillsModule,
     ActivitiesModule,
     HomeworksModule,
     UsersModule,

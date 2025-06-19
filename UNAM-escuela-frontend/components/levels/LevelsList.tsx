@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from "react";
 import { useLevelsByLanguage } from "@/app/hooks";
 import { Button, Pagination, CircularProgress } from "@heroui/react";
+import { useRouter } from "next/navigation";
 
 interface LevelsListProps {
   languageId: string;
@@ -10,6 +11,7 @@ interface LevelsListProps {
 export function LevelsList({ languageId }: LevelsListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
+  const router = useRouter();
 
   const {
     data: levelsData,
@@ -65,7 +67,8 @@ export function LevelsList({ languageId }: LevelsListProps) {
               return (
                 <div
                   key={level.id}
-                  className="bg-background border border-divider rounded-2xl p-10 shadow-sm cursor-pointer hover:shadow-md"
+                  className="bg-background border border-divider rounded-2xl p-10 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200"
+                  onClick={() => router.push(`/main/content?level=${level.id}`)}
                 >
                   {/* Level number badge - positioned at top */}
                   <div className="flex justify-center mb-8">
@@ -76,9 +79,28 @@ export function LevelsList({ languageId }: LevelsListProps) {
 
                   {/* Content */}
                   <div className="text-center">
-                    <h3 className="text-2xl font-medium text-foreground mb-6 leading-snug">
+                    <h3 className="text-2xl font-medium text-foreground mb-4 leading-snug">
                       {level.name}
                     </h3>
+                    {level.difficulty && (
+                      <div className="mb-4">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                            level.difficulty === "beginner"
+                              ? "bg-green-100 text-green-600"
+                              : level.difficulty === "intermediate"
+                              ? "bg-yellow-100 text-yellow-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
+                        >
+                          {level.difficulty === "beginner"
+                            ? "Principiante"
+                            : level.difficulty === "intermediate"
+                            ? "Intermedio"
+                            : "Avanzado"}
+                        </span>
+                      </div>
+                    )}
                     <p className="text-default-500 leading-relaxed font-light text-base">
                       {level.description}
                     </p>

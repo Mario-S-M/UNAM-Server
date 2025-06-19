@@ -13,6 +13,7 @@ type Level {
   updatedAt: String!
   userId: Int!
   isActive: Boolean!
+  difficulty: String!
   lenguageId: ID!
 }
 
@@ -23,6 +24,16 @@ type User {
   roles: [String!]!
   isActive: Boolean!
   lastUpdateBy: User
+}
+
+type Skill {
+  id: ID!
+  name: String!
+  description: String!
+  color: String!
+  isActive: Boolean!
+  createdAt: String!
+  updatedAt: String!
 }
 
 type Content {
@@ -37,7 +48,10 @@ type Content {
   markdownPath: String
   assignedTeachers: [User!]
   status: String!
+  validationStatus: String!
   publishedAt: String
+  skill: Skill
+  skillId: ID
 }
 
 type Activity {
@@ -80,12 +94,25 @@ type Query {
   levels: [Level!]!
   level(id: ID!): Level!
   levelsByLenguage(lenguageId: ID!): [Level!]!
+  contentsByLevelPublic(levelId: ID!): [Content!]!
+  contentsBySkillPublic(skillId: ID!): [Content!]!
+  contentsByLevelAndSkillPublic(levelId: ID!, skillId: ID!): [Content!]!
+  contentMarkdownPublic(contentId: ID!): String!
   contents: [Content!]!
   contentsByLevel(levelId: ID!): [Content!]!
   contentsByTeacher(teacherId: ID!): [Content!]!
+  contentsBySkill(skillId: ID!): [Content!]!
+  contentsByLevelAndSkill(levelId: ID!, skillId: ID!): [Content!]!
   myAssignedContents: [Content!]!
   content(id: ID!): Content!
   contentMarkdown(contentId: ID!): String!
+  validatedContentsByLevel(levelId: ID!): [Content!]!
+  validatedContentsBySkill(skillId: ID!): [Content!]!
+  validatedContentsByLevelAndSkill(levelId: ID!, skillId: ID!): [Content!]!
+  skillsActivePublic: [Skill!]!
+  skills: [Skill!]!
+  skillsActive: [Skill!]!
+  skill(id: ID!): Skill!
   activities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
   activity(id: ID!): Activity!
@@ -117,6 +144,13 @@ type Mutation {
   removeTeacherFromContent(contentId: ID!, teacherId: ID!): Content!
   removeContent(id: ID!): Content!
   updateContentMarkdown(contentId: ID!, markdownContent: String!): Boolean!
+  validateContent(contentId: ID!): Content!
+  invalidateContent(contentId: ID!): Content!
+  validateAllContent: String!
+  createSkill(createSkillInput: CreateSkillInput!): Skill!
+  updateSkill(updateSkillInput: UpdateSkillInput!): Skill!
+  removeSkill(id: ID!): Skill!
+  toggleSkillActive(id: ID!): Skill!
   createActivity(createActivityInput: CreateActivityInput!): Activity!
   updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
   removeActivity(id: ID!): Activity!
@@ -134,6 +168,7 @@ type Mutation {
 input CreateLevelInput {
   name: String!
   description: String!
+  difficulty: String = "beginner"
   lenguageId: ID!
 }
 
@@ -141,6 +176,7 @@ input UpdateLevelInput {
   id: ID!
   name: String
   description: String
+  difficulty: String
 }
 
 input CreateContentInput {
@@ -149,6 +185,8 @@ input CreateContentInput {
   levelId: ID!
   teacherIds: [ID!]
   status: String
+  validationStatus: String
+  skillId: ID
 }
 
 input UpdateContentInput {
@@ -157,6 +195,21 @@ input UpdateContentInput {
   levelId: ID
   teacherIds: [ID!]
   status: String
+  validationStatus: String
+  skillId: ID
+  id: ID!
+}
+
+input CreateSkillInput {
+  name: String!
+  description: String!
+  color: String
+}
+
+input UpdateSkillInput {
+  name: String
+  description: String
+  color: String
   id: ID!
 }
 

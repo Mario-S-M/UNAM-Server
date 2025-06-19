@@ -9,6 +9,10 @@ export const levelFormSchema = z.object({
     .string()
     .min(1, "La descripción es requerida")
     .max(500, "La descripción no puede tener más de 500 caracteres"),
+  difficulty: z
+    .enum(["beginner", "intermediate", "advanced"])
+    .optional()
+    .default("beginner"),
   lenguageId: z.string().min(1, "El lenguaje es requerido"),
 });
 
@@ -16,6 +20,7 @@ export const levelResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
 });
 
 export const levelsResponseSchema = z.object({

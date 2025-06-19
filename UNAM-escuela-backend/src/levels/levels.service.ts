@@ -37,6 +37,8 @@ export class LevelsService {
     if (updateLevelInput.name) level.name = updateLevelInput.name;
     if (updateLevelInput.description)
       level.description = updateLevelInput.description;
+    if (updateLevelInput.difficulty)
+      level.difficulty = updateLevelInput.difficulty;
     return await this.itemsRepository.save(level);
   }
 

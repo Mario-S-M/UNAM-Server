@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthDAL, Role } from "@/app/dal/auth-dal";
+import { AuthDAL } from "@/app/dal/auth-dal";
 import { User } from "@/app/interfaces/auth-interfaces";
 
 /**

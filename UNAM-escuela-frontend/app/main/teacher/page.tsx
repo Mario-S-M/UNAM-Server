@@ -1,21 +1,7 @@
 "use client";
 
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Chip,
-  Button,
-  Spinner,
-} from "@heroui/react";
-import {
-  BookOpen,
-  Users,
-  PlusCircle,
-  BarChart3,
-  Edit,
-  Eye,
-} from "lucide-react";
+import { Card, CardBody, CardHeader, Button, Spinner } from "@heroui/react";
+import { BookOpen, Users, PlusCircle, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { usePermissions } from "@/app/hooks/use-authorization";

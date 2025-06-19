@@ -17,7 +17,7 @@ export class UsersResolver {
   @Query(() => [User], { name: 'users' })
   findAll(
     @Args() validRoles: ValidRolesArgs,
-    @CurrentUser([ValidRoles.superUser], [ValidRoles.admin]) user: User,
+    @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
   ): Promise<User[]> {
     this.logger.log(
       `Finding users with roles: ${JSON.stringify(validRoles.roles)}`,
@@ -28,7 +28,7 @@ export class UsersResolver {
   @Query(() => User, { name: 'user' })
   findOne(
     @Args('id', { type: () => ID }, ParseUUIDPipe) id: string,
-    @CurrentUser([ValidRoles.superUser], [ValidRoles.admin]) user: User,
+    @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
   ): Promise<User> {
     return this.usersService.findOneById(id);
   }
@@ -36,7 +36,7 @@ export class UsersResolver {
   @Mutation(() => User, { name: 'blockUser' })
   blockUser(
     @Args('id', { type: () => ID }, ParseUUIDPipe) id: string,
-    @CurrentUser([ValidRoles.superUser], [ValidRoles.admin]) user: User,
+    @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
   ): Promise<User> {
     return this.usersService.block(id, user);
   }

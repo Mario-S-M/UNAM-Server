@@ -6,9 +6,12 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   ManyToMany,
+  ManyToOne,
   JoinTable,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Skill } from '../../skills/entities/skill.entity';
 
 @Entity({ name: 'contents' })
 @ObjectType()
@@ -65,8 +68,23 @@ export class Content {
   @Field(() => String)
   status: string; // draft, published, archived
 
+  // Estado de validación del contenido
+  @Column({ default: 'sin validar' })
+  @Field(() => String)
+  validationStatus: string; // sin validar, validado
+
   // Fecha de publicación
   @Column({ nullable: true })
   @Field(() => String, { nullable: true })
   publishedAt?: string;
+
+  // Relación con Skill
+  @ManyToOne(() => Skill, { nullable: true })
+  @JoinColumn({ name: 'skillId' })
+  @Field(() => Skill, { nullable: true })
+  skill?: Skill;
+
+  @Column({ nullable: true })
+  @Field(() => ID, { nullable: true })
+  skillId?: string;
 }

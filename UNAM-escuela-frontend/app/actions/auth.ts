@@ -49,7 +49,7 @@ export async function getCurrentUser() {
     }
 
     return result.data.revalidate.user;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

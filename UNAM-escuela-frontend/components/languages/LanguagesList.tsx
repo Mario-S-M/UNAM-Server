@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { useActiveLenguages } from "@/app/hooks";
-import { Button, Pagination, CircularProgress } from "@heroui/react";
+import { Pagination, CircularProgress } from "@heroui/react";
 import Link from "next/link";
 
 export function LanguagesList() {

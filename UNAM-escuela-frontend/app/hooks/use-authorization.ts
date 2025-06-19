@@ -102,6 +102,7 @@ export function usePermissions() {
     canAccessDebugPanel: AuthDAL.hasPermission(safeUser, "debug"),
     canManageUsers: AuthDAL.hasPermission(safeUser, "user_management"),
     canManageContent: AuthDAL.hasPermission(safeUser, "content_management"),
+    canManageSkills: AuthDAL.hasAnyRole(safeUser, ["superUser", "admin"]),
 
     // Permisos de maestro
     canTeach: AuthDAL.hasPermission(safeUser, "teacher"),

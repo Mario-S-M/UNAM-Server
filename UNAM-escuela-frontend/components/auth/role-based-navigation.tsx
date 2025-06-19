@@ -11,8 +11,6 @@ import {
   BarChart3,
   GraduationCap,
   Trophy,
-  User,
-  Bug,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -58,14 +56,6 @@ export function RoleBasedNavigation() {
       icon: <Settings className="h-5 w-5" />,
       description: "Panel principal de administración",
       color: "bg-blue-100 text-blue-600 hover:bg-blue-200",
-    },
-    {
-      href: "/main/admin-debug",
-      label: "Panel Debug",
-      icon: <Bug className="h-5 w-5" />,
-      description: "Panel de debugging avanzado",
-      color: "bg-red-100 text-red-600 hover:bg-red-200",
-      permission: "debug",
     },
 
     // Gestión de usuarios
@@ -133,8 +123,6 @@ export function RoleBasedNavigation() {
 
     // Verificar por URL/funcionalidad específica
     switch (item.href) {
-      case "/main/admin":
-      case "/main/admin-debug":
       case "/main/admin-dashboard":
         return canAccessAdminPanel;
       case "/main/users":

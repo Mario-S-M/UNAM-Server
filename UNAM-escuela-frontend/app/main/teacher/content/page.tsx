@@ -15,7 +15,6 @@ import {
   BookOpen,
   FileText,
   Calendar,
-  Users,
   Edit,
   Eye,
   ExternalLink,
@@ -99,13 +98,17 @@ function TeacherContentContent() {
 
         {/* Lista de contenidos asignados */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold border-b pb-2">Contenidos Asignados</h2>
-          
+          <h2 className="text-xl font-semibold border-b pb-2">
+            Contenidos Asignados
+          </h2>
+
           {isLoading ? (
             <div className="flex justify-center py-12">
               <div className="text-center">
                 <Spinner size="lg" />
-                <p className="mt-4 text-gray-600">Cargando contenidos asignados...</p>
+                <p className="mt-4 text-gray-600">
+                  Cargando contenidos asignados...
+                </p>
               </div>
             </div>
           ) : error ? (
@@ -154,7 +157,8 @@ function TeacherContentContent() {
                     No tienes contenido asignado
                   </h3>
                   <p className="text-gray-500 mb-4">
-                    Cuando un administrador te asigne contenido para enseñar, aparecerá aquí.
+                    Cuando un administrador te asigne contenido para enseñar,
+                    aparecerá aquí.
                   </p>
                 </div>
               </CardBody>

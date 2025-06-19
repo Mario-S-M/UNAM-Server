@@ -2,6 +2,7 @@ export interface Level {
   id: string;
   name: string;
   description: string;
+  difficulty?: "beginner" | "intermediate" | "advanced";
   status?: "active" | "inactive" | "draft";
   isCompleted?: boolean;
   percentaje?: number;

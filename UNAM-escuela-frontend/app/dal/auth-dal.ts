@@ -144,9 +144,7 @@ export class AuthDAL {
 
     // Definir reglas de acceso por página
     const pageAccessRules: { [key: string]: Role[] } = {
-      "/main/admin-debug": ["superUser", "admin"],
       "/main/admin-dashboard": ["superUser", "admin"],
-      "/main/admin": ["superUser", "admin"],
       "/main/teacher": ["superUser", "admin", "docente"],
       "/main/student": ["superUser", "admin", "docente", "alumno"],
       "/main/users": ["superUser", "admin"],

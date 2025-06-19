@@ -23,6 +23,8 @@ export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
             id
             name
             description
+            difficulty
+            isActive
           }
         }
       `,
@@ -61,7 +63,8 @@ export async function getLevel(id: string): Promise<ActionResponse<Level>> {
               id
               name
               description
-              status
+              difficulty
+              isActive
             }
           }
         `,
@@ -101,6 +104,7 @@ export async function createLevel(
     const rawData = {
       name: formData.get("name")?.toString() || "",
       description: formData.get("description")?.toString() || "",
+      difficulty: formData.get("difficulty")?.toString() || "beginner",
       lenguageId: formData.get("lenguageId")?.toString() || "",
     };
 
@@ -118,11 +122,12 @@ export async function createLevel(
       },
       body: JSON.stringify({
         query: `
-          mutation CreateLevel($name: String!, $description: String!, $lenguageId: ID!) {
-            createLevel(createLevelInput: { name: $name, description: $description, lenguageId: $lenguageId }) {
+          mutation CreateLevel($name: String!, $description: String!, $difficulty: String, $lenguageId: ID!) {
+            createLevel(createLevelInput: { name: $name, description: $description, difficulty: $difficulty, lenguageId: $lenguageId }) {
               id
               name
               description
+              difficulty
             }
           }
         `,

@@ -58,14 +58,14 @@ export class ContentsService {
 
   async findAll(): Promise<Content[]> {
     return await this.contentsRepository.find({
-      relations: ['assignedTeachers'],
+      relations: ['assignedTeachers', 'skill'],
     });
   }
 
   async findByLevel(levelId: string): Promise<Content[]> {
     const contents = await this.contentsRepository.find({
       where: { levelId: levelId },
-      relations: ['assignedTeachers'],
+      relations: ['assignedTeachers', 'skill'],
     });
     return contents;
   }
@@ -74,6 +74,7 @@ export class ContentsService {
     return await this.contentsRepository
       .createQueryBuilder('content')
       .leftJoinAndSelect('content.assignedTeachers', 'teacher')
+      .leftJoinAndSelect('content.skill', 'skill')
       .where('teacher.id = :teacherId', { teacherId })
       .getMany();
   }
@@ -81,10 +82,29 @@ export class ContentsService {
   async findOne(id: string): Promise<Content> {
     const content = await this.contentsRepository.findOne({
       where: { id },
-      relations: ['assignedTeachers'],
+      relations: ['assignedTeachers', 'skill'],
     });
     if (!content) throw new NotFoundException('Contenido no encontrado');
     return content;
+  }
+
+  async findBySkill(skillId: string): Promise<Content[]> {
+    return await this.contentsRepository.find({
+      where: { skillId },
+      relations: ['assignedTeachers', 'skill'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findByLevelAndSkill(
+    levelId: string,
+    skillId: string,
+  ): Promise<Content[]> {
+    return await this.contentsRepository.find({
+      where: { levelId, skillId },
+      relations: ['assignedTeachers', 'skill'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async update(
@@ -399,12 +419,221 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       await this.contentsRepository.update(contentId, {
         updatedAt: new Date().toISOString(),
         markdownPath: content.markdownPath || markdownPath, // Guardar la ruta si no existe
+        validationStatus: 'sin validar', // Auto-invalidate when content is edited
       });
 
       return true;
     } catch (error) {
       console.error('Error escribiendo archivo markdown:', error);
       throw new Error('No se pudo guardar el archivo de contenido');
+    }
+  }
+
+  // Validate content - only for admins
+  async validateContent(contentId: string): Promise<Content> {
+    const content = await this.contentsRepository.findOne({
+      where: { id: contentId },
+      relations: ['assignedTeachers', 'skill'],
+    });
+
+    if (!content) {
+      throw new NotFoundException('Contenido no encontrado');
+    }
+
+    await this.contentsRepository.update(contentId, {
+      validationStatus: 'validado',
+      updatedAt: new Date().toISOString(),
+    });
+
+    return this.findOne(contentId);
+  }
+
+  // Mark content as requiring validation - for admins
+  async invalidateContent(contentId: string): Promise<Content> {
+    const content = await this.contentsRepository.findOne({
+      where: { id: contentId },
+      relations: ['assignedTeachers', 'skill'],
+    });
+
+    if (!content) {
+      throw new NotFoundException('Contenido no encontrado');
+    }
+
+    await this.contentsRepository.update(contentId, {
+      validationStatus: 'sin validar',
+      updatedAt: new Date().toISOString(),
+    });
+
+    return this.findOne(contentId);
+  }
+
+  // Get only validated content for students and general view
+  async findValidatedByLevel(levelId: string): Promise<Content[]> {
+    return this.contentsRepository.find({
+      where: {
+        levelId,
+        validationStatus: 'validado',
+      },
+      relations: ['assignedTeachers', 'skill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // Get only validated content by skill
+  async findValidatedBySkill(skillId: string): Promise<Content[]> {
+    return this.contentsRepository.find({
+      where: {
+        skillId,
+        validationStatus: 'validado',
+      },
+      relations: ['assignedTeachers', 'skill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // Get only validated content by level and skill
+  async findValidatedByLevelAndSkill(
+    levelId: string,
+    skillId: string,
+  ): Promise<Content[]> {
+    return this.contentsRepository.find({
+      where: {
+        levelId,
+        skillId,
+        validationStatus: 'validado',
+      },
+      relations: ['assignedTeachers', 'skill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // TEMPORARY: Public access methods that return ALL content (not just validated)
+  // TODO: Remove these methods once all content is properly validated
+  async findAllByLevelPublic(levelId: string): Promise<Content[]> {
+    return this.contentsRepository.find({
+      where: {
+        levelId,
+      },
+      relations: ['assignedTeachers', 'skill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // TEMPORARY: Get all content by skill for public access
+  async findAllBySkillPublic(skillId: string): Promise<Content[]> {
+    return this.contentsRepository.find({
+      where: {
+        skillId,
+      },
+      relations: ['assignedTeachers', 'skill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // TEMPORARY: Get all content by level and skill for public access
+  async findAllByLevelAndSkillPublic(
+    levelId: string,
+    skillId: string,
+  ): Promise<Content[]> {
+    return this.contentsRepository.find({
+      where: {
+        levelId,
+        skillId,
+      },
+      relations: ['assignedTeachers', 'skill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  // Administrative function to validate all content at once
+  async validateAllContent(): Promise<{
+    message: string;
+    updatedCount: number;
+  }> {
+    const result = await this.contentsRepository.update(
+      { validationStatus: 'sin validar' },
+      {
+        validationStatus: 'validado',
+        updatedAt: new Date().toISOString(),
+      },
+    );
+
+    return {
+      message: 'All content has been validated',
+      updatedCount: result.affected || 0,
+    };
+  }
+
+  // Public access to markdown content for validated content only
+  async getMarkdownContentPublic(contentId: string): Promise<string> {
+    // Verificar que el contenido existe y está validado
+    const content = await this.contentsRepository.findOne({
+      where: {
+        id: contentId,
+        validationStatus: 'validado', // Solo contenido validado es público
+      },
+    });
+
+    if (!content) {
+      throw new NotFoundException('Contenido no encontrado o no está validado');
+    }
+
+    try {
+      // Si ya existe un markdownPath en la entidad, usarlo
+      if (content.markdownPath) {
+        const markdownContent = await fs.readFile(content.markdownPath, 'utf8');
+        return markdownContent;
+      }
+
+      // Si no, intentar construir la ruta basándose en el nombre del contenido
+      const level = await this.contentsRepository.query(
+        'SELECT l.name as level_name, lg.name as language_name FROM levels l JOIN lenguages lg ON l.lenguageId = lg.id WHERE l.id = $1',
+        [content.levelId],
+      );
+
+      if (!level[0]) {
+        throw new Error('No se pudo encontrar información del nivel');
+      }
+
+      // Construir ruta basándose en el nombre del contenido
+      const sanitizedLanguageName = level[0].language_name
+        .replace(/[^a-zA-Z0-9]/g, '-')
+        .toLowerCase();
+      const sanitizedLevelName = level[0].level_name
+        .replace(/[^a-zA-Z0-9]/g, '-')
+        .toLowerCase();
+      const sanitizedContentName = content.name
+        .replace(/[^a-zA-Z0-9]/g, '-')
+        .toLowerCase();
+
+      const markdownPath = join(
+        process.cwd(),
+        '..',
+        'Markdown',
+        sanitizedLanguageName,
+        sanitizedLevelName,
+        sanitizedContentName,
+        `${sanitizedContentName}.md`,
+      );
+
+      // Leer el contenido del archivo
+      const markdownContent = await fs.readFile(markdownPath, 'utf8');
+      return markdownContent;
+    } catch (error) {
+      console.error('Error reading markdown file:', error);
+      throw new Error('No se pudo cargar el contenido del archivo');
     }
   }
 }

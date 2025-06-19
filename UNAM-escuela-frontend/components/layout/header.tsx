@@ -5,7 +5,6 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { LoginModal } from "@/components/auth/login-modal";
 import { RegisterModal } from "@/components/auth/register-modal";
 import { RoleBadge } from "@/components/ui/role-badge";
-import GlobalButton from "@/components/global/globalButton";
 import GlobalLogoUNAM from "@/components/global/globalLogoUNAM";
 import {
   Card,

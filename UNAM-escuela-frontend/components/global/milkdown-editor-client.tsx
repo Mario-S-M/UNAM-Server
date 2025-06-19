@@ -96,23 +96,50 @@ const MilkdownEditor: FC<MilkdownEditorClientProps> = ({
       if (enableAutoSave && contentId) {
         console.log("🔄 Configurando auto-guardado para:", contentId);
 
-        // Polling para detectar cambios
-        const pollInterval = setInterval(() => {
-          try {
-            const newContent = crepe.getMarkdown();
-            if (newContent !== currentContent && newContent.trim() !== "") {
-              setCurrentContent(newContent);
-              scheduleAutoSave(newContent);
-            }
-          } catch (error) {
-            console.error("Error obteniendo contenido:", error);
-          }
-        }, 1000);
+        // Usar una aproximación más segura con timer retrasado
+        let lastContent = defaultValue;
+        let contentCheckInterval: NodeJS.Timeout;
 
-        // Limpiar después de 30 minutos
+        const startContentMonitoring = () => {
+          contentCheckInterval = setInterval(() => {
+            try {
+              // Intentar obtener el contenido del editor de forma segura
+              const newContent = crepe.getMarkdown();
+
+              if (newContent !== lastContent && newContent.trim() !== "") {
+                console.log("🔄 Cambio detectado en el editor:");
+                console.log(
+                  "  - Anterior:",
+                  lastContent.substring(0, 50) + "..."
+                );
+                console.log("  - Nuevo:", newContent.substring(0, 50) + "...");
+                console.log("  - Programando auto-guardado en 5 segundos...");
+
+                lastContent = newContent;
+                setCurrentContent(newContent);
+                scheduleAutoSave(newContent);
+              }
+            } catch (error) {
+              // Si hay error, probablemente el editor no está listo aún
+              console.log("🔄 Editor aún no está listo, reintentando...");
+            }
+          }, 1000); // Verificar cada segundo
+
+          // Limpiar después de 30 minutos
+          setTimeout(() => {
+            if (contentCheckInterval) {
+              clearInterval(contentCheckInterval);
+            }
+          }, 30 * 60 * 1000);
+        };
+
+        // Iniciar el monitoreo después de un breve delay para asegurar que el editor esté listo
         setTimeout(() => {
-          clearInterval(pollInterval);
-        }, 30 * 60 * 1000);
+          console.log(
+            "✅ Iniciando monitoreo de contenido para auto-guardado..."
+          );
+          startContentMonitoring();
+        }, 2000); // Esperar 2 segundos antes de empezar
       }
 
       return crepe;

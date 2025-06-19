@@ -7,6 +7,7 @@ import {
   Globe,
   GraduationCap,
   ArrowRight,
+  Palette,
 } from "lucide-react";
 import Link from "next/link";
 import { RouteGuard } from "@/components/auth/route-guard";
@@ -91,6 +92,19 @@ function AdminDashboardContent() {
                 <h3 className="font-semibold text-lg mb-2">Contenidos</h3>
                 <p className="text-sm text-foreground/60">
                   Gestionar contenido educativo
+                </p>
+                <ArrowRight className="h-4 w-4 text-primary mt-2 mx-auto" />
+              </CardBody>
+            </Card>
+          </Link>
+
+          <Link href="/main/admin-dashboard/skills">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardBody className="p-6 text-center">
+                <Palette className="h-12 w-12 text-orange-500 mx-auto mb-3" />
+                <h3 className="font-semibold text-lg mb-2">Skills</h3>
+                <p className="text-sm text-foreground/60">
+                  Administrar habilidades
                 </p>
                 <ArrowRight className="h-4 w-4 text-primary mt-2 mx-auto" />
               </CardBody>

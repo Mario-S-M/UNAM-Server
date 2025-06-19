@@ -1,4 +1,4 @@
-                    "use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -20,7 +20,6 @@ import {
   Globe,
   Plus,
   Edit,
-  Trash2,
   GraduationCap,
   Search,
   ArrowLeft,

@@ -15,35 +15,52 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Agregar headers de seguridad para producción
-  if (process.env.NODE_ENV === "production") {
-    // Headers de seguridad
-    response.headers.set("X-Frame-Options", "DENY");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    response.headers.set("Referrer-Policy", "origin-when-cross-origin");
-    response.headers.set("X-XSS-Protection", "1; mode=block");
+  // Agregar headers de seguridad siempre, pero especialmente en producción
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "origin-when-cross-origin");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
 
-    // Verificar y reconfigurar cookie de autenticación si existe
-    const token = request.cookies.get("UNAM-INCLUSION-TOKEN");
-    if (token) {
-      // Re-establecer la cookie con configuración segura optimizada
-      response.cookies.set({
-        name: "UNAM-INCLUSION-TOKEN",
-        value: token.value,
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-        priority: "high",
+  // Verificar y reconfigurar cookie de autenticación si existe
+  const token = request.cookies.get("UNAM-INCLUSION-TOKEN");
+
+  if (token) {
+    // En producción: Re-establecer con configuración segura optimizada
+    // En desarrollo: Asegurar que la cookie se mantiene correctamente
+    const cookieConfig =
+      process.env.NODE_ENV === "production"
+        ? {
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax" as const,
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+            priority: "high" as const,
+          }
+        : {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax" as const,
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+          };
+
+    response.cookies.set({
+      name: "UNAM-INCLUSION-TOKEN",
+      value: token.value,
+      ...cookieConfig,
+    });
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔒 Middleware - Cookie de auth reconfigurada:", {
+        hasToken: !!token.value,
+        tokenLength: token.value?.length || 0,
+        secure: cookieConfig.secure,
+        sameSite: cookieConfig.sameSite,
       });
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log(
-          "🔒 Middleware - Cookie de auth reconfigurada para producción"
-        );
-      }
     }
+  } else if (process.env.NODE_ENV === "development") {
+    console.log("⚠️ Middleware - No se encontró cookie de autenticación");
   }
 
   return response;

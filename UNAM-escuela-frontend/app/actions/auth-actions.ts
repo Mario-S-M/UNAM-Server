@@ -121,6 +121,7 @@ export async function loginAction(
 
     const response_data: AuthResponse<User> = {
       data: validated.user,
+      token: validated.token, // Incluir token para recuperación
       redirect: {
         destination: redirectPath,
         type: "replace",
@@ -248,6 +249,7 @@ export async function registerAction(
 
     const response_data: AuthResponse<User> = {
       data: validated.user,
+      token: validated.token, // Incluir token para recuperación
       redirect: {
         destination: redirectPath,
         type: "replace",

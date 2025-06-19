@@ -12,6 +12,7 @@ export interface Register {
 export interface AuthResponse<T> {
   data?: T;
   error?: string;
+  token?: string; // Agregar token para recuperación de cookies
   redirect?: {
     destination: string;
     type: "replace" | "push";

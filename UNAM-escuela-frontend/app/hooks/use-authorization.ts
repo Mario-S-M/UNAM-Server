@@ -70,6 +70,18 @@ export function usePageProtection(pagePath: string) {
     setAuthorizationResult(result);
     setIsAuthorized(result.hasAccess);
 
+    // Log para debug en desarrollo
+    if (process.env.NODE_ENV === "development") {
+      console.log("🛡️ usePageProtection - Verificando acceso:", {
+        pagePath,
+        hasUser: !!safeUser,
+        userRoles: safeUser?.roles,
+        hasAccess: result.hasAccess,
+        reason: result.reason,
+        redirectTo: result.redirectTo,
+      });
+    }
+
     // Si no tiene acceso, redirigir
     if (!result.hasAccess && result.redirectTo) {
       console.warn(

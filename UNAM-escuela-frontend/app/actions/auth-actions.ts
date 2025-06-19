@@ -13,6 +13,7 @@ import {
   User,
 } from "../interfaces/auth-interfaces";
 import { getUserMainPage, getHighestRole } from "../dal/auth-dal-server";
+import { getCookieConfig } from "../utils/cookie-config";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -96,15 +97,21 @@ export async function loginAction(
 
     console.log("✅ Login exitoso, guardando cookie...");
     const cookieStore = await cookies();
-    cookieStore.set({
+
+    // Usar configuración optimizada para el entorno
+    const cookieConfig = getCookieConfig();
+    const cookieOptions = {
       name: "UNAM-INCLUSION-TOKEN",
       value: validated.token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      ...cookieConfig,
+    };
+
+    console.log("🍪 Configuración de cookie:", {
+      ...cookieOptions,
+      value: "***TOKEN***", // No loggear el token real
     });
+
+    cookieStore.set(cookieOptions);
 
     // Usar el DAL para determinar la redirección inteligente
     const redirectPath = getUserMainPage(validated.user);
@@ -215,15 +222,21 @@ export async function registerAction(
 
     console.log("✅ Registro exitoso, guardando cookie...");
     const cookieStore = await cookies();
-    cookieStore.set({
+
+    // Usar configuración optimizada para el entorno
+    const cookieConfig = getCookieConfig();
+    const cookieOptions = {
       name: "UNAM-INCLUSION-TOKEN",
       value: validated.token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      ...cookieConfig,
+    };
+
+    console.log("🍪 Configuración de cookie:", {
+      ...cookieOptions,
+      value: "***TOKEN***", // No loggear el token real
     });
+
+    cookieStore.set(cookieOptions);
 
     // Los nuevos usuarios van al dashboard de estudiante por defecto
     const redirectPath = "/main/student";

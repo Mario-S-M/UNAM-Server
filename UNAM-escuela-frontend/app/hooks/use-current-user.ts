@@ -15,11 +15,17 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: ["currentUser"],
     queryFn: getCurrentUser,
-    staleTime: 0, // Always consider data stale
-    gcTime: 0, // Don't cache the data (was cacheTime in v4)
-    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutos en producción
+    gcTime: 1000 * 60 * 10, // 10 minutos cache
+    retry: (failureCount, error) => {
+      console.log("🔄 useCurrentUser - Retry attempt:", failureCount, error);
+      return failureCount < 2; // Máximo 2 reintentos
+    },
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    // Agregar configuración para manejar errores de red
+    networkMode: "online",
   });
 }
 

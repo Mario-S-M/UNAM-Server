@@ -40,9 +40,9 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
         queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
         addToast({
-          title: "¡Bienvenid@!",
+          title: "¡Inicio de sesión exitoso!",
           color: "success",
-          description: `Hola ${result.data.fullName}! Inicio de sesión exitoso`,
+          description: `¡Bienvenid@ de vuelta ${result.data.fullName}!`,
           timeout: 3000,
           shouldShowTimeoutProgress: true,
         });
@@ -52,7 +52,7 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
         setEmail("");
         setPassword("");
 
-        // Redirigir después de un breve delay para que se actualice el usuario
+        // Pequeño delay para asegurar que el estado se actualice antes de redirigir
         setTimeout(() => {
           if (result.redirect) {
             console.log(
@@ -61,9 +61,20 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
             );
             router.replace(result.redirect.destination);
           } else {
-            router.replace("/main/student");
+            // Fallback a dashboard de admin si es superUser o admin
+            const userRoles = result.data?.roles || [];
+            if (
+              userRoles.includes("superUser") ||
+              userRoles.includes("admin")
+            ) {
+              router.replace("/main/admin-dashboard");
+            } else if (userRoles.includes("docente")) {
+              router.replace("/main/teacher");
+            } else {
+              router.replace("/main/student");
+            }
           }
-        }, 1000);
+        }, 500); // Aumentar delay para producción
       }
     },
     onError: (error) => {

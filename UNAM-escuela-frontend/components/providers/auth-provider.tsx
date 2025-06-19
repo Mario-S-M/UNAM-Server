@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import { useCurrentUser, User } from "@/app/hooks/use-current-user";
 
 interface AuthContextType {
@@ -17,7 +17,20 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children, initialUser }: AuthProviderProps) {
-  const { data: user, isLoading } = useCurrentUser();
+  const { data: user, isLoading, error } = useCurrentUser();
+
+  // Log para debug en desarrollo
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔒 AuthProvider - Estado:", {
+        hasUser: !!user,
+        hasInitialUser: !!initialUser,
+        isLoading,
+        hasError: !!error,
+        userRoles: user?.roles || initialUser?.roles,
+      });
+    }
+  }, [user, initialUser, isLoading, error]);
 
   const contextValue: AuthContextType = {
     user: user !== undefined ? user : initialUser,

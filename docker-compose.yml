@@ -47,7 +47,7 @@ services:
     env_file:
       - .env
     ports:
-      - "11434:3000" # Backend en puerto 11434 como estaba originalmente
+      - "50001:3000" # Backend en puerto 11434 como estaba originalmente
     networks:
       - unam-net
     restart: unless-stopped

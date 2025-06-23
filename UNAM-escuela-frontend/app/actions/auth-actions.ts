@@ -21,7 +21,7 @@ const GRAPHQL_ENDPOINT =
 export async function loginAction(
   loginInput: Login
 ): Promise<AuthResponse<User>> {
-  console.log("🔐 LoginAction iniciada con:", { email: loginInput.email });
+  // ...existing code...
 
   try {
     if (!loginInput) {

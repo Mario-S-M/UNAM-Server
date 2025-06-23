@@ -4,15 +4,9 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  // Solo loggear en desarrollo para debug
+  // Solo ejecutar acciones específicas en desarrollo
   if (process.env.NODE_ENV === "development") {
-    console.log("🛡️ Middleware - Procesando:", request.url);
-    console.log(
-      "🍪 Middleware - Cookies disponibles:",
-      request.cookies
-        .getAll()
-        .map((c) => ({ name: c.name, hasValue: !!c.value }))
-    );
+    // Desarrollo: no hay acciones específicas por ahora
   }
 
   // Agregar headers de seguridad siempre, pero especialmente en producción
@@ -51,16 +45,7 @@ export function middleware(request: NextRequest) {
       ...cookieConfig,
     });
 
-    if (process.env.NODE_ENV === "development") {
-      console.log("🔒 Middleware - Cookie de auth reconfigurada:", {
-        hasToken: !!token.value,
-        tokenLength: token.value?.length || 0,
-        secure: cookieConfig.secure,
-        sameSite: cookieConfig.sameSite,
-      });
-    }
-  } else if (process.env.NODE_ENV === "development") {
-    console.log("⚠️ Middleware - No se encontró cookie de autenticación");
+    // No hay acciones adicionales después de reconfigurar la cookie
   }
 
   return response;

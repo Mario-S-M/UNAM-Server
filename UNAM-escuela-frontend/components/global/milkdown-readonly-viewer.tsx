@@ -5,7 +5,6 @@ import { Crepe } from "@milkdown/crepe";
 import { Milkdown, useEditor } from "@milkdown/react";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import "./milkdown-theme.css";
 
 interface MilkdownReadOnlyViewerProps {
   content: string;

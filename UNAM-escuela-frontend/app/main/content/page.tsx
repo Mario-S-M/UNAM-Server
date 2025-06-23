@@ -13,7 +13,7 @@ import {
   Button,
   Spinner,
 } from "@heroui/react";
-import { BookOpen, Eye, FileText, Calendar, Users } from "lucide-react";
+import { BookOpen, Eye, FileText, Calendar, Users, User } from "lucide-react";
 import { getActiveSkills } from "../../actions/skill-actions";
 import {
   getContentsBySkill,
@@ -381,22 +381,19 @@ function ContentCard({ content }: ContentCardProps) {
               {getStatusText(content.status || "draft")}
             </Chip>
 
-            {/* Validation status for admins/teachers */}
-            {(canTeach || canManageContent) && (
-              <Chip
-                color={
-                  content.validationStatus === "validado"
-                    ? "success"
-                    : "warning"
-                }
-                variant="flat"
-                size="sm"
-              >
-                {content.validationStatus === "validado"
-                  ? "✓ Validado"
-                  : "⚠ Sin validar"}
-              </Chip>
-            )}
+            {/* Validation status for all users */}
+            <Chip
+              color={
+                content.validationStatus === "validado" ? "success" : "danger"
+              }
+              variant="dot"
+              size="sm"
+              startContent={<User size={16} />}
+            >
+              {content.validationStatus === "validado"
+                ? "Validado"
+                : "Sin validar"}
+            </Chip>
           </div>
         </div>
       </CardHeader>

@@ -17,13 +17,16 @@ import {
   DropdownItem,
 } from "@heroui/dropdown";
 import { Link } from "@heroui/link";
+import { Chip, useDisclosure } from "@heroui/react";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import GlobalLogoUNAM from "./globalLogoUNAM";
 import { getLevelsByLenguage } from "@/app/actions";
 import { LevelsResponse } from "@/app/interfaces";
-import { logoutAction } from "@/app/hooks/use-current-user";
+import { logoutAction, useCurrentUser } from "@/app/hooks/use-current-user";
+import { LoginModal } from "@/components/auth/login-modal";
+import { RegisterModal } from "@/components/auth/register-modal";
 
 interface PageProps {
   lenguageId?: string;
@@ -32,6 +35,13 @@ interface PageProps {
 function GlobalNavbar({ lenguageId }: PageProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Modal states for login and register
+  const loginModal = useDisclosure();
+  const registerModal = useDisclosure();
+
+  // Obtener información del usuario actual
+  const { data: currentUser } = useCurrentUser();
 
   const { data } = useQuery<LevelsResponse>({
     queryKey: ["levels", lenguageId],
@@ -45,6 +55,86 @@ function GlobalNavbar({ lenguageId }: PageProps) {
     enabled: !!lenguageId,
     refetchOnWindowFocus: true,
   });
+
+  // Función para obtener el rol más alto del usuario
+  const getHighestRole = (user: any) => {
+    if (!user?.roles || user.roles.length === 0) return null;
+
+    const roleHierarchy = {
+      superUser: 5,
+      admin: 4,
+      docente: 3,
+      alumno: 2,
+      mortal: 1,
+    };
+
+    let highestRole = "mortal";
+    let highestLevel = 0;
+
+    for (const role of user.roles) {
+      const level = roleHierarchy[role as keyof typeof roleHierarchy];
+      if (level && level > highestLevel) {
+        highestLevel = level;
+        highestRole = role;
+      }
+    }
+
+    return highestRole;
+  };
+
+  // Función para obtener color del rol
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "superUser":
+        return "danger";
+      case "admin":
+        return "warning";
+      case "docente":
+        return "primary";
+      case "alumno":
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
+  // Función para obtener nombre del rol
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "superUser":
+        return "Super Administrador";
+      case "admin":
+        return "Administrador";
+      case "docente":
+        return "Maestro";
+      case "alumno":
+        return "Alumno";
+      case "mortal":
+        return "Usuario";
+      default:
+        return "Invitado";
+    }
+  };
+
+  // Función para obtener la ruta del panel según el rol
+  const getPanelRoute = (role: string) => {
+    switch (role) {
+      case "superUser":
+      case "admin":
+        return "/main/admin-dashboard";
+      case "docente":
+        return "/main/teacher";
+      case "alumno":
+        return "/main/student";
+      default:
+        return "/main";
+    }
+  };
+
+  const highestRole = getHighestRole(currentUser);
+  const userName = currentUser?.fullName || "Invitado";
+  const roleLabel = getRoleLabel(highestRole || "");
+  const roleColor = getRoleColor(highestRole || "");
 
   return (
     <Navbar
@@ -94,38 +184,74 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             <Avatar
               isBordered
               as="button"
-              className="border-divider hover:border-default-300 bg-content1"
-              color="default"
-              fallback={<User size={24} className="text-foreground" />}
+              className="border-divider hover:border-default-300"
+              color={roleColor as any}
+              fallback={<User size={24} className="text-white" />}
               size="md"
             />
           </DropdownTrigger>
           <DropdownMenu aria-label="Opciones de perfil" variant="flat">
             <DropdownItem
-              key="profile"
-              className="text-foreground hover:bg-content1"
+              key="user-info"
+              className="h-16 gap-2"
+              textValue="Información del usuario"
             >
-              Mi Perfil
+              <div className="flex flex-col">
+                <p className="font-semibold">{userName}</p>
+                <div className="mt-1">
+                  <Chip
+                    size="sm"
+                    color={roleColor as any}
+                    variant="flat"
+                    startContent={<User size={12} />}
+                  >
+                    {roleLabel}
+                  </Chip>
+                </div>
+              </div>
             </DropdownItem>
-            <DropdownItem
-              key="admin"
-              className="text-foreground hover:bg-content1"
-              onPress={() => {
-                if (lenguageId) {
-                  router.replace(`/main/levels/${lenguageId}/admin`);
-                }
-              }}
-            >
-              Administrador
-            </DropdownItem>
-            <DropdownItem
-              key="logout"
-              className="text-danger hover:bg-danger-50"
-              color="danger"
-              onPress={() => logoutAction()}
-            >
-              Cerrar Sesión
-            </DropdownItem>
+            {currentUser && (
+              <>
+                <DropdownItem
+                  key="panel"
+                  className="text-foreground hover:bg-content1"
+                  onPress={() => {
+                    const panelRoute = getPanelRoute(highestRole || "");
+                    router.replace(panelRoute);
+                  }}
+                >
+                  Panel
+                </DropdownItem>
+                <DropdownItem
+                  key="logout"
+                  className="text-danger hover:bg-danger-50"
+                  color="danger"
+                  onPress={() => logoutAction()}
+                >
+                  Cerrar Sesión
+                </DropdownItem>
+              </>
+            )}
+            {!currentUser && (
+              <>
+                <DropdownItem
+                  key="login"
+                  className="text-primary hover:bg-primary-50"
+                  color="primary"
+                  onPress={loginModal.onOpen}
+                >
+                  Iniciar Sesión
+                </DropdownItem>
+                <DropdownItem
+                  key="register"
+                  className="text-primary hover:bg-primary-50"
+                  color="primary"
+                  onPress={registerModal.onOpen}
+                >
+                  Crear Cuenta
+                </DropdownItem>
+              </>
+            )}
           </DropdownMenu>
         </Dropdown>
       </NavbarContent>
@@ -148,10 +274,27 @@ function GlobalNavbar({ lenguageId }: PageProps) {
         <NavbarMenuItem>
           <Link
             className="w-full text-foreground hover:text-default-700 text-base font-medium py-3 px-4 rounded-lg hover:bg-content1"
-            href="/"
+            href="#"
             size="lg"
+            onClick={(e) => {
+              e.preventDefault();
+              loginModal.onOpen();
+            }}
           >
             Iniciar Sesión
+          </Link>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <Link
+            className="w-full text-foreground hover:text-default-700 text-base font-medium py-3 px-4 rounded-lg hover:bg-content1"
+            href="#"
+            size="lg"
+            onClick={(e) => {
+              e.preventDefault();
+              registerModal.onOpen();
+            }}
+          >
+            Crear Cuenta
           </Link>
         </NavbarMenuItem>
         <NavbarMenuItem>
@@ -165,6 +308,16 @@ function GlobalNavbar({ lenguageId }: PageProps) {
           </Link>
         </NavbarMenuItem>
       </NavbarMenu>
+
+      {/* Login and Register Modals */}
+      <LoginModal
+        isOpen={loginModal.isOpen}
+        onOpenChange={loginModal.onOpenChange}
+      />
+      <RegisterModal
+        isOpen={registerModal.isOpen}
+        onOpenChange={registerModal.onOpenChange}
+      />
     </Navbar>
   );
 }

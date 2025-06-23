@@ -42,6 +42,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  User,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
@@ -423,11 +424,21 @@ function ContentsManagementContent() {
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {content.validationStatus === "validado" ? (
-                                <Chip size="sm" color="success" variant="solid">
+                                <Chip
+                                  size="sm"
+                                  color="success"
+                                  variant="dot"
+                                  startContent={<User size={16} />}
+                                >
                                   Validado
                                 </Chip>
                               ) : (
-                                <Chip size="sm" color="danger" variant="solid">
+                                <Chip
+                                  size="sm"
+                                  color="danger"
+                                  variant="dot"
+                                  startContent={<User size={16} />}
+                                >
                                   Sin validar
                                 </Chip>
                               )}

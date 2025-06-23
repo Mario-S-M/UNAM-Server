@@ -5,8 +5,7 @@ import { Crepe } from "@milkdown/crepe";
 import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import "./milkdown-theme-basic.css";
-import "./milkdown-theme-icons.css"; // Estilos específicos para iconos
+import "../../app/milkdown-custom-theme.css"; // CSS personalizado DESPUÉS de los estilos de Milkdown
 import { useAutoSave } from "../../app/hooks/use-auto-save";
 
 interface MilkdownEditorClientProps {

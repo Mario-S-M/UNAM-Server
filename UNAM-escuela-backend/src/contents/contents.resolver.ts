@@ -279,4 +279,39 @@ export class ContentsResolver {
     const result = await this.contentsService.validateAllContent();
     return `${result.message} - Updated ${result.updatedCount} items`;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => Boolean, { name: 'convertDocxToMarkdown' })
+  async convertDocxToMarkdown(
+    @Args('contentId', { type: () => ID }) contentId: string,
+    @Args('docxBase64', { type: () => String }) docxBase64: string,
+    @CurrentUser([ValidRoles.docente]) user: User,
+  ): Promise<boolean> {
+    console.log('🚀 GraphQL convertDocxToMarkdown mutation called');
+    console.log('📋 Content ID:', contentId);
+    console.log('👤 User:', user?.id, '-', user?.email);
+    console.log('📄 Base64 length:', docxBase64?.length);
+
+    try {
+      // Decode base64 to buffer
+      console.log('🔧 Decoding base64 to buffer...');
+      const docxBuffer = Buffer.from(docxBase64, 'base64');
+      console.log('✅ Buffer created, size:', docxBuffer.length, 'bytes');
+
+      // Call service method
+      console.log('📞 Calling ContentsService.convertDocxToMarkdown...');
+      const result = await this.contentsService.convertDocxToMarkdown(
+        contentId,
+        docxBuffer,
+        user.id,
+      );
+
+      console.log('🎯 Service method completed, result:', result);
+      return result;
+    } catch (error) {
+      console.error('💥 Error in convertDocxToMarkdown resolver:', error);
+      console.error('Error stack:', error.stack);
+      throw error;
+    }
+  }
 }

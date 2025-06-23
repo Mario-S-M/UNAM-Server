@@ -15,9 +15,14 @@ import {
 import dynamic from "next/dynamic";
 import { ContentErrorDisplay } from "@/components/content/content-error-display";
 
-// Importar Milkdown de forma dinámica para evitar SSR issues
+// Importar componentes de forma dinámica para evitar SSR issues
 const MilkdownEditorClient = dynamic(
   () => import("@/components/global/milkdown-editor-client"),
+  { ssr: false }
+);
+
+const DocxUploader = dynamic(
+  () => import("@/components/content/docx-uploader"),
   { ssr: false }
 );
 
@@ -194,6 +199,18 @@ Aquí puedes agregar el contenido educativo principal...
     setTimeout(() => setAutoSaveStatus(""), 5000);
   };
 
+  // Callback para conversión exitosa de DOCX
+  const handleDocxConversionSuccess = () => {
+    setAutoSaveStatus("✅ Archivo Word convertido exitosamente");
+    // El hook ya invalida las queries automáticamente
+    setTimeout(() => setAutoSaveStatus(""), 3000);
+  };
+
+  const handleDocxConversionError = (error: string) => {
+    setAutoSaveStatus(`❌ Error al convertir: ${error}`);
+    setTimeout(() => setAutoSaveStatus(""), 5000);
+  };
+
   if (contentLoading || markdownLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -279,6 +296,28 @@ Aquí puedes agregar el contenido educativo principal...
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Uploader de archivos Word */}
+      <div className="border-b bg-gray-50/50 px-6 py-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col items-center text-center">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">
+              Importar desde Word
+            </h3>
+            <DocxUploader
+              contentId={contentId}
+              onSuccess={handleDocxConversionSuccess}
+              onError={handleDocxConversionError}
+              className="w-full max-w-md"
+            />
+            <p className="text-xs text-gray-500 mt-3 max-w-md">
+              Sube un archivo Word (.docx) para convertirlo automáticamente a
+              Markdown y <strong>reemplazar completamente</strong> el contenido
+              actual.
+            </p>
           </div>
         </div>
       </div>

@@ -7,6 +7,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import * as mammoth from 'mammoth';
+import * as TurndownService from 'turndown';
 
 @Injectable()
 export class ContentsService {
@@ -635,6 +637,115 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     } catch (error) {
       console.error('Error reading markdown file:', error);
       throw new Error('No se pudo cargar el contenido del archivo');
+    }
+  }
+
+  // Convert DOCX file to Markdown and update content
+  async convertDocxToMarkdown(
+    contentId: string,
+    docxBuffer: Buffer,
+    userId: string,
+  ): Promise<boolean> {
+    console.log('🔄 Starting DOCX conversion process...');
+    console.log('📋 Content ID:', contentId);
+    console.log('👤 User ID:', userId);
+    console.log('📄 Buffer size:', docxBuffer.length, 'bytes');
+
+    // Verificar que el contenido existe y el usuario tiene acceso
+    console.log('🔍 Looking for content in database...');
+    const content = await this.contentsRepository.findOne({
+      where: { id: contentId },
+      relations: ['assignedTeachers'],
+    });
+
+    if (!content) {
+      console.error('❌ Content not found');
+      throw new NotFoundException('Contenido no encontrado');
+    }
+    console.log('✅ Content found:', content.name);
+    console.log(
+      '👥 Assigned teachers:',
+      content.assignedTeachers?.map((t) => t.id),
+    );
+
+    // Verificar que el usuario es un profesor asignado
+    const isAssignedTeacher =
+      content.assignedTeachers?.some((teacher) => teacher.id === userId) ||
+      false;
+
+    console.log(
+      '🔐 Permission check - Is assigned teacher:',
+      isAssignedTeacher,
+    );
+
+    if (!isAssignedTeacher) {
+      console.error('❌ User not authorized');
+      throw new Error('No tienes permisos para editar este contenido');
+    }
+
+    try {
+      // Convert DOCX to HTML using mammoth
+      console.log('🔧 Converting DOCX to HTML using mammoth...');
+      const result = await mammoth.convertToHtml({ buffer: docxBuffer });
+      console.log('✅ DOCX to HTML conversion completed');
+      console.log('📏 HTML length:', result.value.length);
+      console.log('⚠️ Conversion messages:', result.messages.length);
+
+      if (result.messages.length > 0) {
+        console.log('📝 Conversion warnings:', result.messages);
+      }
+
+      // Convert HTML to Markdown using turndown
+      console.log('🔧 Converting HTML to Markdown using turndown...');
+      const turndownService = new TurndownService({
+        headingStyle: 'atx',
+        codeBlockStyle: 'fenced',
+        bulletListMarker: '-',
+        emDelimiter: '*',
+        strongDelimiter: '**',
+      });
+
+      // Add custom rules for better markdown conversion
+      turndownService.addRule('strikethrough', {
+        filter: ['del', 's', 'strike'],
+        replacement: function (content) {
+          return '~~' + content + '~~';
+        },
+      });
+
+      const markdown = turndownService.turndown(result.value);
+      console.log('✅ HTML to Markdown conversion completed');
+      console.log('📏 Markdown length:', markdown.length);
+
+      // Use only the converted markdown content without any additional headers
+      // This will replace ALL existing content in the editor
+      const finalMarkdown = markdown;
+      console.log(
+        '📄 Final markdown prepared (original content only), length:',
+        finalMarkdown.length,
+      );
+
+      // Update the content using existing method
+      console.log('💾 Updating markdown content...');
+      const success = await this.updateMarkdownContent(
+        contentId,
+        finalMarkdown,
+        userId,
+      );
+
+      console.log('✅ Update result:', success);
+
+      if (success) {
+        console.log('🎉 DOCX successfully converted and saved as markdown');
+      } else {
+        console.log('⚠️ Update returned false');
+      }
+
+      return success;
+    } catch (error) {
+      console.error('💥 Error converting DOCX to markdown:', error);
+      console.error('Stack trace:', error.stack);
+      throw new Error('No se pudo convertir el archivo Word a Markdown');
     }
   }
 }

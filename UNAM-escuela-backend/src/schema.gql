@@ -147,6 +147,7 @@ type Mutation {
   validateContent(contentId: ID!): Content!
   invalidateContent(contentId: ID!): Content!
   validateAllContent: String!
+  convertDocxToMarkdown(contentId: ID!, docxBase64: String!): Boolean!
   createSkill(createSkillInput: CreateSkillInput!): Skill!
   updateSkill(updateSkillInput: UpdateSkillInput!): Skill!
   removeSkill(id: ID!): Skill!

@@ -1620,6 +1620,143 @@ export async function adminWorkaroundAssignTeachers(
   }
 }
 
+// Convert DOCX file to Markdown
+export async function convertDocxToMarkdown(
+  contentId: string,
+  file: File
+): Promise<ActionResponse<boolean>> {
+  try {
+    console.log("🚀 convertDocxToMarkdown function called");
+    console.log("📋 Content ID:", contentId);
+    console.log("📄 File object:", file);
+
+    if (!contentId || !file) {
+      console.error("❌ Missing required parameters");
+      throw new Error("ID del contenido y archivo son requeridos");
+    }
+
+    // Validate file type
+    console.log("🔍 Validating file type...");
+    console.log("📝 File name:", file.name);
+    console.log("📝 File type:", file.type);
+    console.log("📝 File size:", file.size);
+
+    if (
+      !file.name.toLowerCase().endsWith(".docx") &&
+      !file.type.includes("officedocument")
+    ) {
+      console.error("❌ Invalid file type");
+      throw new Error("Solo se permiten archivos Word (.docx)");
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      console.error("❌ File too large:", file.size);
+      throw new Error("El archivo es demasiado grande. Máximo 10MB permitido.");
+    }
+
+    console.log("✅ File validation passed");
+    console.log(
+      `🔄 Convirtiendo archivo Word a Markdown para contenido: ${contentId}`
+    );
+    console.log(
+      `📁 Archivo: ${file.name}, Tamaño: ${(file.size / 1024 / 1024).toFixed(
+        2
+      )}MB`
+    );
+
+    // Convert file to base64 using browser-compatible method
+    console.log("🔧 Converting file to base64...");
+    const arrayBuffer = await file.arrayBuffer();
+    console.log("📄 ArrayBuffer created, length:", arrayBuffer.byteLength);
+
+    const bytes = new Uint8Array(arrayBuffer);
+    console.log("📄 Uint8Array created, length:", bytes.length);
+
+    const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join(
+      ""
+    );
+    console.log("📄 Binary string created, length:", binary.length);
+
+    const base64String = btoa(binary);
+    console.log("📄 Base64 string created, length:", base64String.length);
+    console.log(
+      "📄 Base64 preview (first 100 chars):",
+      base64String.substring(0, 100)
+    );
+
+    console.log("🔑 Getting auth headers...");
+    const headers = await getAuthHeaders();
+    console.log("✅ Auth headers obtained");
+
+    console.log("🌐 Sending GraphQL request...");
+    console.log("📡 Endpoint:", GRAPHQL_ENDPOINT);
+
+    const requestBody = {
+      query: `
+        mutation ConvertDocxToMarkdown($contentId: ID!, $docxBase64: String!) {
+          convertDocxToMarkdown(contentId: $contentId, docxBase64: $docxBase64)
+        }
+      `,
+      variables: {
+        contentId,
+        docxBase64: base64String,
+      },
+    };
+
+    console.log("📦 Request variables:", {
+      contentId,
+      docxBase64Length: base64String.length,
+    });
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log("📡 Response received, status:", response.status);
+    console.log("📡 Response ok:", response.ok);
+
+    if (!response.ok) {
+      console.error("❌ HTTP error:", response.status, response.statusText);
+      throw new Error(
+        `Error HTTP: ${response.status} - ${response.statusText}`
+      );
+    }
+
+    console.log("🔧 Parsing response JSON...");
+    const result = await response.json();
+    console.log("📊 Full response:", result);
+
+    if (result.errors) {
+      console.error("❌ GraphQL errors:", result.errors);
+      const errorMessage = result.errors
+        .map((err: any) => err.message)
+        .join(", ");
+      throw new Error(sanitizeErrorMessage(errorMessage));
+    }
+
+    console.log("📊 Response data:", result.data);
+    console.log("✅ Success result:", result.data.convertDocxToMarkdown);
+    console.log(`🎉 Archivo Word convertido exitosamente a Markdown`);
+
+    return { data: result.data.convertDocxToMarkdown };
+  } catch (error) {
+    console.error("💥 Error en convertDocxToMarkdown:", error);
+    console.error(
+      "Stack trace:",
+      error instanceof Error ? error.stack : "No stack"
+    );
+    const { error: errorMessage } =
+      ContentErrorHandler.handleContentError(error);
+    return {
+      error: errorMessage,
+    };
+  }
+}
+
 // Definición del tipo UpdateContentInput para TypeScript
 interface UpdateContentInput {
   id: string;

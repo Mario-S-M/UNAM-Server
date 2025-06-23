@@ -9,6 +9,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import * as mammoth from 'mammoth';
 import * as TurndownService from 'turndown';
+import { tables } from 'turndown-plugin-gfm';
 
 @Injectable()
 export class ContentsService {
@@ -264,7 +265,6 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
 
       return markdownFile;
     } catch (error) {
-      console.error('Error creando estructura de markdown:', error);
       throw new Error(
         `No se pudo crear la estructura de archivos: ${error.message}`,
       );
@@ -344,7 +344,6 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       const markdownContent = await fs.readFile(markdownPath, 'utf8');
       return markdownContent;
     } catch (error) {
-      console.error('Error leyendo archivo markdown:', error);
       throw new Error('No se pudo leer el archivo de contenido');
     }
   }
@@ -427,7 +426,6 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
 
       return true;
     } catch (error) {
-      console.error('Error escribiendo archivo markdown:', error);
       throw new Error('No se pudo guardar el archivo de contenido');
     }
   }
@@ -635,7 +633,6 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       const markdownContent = await fs.readFile(markdownPath, 'utf8');
       return markdownContent;
     } catch (error) {
-      console.error('Error reading markdown file:', error);
       throw new Error('No se pudo cargar el contenido del archivo');
     }
   }
@@ -646,63 +643,71 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     docxBuffer: Buffer,
     userId: string,
   ): Promise<boolean> {
-    console.log('🔄 Starting DOCX conversion process...');
-    console.log('📋 Content ID:', contentId);
-    console.log('👤 User ID:', userId);
-    console.log('📄 Buffer size:', docxBuffer.length, 'bytes');
-
     // Verificar que el contenido existe y el usuario tiene acceso
-    console.log('🔍 Looking for content in database...');
     const content = await this.contentsRepository.findOne({
       where: { id: contentId },
       relations: ['assignedTeachers'],
     });
 
     if (!content) {
-      console.error('❌ Content not found');
       throw new NotFoundException('Contenido no encontrado');
     }
-    console.log('✅ Content found:', content.name);
-    console.log(
-      '👥 Assigned teachers:',
-      content.assignedTeachers?.map((t) => t.id),
-    );
 
     // Verificar que el usuario es un profesor asignado
     const isAssignedTeacher =
       content.assignedTeachers?.some((teacher) => teacher.id === userId) ||
       false;
 
-    console.log(
-      '🔐 Permission check - Is assigned teacher:',
-      isAssignedTeacher,
-    );
-
     if (!isAssignedTeacher) {
-      console.error('❌ User not authorized');
       throw new Error('No tienes permisos para editar este contenido');
     }
 
     try {
       // Convert DOCX to HTML using mammoth
-      console.log('🔧 Converting DOCX to HTML using mammoth...');
       const result = await mammoth.convertToHtml({ buffer: docxBuffer });
-      console.log('✅ DOCX to HTML conversion completed');
-      console.log('📏 HTML length:', result.value.length);
-      console.log('⚠️ Conversion messages:', result.messages.length);
-
-      if (result.messages.length > 0) {
-        console.log('📝 Conversion warnings:', result.messages);
-      }
 
       // Convert HTML to Markdown using turndown
-      console.log('🔧 Converting HTML to Markdown using turndown...');
       const turndownService = new TurndownService({
         headingStyle: 'atx',
         codeBlockStyle: 'fenced',
         bulletListMarker: '-',
         emDelimiter: '*',
         strongDelimiter: '**',
+      });
+
+      // Custom table rule to handle Word tables with paragraphs in cells
+      turndownService.addRule('table', {
+        filter: 'table',
+        replacement: function (content, node: any) {
+          const rows = Array.from(node.querySelectorAll('tr'));
+          let result = '\n\n';
+
+          rows.forEach((row: any, index: number) => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            const cellContents = cells.map((cell: any) => {
+              // Extract text from paragraphs and other elements inside the cell
+              const paragraphs = cell.querySelectorAll('p');
+              if (paragraphs.length > 0) {
+                return Array.from(paragraphs)
+                  .map((p: any) => p.textContent.trim())
+                  .filter((text: string) => text.length > 0)
+                  .join(' ');
+              }
+              return cell.textContent.trim().replace(/\s+/g, ' ');
+            });
+
+            // Create the row
+            result += '| ' + cellContents.join(' | ') + ' |\n';
+
+            // Add separator after the first row (headers)
+            if (index === 0) {
+              result +=
+                '| ' + cellContents.map(() => '---').join(' | ') + ' |\n';
+            }
+          });
+
+          return result + '\n';
+        },
       });
 
       // Add custom rules for better markdown conversion
@@ -714,37 +719,20 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       });
 
       const markdown = turndownService.turndown(result.value);
-      console.log('✅ HTML to Markdown conversion completed');
-      console.log('📏 Markdown length:', markdown.length);
 
       // Use only the converted markdown content without any additional headers
       // This will replace ALL existing content in the editor
       const finalMarkdown = markdown;
-      console.log(
-        '📄 Final markdown prepared (original content only), length:',
-        finalMarkdown.length,
-      );
 
       // Update the content using existing method
-      console.log('💾 Updating markdown content...');
       const success = await this.updateMarkdownContent(
         contentId,
         finalMarkdown,
         userId,
       );
 
-      console.log('✅ Update result:', success);
-
-      if (success) {
-        console.log('🎉 DOCX successfully converted and saved as markdown');
-      } else {
-        console.log('⚠️ Update returned false');
-      }
-
       return success;
     } catch (error) {
-      console.error('💥 Error converting DOCX to markdown:', error);
-      console.error('Stack trace:', error.stack);
       throw new Error('No se pudo convertir el archivo Word a Markdown');
     }
   }

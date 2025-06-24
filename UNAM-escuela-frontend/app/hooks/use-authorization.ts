@@ -135,5 +135,12 @@ export function usePermissions() {
       operation: "create" | "read" | "update" | "delete",
       resource: string
     ) => AuthDAL.canPerformOperation(safeUser, operation, resource),
+
+    // Gestión de roles
+    getAssignableRoles: () => AuthDAL.getAssignableRoles(safeUser),
+    canChangeUserRole: (targetUser: any, newRoles: Role[]) =>
+      AuthDAL.canChangeUserRole(safeUser, targetUser, newRoles),
+    canManageUser: (targetUser: any) =>
+      AuthDAL.canManageUser(safeUser, targetUser),
   };
 }

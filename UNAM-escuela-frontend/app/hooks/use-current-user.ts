@@ -17,8 +17,18 @@ export function useCurrentUser() {
     queryFn: getCurrentUser,
     staleTime: 1000 * 60 * 5, // 5 minutos
     gcTime: 1000 * 60 * 10, // 10 minutos cache
-    retry: (failureCount, error) => {
+    retry: (failureCount, error: any) => {
       console.log("🔄 useCurrentUser - Retry attempt:", failureCount, error);
+
+      // Don't retry if it's a blocked user error - let QueryClient handle it
+      if (
+        error?.message?.includes("Usuario no activo") ||
+        error?.message?.includes("Usuario inactivo") ||
+        (error as any)?.extensions?.code === "UNAUTHENTICATED"
+      ) {
+        return false;
+      }
+
       return failureCount < 2; // Máximo 2 reintentos
     },
     refetchOnMount: true,

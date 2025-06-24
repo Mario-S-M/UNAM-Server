@@ -239,12 +239,12 @@ export async function registerAction(
 
     cookieStore.set(cookieOptions);
 
-    // Los nuevos usuarios van al dashboard de estudiante por defecto
-    const redirectPath = "/main/student";
+    // Los nuevos usuarios van a la página principal por defecto (rol mortal)
+    const redirectPath = "/main";
 
     console.log("🎯 Redirección determinada:", {
       redirectPath,
-      role: "alumno",
+      role: "mortal",
     });
 
     const response_data: AuthResponse<User> = {

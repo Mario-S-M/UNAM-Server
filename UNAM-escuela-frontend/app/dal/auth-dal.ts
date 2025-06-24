@@ -50,7 +50,7 @@ export class AuthDAL {
     },
     docente: {
       level: 3,
-      permissions: ["teacher", "content_view"],
+      permissions: ["teacher", "content_view", "user_management"],
       redirectTo: "/main/teacher",
       displayName: "Maestro",
     },
@@ -145,9 +145,10 @@ export class AuthDAL {
     // Definir reglas de acceso por página
     const pageAccessRules: { [key: string]: Role[] } = {
       "/main/admin-dashboard": ["superUser", "admin"],
+      "/main/admin-dashboard/users": ["superUser", "admin", "docente"],
       "/main/teacher": ["superUser", "admin", "docente"],
       "/main/student": ["superUser", "admin", "docente", "alumno"],
-      "/main/users": ["superUser", "admin"],
+      "/main/users": ["superUser", "admin", "docente"],
       "/main/levels": ["superUser", "admin", "docente"],
       "/main/contents": ["superUser", "admin", "docente"],
     };
@@ -259,5 +260,90 @@ export class AuthDAL {
     return requiredPermissions.some((permission) =>
       this.hasPermission(user, permission)
     );
+  }
+
+  /**
+   * Obtiene los roles que un usuario puede asignar a otros usuarios
+   */
+  static getAssignableRoles(user: User | null): Role[] {
+    if (!user) return [];
+
+    const currentRole = this.getHighestRole(user);
+    if (!currentRole) return [];
+
+    // Definir qué roles puede asignar cada tipo de usuario
+    switch (currentRole) {
+      case "superUser":
+        // SuperUser puede asignar cualquier rol incluyendo mortal
+        return ["superUser", "admin", "docente", "alumno", "mortal"];
+
+      case "admin":
+        // Admin puede asignar docente, alumno y mortal
+        return ["docente", "alumno", "mortal"];
+
+      case "docente":
+        // Docente puede asignar alumno y mortal (usuario normal)
+        return ["alumno", "mortal"];
+
+      default:
+        // Otros roles no pueden asignar roles
+        return [];
+    }
+  }
+
+  /**
+   * Verifica si un usuario puede cambiar el rol de otro usuario
+   */
+  static canChangeUserRole(
+    currentUser: User | null,
+    targetUser: User,
+    newRoles: Role[]
+  ): boolean {
+    if (!currentUser) return false;
+
+    // Verificar que puede gestionar al usuario objetivo
+    if (!this.canManageUser(currentUser, targetUser)) return false;
+
+    // Verificar que puede asignar todos los nuevos roles
+    const assignableRoles = this.getAssignableRoles(currentUser);
+
+    for (const role of newRoles) {
+      if (!assignableRoles.includes(role)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Obtiene el siguiente rol en la jerarquía que un usuario puede asignar
+   */
+  static getNextAssignableRole(
+    currentUser: User | null,
+    currentRole: Role
+  ): Role | null {
+    const assignableRoles = this.getAssignableRoles(currentUser);
+
+    // Definir la jerarquía circular según tu descripción:
+    // superUser -> admin -> docente -> alumno -> superUser (cíclico)
+    const roleProgression: { [key in Role]: Role } = {
+      superUser: "admin",
+      admin: "docente",
+      docente: "alumno",
+      alumno: "superUser",
+      mortal: "alumno", // mortal salta a alumno
+    };
+
+    let nextRole = roleProgression[currentRole];
+
+    // Buscar el siguiente rol válido que el usuario puede asignar
+    let attempts = 0;
+    while (attempts < 5 && !assignableRoles.includes(nextRole)) {
+      nextRole = roleProgression[nextRole];
+      attempts++;
+    }
+
+    return assignableRoles.includes(nextRole) ? nextRole : null;
   }
 }

@@ -77,6 +77,16 @@ type Homework {
   userId: Int!
 }
 
+type PaginatedUsers {
+  users: [User!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
 type AuthResponse {
   token: String!
   user: User!
@@ -119,6 +129,7 @@ type Query {
   homeworks: [Homework!]!
   homework(id: Int!): Homework!
   users(roles: [ValidRoles!] = []): [User!]!
+  usersPaginated(roles: [ValidRoles!] = [], search: String, page: Int = 1, limit: Int = 10): PaginatedUsers!
   user(id: ID!): User!
   revalidate: AuthResponse!
   lenguages: [Lenguage!]!
@@ -159,6 +170,7 @@ type Mutation {
   updateHomework(updateHomeworkInput: UpdateHomeworkInput!): Homework!
   removeHomework(id: Int!): Homework!
   blockUser(id: ID!): User!
+  updateUserRoles(updateUserRolesInput: UpdateUserRolesInput!): User!
   signin(signUpInput: SignupInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
   createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!
@@ -240,6 +252,11 @@ input UpdateHomeworkInput {
   """Example field (placeholder)"""
   exampleField: Int
   id: Int!
+}
+
+input UpdateUserRolesInput {
+  id: ID!
+  roles: [ValidRoles!]!
 }
 
 input SignupInput {

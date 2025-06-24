@@ -51,7 +51,7 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
         addToast({
           title: "¡Cuenta creada exitosamente!",
           color: "success",
-          description: `¡Bienvenid@ ${result.data.fullName}! Tu cuenta ha sido creada como alumno`,
+          description: `¡Bienvenid@ ${result.data.fullName}! Tu cuenta ha sido creada. Un maestro puede actualizar tu rol si es necesario.`,
           timeout: 4000,
           shouldShowTimeoutProgress: true,
         });
@@ -71,7 +71,7 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
             );
             router.replace(result.redirect.destination);
           } else {
-            router.replace("/main/student");
+            router.replace("/main");
           }
         }, 1000);
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Card,
   CardBody,
@@ -12,6 +12,7 @@ import {
   Select,
   SelectItem,
   Avatar,
+  Pagination,
 } from "@heroui/react";
 import {
   Users,
@@ -23,12 +24,21 @@ import {
   Search,
   ArrowLeft,
   Mail,
+  Settings,
 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { usePermissions } from "@/app/hooks/use-authorization";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useDebouncedSearch } from "@/app/hooks/use-debounced-value";
+import { ChangeUserRoleModal } from "@/components/ui/change-user-role-modal";
+import { useBlockUser } from "@/app/hooks/use-users";
 import Link from "next/link";
-import { getUsers, blockUser } from "@/app/actions/user-actions";
+import {
+  getUsers,
+  getUsersPaginated,
+  blockUser,
+} from "@/app/actions/user-actions";
 import { addToast } from "@heroui/react";
 
 export default function UsersManagementPage() {
@@ -42,32 +52,48 @@ export default function UsersManagementPage() {
 function UsersManagementContent() {
   const { canManageUsers } = usePermissions();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(5);
 
-  // Queries
+  // Debouncing para la búsqueda
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Resetear a la página 1 cuando se busca
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Preparar filtros para la query
+  const filters = {
+    search: debouncedSearchTerm || undefined,
+    roles: roleFilter ? [roleFilter] : undefined,
+    page: currentPage,
+    limit: pageSize,
+  };
+
+  // Query para usuarios paginados
   const {
-    data: users,
+    data: paginatedUsersResponse,
     isLoading: usersLoading,
     error: usersError,
   } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => getUsers(),
+    queryKey: ["usersPaginated", filters],
+    queryFn: () => getUsersPaginated(filters),
+    staleTime: 1000 * 60, // 1 minuto
   });
 
-  const filteredUsers = users?.data?.filter((user: any) => {
-    const matchesSearch =
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const paginatedData = paginatedUsersResponse?.data;
+  const users = paginatedData?.users || [];
+  const totalPages = paginatedData?.totalPages || 1;
 
-    const matchesRole = !roleFilter || user.roles.includes(roleFilter);
-    const matchesStatus =
-      !statusFilter ||
-      (statusFilter === "active" && user.isActive) ||
-      (statusFilter === "inactive" && !user.isActive);
-
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  // Handle page change
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
 
   if (!canManageUsers) {
     return (
@@ -138,21 +164,6 @@ function UsersManagementContent() {
                 <SelectItem key="mortal">Usuario Normal</SelectItem>
               </Select>
 
-              <Select
-                label="Filtrar por Estado"
-                placeholder="Todos los estados"
-                selectedKeys={
-                  statusFilter ? new Set([statusFilter]) : new Set()
-                }
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0] as string;
-                  setStatusFilter(selected || "");
-                }}
-              >
-                <SelectItem key="active">Activo</SelectItem>
-                <SelectItem key="inactive">Inactivo</SelectItem>
-              </Select>
-
               <Button
                 color="primary"
                 startContent={<Plus className="h-4 w-4" />}
@@ -170,7 +181,7 @@ function UsersManagementContent() {
             <CardBody className="p-4 text-center">
               <Users className="h-8 w-8 text-blue-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-blue-600">
-                {users?.data?.length || 0}
+                {paginatedData?.total || 0}
               </p>
               <p className="text-sm text-blue-500">Total Usuarios</p>
             </CardBody>
@@ -180,7 +191,7 @@ function UsersManagementContent() {
             <CardBody className="p-4 text-center">
               <UserCheck className="h-8 w-8 text-green-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-green-600">
-                {users?.data?.filter((u: any) => u.isActive).length || 0}
+                {users?.filter((u: any) => u.isActive).length || 0}
               </p>
               <p className="text-sm text-green-500">Activos</p>
             </CardBody>
@@ -190,7 +201,7 @@ function UsersManagementContent() {
             <CardBody className="p-4 text-center">
               <UserX className="h-8 w-8 text-orange-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-orange-600">
-                {users?.data?.filter((u: any) => !u.isActive).length || 0}
+                {users?.filter((u: any) => !u.isActive).length || 0}
               </p>
               <p className="text-sm text-orange-500">Inactivos</p>
             </CardBody>
@@ -200,7 +211,7 @@ function UsersManagementContent() {
             <CardBody className="p-4 text-center">
               <Mail className="h-8 w-8 text-purple-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-purple-600">
-                {users?.data?.filter((u: any) => u.roles.includes("docente"))
+                {users?.filter((u: any) => u.roles.includes("docente"))
                   .length || 0}
               </p>
               <p className="text-sm text-purple-500">Docentes</p>
@@ -215,9 +226,10 @@ function UsersManagementContent() {
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">
                 Lista de Usuarios
-                {filteredUsers && (
+                {paginatedData && (
                   <span className="text-sm font-normal text-foreground/60 ml-2">
-                    ({filteredUsers.length} usuarios)
+                    (Página {currentPage} de {totalPages} -{" "}
+                    {paginatedData.total} usuarios totales)
                   </span>
                 )}
               </h2>
@@ -228,14 +240,14 @@ function UsersManagementContent() {
               <div className="flex justify-center py-12">
                 <Spinner size="lg" />
               </div>
-            ) : !filteredUsers || filteredUsers.length === 0 ? (
+            ) : !users || users.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="h-16 w-16 text-default-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-default-500 mb-2">
                   No hay usuarios
                 </h3>
                 <p className="text-default-400 mb-4">
-                  {searchTerm || roleFilter || statusFilter
+                  {searchTerm || roleFilter
                     ? "No se encontraron usuarios con los filtros aplicados"
                     : "Aún no hay usuarios en el sistema"}
                 </p>
@@ -272,11 +284,49 @@ function UsersManagementContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user: any) => (
+                    {users.map((user: any) => (
                       <UserRow key={user.id} user={user} />
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Paginación */}
+            {users && users.length > 0 && totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <Pagination
+                  total={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  variant="light"
+                  size="lg"
+                  showControls
+                  className="gap-2"
+                  classNames={{
+                    wrapper: "gap-2 overflow-visible shadow-none",
+                    item: "w-10 h-10 text-sm bg-transparent border-0 rounded-lg hover:bg-default-100 text-default-600 hover:text-foreground",
+                    cursor:
+                      "bg-primary text-primary-foreground font-semibold shadow-sm",
+                    prev: "bg-transparent hover:bg-default-100 border-0 rounded-lg text-default-600 hover:text-foreground",
+                    next: "bg-transparent hover:bg-default-100 border-0 rounded-lg text-default-600 hover:text-foreground",
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Información de paginación */}
+            {paginatedData && (
+              <div className="flex justify-between items-center mt-4 text-small text-default-500">
+                <span>
+                  Mostrando {(currentPage - 1) * pageSize + 1} -{" "}
+                  {Math.min(currentPage * pageSize, paginatedData.total)} de{" "}
+                  {paginatedData.total} usuarios
+                </span>
+                <span>
+                  Página {currentPage} de {totalPages} (5 usuarios por página)
+                </span>
               </div>
             )}
           </CardBody>
@@ -288,34 +338,35 @@ function UsersManagementContent() {
 
 // Componente para cada fila de usuario
 function UserRow({ user }: { user: any }) {
-  const queryClient = useQueryClient();
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const { user: currentUser } = useAuth();
+  const { canManageUser } = usePermissions();
 
-  const blockUserMutation = useMutation({
-    mutationFn: (userId: string) => blockUser(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      addToast({
-        title: user.isActive ? "Usuario bloqueado" : "Usuario activado",
-        description: `${user.fullName} ha sido ${
-          user.isActive ? "bloqueado" : "activado"
-        } exitosamente`,
-        color: "success",
-        timeout: 3000,
-      });
-    },
-    onError: (error: Error) => {
-      addToast({
-        title: "Error",
-        description:
-          error.message || "No se pudo cambiar el estado del usuario",
-        color: "danger",
-        timeout: 3000,
-      });
-    },
-  });
+  // Usar el hook centralizado para bloquear usuarios
+  const blockUserMutation = useBlockUser();
+
+  // Check if current user can block this target user
+  const canBlockUser = () => {
+    if (!currentUser) return false;
+
+    // Users cannot block themselves
+    if (currentUser.id === user.id) return false;
+
+    // Use the permission system to check if can manage this user
+    return canManageUser(user);
+  };
 
   const handleToggleStatus = () => {
-    blockUserMutation.mutate(user.id);
+    if (!canBlockUser()) {
+      addToast({
+        title: "Permisos insuficientes",
+        description: "No tienes permisos para bloquear este usuario",
+        color: "warning",
+        timeout: 3000,
+      });
+      return;
+    }
+    blockUserMutation.mutate({ id: user.id });
   };
 
   const getRoleColor = (role: string) => {
@@ -409,17 +460,29 @@ function UserRow({ user }: { user: any }) {
             isIconOnly
             size="sm"
             variant="light"
-            color={user.isActive ? "warning" : "success"}
-            onPress={handleToggleStatus}
-            isLoading={blockUserMutation.isPending}
-            title={user.isActive ? "Bloquear usuario" : "Activar usuario"}
+            color="primary"
+            onPress={() => setIsRoleModalOpen(true)}
+            title="Cambiar rol"
           >
-            {user.isActive ? (
-              <UserX className="h-4 w-4" />
-            ) : (
-              <UserCheck className="h-4 w-4" />
-            )}
+            <Settings className="h-4 w-4" />
           </Button>
+          {canBlockUser() && (
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              color={user.isActive ? "warning" : "success"}
+              onPress={handleToggleStatus}
+              isLoading={blockUserMutation.isPending}
+              title={user.isActive ? "Bloquear usuario" : "Activar usuario"}
+            >
+              {user.isActive ? (
+                <UserX className="h-4 w-4" />
+              ) : (
+                <UserCheck className="h-4 w-4" />
+              )}
+            </Button>
+          )}
           <Button
             isIconOnly
             size="sm"
@@ -431,6 +494,13 @@ function UserRow({ user }: { user: any }) {
           </Button>
         </div>
       </td>
+
+      {/* Role Change Modal */}
+      <ChangeUserRoleModal
+        user={user}
+        isOpen={isRoleModalOpen}
+        onOpenChange={setIsRoleModalOpen}
+      />
     </tr>
   );
 }

@@ -41,9 +41,33 @@ export interface UsersResponse {
   data: User[];
 }
 
+export interface PaginatedUsersResponse {
+  data: {
+    users: User[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface UsersFilterArgs {
+  roles?: string[];
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 export interface ActionResponse<T> {
   data?: T;
   error?: string;
+}
+
+export interface UpdateUserRolesInput {
+  id: string;
+  roles: string[];
 }
 
 export async function getUsers(token?: string): Promise<UsersResponse> {
@@ -105,6 +129,105 @@ export async function getUsers(token?: string): Promise<UsersResponse> {
   }
 
   return { data: result.data.users || [] };
+}
+
+export async function getUsersPaginated(
+  filters: UsersFilterArgs = {},
+  token?: string
+): Promise<PaginatedUsersResponse> {
+  const { roles = [], search, page = 1, limit = 10 } = filters;
+
+  console.log("🔍 Obteniendo usuarios paginados:", {
+    roles,
+    search,
+    page,
+    limit,
+  });
+
+  const headers = await getAuthHeaders();
+
+  // Si se proporciona un token específico, usarlo en su lugar
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query UsersPaginated($roles: [ValidRoles!], $search: String, $page: Int, $limit: Int) {
+          usersPaginated(roles: $roles, search: $search, page: $page, limit: $limit) {
+            users {
+              id
+              fullName
+              email
+              roles
+              isActive
+              lastUpdateBy {
+                id
+                fullName
+              }
+            }
+            total
+            page
+            limit
+            totalPages
+            hasNextPage
+            hasPreviousPage
+          }
+        }
+      `,
+      variables: { roles, search, page, limit },
+    }),
+  });
+
+  console.log("📥 Respuesta HTTP:", response.status, response.statusText);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("❌ Error en respuesta HTTP:", errorText);
+    throw new Error(`Error HTTP: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    console.error("❌ GraphQL errors:", result.errors);
+
+    // Si es un error de permisos, devolver respuesta vacía
+    if (
+      result.errors.some(
+        (err: any) =>
+          err.message.includes("superUser") ||
+          err.extensions?.code === "FORBIDDEN"
+      )
+    ) {
+      console.warn(
+        "⚠️ Error de permisos en getUsersPaginated, devolviendo respuesta vacía"
+      );
+      return {
+        data: {
+          users: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+    }
+
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  const paginatedData = result.data.usersPaginated;
+  console.log(
+    `✅ Se encontraron ${paginatedData.total} usuarios (página ${paginatedData.page})`
+  );
+
+  return { data: paginatedData };
 }
 
 export async function getUser(
@@ -583,5 +706,65 @@ async function extractTeachersFromContents(token?: string): Promise<User[]> {
   } catch (error) {
     console.error("❌ Error al extraer profesores de contenidos:", error);
     return [];
+  }
+}
+
+/**
+ * Actualiza los roles de un usuario
+ */
+export async function updateUserRoles(
+  input: UpdateUserRolesInput,
+  token?: string
+): Promise<ActionResponse<User>> {
+  try {
+    if (!input.id || !input.roles || input.roles.length === 0) {
+      throw new Error("ID de usuario y roles son requeridos");
+    }
+
+    const headers = await getAuthHeaders();
+
+    // Si se proporciona un token específico, usarlo en su lugar
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          mutation UpdateUserRoles($updateUserRolesInput: UpdateUserRolesInput!) {
+            updateUserRoles(updateUserRolesInput: $updateUserRolesInput) {
+              id
+              fullName
+              email
+              roles
+              isActive
+              lastUpdateBy {
+                id
+                fullName
+              }
+            }
+          }
+        `,
+        variables: { updateUserRolesInput: input },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al actualizar los roles del usuario");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    return { data: result.data.updateUserRoles };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
   }
 }

@@ -7,9 +7,29 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { MilkdownProvider } from "@milkdown/react";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { AuthErrorProvider } from "@/components/providers/auth-error-provider";
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: (failureCount, error: any) => {
+              // No reintentar si es un error de usuario bloqueado
+              if (
+                error?.message?.includes("Usuario no activo") ||
+                error?.message?.includes("Usuario inactivo") ||
+                error?.extensions?.code === "UNAUTHENTICATED"
+              ) {
+                return false;
+              }
+              return failureCount < 2;
+            },
+          },
+        },
+      })
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -24,7 +44,9 @@ export default function Providers({ children }: { children: ReactNode }) {
         <HeroUIProvider>
           <ToastProvider />
           <AuthProvider>
-            <MilkdownProvider>{children}</MilkdownProvider>
+            <AuthErrorProvider>
+              <MilkdownProvider>{children}</MilkdownProvider>
+            </AuthErrorProvider>
           </AuthProvider>
         </HeroUIProvider>
       </NextThemesProvider>

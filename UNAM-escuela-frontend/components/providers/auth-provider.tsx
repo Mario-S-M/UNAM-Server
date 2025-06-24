@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import React, { createContext, useContext, ReactNode } from "react";
 import { useCurrentUser, User } from "@/app/hooks/use-current-user";
 
@@ -21,6 +23,14 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const [lastValidUser, setLastValidUser] = React.useState<User | null>(
     initialUser || null
   );
+
+  // Manejar errores de autenticación
+  React.useEffect(() => {
+    if (error) {
+      // Si es un error de usuario bloqueado, el AuthErrorProvider se encargará
+      console.warn("Error de autenticación:", error);
+    }
+  }, [error]);
 
   // Mantener track del último usuario válido para evitar pérdida de estado
   React.useEffect(() => {

@@ -79,12 +79,17 @@ export function ClientHeader({ initialUser }: ClientHeaderProps) {
                             (role: string) => role === "mortal"
                           ) && <RoleBadge roles={user.roles} />}
                       </div>
-                      <ChevronDown className="h-4 w-4 text-default-400" />
+                      <ChevronDown className="h-4 w-4 text-default-600" />
                     </div>
                   </DropdownTrigger>
                   <DropdownMenu
                     aria-label="Opciones de usuario"
                     variant="faded"
+                    className="dropdown-white-text"
+                    classNames={{
+                      base: "shadow-none border-none",
+                      list: "shadow-none border-none",
+                    }}
                   >
                     <DropdownSection title="Navegación" showDivider>
                       <DropdownItem
@@ -131,27 +136,40 @@ export function ClientHeader({ initialUser }: ClientHeaderProps) {
                           icon: "text-default-600",
                         }}
                       />
-                      <span className="text-sm font-medium">Invitado</span>
-                      <ChevronDown className="h-4 w-4 text-default-400" />
+                      <span className="text-sm font-medium text-foreground">
+                        Invitado
+                      </span>
+                      <ChevronDown className="h-4 w-4 text-default-600" />
                     </div>
                   </DropdownTrigger>
                   <DropdownMenu
                     aria-label="Opciones de invitado"
                     variant="faded"
+                    className="dropdown-white-text"
+                    classNames={{
+                      base: "shadow-none border-none",
+                      list: "shadow-none border-none",
+                    }}
                   >
                     <DropdownItem
                       key="login"
-                      startContent={<UserIcon className="h-4 w-4" />}
+                      startContent={
+                        <UserIcon className="h-4 w-4 text-foreground" />
+                      }
                       onPress={loginModal.onOpen}
+                      className="text-foreground"
                     >
-                      Iniciar Sesión
+                      <span className="text-foreground">Iniciar Sesión</span>
                     </DropdownItem>
                     <DropdownItem
                       key="register"
-                      startContent={<UserIcon className="h-4 w-4" />}
+                      startContent={
+                        <UserIcon className="h-4 w-4 text-foreground" />
+                      }
                       onPress={registerModal.onOpen}
+                      className="text-foreground"
                     >
-                      Crear Cuenta
+                      <span className="text-foreground">Crear Cuenta</span>
                     </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>

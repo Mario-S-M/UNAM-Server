@@ -156,6 +156,12 @@ function UsersManagementContent() {
                   const selected = Array.from(keys)[0] as string;
                   setRoleFilter(selected || "");
                 }}
+                classNames={{
+                  trigger: "border-default-200 hover:border-default-300",
+                  value: "text-default-700",
+                  label: "text-default-600",
+                  selectorIcon: "text-default-600", // Fuerza el color del icono
+                }}
               >
                 <SelectItem key="superUser">Super Usuario</SelectItem>
                 <SelectItem key="admin">Administrador</SelectItem>

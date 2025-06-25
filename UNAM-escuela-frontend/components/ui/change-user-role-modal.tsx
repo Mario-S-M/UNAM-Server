@@ -211,6 +211,12 @@ export function ChangeUserRoleModal({
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
                     description="Solo se muestran los roles que puedes asignar"
+                    classNames={{
+                      trigger: "border-default-200 hover:border-default-300",
+                      value: "text-default-700",
+                      label: "text-default-600",
+                      selectorIcon: "text-default-600", // Fuerza el color del icono
+                    }}
                   >
                     {assignableRoles.map((role) => (
                       <SelectItem key={role} textValue={roleConfig[role].label}>

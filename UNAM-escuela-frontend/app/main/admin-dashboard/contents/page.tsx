@@ -229,6 +229,12 @@ function ContentsManagementContent() {
                     setSelectedLevel("");
                   }}
                   isLoading={languagesLoading}
+                  classNames={{
+                    trigger: "border-default-200 hover:border-default-300",
+                    value: "text-default-700",
+                    label: "text-default-600",
+                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                  }}
                 >
                   {(languages?.data || []).map((lang: any) => (
                     <SelectItem key={lang.id}>{lang.name}</SelectItem>
@@ -247,6 +253,12 @@ function ContentsManagementContent() {
                   }}
                   isLoading={levelsLoading}
                   isDisabled={!selectedLanguage}
+                  classNames={{
+                    trigger: "border-default-200 hover:border-default-300",
+                    value: "text-default-700",
+                    label: "text-default-600",
+                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                  }}
                 >
                   {(levels?.data || []).map((level: any) => (
                     <SelectItem key={level.id}>{level.name}</SelectItem>
@@ -264,6 +276,12 @@ function ContentsManagementContent() {
                     setSelectedSkill(selected || "");
                   }}
                   isLoading={skillsLoading}
+                  classNames={{
+                    trigger: "border-default-200 hover:border-default-300",
+                    value: "text-default-700",
+                    label: "text-default-600",
+                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                  }}
                 >
                   {(skills?.data || []).map((skill: any) => (
                     <SelectItem key={skill.id}>
@@ -428,7 +446,6 @@ function ContentsManagementContent() {
                                   size="sm"
                                   color="success"
                                   variant="dot"
-                                  startContent={<User size={16} />}
                                 >
                                   Validado
                                 </Chip>
@@ -437,7 +454,6 @@ function ContentsManagementContent() {
                                   size="sm"
                                   color="danger"
                                   variant="dot"
-                                  startContent={<User size={16} />}
                                 >
                                   Sin validar
                                 </Chip>

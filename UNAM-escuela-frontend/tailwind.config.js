@@ -44,22 +44,8 @@ module.exports = {
         "unam-light-theme": {
           extend: "light",
           colors: {
-            background: "#ffffff", // Blanco puro
+            background: "#ffffff", // Blanco puro - HeroUI generará content1-4 automáticamente
             foreground: "#16090d", // Texto oscuro
-            default: {
-              50: "#fceff2",
-              100: "#ddd8d9",
-              200: "#bfbfc1",
-              300: "#8a8a8b", // Mejorado para mejor contraste en texto inactivo
-              400: "#6c6c6c", // Más oscuro para mejor legibilidad
-              500: "#5a5a5a", // Texto más fuerte
-              600: "#454545",
-              700: "#3f3f41",
-              800: "#292526",
-              900: "#16090d",
-              DEFAULT: "#5e5e5f",
-              foreground: "#ffffff",
-            },
             primary: {
               50: "#e6f3ff",
               100: "#c5d8ee",
@@ -89,28 +75,13 @@ module.exports = {
               foreground: "#16090d",
             },
             focus: "#2c4d71", // Azul UNAM
-            divider: "#e5e7eb", // Para bordes y separadores
           },
         },
         "unam-dark-theme": {
           extend: "dark",
           colors: {
-            background: "#1f2526", // Gris oscuro (corregido)
+            background: "#1f2526", // Gris oscuro - HeroUI generará content1-4 automáticamente
             foreground: "#e6e9ef", // Texto claro
-            default: {
-              50: "#e6f3ff",
-              100: "#c5d8ee",
-              200: "#a2bedc",
-              300: "#7fa4cd",
-              400: "#5c8abe",
-              500: "#4271a4",
-              600: "#325880",
-              700: "#223f5d",
-              800: "#10263a",
-              900: "#000e19",
-              DEFAULT: "#2c4d71", // Azul UNAM para botones
-              foreground: "#ffffff",
-            },
             primary: {
               50: "#e6f3ff",
               100: "#c5d8ee",
@@ -140,32 +111,13 @@ module.exports = {
               foreground: "#1f2526",
             },
             focus: "#e9ae3c", // Dorado UNAM
-            divider: "#374151", // Para bordes y separadores en tema oscuro
           },
         },
         contraste: {
           extend: "dark",
           colors: {
-            background: "#000000", // Negro puro para alto contraste
+            background: "#000000", // Negro puro - HeroUI generará content1-4 automáticamente
             foreground: "#ffff00", // AMARILLO PURO para texto - Contraste 19.56:1 (WCAG AAA)
-            content1: "#1a1a1a", // Gris muy oscuro para paneles - Contraste 12.63:1
-            content2: "#262626", // Gris oscuro para contenido secundario - Contraste 9.74:1
-            content3: "#333333", // Gris medio oscuro - Contraste 7.54:1
-            content4: "#404040", // Gris medio - Contraste 5.74:1
-            default: {
-              50: "#ffffff", // Blanco puro
-              100: "#f2f2f2", // Gris muy claro - Contraste 18.77:1
-              200: "#e6e6e6", // Gris claro - Contraste 16.75:1
-              300: "#cccccc", // Gris claro medio - Contraste 12.63:1
-              400: "#b3b3b3", // Gris medio claro - Contraste 9.74:1
-              500: "#808080", // Gris medio - Contraste 5.31:1 (WCAG AA)
-              600: "#666666", // Gris medio oscuro - Contraste 7.54:1
-              700: "#4d4d4d", // Gris oscuro - Contraste 11.59:1
-              800: "#333333", // Gris muy oscuro - Contraste 7.54:1
-              900: "#1a1a1a", // Casi negro - Contraste 12.63:1
-              DEFAULT: "#e6e6e6", // Gris claro para elementos neutros - Contraste 16.75:1
-              foreground: "#000000", // Negro sobre elementos default
-            },
             primary: {
               50: "#ffffff", // Blanco puro
               100: "#f5f5f5", // Gris muy claro
@@ -179,34 +131,6 @@ module.exports = {
               900: "#212121", // Gris muy oscuro
               DEFAULT: "#ffffff", // Blanco para botones - Contraste 21:1 con negro
               foreground: "#000000", // Negro sobre blanco - Contraste 21:1
-            },
-            secondary: {
-              50: "#ffffff",
-              100: "#f2f2f2",
-              200: "#e6e6e6",
-              300: "#cccccc",
-              400: "#b3b3b3",
-              500: "#999999",
-              600: "#808080",
-              700: "#666666",
-              800: "#4d4d4d",
-              900: "#333333",
-              DEFAULT: "#e6e6e6", // Gris claro para elementos secundarios
-              foreground: "#000000", // Negro sobre gris claro
-            },
-            success: {
-              50: "#e8f5e8",
-              100: "#c8e6c9",
-              200: "#a5d6a7",
-              300: "#81c784",
-              400: "#66bb6a",
-              500: "#4caf50", // Verde estándar más suave
-              600: "#43a047",
-              700: "#388e3c",
-              800: "#2e7d32",
-              900: "#1b5e20",
-              DEFAULT: "#ffffff", // Fondo blanco para success
-              foreground: "#1b5e20", // Verde oscuro sobre blanco
             },
             warning: {
               50: "#fff8e1",
@@ -237,7 +161,6 @@ module.exports = {
               foreground: "#b71c1c", // Rojo oscuro sobre blanco
             },
             focus: "#ffff00", // AMARILLO PURO para focus - máximo contraste
-            divider: "#666666", // Gris medio para divisores - Contraste 7.54:1 (WCAG AA)
           },
         },
       },
@@ -276,6 +199,30 @@ module.exports = {
         },
         ".border-theme-divider": {
           borderColor: "hsl(var(--heroui-divider) / 1)",
+        },
+        // Clases para iconos con colores de tema
+        ".text-theme-default": {
+          color: "hsl(var(--heroui-default-500) / 1)",
+        },
+        ".text-theme-icon": {
+          color: "hsl(var(--heroui-default-600) / 1)",
+        },
+        // Clase para iconos de avatar que se adapta al tema
+        ".text-avatar-icon": {
+          color: "hsl(var(--heroui-default-600) / 1)", // Gris oscuro en tema claro
+        },
+        ".dark .text-avatar-icon": {
+          color: "#ffffff", // Blanco en tema oscuro
+        },
+        // Clase para borde hover del avatar que se adapta al tema
+        ".avatar-hover-border": {
+          borderColor: "hsl(var(--heroui-divider) / 1)",
+        },
+        ".avatar-hover-border:hover": {
+          borderColor: "hsl(var(--heroui-default-400) / 1)", // Tema claro
+        },
+        ".dark .avatar-hover-border:hover": {
+          borderColor: "hsl(var(--heroui-default-500) / 1)", // Tema oscuro - más suave
         },
       });
     },

@@ -133,4 +133,53 @@
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
   }
+
+  /* Forzar colores correctos SOLO en dropdowns específicos que lo necesiten */
+  /* Remover reglas globales para permitir estilos por defecto en todos los componentes */
+
+  /* Solo aplicar texto adaptativo a dropdowns específicos usando clases personalizadas */
+  .dropdown-white-text * {
+    color: hsl(var(--heroui-foreground)) !important;
+  }
+
+  /* Usar colores nativos del tema para content1 (dropdowns) */
+  .dropdown-white-text [data-slot="content"] {
+    background-color: hsl(var(--heroui-content1)) !important;
+    color: hsl(var(--heroui-foreground)) !important;
+  }
+
+  /* Hover en tema oscuro - usar data-hover oficial de HeroUI para mejor compatibilidad */
+  .dark .dropdown-white-text [data-slot="base"][data-hover="true"],
+  html.dark .dropdown-white-text [data-slot="base"][data-hover="true"],
+  .dark .dropdown-white-text [data-hover="true"] {
+    background-color: #dbeafe !important; /* azul clarito */
+    color: #1f2937 !important; /* texto oscuro para contraste */
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+  }
+
+  /* Asegurar que todos los elementos hijos también tengan el texto oscuro en hover */
+  .dark .dropdown-white-text [data-slot="base"][data-hover="true"] *,
+  html.dark .dropdown-white-text [data-slot="base"][data-hover="true"] *,
+  .dark .dropdown-white-text [data-hover="true"] * {
+    color: #1f2937 !important; /* texto oscuro para contraste con fondo azul */
+  }
+
+  /* Asegurar que iconos también se vean bien con data-hover */
+  .dark .dropdown-white-text [data-hover="true"] svg,
+  .dark .dropdown-white-text [data-slot="base"][data-hover="true"] svg {
+    color: #1f2937 !important; /* iconos oscuros para contraste */
+  }
+
+  /* Reglas de respaldo para elementos sin data-hover (compatibilidad) */
+  .dark .dropdown-white-text li:hover,
+  .dark .dropdown-white-text button:hover {
+    background-color: #dbeafe !important; /* azul clarito */
+    color: #1f2937 !important; /* texto oscuro */
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+  }
+
+  .dark .dropdown-white-text li:hover *,
+  .dark .dropdown-white-text button:hover * {
+    color: #1f2937 !important; /* texto oscuro */
+  }
 }

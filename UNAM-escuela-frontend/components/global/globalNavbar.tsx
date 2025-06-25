@@ -184,13 +184,21 @@ function GlobalNavbar({ lenguageId }: PageProps) {
             <Avatar
               isBordered
               as="button"
-              className="border-divider hover:border-default-300"
+              className="avatar-hover-border"
               color={roleColor as any}
-              fallback={<User size={24} className="text-white" />}
+              fallback={<User size={24} className="text-default-400" />}
               size="md"
             />
           </DropdownTrigger>
-          <DropdownMenu aria-label="Opciones de perfil" variant="flat">
+          <DropdownMenu
+            aria-label="Opciones de perfil"
+            variant="faded"
+            className="dropdown-white-text"
+            classNames={{
+              base: "shadow-none border-none",
+              list: "shadow-none border-none",
+            }}
+          >
             <DropdownItem
               key="user-info"
               className="h-16 gap-2"
@@ -203,7 +211,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
                     size="sm"
                     color={roleColor as any}
                     variant="flat"
-                    startContent={<User size={12} />}
+                    startContent={<User size={12} className="text-current" />}
                   >
                     {roleLabel}
                   </Chip>
@@ -214,19 +222,27 @@ function GlobalNavbar({ lenguageId }: PageProps) {
               <>
                 <DropdownItem
                   key="panel"
-                  className="text-foreground hover:bg-content1"
+                  className="text-foreground hover:bg-content1 dark:hover:text-black"
                   onPress={() => {
                     const panelRoute = getPanelRoute(highestRole || "");
                     router.replace(panelRoute);
+                  }}
+                  classNames={{
+                    title: "dark:hover:text-black",
+                    description: "dark:hover:text-black",
                   }}
                 >
                   Panel
                 </DropdownItem>
                 <DropdownItem
                   key="logout"
-                  className="text-danger hover:bg-danger-50"
+                  className="text-danger hover:bg-danger-50 dark:hover:text-black"
                   color="danger"
                   onPress={() => logoutAction()}
+                  classNames={{
+                    title: "dark:hover:text-black",
+                    description: "dark:hover:text-black",
+                  }}
                 >
                   Cerrar Sesión
                 </DropdownItem>
@@ -236,17 +252,25 @@ function GlobalNavbar({ lenguageId }: PageProps) {
               <>
                 <DropdownItem
                   key="login"
-                  className="text-primary hover:bg-primary-50"
+                  className="text-primary hover:bg-primary-50 dark:hover:text-black"
                   color="primary"
                   onPress={loginModal.onOpen}
+                  classNames={{
+                    title: "dark:hover:text-black",
+                    description: "dark:hover:text-black",
+                  }}
                 >
                   Iniciar Sesión
                 </DropdownItem>
                 <DropdownItem
                   key="register"
-                  className="text-primary hover:bg-primary-50"
+                  className="text-primary hover:bg-primary-50 dark:hover:text-black"
                   color="primary"
                   onPress={registerModal.onOpen}
+                  classNames={{
+                    title: "dark:hover:text-black",
+                    description: "dark:hover:text-black",
+                  }}
                 >
                   Crear Cuenta
                 </DropdownItem>

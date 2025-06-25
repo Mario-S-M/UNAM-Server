@@ -6,7 +6,7 @@ export interface GlobalSelectProps extends Omit<SelectProps, "error"> {
 }
 
 const GlobalSelect = React.forwardRef<HTMLSelectElement, GlobalSelectProps>(
-  ({ errorMessage, className, ...props }, ref) => {
+  ({ errorMessage, className, classNames, ...props }, ref) => {
     return (
       <Select
         ref={ref}
@@ -15,6 +15,13 @@ const GlobalSelect = React.forwardRef<HTMLSelectElement, GlobalSelectProps>(
         errorMessage={errorMessage}
         className={`w-full ${className || ""} text-foreground`}
         variant="bordered"
+        classNames={{
+          trigger: "border-default-200 hover:border-default-300",
+          value: "text-default-700",
+          label: "text-default-600",
+          selectorIcon: "text-default-600", // Fuerza el color del icono
+          ...classNames, // Permite override si se pasan classNames específicos
+        }}
       />
     );
   }

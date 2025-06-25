@@ -134,6 +134,12 @@ function LevelsManagementContent() {
                     setSelectedLanguage(selected || "");
                   }}
                   isLoading={languagesLoading}
+                  classNames={{
+                    trigger: "border-default-200 hover:border-default-300",
+                    value: "text-default-700",
+                    label: "text-default-600",
+                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                  }}
                 >
                   {(languages?.data || []).map((lang: any) => (
                     <SelectItem key={lang.id}>{lang.name}</SelectItem>

@@ -127,7 +127,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
       case "alumno":
         return "/main/student";
       default:
-        return "/main";
+        return "/";
     }
   };
 

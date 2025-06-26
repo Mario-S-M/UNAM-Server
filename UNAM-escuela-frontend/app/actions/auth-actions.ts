@@ -262,7 +262,7 @@ export async function registerAction(
     await debugCookieConfiguration();
 
     // Los nuevos usuarios van a la página principal por defecto (rol mortal)
-    const redirectPath = "/main";
+    const redirectPath = "/";
 
     console.log("🎯 Redirección determinada:", {
       redirectPath,

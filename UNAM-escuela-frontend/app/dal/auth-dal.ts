@@ -63,7 +63,7 @@ export class AuthDAL {
     mortal: {
       level: 1,
       permissions: [],
-      redirectTo: "/main",
+      redirectTo: "/",
       displayName: "Usuario",
     },
   };
@@ -137,7 +137,7 @@ export class AuthDAL {
     if (!highestRole) {
       return {
         hasAccess: false,
-        redirectTo: "/main",
+        redirectTo: "/",
         reason: "Usuario sin roles válidos",
       };
     }
@@ -181,7 +181,7 @@ export class AuthDAL {
    */
   static getUserMainPage(user: User | null): string {
     const highestRole = this.getHighestRole(user);
-    if (!highestRole) return "/main";
+    if (!highestRole) return "/";
 
     return this.ROLE_HIERARCHY[highestRole].redirectTo;
   }

@@ -71,7 +71,7 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
             );
             router.replace(result.redirect.destination);
           } else {
-            router.replace("/main");
+            router.replace("/");
           }
         }, 1000);
       }

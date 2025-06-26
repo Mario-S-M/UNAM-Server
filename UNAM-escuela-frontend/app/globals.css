@@ -45,10 +45,35 @@
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
+    color: hsl(var(--heroui-foreground)) !important;
+    opacity: 0.7 !important;
+    transition: all 0.2s ease-in-out !important;
+    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   [data-slot="close-button"]:hover {
     background: hsl(var(--heroui-default-100)) !important;
+    opacity: 1 !important;
+    transform: scale(1.05) !important;
+  }
+
+  [data-slot="close-button"]:focus,
+  [data-slot="close-button"]:focus-visible {
+    outline: 2px solid hsl(var(--heroui-primary)) !important;
+    outline-offset: 2px !important;
+    background: hsl(var(--heroui-default-100)) !important;
+  }
+
+  /* Icono dentro del botón de cerrar */
+  [data-slot="close-button"] svg {
+    color: hsl(var(--heroui-foreground)) !important;
+    width: 18px !important;
+    height: 18px !important;
   }
 
   /* Remover shadows específicamente de todos los elementos de modal */
@@ -208,4 +233,145 @@
 body.resizing {
   cursor: col-resize !important;
   user-select: none !important;
+}
+
+/* Adaptar icono del selector al color del tema - Reglas más específicas */
+[data-slot="selectorIcon"] svg,
+[data-slot="selectorIcon"] path,
+.w-full [data-slot="selectorIcon"] svg,
+.w-full [data-slot="selectorIcon"] path,
+[class*="heroui"] [data-slot="selectorIcon"] svg,
+[class*="heroui"] [data-slot="selectorIcon"] path {
+  color: hsl(var(--heroui-foreground)) !important;
+  fill: hsl(var(--heroui-foreground)) !important;
+  stroke: hsl(var(--heroui-foreground)) !important;
+}
+
+[data-slot="selectorIcon"],
+.w-full [data-slot="selectorIcon"],
+[class*="heroui"] [data-slot="selectorIcon"] {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Reglas específicas por tema para mayor compatibilidad */
+.light [data-slot="selectorIcon"] svg,
+.light [data-slot="selectorIcon"] path,
+html.light [data-slot="selectorIcon"] svg,
+html.light [data-slot="selectorIcon"] path {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.dark [data-slot="selectorIcon"] svg,
+.dark [data-slot="selectorIcon"] path,
+html.dark [data-slot="selectorIcon"] svg,
+html.dark [data-slot="selectorIcon"] path {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.contraste [data-slot="selectorIcon"] svg,
+.contraste [data-slot="selectorIcon"] path,
+html.contraste [data-slot="selectorIcon"] svg,
+html.contraste [data-slot="selectorIcon"] path {
+  color: #ffff00 !important;
+  fill: #ffff00 !important;
+  stroke: #ffff00 !important;
+}
+
+/* Asegurar que el valor seleccionado sea visible */
+[data-slot="value"],
+.w-full [data-slot="value"],
+[class*="heroui"] [data-slot="value"] {
+  color: hsl(var(--heroui-foreground)) !important;
+  opacity: 1 !important;
+}
+
+/* Específico para selects que no muestran valor seleccionado */
+[data-slot="trigger"] [data-slot="value"],
+[data-slot="trigger"] .flex.items-center.gap-2 {
+  color: hsl(var(--heroui-foreground)) !important;
+  opacity: 1 !important;
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* Reglas específicas para valores de Select - forzar visibilidad */
+.heroui-select [data-slot="value"],
+[data-component="select"] [data-slot="value"],
+select [data-slot="value"] {
+  opacity: 1 !important;
+  color: hsl(var(--heroui-foreground)) !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Asegurar que el contenido del renderValue sea visible */
+.heroui-select [data-slot="value"] > *,
+[data-component="select"] [data-slot="value"] > *,
+select [data-slot="value"] > * {
+  opacity: 1 !important;
+  color: inherit !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+/* Forzar display para valores en Select específicamente */
+[aria-haspopup="listbox"] [data-slot="value"],
+[role="combobox"] [data-slot="value"] {
+  opacity: 1 !important;
+  color: hsl(var(--heroui-foreground)) !important;
+  display: flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+}
+
+/* Específico para el modal de cambio de rol */
+[data-slot="trigger"]:has([data-slot="value"]) {
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Asegurar que placeholder y value no se confundan */
+[data-slot="value"]:not(:empty) {
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+[data-slot="value"]:empty + [data-slot="placeholder"] {
+  opacity: 0.5 !important;
+}
+
+/* Forzar visibilidad del valor seleccionado en selects específicamente */
+[data-slot="trigger"] [data-slot="value"]:not(:empty),
+[role="combobox"] [data-slot="value"]:not(:empty) {
+  opacity: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  color: hsl(var(--heroui-foreground)) !important;
+  font-weight: 400 !important;
+  min-height: 1rem !important;
+}
+
+/* Asegurar que el renderValue tenga prioridad sobre placeholder */
+[data-slot="value"] > div.flex.items-center.gap-2 {
+  opacity: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  color: hsl(var(--heroui-foreground)) !important;
+}
+
+/* Forzar colores en elementos de renderValue */
+[data-slot="value"] > div.flex.items-center.gap-2 > span,
+[data-slot="value"] > div.flex.items-center.gap-2 > svg {
+  color: hsl(var(--heroui-foreground)) !important;
+  opacity: 1 !important;
+}
+
+/* Ocultar placeholder cuando hay valor */
+[data-slot="trigger"]:has([data-slot="value"]:not(:empty))
+  [data-slot="placeholder"] {
+  display: none !important;
 }

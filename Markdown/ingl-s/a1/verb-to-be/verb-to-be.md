@@ -2,14 +2,14 @@
 
 ## Descripción
 
-El nivel A1 de inglés corresponde al nivel más básico según el Marco Común Europeo de Referencia (MCER). Los estudiantes de este nivel pueden comprender y usar expresiones familiares del día a día y frases muy básicas para satisfacer necesidades concretas 
+Descripción del nivel A1
 
 ## Información del Contenido
 
 - **Lenguaje**: Inglés
 - **Nivel**: A1
 - **Estado**: Borrador
-- **Fecha de creación**: 18/6/2025
+- **Fecha de creación**: 26/6/2025
 
 ## Objetivos de Aprendizaje
 

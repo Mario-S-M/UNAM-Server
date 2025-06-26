@@ -27,33 +27,6 @@ export default function Footer() {
         </div>
 
         <div className="flex-1">
-          <h4 className="font-bold mb-3 text-primary-foreground">
-            Cursos y Acreeditaciones
-          </h4>
-          <div className="grid grid-cols-2 gap-x-4">
-            <ul className="space-y-1 text-sm text-primary-foreground/80">
-              {[
-                "Ingles A1",
-                "Ingles A2",
-                "Ingles B1",
-                "Ingles B2",
-                "Ingles C1",
-                "Ingles C2",
-              ].map((item) => (
-                <li key={item}>
-                  <a
-                    href="#"
-                    className="hover:text-primary-foreground text-primary-foreground/80"
-                  >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="flex-1">
           <h4 className="font-bold mb-3 text-primary-foreground">Contacto</h4>
 
           <div className="text-sm text-primary-foreground/80 mb-4">

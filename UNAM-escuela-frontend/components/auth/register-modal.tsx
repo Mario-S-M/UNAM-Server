@@ -37,11 +37,19 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
       return result;
     },
     onSuccess: (result) => {
-      console.log("✅ Modal: Registro exitoso:", result);
+      console.log("✅ Modal: Procesando resultado del registro:", result);
 
+      // Si hay un error en el resultado, mostrarlo directamente sin lanzar excepción
       if (result.error) {
-        console.error("❌ Modal: Error en resultado:", result.error);
-        throw new Error(result.error);
+        console.log("ℹ️ Modal: Error de registro:", result.error);
+        addToast({
+          title: "Error al crear cuenta",
+          color: "danger",
+          description: result.error,
+          timeout: 5000,
+          shouldShowTimeoutProgress: true,
+        });
+        return; // Salir temprano sin proceder con el registro exitoso
       }
 
       if (result.data) {

@@ -28,11 +28,19 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
       return result;
     },
     onSuccess: (result) => {
-      console.log("✅ Modal: Login exitoso:", result);
+      console.log("✅ Modal: Procesando resultado del login:", result);
 
+      // Si hay un error en el resultado, mostrarlo directamente sin lanzar excepción
       if (result.error) {
-        console.error("❌ Modal: Error en resultado:", result.error);
-        throw new Error(result.error);
+        console.log("ℹ️ Modal: Error de autenticación:", result.error);
+        addToast({
+          title: "Error de Inicio de Sesión",
+          color: "danger",
+          description: result.error,
+          timeout: 5000,
+          shouldShowTimeoutProgress: true,
+        });
+        return; // Salir temprano sin proceder con el login exitoso
       }
 
       if (result.data) {

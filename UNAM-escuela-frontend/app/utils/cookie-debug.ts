@@ -44,33 +44,39 @@ export async function setCookieWithDebug(token: string, useAltConfig = false) {
     console.log("🍪 Setting cookie with debug info...");
     const cookieStore = await cookies();
 
-    // Usar configuración alternativa si se especifica
-    const cookieOptions = useAltConfig
-      ? {
-          name: "UNAM-INCLUSION-TOKEN",
-          value: token,
-          httpOnly: true,
-          secure: false, // CRÍTICO: false para HTTP
-          sameSite: "lax" as const,
-          path: "/",
-          // NO especificar dominio
-          maxAge: 60 * 60 * 24 * 7, // 7 días
-        }
-      : {
-          name: "UNAM-INCLUSION-TOKEN",
-          value: token,
-          httpOnly: true,
-          secure: false, // CRÍTICO: false para HTTP
-          sameSite: "lax" as const,
-          path: "/",
-          domain: "132.247.186.91", // Dominio específico
-          maxAge: 60 * 60 * 24 * 7, // 7 días
-        };
+    // Usar configuración apropiada según el entorno
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions =
+      useAltConfig || !isProduction
+        ? {
+            name: "UNAM-INCLUSION-TOKEN",
+            value: token,
+            httpOnly: true,
+            secure: false, // CRÍTICO: false para HTTP
+            sameSite: "lax" as const,
+            path: "/",
+            // NO especificar dominio en desarrollo o configuración alternativa
+            maxAge: 60 * 60 * 24 * 7, // 7 días
+          }
+        : {
+            name: "UNAM-INCLUSION-TOKEN",
+            value: token,
+            httpOnly: true,
+            secure: false, // CRÍTICO: false para HTTP
+            sameSite: "lax" as const,
+            path: "/",
+            domain: "132.247.186.91", // Dominio específico solo en producción
+            maxAge: 60 * 60 * 24 * 7, // 7 días
+          };
 
     console.log("🍪 Cookie options:", {
       ...cookieOptions,
       value: "***TOKEN***",
-      configType: useAltConfig ? "WITHOUT_DOMAIN" : "WITH_DOMAIN",
+      configType:
+        useAltConfig || !isProduction
+          ? "DEVELOPMENT_OR_ALT"
+          : "PRODUCTION_WITH_DOMAIN",
+      environment: isProduction ? "production" : "development",
     });
 
     cookieStore.set(cookieOptions);

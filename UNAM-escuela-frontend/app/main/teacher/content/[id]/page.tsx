@@ -199,7 +199,7 @@ function ViewContentPageContent() {
           <CardHeader>
             <h2 className="text-xl font-semibold">Contenido</h2>
           </CardHeader>
-          <CardBody>
+          <CardBody className="p-2">
             {markdownData?.data ? (
               <div className="prose prose-gray max-w-none">
                 <MilkdownReadOnlyViewer content={markdownData.data} />

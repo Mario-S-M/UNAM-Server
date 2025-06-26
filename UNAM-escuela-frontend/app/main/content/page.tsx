@@ -354,7 +354,6 @@ function ContentCard({ content }: ContentCardProps) {
               }
               variant="dot"
               size="sm"
-              startContent={<User size={16} />}
             >
               {content.validationStatus === "validado"
                 ? "Validado"

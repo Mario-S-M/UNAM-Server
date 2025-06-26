@@ -5,7 +5,7 @@ import { Crepe } from "@milkdown/crepe";
 import { Milkdown, useEditor } from "@milkdown/react";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import "../../app/milkdown-custom-theme.css"; 
+import "../../app/milkdown-custom-theme.css";
 
 interface MilkdownReadOnlyViewerProps {
   content: string;
@@ -49,8 +49,11 @@ const MilkdownReadOnlyViewer: FC<MilkdownReadOnlyViewerProps> = ({
   );
 
   return (
-    <div className="h-full w-full">
-      <div className="p-1 max-w-none">
+    <div
+      className="milkdown-readonly h-full w-full flex justify-center"
+      style={{ padding: 0, margin: 0 }}
+    >
+      <div className="w-full max-w-none" style={{ padding: 0, margin: 0 }}>
         <Milkdown />
       </div>
     </div>

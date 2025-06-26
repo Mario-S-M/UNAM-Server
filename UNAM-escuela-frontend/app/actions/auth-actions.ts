@@ -104,10 +104,12 @@ export async function loginAction(
     // Debug de configuración antes de guardar
     await debugCookieConfiguration();
 
-    // Intentar primero con dominio específico
-    let cookieResult = await setCookieWithDebug(validated.token, false);
+    // En desarrollo, usar configuración sin dominio. En producción, intentar primero con dominio
+    const isDevelopment = process.env.NODE_ENV === "development";
+    let cookieResult = await setCookieWithDebug(validated.token, isDevelopment);
 
-    if (!cookieResult.success || !cookieResult.wasSet) {
+    // Solo en producción, si falló con dominio específico, intentar sin dominio
+    if (!isDevelopment && (!cookieResult.success || !cookieResult.wasSet)) {
       console.warn(
         "⚠️ Falló con dominio específico, intentando sin dominio..."
       );
@@ -237,10 +239,12 @@ export async function registerAction(
     // Debug de configuración antes de guardar
     await debugCookieConfiguration();
 
-    // Intentar primero con dominio específico
-    let cookieResult = await setCookieWithDebug(validated.token, false);
+    // En desarrollo, usar configuración sin dominio. En producción, intentar primero con dominio
+    const isDevelopment = process.env.NODE_ENV === "development";
+    let cookieResult = await setCookieWithDebug(validated.token, isDevelopment);
 
-    if (!cookieResult.success || !cookieResult.wasSet) {
+    // Solo en producción, si falló con dominio específico, intentar sin dominio
+    if (!isDevelopment && (!cookieResult.success || !cookieResult.wasSet)) {
       console.warn(
         "⚠️ Falló con dominio específico, intentando sin dominio..."
       );

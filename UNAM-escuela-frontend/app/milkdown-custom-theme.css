@@ -5,3 +5,35 @@
   --crepe-font-title: var(--font-geist-sans), Outfit, Georgia, Cambria,
     "Times New Roman", Times, serif;
 }
+
+/* Reglas específicas para el componente readonly - eliminar padding y margin */
+.milkdown-readonly .milkdown .milkdown-editor,
+.milkdown-readonly .milkdown .crepe-editor,
+.milkdown-readonly .milkdown .editor,
+.milkdown-readonly .milkdown > div,
+.milkdown-readonly .milkdown [data-milkdown-editor],
+.milkdown-readonly .milkdown .crepe-editor-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Asegurar que el contenido del editor readonly no tenga padding */
+.milkdown-readonly .milkdown .ProseMirror {
+  padding: 0 !important;
+  margin: 0 auto !important;
+  max-width: 100% !important;
+  text-align: left !important;
+}
+
+/* Centrar el contenido del markdown solo en readonly */
+.milkdown-readonly .milkdown {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+}
+
+.milkdown-readonly .milkdown .ProseMirror {
+  width: 100% !important;
+  max-width: none !important;
+}

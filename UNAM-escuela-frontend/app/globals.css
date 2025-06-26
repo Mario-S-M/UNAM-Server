@@ -183,3 +183,29 @@
     color: #1f2937 !important; /* texto oscuro */
   }
 }
+
+/* Asegurar que ScrollShadow no tenga padding interno */
+[data-slot="base"] {
+  padding: 0 !important;
+}
+
+/* Eliminar cualquier padding de HeroUI ScrollShadow */
+.heroui-scroll-shadow-base {
+  padding: 0 !important;
+}
+
+/* Estilos para el divisor redimensionable */
+.resizer-dragging {
+  user-select: none !important;
+}
+
+.resizer-dragging * {
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+/* Cursor personalizado durante el arrastre - más sutil */
+body.resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}

@@ -25,9 +25,10 @@ export function middleware(request: NextRequest) {
       process.env.NODE_ENV === "production"
         ? {
             httpOnly: true,
-            secure: true,
+            secure: false, // CRÍTICO: false porque no usas HTTPS
             sameSite: "lax" as const,
             path: "/",
+            domain: "132.247.186.91", // Dominio específico
             maxAge: 60 * 60 * 24 * 7,
             priority: "high" as const,
           }

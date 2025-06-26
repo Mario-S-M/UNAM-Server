@@ -14,6 +14,10 @@ import {
 } from "../interfaces/auth-interfaces";
 import { getUserMainPage, getHighestRole } from "../dal/auth-dal-server";
 import { getCookieConfig } from "../utils/cookie-config";
+import {
+  setCookieWithDebug,
+  debugCookieConfiguration,
+} from "../utils/cookie-debug";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -96,22 +100,29 @@ export async function loginAction(
     }
 
     console.log("✅ Login exitoso, guardando cookie...");
-    const cookieStore = await cookies();
 
-    // Usar configuración optimizada para el entorno
-    const cookieConfig = getCookieConfig();
-    const cookieOptions = {
-      name: "UNAM-INCLUSION-TOKEN",
-      value: validated.token,
-      ...cookieConfig,
-    };
+    // Debug de configuración antes de guardar
+    await debugCookieConfiguration();
 
-    console.log("🍪 Configuración de cookie:", {
-      ...cookieOptions,
-      value: "***TOKEN***", // No loggear el token real
-    });
+    // Intentar primero con dominio específico
+    let cookieResult = await setCookieWithDebug(validated.token, false);
 
-    cookieStore.set(cookieOptions);
+    if (!cookieResult.success || !cookieResult.wasSet) {
+      console.warn(
+        "⚠️ Falló con dominio específico, intentando sin dominio..."
+      );
+      cookieResult = await setCookieWithDebug(validated.token, true);
+    }
+
+    if (!cookieResult.success) {
+      console.error("❌ Falló al establecer cookie:", cookieResult.error);
+      throw new Error("Error al guardar sesión");
+    }
+
+    console.log("🍪 Cookie establecida exitosamente:", cookieResult);
+
+    // Debug de configuración después de guardar
+    await debugCookieConfiguration();
 
     // Usar el DAL para determinar la redirección inteligente
     const redirectPath = getUserMainPage(validated.user);
@@ -222,22 +233,29 @@ export async function registerAction(
     }
 
     console.log("✅ Registro exitoso, guardando cookie...");
-    const cookieStore = await cookies();
 
-    // Usar configuración optimizada para el entorno
-    const cookieConfig = getCookieConfig();
-    const cookieOptions = {
-      name: "UNAM-INCLUSION-TOKEN",
-      value: validated.token,
-      ...cookieConfig,
-    };
+    // Debug de configuración antes de guardar
+    await debugCookieConfiguration();
 
-    console.log("🍪 Configuración de cookie:", {
-      ...cookieOptions,
-      value: "***TOKEN***", // No loggear el token real
-    });
+    // Intentar primero con dominio específico
+    let cookieResult = await setCookieWithDebug(validated.token, false);
 
-    cookieStore.set(cookieOptions);
+    if (!cookieResult.success || !cookieResult.wasSet) {
+      console.warn(
+        "⚠️ Falló con dominio específico, intentando sin dominio..."
+      );
+      cookieResult = await setCookieWithDebug(validated.token, true);
+    }
+
+    if (!cookieResult.success) {
+      console.error("❌ Falló al establecer cookie:", cookieResult.error);
+      throw new Error("Error al guardar sesión");
+    }
+
+    console.log("🍪 Cookie establecida exitosamente:", cookieResult);
+
+    // Debug de configuración después de guardar
+    await debugCookieConfiguration();
 
     // Los nuevos usuarios van a la página principal por defecto (rol mortal)
     const redirectPath = "/main";

@@ -28,7 +28,7 @@ export function reestablishAuthCookie(options: CookieRecoveryOptions): boolean {
     const {
       token,
       maxAge = 60 * 60 * 24 * 7, // 7 días por defecto
-      secure = process.env.NODE_ENV === "production",
+      secure = false, // CRÍTICO: false para HTTP en producción
       sameSite = "lax",
     } = options;
 
@@ -37,6 +37,9 @@ export function reestablishAuthCookie(options: CookieRecoveryOptions): boolean {
       `Max-Age=${maxAge}`,
       `Path=/`,
       `SameSite=${sameSite}`,
+      ...(process.env.NODE_ENV === "production"
+        ? ["Domain=132.247.186.91"]
+        : []),
       ...(secure ? ["Secure"] : []),
     ].join("; ");
 

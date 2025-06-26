@@ -4,7 +4,6 @@ export interface Content {
   description: string;
   content?: string;
   levelId: string;
-  status?: string;
   validationStatus?: string;
   markdownPath?: string;
   assignedTeachers?: Teacher[];

@@ -97,7 +97,7 @@ function LanguagesManagementContent() {
               </Link>
               <div>
                 <h1 className="text-3xl font-bold text-primary">
-                  Gestión de Lenguajes
+                  Gestión de Idiomas
                 </h1>
                 <p className="text-foreground/70">
                   Administra los idiomas disponibles en el sistema
@@ -112,7 +112,7 @@ function LanguagesManagementContent() {
               <div className="flex flex-col md:flex-row gap-4 justify-between">
                 <Input
                   label="Buscar"
-                  placeholder="Buscar lenguajes..."
+                  placeholder="Buscar idiomas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   startContent={<Search className="h-4 w-4" />}
@@ -124,22 +124,22 @@ function LanguagesManagementContent() {
                   startContent={<Plus className="h-4 w-4" />}
                   onPress={() => setIsCreateModalOpen(true)}
                 >
-                  Crear Lenguaje
+                  Crear Idioma
                 </Button>
               </div>
             </CardBody>
           </Card>
 
-          {/* Tabla de Lenguajes */}
+          {/* Tabla de Idiomas */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Globe className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold">
-                  Lista de Lenguajes
+                  Lista de Idiomas
                   {filteredLanguages && (
                     <span className="text-sm font-normal text-foreground/60 ml-2">
-                      ({filteredLanguages.length} lenguajes)
+                      ({filteredLanguages.length} idiomas)
                     </span>
                   )}
                 </h2>
@@ -154,32 +154,32 @@ function LanguagesManagementContent() {
                 <div className="text-center py-12">
                   <Globe className="h-16 w-16 text-default-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-default-500 mb-2">
-                    No hay lenguajes
+                    No hay idiomas
                   </h3>
                   <p className="text-default-400 mb-4">
                     {searchTerm
-                      ? "No se encontraron lenguajes con ese término de búsqueda"
-                      : "Aún no hay lenguajes creados en el sistema"}
+                      ? "No se encontraron idiomas con ese término de búsqueda"
+                      : "Aún no hay idiomas creados en el sistema"}
                   </p>
                   <Button
                     color="primary"
                     startContent={<Plus className="h-4 w-4" />}
                     onPress={() => setIsCreateModalOpen(true)}
                   >
-                    Crear Primer Lenguaje
+                    Crear Primer Idioma
                   </Button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <Table aria-label="Tabla de lenguajes">
+                  <Table aria-label="Tabla de idiomas">
                     <TableHeader>
-                      <TableColumn>LENGUAJE</TableColumn>
+                      <TableColumn>IDIOMA</TableColumn>
                       <TableColumn>DESCRIPCIÓN</TableColumn>
                       <TableColumn>NIVELES</TableColumn>
                       <TableColumn>ESTADO</TableColumn>
                       <TableColumn>ACCIONES</TableColumn>
                     </TableHeader>
-                    <TableBody emptyContent="No hay lenguajes disponibles">
+                    <TableBody emptyContent="No hay idiomas disponibles">
                       {filteredLanguages?.length > 0 ? (
                         filteredLanguages.map((language: any) => (
                           <TableRow key={language.id}>
@@ -232,7 +232,7 @@ function LanguagesManagementContent() {
                                   isIconOnly
                                   size="sm"
                                   variant="light"
-                                  title="Editar lenguaje"
+                                  title="Editar idioma"
                                 >
                                   <Edit className="h-4 w-4 text-foreground" />
                                 </Button>
@@ -245,7 +245,7 @@ function LanguagesManagementContent() {
                           <TableCell colSpan={5}>
                             <div className="text-center py-4">
                               <p className="text-foreground/50">
-                                No hay lenguajes disponibles
+                                No hay idiomas disponibles
                               </p>
                             </div>
                           </TableCell>
@@ -260,7 +260,7 @@ function LanguagesManagementContent() {
         </div>
       </div>
 
-      {/* Modal de crear lenguaje */}
+      {/* Modal de crear idioma */}
       <CreateLanguageModal
         isOpen={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
@@ -269,7 +269,7 @@ function LanguagesManagementContent() {
   );
 }
 
-// Componente para mostrar los niveles de un lenguaje
+// Componente para mostrar los niveles de un idioma
 function LanguageLevelsCell({ languageId }: { languageId: string }) {
   const { data: levels, isLoading: levelsLoading } = useQuery({
     queryKey: ["levels", languageId],
@@ -290,7 +290,7 @@ function LanguageLevelsCell({ languageId }: { languageId: string }) {
   );
 }
 
-// Modal para crear lenguaje
+// Modal para crear idioma
 interface CreateLanguageModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -315,8 +315,8 @@ function CreateLanguageModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["languages"] });
       addToast({
-        title: "Lenguaje creado",
-        description: "El lenguaje se ha creado exitosamente",
+        title: "Idioma creado",
+        description: "El idioma se ha creado exitosamente",
         color: "success",
         timeout: 3000,
       });
@@ -327,7 +327,7 @@ function CreateLanguageModal({
     onError: (error: Error) => {
       addToast({
         title: "Error",
-        description: error.message || "No se pudo crear el lenguaje",
+        description: error.message || "No se pudo crear el idioma",
         color: "danger",
         timeout: 3000,
       });
@@ -358,11 +358,11 @@ function CreateLanguageModal({
     <GlobalModal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      title="Crear Nuevo Lenguaje"
+      title="Crear Nuevo Idioma"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <GlobalInput
-          label="Nombre del Lenguaje"
+          label="Nombre del Idioma"
           placeholder="Ej: Inglés, Francés, Alemán..."
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -371,7 +371,7 @@ function CreateLanguageModal({
 
         <GlobalTextArea
           label="Descripción"
-          placeholder="Descripción detallada del lenguaje..."
+          placeholder="Descripción detallada del idioma..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           isRequired
@@ -385,7 +385,7 @@ function CreateLanguageModal({
             onPress={() => onOpenChange(false)}
           />
           <GlobalButton
-            text="Crear Lenguaje"
+            text="Crear Idioma"
             color="primary"
             type="submit"
             isLoading={createLanguageMutation.isPending}

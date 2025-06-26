@@ -10,32 +10,6 @@ interface AssignedContentCardProps {
 }
 
 export function AssignedContentCard({ content }: AssignedContentCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "published":
-        return "success";
-      case "draft":
-        return "warning";
-      case "archived":
-        return "default";
-      default:
-        return "primary";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "published":
-        return "Publicado";
-      case "draft":
-        return "Borrador";
-      case "archived":
-        return "Archivado";
-      default:
-        return status || "Sin estado";
-    }
-  };
-
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
@@ -53,13 +27,6 @@ export function AssignedContentCard({ content }: AssignedContentCardProps) {
               </p>
             </div>
           </div>
-          <Chip
-            color={getStatusColor(content.status || "draft")}
-            variant="flat"
-            size="sm"
-          >
-            {getStatusText(content.status || "draft")}
-          </Chip>
         </div>
       </CardHeader>
 

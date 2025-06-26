@@ -39,7 +39,7 @@ export default function LenguageList() {
                     router.push(`/main/levels/${lenguage.id}/view`)
                   }
                 >
-                  Ir al lenguaje
+                  Ir al idioma
                 </Button>
               </div>
             </CardBody>

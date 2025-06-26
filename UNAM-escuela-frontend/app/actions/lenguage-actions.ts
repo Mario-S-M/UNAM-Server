@@ -56,7 +56,7 @@ export async function getLanguageById(
       variables: { id },
     }),
   });
-  if (!response.ok) throw new Error("Error al cargar el lenguaje");
+  if (!response.ok) throw new Error("Error al cargar el idioma");
   const result = await response.json();
   const validated = graphqlSingleLenguageResponseSchema.safeParse(result);
   if (!validated.success) {
@@ -96,7 +96,7 @@ export async function createLenguage(
     });
 
     if (!response.ok) {
-      throw new Error("Error al crear el lenguaje");
+      throw new Error("Error al crear el idioma");
     }
 
     const result = await response.json();

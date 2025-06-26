@@ -26,11 +26,6 @@ export class CreateContentInput {
   @IsOptional()
   @IsString()
   @Field(() => String, { nullable: true })
-  status?: string;
-
-  @IsOptional()
-  @IsString()
-  @Field(() => String, { nullable: true })
   validationStatus?: string;
 
   @IsOptional()

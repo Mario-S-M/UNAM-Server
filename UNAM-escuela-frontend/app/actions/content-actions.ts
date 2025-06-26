@@ -40,7 +40,6 @@ export interface Content {
   skillId?: string;
   createdAt?: string;
   updatedAt?: string;
-  status?: string;
   markdownPath?: string;
   assignedTeachers?: {
     id: string;
@@ -87,7 +86,6 @@ export async function getContentsByLevel(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skillId
@@ -208,7 +206,6 @@ export async function createContent(
     const name = formData.get("name")?.toString() || "";
     const description = formData.get("description")?.toString() || "";
     const levelId = formData.get("levelId")?.toString() || "";
-    const status = formData.get("status")?.toString() || "draft";
     const skillId = formData.get("skillId")?.toString() || "";
 
     if (!name || !description || !levelId) {
@@ -231,7 +228,6 @@ export async function createContent(
               name
               description
               levelId
-              status
               skillId
               skill {
                 id
@@ -249,7 +245,6 @@ export async function createContent(
             name,
             description,
             levelId,
-            status,
             skillId,
           },
         },
@@ -399,7 +394,6 @@ export async function getContentsByTeacher(
             description
             content
             levelId
-            status
             markdownPath
             assignedTeachers {
               id
@@ -443,7 +437,6 @@ export async function getMyAssignedContents(): Promise<ContentsResponse> {
               name
               description
               levelId
-              status
               markdownPath
               assignedTeachers {
                 id
@@ -499,7 +492,6 @@ export async function assignTeachersToContent(
               name
               description
               levelId
-              status
               markdownPath
               assignedTeachers {
                 id
@@ -567,7 +559,6 @@ export async function removeTeacherFromContent(
               description
               content
               levelId
-              status
               markdownPath
               assignedTeachers {
                 id
@@ -628,7 +619,6 @@ export async function getContentById(
               description
               levelId
               skillId
-              status
               markdownPath
               assignedTeachers {
                 id
@@ -884,7 +874,6 @@ export async function getContentsBySkill(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skillId
@@ -984,7 +973,6 @@ export async function getContentsByLevelAndSkill(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skillId
@@ -1075,7 +1063,6 @@ export async function validateContent(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skill {
@@ -1139,7 +1126,6 @@ export async function invalidateContent(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skill {
@@ -1215,7 +1201,6 @@ export async function getValidatedContentsByLevel(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skillId
@@ -1335,7 +1320,6 @@ export async function getValidatedContentsBySkill(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skillId
@@ -1452,7 +1436,6 @@ export async function getValidatedContentsByLevelAndSkill(
               name
               description
               levelId
-              status
               validationStatus
               markdownPath
               skillId
@@ -1589,7 +1572,6 @@ export async function adminWorkaroundAssignTeachers(
             name: contentResult.data.name,
             description: contentResult.data.description,
             levelId: contentResult.data.levelId,
-            status: contentResult.data.status || "draft",
             teacherIds: teacherIds,
             skillId: contentResult.data.skillId,
           },
@@ -1762,7 +1744,6 @@ interface UpdateContentInput {
   id: string;
   name: string;
   description: string;
-  status?: string;
   levelId: string;
   teacherIds?: string[];
   skillId?: string;

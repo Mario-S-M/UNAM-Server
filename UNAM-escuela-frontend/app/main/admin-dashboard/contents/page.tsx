@@ -218,8 +218,8 @@ function ContentsManagementContent() {
             <CardBody className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Select
-                  label="Seleccionar Lenguaje"
-                  placeholder="Elige un lenguaje"
+                  label="Seleccionar Idioma"
+                  placeholder="Elige un idioma"
                   selectedKeys={
                     selectedLanguage ? new Set([selectedLanguage]) : new Set()
                   }
@@ -374,7 +374,6 @@ function ContentsManagementContent() {
                       <TableColumn>NOMBRE</TableColumn>
                       <TableColumn>DESCRIPCIÓN</TableColumn>
                       <TableColumn>SKILL</TableColumn>
-                      <TableColumn>ESTADO</TableColumn>
                       <TableColumn>VALIDACIÓN</TableColumn>
                       <TableColumn>PROFESORES</TableColumn>
                       <TableColumn>ACCIONES</TableColumn>
@@ -421,40 +420,15 @@ function ContentsManagementContent() {
                               </span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            <Chip
-                              size="sm"
-                              color={
-                                content.status === "published"
-                                  ? "success"
-                                  : content.status === "draft"
-                                  ? "warning"
-                                  : "default"
-                              }
-                            >
-                              {content.status === "published"
-                                ? "Publicado"
-                                : content.status === "draft"
-                                ? "Borrador"
-                                : "Archivado"}
-                            </Chip>
-                          </TableCell>
+
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {content.validationStatus === "validado" ? (
-                                <Chip
-                                  size="sm"
-                                  color="success"
-                                  variant="dot"
-                                >
+                                <Chip size="sm" color="success" variant="dot">
                                   Validado
                                 </Chip>
                               ) : (
-                                <Chip
-                                  size="sm"
-                                  color="danger"
-                                  variant="dot"
-                                >
+                                <Chip size="sm" color="danger" variant="dot">
                                   Sin validar
                                 </Chip>
                               )}
@@ -576,7 +550,6 @@ function CreateContentModal({
   const [description, setDescription] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
-  const [status, setStatus] = useState("draft");
   const queryClient = useQueryClient();
 
   const { data: skills } = useQuery({
@@ -609,7 +582,6 @@ function CreateContentModal({
       setDescription("");
       setSelectedSkill("");
       setSelectedTeachers([]);
-      setStatus("draft");
     },
     onError: (error: Error) => {
       addToast({
@@ -647,7 +619,6 @@ function CreateContentModal({
     formData.append("name", name);
     formData.append("description", description);
     formData.append("levelId", levelId);
-    formData.append("status", status);
     formData.append("skillId", selectedSkill);
 
     if (selectedTeachers.length > 0) {
@@ -726,20 +697,6 @@ function CreateContentModal({
             </div>
           </div>
         )}
-
-        <GlobalSelect
-          label="Estado"
-          placeholder="Selecciona el estado"
-          selectedKeys={new Set([status])}
-          onSelectionChange={(keys: any) => {
-            const selectedArray = Array.from(keys);
-            setStatus(selectedArray[0] as string);
-          }}
-        >
-          <SelectItem key="draft">Borrador</SelectItem>
-          <SelectItem key="published">Publicado</SelectItem>
-          <SelectItem key="archived">Archivado</SelectItem>
-        </GlobalSelect>
 
         {/* Sección de asignación de profesores */}
         <div className="space-y-2">
@@ -1086,25 +1043,6 @@ function TeachersManagementModal({
               <p>
                 <strong>Descripción:</strong> {content?.data?.description}
               </p>
-              <div>
-                <strong>Estado:</strong>{" "}
-                <Chip
-                  size="sm"
-                  color={
-                    content?.data?.status === "published"
-                      ? "success"
-                      : content?.data?.status === "draft"
-                      ? "warning"
-                      : "default"
-                  }
-                >
-                  {content?.data?.status === "published"
-                    ? "Publicado"
-                    : content?.data?.status === "draft"
-                    ? "Borrador"
-                    : "Archivado"}
-                </Chip>
-              </div>
             </div>
           </div>
 

@@ -23,7 +23,6 @@ export function CreateContentModal({
 }: CreateContentModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("draft");
   const queryClient = useQueryClient();
 
   const createContentMutation = useMutation({
@@ -45,7 +44,6 @@ export function CreateContentModal({
       onOpenChange(false);
       setName("");
       setDescription("");
-      setStatus("draft");
     },
     onError: (error: Error) => {
       addToast({
@@ -74,7 +72,6 @@ export function CreateContentModal({
     formData.append("name", name);
     formData.append("description", description);
     formData.append("levelId", levelId);
-    formData.append("status", status);
 
     await createContentMutation.mutateAsync(formData);
   };
@@ -102,20 +99,6 @@ export function CreateContentModal({
           isRequired
           minRows={4}
         />
-
-        <GlobalSelect
-          label="Estado"
-          placeholder="Selecciona el estado del contenido"
-          selectedKeys={new Set([status])}
-          onSelectionChange={(keys: any) => {
-            const selectedArray = Array.from(keys);
-            setStatus(selectedArray[0] as string);
-          }}
-        >
-          <SelectItem key="draft">Borrador</SelectItem>
-          <SelectItem key="published">Publicado</SelectItem>
-          <SelectItem key="archived">Archivado</SelectItem>
-        </GlobalSelect>
 
         <div className="flex justify-end gap-2 pt-4">
           <GlobalButton

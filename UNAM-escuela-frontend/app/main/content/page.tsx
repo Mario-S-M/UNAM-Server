@@ -329,32 +329,6 @@ interface ContentCardProps {
 function ContentCard({ content }: ContentCardProps) {
   const { canTeach, canManageContent } = usePermissions();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "published":
-        return "success";
-      case "draft":
-        return "warning";
-      case "archived":
-        return "default";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "published":
-        return "Publicado";
-      case "draft":
-        return "Borrador";
-      case "archived":
-        return "Archivado";
-      default:
-        return "Desconocido";
-    }
-  };
-
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
@@ -373,14 +347,6 @@ function ContentCard({ content }: ContentCardProps) {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Chip
-              color={getStatusColor(content.status || "draft")}
-              variant="flat"
-              size="sm"
-            >
-              {getStatusText(content.status || "draft")}
-            </Chip>
-
             {/* Validation status for all users */}
             <Chip
               color={

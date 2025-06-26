@@ -9,7 +9,7 @@ export interface LenguageResponse {
 }
 
 export interface SingleLenguageResponse {
-  data: Lenguage; // Para un solo lenguaje
+  data: Lenguage; // Para un solo idioma
 }
 export interface ActionLenguageResponse<T> {
   data?: T;

@@ -93,32 +93,6 @@ function ViewContentPageContent() {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "published":
-        return "success";
-      case "draft":
-        return "warning";
-      case "archived":
-        return "default";
-      default:
-        return "primary";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "published":
-        return "Publicado";
-      case "draft":
-        return "Borrador";
-      case "archived":
-        return "Archivado";
-      default:
-        return status || "Sin estado";
-    }
-  };
-
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto">
@@ -140,13 +114,6 @@ function ViewContentPageContent() {
                 {content.data.name}
               </h1>
               <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <Chip
-                  color={getStatusColor(content.data.status || "draft")}
-                  variant="flat"
-                  size="sm"
-                >
-                  {getStatusText(content.data.status || "draft")}
-                </Chip>
                 {content.data.assignedTeachers && (
                   <div className="flex items-center space-x-1">
                     <Users className="h-4 w-4" />
@@ -202,12 +169,6 @@ function ViewContentPageContent() {
               <div>
                 <span className="font-medium text-gray-700">Descripción:</span>
                 <p className="text-gray-600 mt-1">{content.data.description}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Estado:</span>
-                <p className="text-gray-600 mt-1">
-                  {getStatusText(content.data.status || "draft")}
-                </p>
               </div>
               {content.data.assignedTeachers &&
                 content.data.assignedTeachers.length > 0 && (

@@ -13,7 +13,7 @@ export const levelFormSchema = z.object({
     .enum(["beginner", "intermediate", "advanced"])
     .optional()
     .default("beginner"),
-  lenguageId: z.string().min(1, "El lenguaje es requerido"),
+  lenguageId: z.string().min(1, "El idioma es requerido"),
 });
 
 export const levelResponseSchema = z.object({

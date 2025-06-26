@@ -47,7 +47,6 @@ type Content {
   userId: Int!
   markdownPath: String
   assignedTeachers: [User!]
-  status: String!
   validationStatus: String!
   publishedAt: String
   skill: Skill
@@ -197,7 +196,6 @@ input CreateContentInput {
   description: String!
   levelId: ID!
   teacherIds: [ID!]
-  status: String
   validationStatus: String
   skillId: ID
 }
@@ -207,7 +205,6 @@ input UpdateContentInput {
   description: String
   levelId: ID
   teacherIds: [ID!]
-  status: String
   validationStatus: String
   skillId: ID
   id: ID!

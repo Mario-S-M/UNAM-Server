@@ -63,11 +63,6 @@ export class Content {
   @Field(() => [User], { nullable: true })
   assignedTeachers?: User[];
 
-  // Estado del contenido
-  @Column({ default: 'draft' })
-  @Field(() => String)
-  status: string; // draft, published, archived
-
   // Estado de validación del contenido
   @Column({ default: 'sin validar' })
   @Field(() => String)

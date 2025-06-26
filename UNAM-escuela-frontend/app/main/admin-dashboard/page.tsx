@@ -52,7 +52,7 @@ function AdminDashboardContent() {
             </h3>
             <p className="text-blue-700 dark:text-blue-300">
               Organización jerárquica:{" "}
-              <strong>Lenguajes → Niveles → Contenidos</strong>
+              <strong>Idiomas → Niveles → Contenidos</strong>
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ function AdminDashboardContent() {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardBody className="p-6 text-center">
                 <Globe className="h-12 w-12 text-blue-500 mx-auto mb-3" />
-                <h3 className="font-semibold text-lg mb-2">Lenguajes</h3>
+                <h3 className="font-semibold text-lg mb-2">Idiomas</h3>
                 <p className="text-sm text-foreground/60">
                   Gestionar idiomas disponibles
                 </p>

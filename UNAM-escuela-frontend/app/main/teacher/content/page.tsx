@@ -181,32 +181,6 @@ interface ContentCardProps {
 }
 
 function ContentCard({ content }: ContentCardProps) {
-  const getStatusColor = (status: string = "draft") => {
-    switch (status) {
-      case "published":
-        return "success";
-      case "draft":
-        return "warning";
-      case "archived":
-        return "default";
-      default:
-        return "warning";
-    }
-  };
-
-  const getStatusText = (status: string = "draft") => {
-    switch (status) {
-      case "published":
-        return "Publicado";
-      case "draft":
-        return "Borrador";
-      case "archived":
-        return "Archivado";
-      default:
-        return "Borrador";
-    }
-  };
-
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
@@ -219,13 +193,6 @@ function ContentCard({ content }: ContentCardProps) {
               <h3 className="font-semibold text-lg line-clamp-2">
                 {content.name || content.title}
               </h3>
-              <Chip
-                color={getStatusColor(content.status)}
-                size="sm"
-                className="mt-1"
-              >
-                {getStatusText(content.status)}
-              </Chip>
             </div>
           </div>
         </div>

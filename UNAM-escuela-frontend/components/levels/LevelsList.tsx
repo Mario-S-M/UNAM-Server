@@ -151,7 +151,7 @@ export function LevelsList({ languageId }: LevelsListProps) {
             </h3>
             <div className="w-12 h-px bg-default-300 mx-auto mb-4"></div>
             <p className="text-default-500 font-light text-lg">
-              No se encontraron niveles para este lenguaje
+              No se encontraron niveles para este idioma
             </p>
           </div>
         </div>

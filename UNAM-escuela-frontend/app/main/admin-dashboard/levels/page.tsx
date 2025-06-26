@@ -124,8 +124,8 @@ function LevelsManagementContent() {
             <CardBody className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Select
-                  label="Seleccionar Lenguaje"
-                  placeholder="Elige un lenguaje"
+                  label="Seleccionar Idioma"
+                  placeholder="Elige un idioma"
                   selectedKeys={
                     selectedLanguage ? new Set([selectedLanguage]) : new Set()
                   }
@@ -187,10 +187,10 @@ function LevelsManagementContent() {
                 <div className="text-center py-12">
                   <GraduationCap className="h-16 w-16 text-default-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-default-500 mb-2">
-                    Selecciona un Lenguaje
+                    Selecciona un Idioma
                   </h3>
                   <p className="text-default-400">
-                    Primero selecciona un lenguaje para ver sus niveles
+                    Primero selecciona un idioma para ver sus niveles
                   </p>
                 </div>
               ) : levelsLoading ? (
@@ -206,7 +206,7 @@ function LevelsManagementContent() {
                   <p className="text-default-400 mb-4">
                     {searchTerm
                       ? "No se encontraron niveles con ese término de búsqueda"
-                      : "Este lenguaje aún no tiene niveles creados"}
+                      : "Este idioma aún no tiene niveles creados"}
                   </p>
                   <Button
                     color="primary"

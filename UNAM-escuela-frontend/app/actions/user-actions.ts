@@ -6,7 +6,7 @@ const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 // Helper function to get auth headers
-async function getAuthHeaders(): Promise<Record<string, string>> {
+export async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -31,6 +31,12 @@ export interface User {
   email: string;
   roles: string[];
   isActive: boolean;
+  assignedLanguageId?: string;
+  assignedLanguage?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
   lastUpdateBy?: {
     id: string;
     fullName: string;
@@ -762,6 +768,120 @@ export async function updateUserRoles(
     }
 
     return { data: result.data.updateUserRoles };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+/**
+ * Asigna un idioma específico a un usuario (principalmente para admins)
+ */
+export async function assignLanguageToUser(
+  userId: string,
+  languageId: string | null,
+  token?: string
+): Promise<ActionResponse<User>> {
+  try {
+    if (!userId) {
+      throw new Error("ID de usuario es requerido");
+    }
+
+    const headers = await getAuthHeaders();
+
+    // Si se proporciona un token específico, usarlo en su lugar
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          mutation AssignLanguageToUser($userId: ID!, $languageId: ID) {
+            assignLanguageToUser(assignLanguageInput: { 
+              userId: $userId, 
+              languageId: $languageId 
+            }) {
+              id
+              fullName
+              email
+              roles
+              isActive
+              assignedLanguageId
+              assignedLanguage {
+                id
+                name
+                isActive
+              }
+              lastUpdateBy {
+                id
+                fullName
+              }
+            }
+          }
+        `,
+        variables: { userId, languageId },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al asignar idioma al usuario");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    return { data: result.data.assignLanguageToUser };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+/**
+ * Actualiza los roles de un usuario y opcionalmente asigna un idioma si es admin
+ */
+export async function updateUserRolesWithLanguage(
+  userId: string,
+  roles: string[],
+  languageId?: string | null,
+  token?: string
+): Promise<ActionResponse<User>> {
+  try {
+    // Primero actualizar los roles
+    const roleUpdateResult = await updateUserRoles(
+      { id: userId, roles },
+      token
+    );
+
+    if (roleUpdateResult.error) {
+      throw new Error(roleUpdateResult.error);
+    }
+
+    // Si el nuevo rol incluye admin y se proporciona un idioma, asignarlo
+    if (roles.includes("admin") && languageId) {
+      const languageAssignResult = await assignLanguageToUser(
+        userId,
+        languageId,
+        token
+      );
+
+      if (languageAssignResult.error) {
+        throw new Error(languageAssignResult.error);
+      }
+
+      return languageAssignResult;
+    }
+
+    // Si no es admin o no se especifica idioma, solo devolver el resultado del rol
+    return roleUpdateResult;
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Error desconocido",

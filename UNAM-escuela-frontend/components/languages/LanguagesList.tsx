@@ -13,7 +13,7 @@ export function LanguagesList() {
     isLoading,
     error,
     refetch,
-  } = useActiveLenguages();
+  } = useActiveLenguages(false); // Use public version for public pages
 
   // Calcular paginación
   const totalItems = languagesData?.data?.length || 0;

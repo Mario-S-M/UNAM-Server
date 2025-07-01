@@ -21,6 +21,7 @@ export const levelResponseSchema = z.object({
   name: z.string(),
   description: z.string(),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+  isActive: z.boolean().optional(),
 });
 
 export const levelsResponseSchema = z.object({

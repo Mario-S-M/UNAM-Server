@@ -29,7 +29,10 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
-import { usePermissions } from "@/app/hooks/use-authorization";
+import {
+  usePermissions,
+  useAuthorization,
+} from "@/app/hooks/use-authorization";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getActiveLenguages } from "@/app/actions/lenguage-actions";
@@ -52,6 +55,7 @@ export default function LevelsManagementPage() {
 
 function LevelsManagementContent() {
   const { canManageContent } = usePermissions();
+  const { userAssignedLanguage } = useAuthorization();
   const searchParams = useSearchParams();
   const [selectedLanguage, setSelectedLanguage] = useState(
     searchParams.get("language") || ""
@@ -70,6 +74,30 @@ function LevelsManagementContent() {
     queryFn: () => getLevelsByLenguage(selectedLanguage),
     enabled: !!selectedLanguage,
   });
+
+  // Filtrar idiomas basado en el rol del usuario
+  const getFilteredLanguages = () => {
+    let availableLanguages = languages?.data || [];
+
+    // Si es admin con idioma asignado, solo mostrar su idioma
+    if (
+      userAssignedLanguage?.isAdminWithLanguage &&
+      userAssignedLanguage.assignedLanguageId
+    ) {
+      availableLanguages = availableLanguages.filter(
+        (language: any) =>
+          language.id === userAssignedLanguage.assignedLanguageId
+      );
+      // Auto-seleccionar el idioma asignado si no hay ninguno seleccionado
+      if (!selectedLanguage && availableLanguages.length > 0) {
+        setSelectedLanguage(availableLanguages[0].id);
+      }
+    }
+
+    return availableLanguages;
+  };
+
+  const filteredLanguages = getFilteredLanguages();
 
   const filteredLevels = levels?.data?.filter(
     (level: any) =>
@@ -141,8 +169,10 @@ function LevelsManagementContent() {
                     selectorIcon: "text-default-600", // Fuerza el color del icono
                   }}
                 >
-                  {(languages?.data || []).map((lang: any) => (
-                    <SelectItem key={lang.id}>{lang.name}</SelectItem>
+                  {filteredLanguages.map((lang: any) => (
+                    <SelectItem key={lang.id} textValue={lang.name}>
+                      {lang.name}
+                    </SelectItem>
                   ))}
                 </Select>
 

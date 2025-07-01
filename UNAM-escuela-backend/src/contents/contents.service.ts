@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateContentInput } from './dto/create-content.input';
 import { UpdateContentInput } from './dto/update-content.input';
 import { Content } from './entities/content.entity';
 import { User } from '../users/entities/user.entity';
+import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { promises as fs } from 'fs';
@@ -65,7 +70,33 @@ export class ContentsService {
     });
   }
 
-  async findByLevel(levelId: string): Promise<Content[]> {
+  async findByLevel(levelId: string, user?: User): Promise<Content[]> {
+    // Validar que el admin solo pueda acceder a contenidos de su idioma asignado
+    if (
+      user &&
+      this.getHighestRole(user.roles) === ValidRoles.admin &&
+      user.assignedLanguageId
+    ) {
+      // Obtener el idioma del nivel
+      const level = await this.usersRepository.manager
+        .createQueryBuilder()
+        .select(['level.lenguageId'])
+        .from('levels', 'level')
+        .where('level.id = :levelId', { levelId })
+        .getRawOne();
+
+      if (!level) {
+        throw new BadRequestException('Nivel no encontrado');
+      }
+
+      // Verificar que el nivel pertenece al idioma asignado del admin
+      if (level.level_lenguageId !== user.assignedLanguageId) {
+        throw new BadRequestException(
+          'Solo puedes acceder a contenidos del idioma que tienes asignado',
+        );
+      }
+    }
+
     const contents = await this.contentsRepository.find({
       where: { levelId: levelId },
       relations: ['assignedTeachers', 'skill'],
@@ -91,7 +122,39 @@ export class ContentsService {
     return content;
   }
 
-  async findBySkill(skillId: string): Promise<Content[]> {
+  async findBySkill(skillId: string, user?: User): Promise<Content[]> {
+    // Si es admin con idioma asignado, filtrar contenidos por idioma
+    if (
+      user &&
+      this.getHighestRole(user.roles) === ValidRoles.admin &&
+      user.assignedLanguageId
+    ) {
+      // Obtener todos los niveles del idioma asignado del admin
+      const levels = await this.usersRepository.manager
+        .createQueryBuilder()
+        .select(['level.id'])
+        .from('levels', 'level')
+        .where('level.lenguageId = :languageId', {
+          languageId: user.assignedLanguageId,
+        })
+        .getRawMany();
+
+      const levelIds = levels.map((level) => level.level_id);
+
+      if (levelIds.length === 0) {
+        return []; // No hay niveles para este idioma
+      }
+
+      return await this.contentsRepository
+        .createQueryBuilder('content')
+        .leftJoinAndSelect('content.assignedTeachers', 'teachers')
+        .leftJoinAndSelect('content.skill', 'skill')
+        .where('content.skillId = :skillId', { skillId })
+        .andWhere('content.levelId IN (:...levelIds)', { levelIds })
+        .orderBy('content.createdAt', 'DESC')
+        .getMany();
+    }
+
     return await this.contentsRepository.find({
       where: { skillId },
       relations: ['assignedTeachers', 'skill'],
@@ -102,7 +165,34 @@ export class ContentsService {
   async findByLevelAndSkill(
     levelId: string,
     skillId: string,
+    user?: User,
   ): Promise<Content[]> {
+    // Validar que el admin solo pueda acceder a contenidos de su idioma asignado
+    if (
+      user &&
+      this.getHighestRole(user.roles) === ValidRoles.admin &&
+      user.assignedLanguageId
+    ) {
+      // Obtener el idioma del nivel
+      const level = await this.usersRepository.manager
+        .createQueryBuilder()
+        .select(['level.lenguageId'])
+        .from('levels', 'level')
+        .where('level.id = :levelId', { levelId })
+        .getRawOne();
+
+      if (!level) {
+        throw new BadRequestException('Nivel no encontrado');
+      }
+
+      // Verificar que el nivel pertenece al idioma asignado del admin
+      if (level.level_lenguageId !== user.assignedLanguageId) {
+        throw new BadRequestException(
+          'Solo puedes acceder a contenidos del idioma que tienes asignado',
+        );
+      }
+    }
+
     return await this.contentsRepository.find({
       where: { levelId, skillId },
       relations: ['assignedTeachers', 'skill'],
@@ -136,8 +226,19 @@ export class ContentsService {
   async assignTeachers(
     contentId: string,
     teacherIds: string[],
+    user?: User,
   ): Promise<Content> {
     const content = await this.findOne(contentId);
+
+    // Validar restricciones de idioma para la asignación de profesores
+    if (user && teacherIds.length > 0) {
+      await this.validateTeacherAssignmentPermissions(
+        contentId,
+        teacherIds,
+        user,
+      );
+    }
+
     const teachers = await this.usersRepository.findByIds(teacherIds);
     content.assignedTeachers = teachers;
     return await this.contentsRepository.save(content);
@@ -734,5 +835,83 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     } catch (error) {
       throw new Error('No se pudo convertir el archivo Word a Markdown');
     }
+  }
+
+  /**
+   * Validates teacher assignment permissions based on language restrictions
+   */
+  private async validateTeacherAssignmentPermissions(
+    contentId: string,
+    teacherIds: string[],
+    user: User,
+  ): Promise<void> {
+    const userHighestRole = this.getHighestRole(user.roles);
+
+    // SuperUsers pueden asignar cualquier profesor
+    if (userHighestRole === ValidRoles.superUser) {
+      return;
+    }
+
+    // Para admins con idioma asignado, validar compatibilidad de idioma
+    if (userHighestRole === ValidRoles.admin && user.assignedLanguageId) {
+      // Obtener el idioma del contenido a través de su nivel
+      const content = await this.contentsRepository.findOne({
+        where: { id: contentId },
+        select: ['levelId'],
+      });
+
+      if (!content) {
+        throw new BadRequestException('Contenido no encontrado');
+      }
+
+      // Obtener el idioma del nivel
+      const level = await this.usersRepository.manager
+        .createQueryBuilder()
+        .select(['level.lenguageId'])
+        .from('levels', 'level')
+        .where('level.id = :levelId', { levelId: content.levelId })
+        .getRawOne();
+
+      if (!level) {
+        throw new BadRequestException('Nivel no encontrado');
+      }
+
+      // Verificar que el contenido pertenece al idioma asignado del admin
+      if (level.level_lenguageId !== user.assignedLanguageId) {
+        throw new BadRequestException(
+          'Solo puedes asignar profesores a contenido de tu idioma asignado',
+        );
+      }
+
+      // Para futuras implementaciones: aquí podríamos validar que los profesores
+      // también tengan compatibilidad con el idioma específico
+      // Por ahora, permitir la asignación si el admin tiene permisos sobre el contenido
+    }
+  }
+
+  /**
+   * Gets the highest role from user roles array
+   */
+  private getHighestRole(roles: string[]): ValidRoles {
+    const roleHierarchy = {
+      superUser: 5,
+      admin: 4,
+      docente: 3,
+      alumno: 2,
+      mortal: 1,
+    };
+
+    let highestRole = ValidRoles.mortal;
+    let highestLevel = 0;
+
+    for (const role of roles) {
+      const level = roleHierarchy[role as ValidRoles] || 0;
+      if (level > highestLevel) {
+        highestLevel = level;
+        highestRole = role as ValidRoles;
+      }
+    }
+
+    return highestRole;
   }
 }

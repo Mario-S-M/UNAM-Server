@@ -75,7 +75,7 @@ export class ContentsResolver {
     ])
     user: User,
   ): Promise<Content[]> {
-    return this.contentsService.findByLevel(levelId);
+    return this.contentsService.findByLevel(levelId, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -100,7 +100,7 @@ export class ContentsResolver {
     ])
     user: User,
   ): Promise<Content[]> {
-    return this.contentsService.findBySkill(skillId);
+    return this.contentsService.findBySkill(skillId, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -116,7 +116,7 @@ export class ContentsResolver {
     ])
     user: User,
   ): Promise<Content[]> {
-    return this.contentsService.findByLevelAndSkill(levelId, skillId);
+    return this.contentsService.findByLevelAndSkill(levelId, skillId, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -161,7 +161,7 @@ export class ContentsResolver {
     @Args('teacherIds', { type: () => [ID] }) teacherIds: string[],
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser]) user: User,
   ): Promise<Content> {
-    return this.contentsService.assignTeachers(contentId, teacherIds);
+    return this.contentsService.assignTeachers(contentId, teacherIds, user);
   }
 
   @UseGuards(JwtAuthGuard)

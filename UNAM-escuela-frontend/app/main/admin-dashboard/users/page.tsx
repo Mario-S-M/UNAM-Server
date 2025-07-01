@@ -32,6 +32,7 @@ import { usePermissions } from "@/app/hooks/use-authorization";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useDebouncedSearch } from "@/app/hooks/use-debounced-value";
 import { ChangeUserRoleModal } from "@/components/ui/change-user-role-modal";
+import { AssignAdminWithLanguageModal } from "@/components/ui/assign-admin-with-language-modal";
 import { useBlockUser } from "@/app/hooks/use-users";
 import Link from "next/link";
 import {
@@ -501,8 +502,8 @@ function UserRow({ user }: { user: any }) {
         </div>
       </td>
 
-      {/* Role Change Modal */}
-      <ChangeUserRoleModal
+      {/* Role Change Modal with Language Assignment */}
+      <AssignAdminWithLanguageModal
         user={user}
         isOpen={isRoleModalOpen}
         onOpenChange={setIsRoleModalOpen}

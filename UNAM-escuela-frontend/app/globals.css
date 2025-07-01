@@ -375,3 +375,115 @@ select [data-slot="value"] > * {
   [data-slot="placeholder"] {
   display: none !important;
 }
+
+/* Forzar colores por defecto en Select - sobreescribir colores azules */
+.heroui-select[data-color="default"] [data-slot="trigger"],
+[data-component="select"][data-color="default"] [data-slot="trigger"],
+.heroui-select:not([data-color]) [data-slot="trigger"],
+[data-component="select"]:not([data-color]) [data-slot="trigger"] {
+  border-color: hsl(var(--heroui-default-200)) !important;
+  background-color: hsl(var(--heroui-background)) !important;
+}
+
+.heroui-select[data-color="default"] [data-slot="trigger"]:hover,
+[data-component="select"][data-color="default"] [data-slot="trigger"]:hover,
+.heroui-select:not([data-color]) [data-slot="trigger"]:hover,
+[data-component="select"]:not([data-color]) [data-slot="trigger"]:hover {
+  border-color: hsl(var(--heroui-default-300)) !important;
+}
+
+/* Forzar colores de texto por defecto */
+.heroui-select[data-color="default"] [data-slot="value"],
+[data-component="select"][data-color="default"] [data-slot="value"],
+.heroui-select:not([data-color]) [data-slot="value"],
+[data-component="select"]:not([data-color]) [data-slot="value"] {
+  color: hsl(var(--heroui-default-700)) !important;
+}
+
+.heroui-select[data-color="default"] [data-slot="label"],
+[data-component="select"][data-color="default"] [data-slot="label"],
+.heroui-select:not([data-color]) [data-slot="label"],
+[data-component="select"]:not([data-color]) [data-slot="label"] {
+  color: hsl(var(--heroui-default-600)) !important;
+}
+
+.heroui-select[data-color="default"] [data-slot="selectorIcon"],
+[data-component="select"][data-color="default"] [data-slot="selectorIcon"],
+.heroui-select:not([data-color]) [data-slot="selectorIcon"],
+[data-component="select"]:not([data-color]) [data-slot="selectorIcon"] {
+  color: hsl(var(--heroui-default-600)) !important;
+}
+
+.heroui-select[data-color="default"] [data-slot="selectorIcon"] svg,
+[data-component="select"][data-color="default"] [data-slot="selectorIcon"] svg,
+.heroui-select:not([data-color]) [data-slot="selectorIcon"] svg,
+[data-component="select"]:not([data-color]) [data-slot="selectorIcon"] svg {
+  color: hsl(var(--heroui-default-600)) !important;
+  fill: hsl(var(--heroui-default-600)) !important;
+}
+
+/* Reglas específicas para modales - forzar colores por defecto */
+.heroui-modal .heroui-select [data-slot="trigger"],
+[data-slot="content"] .heroui-select [data-slot="trigger"],
+.heroui-modal [data-component="select"] [data-slot="trigger"],
+[data-slot="content"] [data-component="select"] [data-slot="trigger"] {
+  border-color: hsl(var(--heroui-default-200)) !important;
+  background-color: hsl(var(--heroui-background)) !important;
+}
+
+.heroui-modal .heroui-select [data-slot="trigger"]:hover,
+[data-slot="content"] .heroui-select [data-slot="trigger"]:hover,
+.heroui-modal [data-component="select"] [data-slot="trigger"]:hover,
+[data-slot="content"] [data-component="select"] [data-slot="trigger"]:hover {
+  border-color: hsl(var(--heroui-default-300)) !important;
+}
+
+/* Forzar colores en dropdowns de modales */
+.heroui-modal .heroui-select [data-slot="selectorIcon"],
+[data-slot="content"] .heroui-select [data-slot="selectorIcon"],
+.heroui-modal [data-component="select"] [data-slot="selectorIcon"],
+[data-slot="content"] [data-component="select"] [data-slot="selectorIcon"] {
+  color: hsl(var(--heroui-default-600)) !important;
+}
+
+.heroui-modal .heroui-select [data-slot="selectorIcon"] svg,
+[data-slot="content"] .heroui-select [data-slot="selectorIcon"] svg,
+.heroui-modal [data-component="select"] [data-slot="selectorIcon"] svg,
+[data-slot="content"] [data-component="select"] [data-slot="selectorIcon"] svg {
+  color: hsl(var(--heroui-default-600)) !important;
+  fill: hsl(var(--heroui-default-600)) !important;
+}
+
+/* Sobreescribir cualquier color azul residual */
+.heroui-select
+  [data-slot="trigger"]:not([data-color="primary"]):not(
+    [data-color="secondary"]
+  ):not([data-color="success"]):not([data-color="warning"]):not(
+    [data-color="danger"]
+  ),
+[data-component="select"]
+  [data-slot="trigger"]:not([data-color="primary"]):not(
+    [data-color="secondary"]
+  ):not([data-color="success"]):not([data-color="warning"]):not(
+    [data-color="danger"]
+  ) {
+  border-color: hsl(var(--heroui-default-200)) !important;
+}
+
+.heroui-select
+  [data-slot="selectorIcon"]:not([data-color="primary"]):not(
+    [data-color="secondary"]
+  ):not([data-color="success"]):not([data-color="warning"]):not(
+    [data-color="danger"]
+  )
+  svg,
+[data-component="select"]
+  [data-slot="selectorIcon"]:not([data-color="primary"]):not(
+    [data-color="secondary"]
+  ):not([data-color="success"]):not([data-color="warning"]):not(
+    [data-color="danger"]
+  )
+  svg {
+  color: hsl(var(--heroui-default-600)) !important;
+  fill: hsl(var(--heroui-default-600)) !important;
+}

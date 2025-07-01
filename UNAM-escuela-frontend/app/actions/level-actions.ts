@@ -6,16 +6,17 @@ import {
 } from "../schemas/level-schema";
 import { ActionResponse, Level, LevelsResponse } from "../interfaces";
 import { GraphQLResponse } from "../types/graphql";
+import { getAuthHeaders } from "./user-actions";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
+  const headers = await getAuthHeaders();
+
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({
       query: `
         query LevelsByLenguage($lenguageId: ID!) {
@@ -32,13 +33,33 @@ export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
     }),
   });
   if (!response.ok) {
+    console.error(`Error HTTP ${response.status}: ${response.statusText}`);
     throw new Error("Error al cargar los niveles");
   }
 
   const result = await response.json();
+  console.log(
+    "🔍 Respuesta del servidor (getLevelsByLenguage):",
+    JSON.stringify(result, null, 2)
+  );
+
+  // Manejar errores de GraphQL
+  if (result.errors) {
+    console.error("GraphQL errors:", result.errors);
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
   const validated = graphqlLevelsResponseSchema.safeParse(result);
   if (!validated.success) {
     console.error("Error de validación:", validated.error.errors);
+    console.error("Datos recibidos:", result);
+
+    // Intentar una validación más permisiva
+    if (result.data && result.data.levelsByLenguage) {
+      console.log("🔧 Intentando validación permisiva...");
+      return { data: result.data.levelsByLenguage };
+    }
+
     throw new Error("Formato de respuesta inválido del servidor");
   }
 
@@ -51,11 +72,11 @@ export async function getLevel(id: string): Promise<ActionResponse<Level>> {
       throw new Error("ID inválido");
     }
 
+    const headers = await getAuthHeaders();
+
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         query: `
           query Level($levelId: ID!) {
@@ -115,11 +136,11 @@ export async function createLevel(
       };
     }
 
+    const headers = await getAuthHeaders();
+
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         query: `
           mutation CreateLevel($name: String!, $description: String!, $difficulty: String, $lenguageId: ID!) {
@@ -166,11 +187,11 @@ export async function deleteLevel(id: string): Promise<ActionResponse<Level>> {
       throw new Error("ID inválido");
     }
 
+    const headers = await getAuthHeaders();
+
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         query: `
           mutation RemoveLevel($removeLevelId: ID!) {

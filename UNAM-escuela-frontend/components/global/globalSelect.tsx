@@ -15,11 +15,15 @@ const GlobalSelect = React.forwardRef<HTMLSelectElement, GlobalSelectProps>(
         errorMessage={errorMessage}
         className={`w-full ${className || ""} text-foreground`}
         variant="bordered"
+        color="default"
         classNames={{
-          trigger: "border-default-200 hover:border-default-300",
-          value: "text-default-700",
-          label: "text-default-600",
-          selectorIcon: "text-default-600", // Fuerza el color del icono
+          trigger:
+            "border-default-200 hover:border-default-300 !border-default-200",
+          value: "text-default-700 !text-default-700",
+          label: "text-default-600 !text-default-600",
+          selectorIcon: "text-default-600 !text-default-600",
+          listbox: "bg-content1",
+          popoverContent: "bg-content1",
           ...classNames, // Permite override si se pasan classNames específicos
         }}
       />

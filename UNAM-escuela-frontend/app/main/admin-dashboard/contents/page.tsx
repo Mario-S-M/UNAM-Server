@@ -46,7 +46,11 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
-import { usePermissions } from "@/app/hooks/use-authorization";
+import { filterTeachersForLanguageCompatibility } from "@/app/actions/level-language-utils";
+import {
+  usePermissions,
+  useAuthorization,
+} from "@/app/hooks/use-authorization";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getActiveLenguages } from "@/app/actions/lenguage-actions";
@@ -69,6 +73,7 @@ export default function ContentsManagementPage() {
 
 function ContentsManagementContent() {
   const { canManageContent } = usePermissions();
+  const { userAssignedLanguage } = useAuthorization();
   const searchParams = useSearchParams();
   const [selectedLanguage, setSelectedLanguage] = useState(
     searchParams.get("language") || ""
@@ -113,6 +118,30 @@ function ContentsManagementContent() {
     },
     enabled: !!(selectedLevel || selectedSkill),
   });
+
+  // Filtrar idiomas basado en el rol del usuario
+  const getFilteredLanguages = () => {
+    let availableLanguages = languages?.data || [];
+
+    // Si es admin con idioma asignado, solo mostrar su idioma
+    if (
+      userAssignedLanguage?.isAdminWithLanguage &&
+      userAssignedLanguage.assignedLanguageId
+    ) {
+      availableLanguages = availableLanguages.filter(
+        (language: any) =>
+          language.id === userAssignedLanguage.assignedLanguageId
+      );
+      // Auto-seleccionar el idioma asignado si no hay ninguno seleccionado
+      if (!selectedLanguage && availableLanguages.length > 0) {
+        setSelectedLanguage(availableLanguages[0].id);
+      }
+    }
+
+    return availableLanguages;
+  };
+
+  const filteredLanguages = getFilteredLanguages();
 
   const filteredContents =
     contents?.data?.filter(
@@ -236,7 +265,7 @@ function ContentsManagementContent() {
                     selectorIcon: "text-default-600", // Fuerza el color del icono
                   }}
                 >
-                  {(languages?.data || []).map((lang: any) => (
+                  {filteredLanguages.map((lang: any) => (
                     <SelectItem key={lang.id}>{lang.name}</SelectItem>
                   ))}
                 </Select>
@@ -284,7 +313,7 @@ function ContentsManagementContent() {
                   }}
                 >
                   {(skills?.data || []).map((skill: any) => (
-                    <SelectItem key={skill.id}>
+                    <SelectItem key={skill.id} textValue={skill.name}>
                       <div className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full"
@@ -550,7 +579,11 @@ function CreateContentModal({
   const [description, setDescription] = useState("");
   const [selectedSkill, setSelectedSkill] = useState("");
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
+  const [filteredTeachersForLanguage, setFilteredTeachersForLanguage] =
+    useState<any[]>([]);
+  const [isFilteringTeachers, setIsFilteringTeachers] = useState(false);
   const queryClient = useQueryClient();
+  const { userAssignedLanguage } = useAuthorization(); // Obtener información del idioma asignado
 
   const { data: skills } = useQuery({
     queryKey: ["skills"],
@@ -561,6 +594,45 @@ function CreateContentModal({
     queryKey: ["teachers"],
     queryFn: () => getTeachers(),
   });
+
+  // Aplicar filtrado de idioma de forma asíncrona cuando cambien los datos
+  useEffect(() => {
+    const applyLanguageFiltering = async () => {
+      if (!teachers?.data || !levelId) {
+        setFilteredTeachersForLanguage([]);
+        return;
+      }
+
+      setIsFilteringTeachers(true);
+      try {
+        const userLanguageRestriction =
+          userAssignedLanguage?.isAdminWithLanguage
+            ? userAssignedLanguage.assignedLanguageId
+            : undefined;
+
+        const filtered = await filterTeachersForLanguageCompatibility(
+          teachers.data,
+          levelId,
+          userLanguageRestriction
+        );
+
+        setFilteredTeachersForLanguage(filtered);
+      } catch (error) {
+        console.error("Error applying language filtering:", error);
+        // En caso de error, mostrar todos los profesores
+        setFilteredTeachersForLanguage(teachers.data);
+      } finally {
+        setIsFilteringTeachers(false);
+      }
+    };
+
+    applyLanguageFiltering();
+  }, [
+    teachers?.data,
+    levelId,
+    userAssignedLanguage?.isAdminWithLanguage,
+    userAssignedLanguage?.assignedLanguageId,
+  ]);
 
   const createContentMutation = useMutation({
     mutationFn: async (formData: any) => {
@@ -668,7 +740,7 @@ function CreateContentModal({
           isDisabled={!skills?.data || skills.data.length === 0}
         >
           {(skills?.data || []).map((skill: any) => (
-            <SelectItem key={skill.id}>
+            <SelectItem key={skill.id} textValue={skill.name}>
               <div className="flex items-center gap-2">
                 <div
                   className="w-3 h-3 rounded-full"
@@ -701,28 +773,31 @@ function CreateContentModal({
         {/* Sección de asignación de profesores */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            Asignar Profesores <span className="text-gray-400">(Opcional)</span>
+            Asignar Profesores{" "}
+            <span className="text-default-400">(Opcional)</span>
           </label>
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-xs text-default-500 mb-2">
             Puedes asignar profesores ahora o hacerlo más tarde desde la gestión
             de contenidos
           </p>
 
-          {teachersLoading ? (
+          {teachersLoading || isFilteringTeachers ? (
             <div className="flex items-center gap-2 py-2">
               <Spinner size="sm" />
-              <span className="text-sm text-gray-600">
-                Cargando profesores...
+              <span className="text-sm text-default-600">
+                {teachersLoading
+                  ? "Cargando profesores..."
+                  : "Aplicando filtros de idioma..."}
               </span>
             </div>
-          ) : (teachers?.data || []).length === 0 ? (
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center">
-              <Users className="h-5 w-5 mx-auto text-gray-400 mb-2" />
-              <p className="text-sm text-gray-600">
+          ) : (filteredTeachersForLanguage || []).length === 0 ? (
+            <div className="p-4 bg-default-50 border border-default-200 rounded-md text-center">
+              <Users className="h-5 w-5 mx-auto text-default-400 mb-2" />
+              <p className="text-sm text-default-600">
                 La asignación de profesores podrá realizarse después de crear el
                 contenido
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-default-500 mt-1">
                 Utiliza la opción "Gestionar profesores" desde la lista de
                 contenidos
               </p>
@@ -736,17 +811,17 @@ function CreateContentModal({
                 setSelectedTeachers(Array.from(keys) as string[]);
               }}
             >
-              {(teachers?.data || []).map((teacher: any) => (
+              {filteredTeachersForLanguage.map((teacher: any) => (
                 <SelectItem key={teacher.id}>
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="h-3 w-3 text-blue-600" />
+                    <div className="w-6 h-6 bg-default-100 rounded-full flex items-center justify-center">
+                      <Users className="h-3 w-3 text-default-600" />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">
                         {teacher.fullName}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-default-500">
                         {teacher.email}
                       </span>
                     </div>
@@ -758,16 +833,16 @@ function CreateContentModal({
         </div>
 
         {selectedTeachers.length > 0 && (
-          <div className="bg-blue-50 p-3 rounded-lg border">
+          <div className="bg-default-50 p-3 rounded-lg border border-default-200">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-blue-600" />
-              <p className="text-sm font-medium text-blue-800">
+              <Users className="h-4 w-4 text-default-600" />
+              <p className="text-sm font-medium text-default-800">
                 Profesores seleccionados ({selectedTeachers.length}):
               </p>
             </div>
             <div className="flex flex-wrap gap-1">
               {selectedTeachers.map((teacherId) => {
-                const teacher = teachers?.data?.find(
+                const teacher = filteredTeachersForLanguage?.find(
                   (t: any) => t.id === teacherId
                 );
                 return teacher ? (
@@ -787,7 +862,7 @@ function CreateContentModal({
                 ) : null;
               })}
             </div>
-            <p className="text-xs text-blue-600 mt-2">
+            <p className="text-xs text-default-600 mt-2">
               Estos profesores tendrán acceso para editar el contenido una vez
               creado
             </p>
@@ -831,8 +906,12 @@ function TeachersManagementModal({
 }: TeachersManagementModalProps) {
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filteredTeachersForLanguage, setFilteredTeachersForLanguage] =
+    useState<any[]>([]);
+  const [isFilteringTeachers, setIsFilteringTeachers] = useState(false);
   const queryClient = useQueryClient();
   const { userRole } = usePermissions(); // Obtener el rol del usuario actual
+  const { userAssignedLanguage } = useAuthorization(); // Obtener información del idioma asignado
 
   // Obtener datos del contenido
   const { data: content, isLoading: contentLoading } = useQuery({
@@ -862,6 +941,45 @@ function TeachersManagementModal({
     retryDelay: 1000, // Esperar 1 segundo entre reintentos
   });
 
+  // Aplicar filtrado de idioma de forma asíncrona cuando cambien los datos
+  useEffect(() => {
+    const applyLanguageFiltering = async () => {
+      if (!teachers?.data || !content?.data?.levelId) {
+        setFilteredTeachersForLanguage([]);
+        return;
+      }
+
+      setIsFilteringTeachers(true);
+      try {
+        const userLanguageRestriction =
+          userAssignedLanguage?.isAdminWithLanguage
+            ? userAssignedLanguage.assignedLanguageId
+            : undefined;
+
+        const filtered = await filterTeachersForLanguageCompatibility(
+          teachers.data,
+          content.data.levelId,
+          userLanguageRestriction
+        );
+
+        setFilteredTeachersForLanguage(filtered);
+      } catch (error) {
+        console.error("Error applying language filtering:", error);
+        // En caso de error, mostrar todos los profesores
+        setFilteredTeachersForLanguage(teachers.data);
+      } finally {
+        setIsFilteringTeachers(false);
+      }
+    };
+
+    applyLanguageFiltering();
+  }, [
+    teachers?.data,
+    content?.data?.levelId,
+    userAssignedLanguage?.isAdminWithLanguage,
+    userAssignedLanguage?.assignedLanguageId,
+  ]);
+
   // Inicializar con profesores ya asignados
   useEffect(() => {
     if (content?.data?.assignedTeachers) {
@@ -871,15 +989,17 @@ function TeachersManagementModal({
     }
   }, [content?.data?.assignedTeachers]);
 
-  // Filtrar profesores por búsqueda
-  const filteredTeachers = teachers?.data?.filter((teacher: any) => {
-    if (!searchQuery) return true;
+  // Filtrar profesores por búsqueda después de aplicar filtros de idioma
+  const searchFilteredTeachers = (() => {
+    if (!searchQuery) return filteredTeachersForLanguage;
+
     const searchLower = searchQuery.toLowerCase();
-    return (
-      teacher.fullName?.toLowerCase().includes(searchLower) ||
-      teacher.email?.toLowerCase().includes(searchLower)
+    return filteredTeachersForLanguage.filter(
+      (teacher: any) =>
+        teacher.fullName?.toLowerCase().includes(searchLower) ||
+        teacher.email?.toLowerCase().includes(searchLower)
     );
-  });
+  })();
 
   const assignTeachersMutation = useMutation({
     mutationFn: async (teacherIds: string[]) => {
@@ -1012,16 +1132,19 @@ function TeachersManagementModal({
       title={`Gestionar Profesores - ${content?.data?.name || "Contenido"}`}
     >
       {/* Info de diagnóstico */}
-      <div className="mb-4 p-2 bg-blue-50 text-blue-800 text-xs rounded-md">
+      <div className="mb-4 p-2 bg-default-50 border border-default-200 text-default-800 text-xs rounded-md">
         <p>
           <strong>Rol de usuario:</strong> {userRole}
         </p>
         <p>
           <strong>Estado carga:</strong>{" "}
-          {teachersLoading ? "Cargando..." : "Completado"}
+          {teachersLoading || isFilteringTeachers
+            ? "Cargando..."
+            : "Completado"}
         </p>
         <p>
-          <strong>Profesores encontrados:</strong> {teachers?.data?.length || 0}
+          <strong>Profesores encontrados:</strong>{" "}
+          {filteredTeachersForLanguage?.length || 0}
         </p>
       </div>
 
@@ -1058,17 +1181,17 @@ function TeachersManagementModal({
                   {content.data.assignedTeachers.map((teacher: any) => (
                     <div
                       key={teacher.id}
-                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-default-50 rounded-lg border border-default-200"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-blue-600" />
+                        <div className="w-8 h-8 bg-default-100 rounded-full flex items-center justify-center">
+                          <Users className="h-4 w-4 text-default-600" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-foreground">
                             {teacher.fullName}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-default-500">
                             {teacher.email}
                           </p>
                         </div>
@@ -1105,11 +1228,13 @@ function TeachersManagementModal({
               isClearable
             />
 
-            {teachersLoading ? (
+            {teachersLoading || isFilteringTeachers ? (
               <div className="flex justify-center py-4">
                 <Spinner size="sm" />
                 <span className="ml-2 text-sm text-gray-600">
-                  Cargando profesores...
+                  {teachersLoading
+                    ? "Cargando profesores..."
+                    : "Aplicando filtros de idioma..."}
                 </span>
               </div>
             ) : teachersError ? (
@@ -1122,7 +1247,7 @@ function TeachersManagementModal({
                   Tu rol actual: {userRole}. El error es relacionado con
                   permisos.
                 </p>
-                <p className="text-xs text-blue-500 mt-2">
+                <p className="text-xs text-default-600 mt-2">
                   Expandiendo búsqueda... usando método alternativo
                 </p>
                 <Button
@@ -1137,23 +1262,23 @@ function TeachersManagementModal({
                   Reintentar
                 </Button>
               </div>
-            ) : (teachers?.data || []).length === 0 ? (
+            ) : filteredTeachersForLanguage.length === 0 ? (
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center">
                 <Users className="h-5 w-5 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600">
                   No hay profesores disponibles para asignar
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-default-500 mt-1">
                   Para añadir profesores, es necesario que haya usuarios con rol
                   de docente en el sistema
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-default-500 mt-1">
                   Tu rol actual: {userRole}
                 </p>
               </div>
             ) : (
               <>
-                <div className="text-xs text-gray-500 mb-2">
+                <div className="text-xs text-default-500 mb-2">
                   Selecciona uno o más profesores para asignar al contenido
                 </div>
                 <GlobalSelect
@@ -1164,8 +1289,18 @@ function TeachersManagementModal({
                   onSelectionChange={(keys: any) =>
                     setSelectedTeacherIds(Array.from(keys) as string[])
                   }
+                  color="default"
+                  classNames={{
+                    trigger:
+                      "border-default-200 hover:border-default-300 !bg-default-50",
+                    value: "text-default-700",
+                    label: "text-default-600",
+                    selectorIcon: "text-default-600 !text-default-600",
+                    listbox: "bg-content1",
+                    popoverContent: "bg-content1",
+                  }}
                 >
-                  {filteredTeachers?.map((teacher: any) => (
+                  {searchFilteredTeachers?.map((teacher: any) => (
                     <SelectItem
                       key={teacher.id}
                       textValue={`${teacher.fullName} (${teacher.email})`}
@@ -1175,7 +1310,7 @@ function TeachersManagementModal({
                           <span className="text-sm font-medium">
                             {teacher.fullName}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-default-500">
                             {teacher.email}
                           </span>
                         </div>
@@ -1184,8 +1319,8 @@ function TeachersManagementModal({
                   )) || []}
                 </GlobalSelect>
 
-                {filteredTeachers?.length === 0 && (
-                  <div className="text-center py-2 text-gray-500 text-sm">
+                {filteredTeachersForLanguage?.length === 0 && (
+                  <div className="text-center py-2 text-default-500 text-sm">
                     No se encontraron profesores con ese criterio de búsqueda
                   </div>
                 )}

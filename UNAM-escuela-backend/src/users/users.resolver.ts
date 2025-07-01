@@ -6,6 +6,7 @@ import { ValidRolesArgs } from './dto/args/roles.arg';
 import { UsersFilterArgs } from './dto/args/users-filter.arg';
 import { PaginatedUsers } from './dto/paginated-users.output';
 import { UpdateUserRolesInput } from './dto/update-user-roles.input';
+import { AssignLanguageInput } from './dto/assign-language.input';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -68,6 +69,22 @@ export class UsersResolver {
     return this.usersService.updateUserRoles(
       updateUserRolesInput.id,
       updateUserRolesInput.roles,
+      user,
+    );
+  }
+
+  @Mutation(() => User, { name: 'assignLanguageToUser' })
+  assignLanguageToUser(
+    @Args('assignLanguageInput') assignLanguageInput: AssignLanguageInput,
+    @CurrentUser([ValidRoles.superUser])
+    user: User,
+  ): Promise<User> {
+    this.logger.log(
+      `SuperUser ${user.fullName} assigning language to user: ${assignLanguageInput.userId}`,
+    );
+    return this.usersService.assignLanguageToUser(
+      assignLanguageInput.userId,
+      assignLanguageInput.languageId,
       user,
     );
   }

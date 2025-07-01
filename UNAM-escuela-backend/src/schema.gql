@@ -17,12 +17,22 @@ type Level {
   lenguageId: ID!
 }
 
+type Lenguage {
+  id: ID!
+  name: String!
+  createdAt: String!
+  updatedAt: String!
+  isActive: Boolean!
+}
+
 type User {
   id: ID!
   fullName: String!
   email: String!
   roles: [String!]!
   isActive: Boolean!
+  assignedLanguageId: ID
+  assignedLanguage: Lenguage
   lastUpdateBy: User
 }
 
@@ -89,14 +99,6 @@ type PaginatedUsers {
 type AuthResponse {
   token: String!
   user: User!
-}
-
-type Lenguage {
-  id: ID!
-  name: String!
-  createdAt: String!
-  updatedAt: String!
-  isActive: Boolean!
 }
 
 type Query {
@@ -170,6 +172,7 @@ type Mutation {
   removeHomework(id: Int!): Homework!
   blockUser(id: ID!): User!
   updateUserRoles(updateUserRolesInput: UpdateUserRolesInput!): User!
+  assignLanguageToUser(assignLanguageInput: AssignLanguageInput!): User!
   signin(signUpInput: SignupInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
   createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!
@@ -254,6 +257,11 @@ input UpdateHomeworkInput {
 input UpdateUserRolesInput {
   id: ID!
   roles: [ValidRoles!]!
+}
+
+input AssignLanguageInput {
+  userId: ID!
+  languageId: ID
 }
 
 input SignupInput {

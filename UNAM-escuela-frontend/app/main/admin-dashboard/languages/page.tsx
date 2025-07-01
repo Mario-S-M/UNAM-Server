@@ -26,7 +26,10 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
-import { usePermissions } from "@/app/hooks/use-authorization";
+import {
+  usePermissions,
+  useAuthorization,
+} from "@/app/hooks/use-authorization";
 import Link from "next/link";
 import {
   getActiveLenguages,
@@ -49,6 +52,7 @@ export default function LanguagesManagementPage() {
 
 function LanguagesManagementContent() {
   const { canManageContent } = usePermissions();
+  const { hasAnyRole, userAssignedLanguage } = useAuthorization();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -58,11 +62,33 @@ function LanguagesManagementContent() {
     queryFn: getActiveLenguages,
   });
 
-  const filteredLanguages = languages?.data?.filter(
-    (language: any) =>
-      language.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      language.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrar idiomas basado en el rol del usuario
+  const getFilteredLanguages = () => {
+    let availableLanguages = languages?.data || [];
+
+    // Si es admin con idioma asignado, solo mostrar su idioma
+    if (
+      userAssignedLanguage?.isAdminWithLanguage &&
+      userAssignedLanguage.assignedLanguageId
+    ) {
+      availableLanguages = availableLanguages.filter(
+        (language: any) =>
+          language.id === userAssignedLanguage.assignedLanguageId
+      );
+    }
+
+    // Aplicar filtro de búsqueda
+    return availableLanguages.filter(
+      (language: any) =>
+        language.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        language.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const filteredLanguages = getFilteredLanguages();
+
+  // Solo SuperUsers pueden crear idiomas, los admins solo pueden crear niveles
+  const canCreateLanguages = hasAnyRole(["superUser"]);
 
   if (!canManageContent) {
     return (
@@ -119,13 +145,15 @@ function LanguagesManagementContent() {
                   className="max-w-md"
                 />
 
-                <Button
-                  color="primary"
-                  startContent={<Plus className="h-4 w-4" />}
-                  onPress={() => setIsCreateModalOpen(true)}
-                >
-                  Crear Idioma
-                </Button>
+                {canCreateLanguages && (
+                  <Button
+                    color="primary"
+                    startContent={<Plus className="h-4 w-4" />}
+                    onPress={() => setIsCreateModalOpen(true)}
+                  >
+                    Crear Idioma
+                  </Button>
+                )}
               </div>
             </CardBody>
           </Card>
@@ -161,13 +189,20 @@ function LanguagesManagementContent() {
                       ? "No se encontraron idiomas con ese término de búsqueda"
                       : "Aún no hay idiomas creados en el sistema"}
                   </p>
-                  <Button
-                    color="primary"
-                    startContent={<Plus className="h-4 w-4" />}
-                    onPress={() => setIsCreateModalOpen(true)}
-                  >
-                    Crear Primer Idioma
-                  </Button>
+                  {canCreateLanguages && (
+                    <Button
+                      color="primary"
+                      startContent={<Plus className="h-4 w-4" />}
+                      onPress={() => setIsCreateModalOpen(true)}
+                    >
+                      Crear Primer Idioma
+                    </Button>
+                  )}
+                  {!canCreateLanguages && (
+                    <p className="text-default-400 text-sm">
+                      Solo los Super Administradores pueden crear idiomas
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -260,11 +295,13 @@ function LanguagesManagementContent() {
         </div>
       </div>
 
-      {/* Modal de crear idioma */}
-      <CreateLanguageModal
-        isOpen={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
-      />
+      {/* Modal de crear idioma - Solo visible para SuperUsers */}
+      {canCreateLanguages && (
+        <CreateLanguageModal
+          isOpen={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+        />
+      )}
     </>
   );
 }

@@ -208,8 +208,13 @@ export function ChangeUserRoleModal({
                   <Select
                     label="Nuevo rol"
                     placeholder="Elige un rol"
-                    value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
+                    selectedKeys={
+                      selectedRole ? new Set([selectedRole]) : new Set()
+                    }
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] as string;
+                      setSelectedRole(selected || "");
+                    }}
                     description="Solo se muestran los roles que puedes asignar"
                     classNames={{
                       trigger: "border-default-200 hover:border-default-300",

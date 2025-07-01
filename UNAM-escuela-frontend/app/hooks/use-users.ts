@@ -6,6 +6,8 @@ import {
   blockUser,
   revalidateToken,
   updateUserRoles,
+  updateUserRolesWithLanguage,
+  assignLanguageToUser,
   UpdateUserRolesInput,
 } from "../actions/user-actions";
 
@@ -108,6 +110,97 @@ export function useUpdateUserRoles() {
           error.data?.error || error.message || "Error al actualizar el rol",
         color: "danger",
         timeout: 3000,
+      });
+    },
+  });
+}
+
+export function useAssignLanguageToUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userId,
+      languageId,
+      token,
+    }: {
+      userId: string;
+      languageId: string | null;
+      token?: string;
+    }) => assignLanguageToUser(userId, languageId, token),
+    onSuccess: (response) => {
+      // Invalidate and refetch users queries
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["usersPaginated"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+
+      // Show success toast
+      if (response.data) {
+        const languageName = response.data.assignedLanguage?.name || "ninguno";
+        addToast({
+          title: "Idioma asignado",
+          description: `Idioma ${languageName} asignado exitosamente`,
+          color: "success",
+          timeout: 3000,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      // Show error toast
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudo asignar el idioma",
+        color: "danger",
+        timeout: 5000,
+      });
+    },
+  });
+}
+
+export function useUpdateUserRolesWithLanguage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userId,
+      roles,
+      languageId,
+      token,
+    }: {
+      userId: string;
+      roles: string[];
+      languageId?: string | null;
+      token?: string;
+    }) => updateUserRolesWithLanguage(userId, roles, languageId, token),
+    onSuccess: (response) => {
+      // Invalidate and refetch users queries
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["usersPaginated"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+
+      // Show success toast
+      if (response.data) {
+        const isAdmin = response.data.roles.includes("admin");
+        const languageName = response.data.assignedLanguage?.name;
+
+        addToast({
+          title: "Roles actualizados",
+          description:
+            isAdmin && languageName
+              ? `Usuario asignado como administrador de ${languageName}`
+              : "Roles de usuario actualizados exitosamente",
+          color: "success",
+          timeout: 3000,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      // Show error toast
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudieron actualizar los roles",
+        color: "danger",
+        timeout: 5000,
       });
     },
   });

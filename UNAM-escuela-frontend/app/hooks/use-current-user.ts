@@ -9,6 +9,12 @@ export interface User {
   email: string;
   roles: string[];
   isActive: boolean;
+  assignedLanguageId?: string;
+  assignedLanguage?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
 }
 
 export function useCurrentUser() {

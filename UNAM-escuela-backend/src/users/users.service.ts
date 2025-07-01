@@ -195,6 +195,41 @@ export class UsersService {
     return await this.usersRepository.save(userToUpdate);
   }
 
+  async assignLanguageToUser(
+    userId: string,
+    languageId: string | undefined,
+    adminUser: User,
+  ): Promise<User> {
+    this.logger.log(
+      `Asignando idioma ${languageId} al usuario ${userId} por admin ${adminUser.fullName}`,
+    );
+
+    const userToUpdate = await this.findOneById(userId);
+
+    // Verificar que el admin puede gestionar este usuario
+    if (!this.canManageUser(adminUser, userToUpdate)) {
+      throw new BadRequestException(
+        'No tienes permisos para gestionar este usuario',
+      );
+    }
+
+    // Solo SuperUsers pueden asignar idiomas a admins
+    const adminHighestRole = this.getHighestRole(adminUser.roles);
+    if (adminHighestRole !== ValidRoles.superUser) {
+      throw new BadRequestException(
+        'Solo los Super Administradores pueden asignar idiomas a usuarios',
+      );
+    }
+
+    userToUpdate.assignedLanguageId = languageId;
+    userToUpdate.lastUpdateBy = adminUser;
+
+    this.logger.log(
+      `Idioma ${languageId ? languageId : 'removido'} asignado a ${userToUpdate.email}`,
+    );
+    return await this.usersRepository.save(userToUpdate);
+  }
+
   private canManageUser(adminUser: User, targetUser: User): boolean {
     const adminHighestRole = this.getHighestRole(adminUser.roles);
     const targetHighestRole = this.getHighestRole(targetUser.roles);

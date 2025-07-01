@@ -47,6 +47,14 @@ export function useAuthorization() {
       const mainPage = AuthDAL.getUserMainPage(safeUser);
       router.push(mainPage);
     },
+
+    // Información del idioma asignado (para admins)
+    userAssignedLanguage: {
+      assignedLanguageId: user?.assignedLanguageId,
+      assignedLanguage: user?.assignedLanguage,
+      isAdminWithLanguage:
+        user?.roles?.includes("admin") && !!user?.assignedLanguageId,
+    },
   };
 }
 
@@ -142,5 +150,19 @@ export function usePermissions() {
       AuthDAL.canChangeUserRole(safeUser, targetUser, newRoles),
     canManageUser: (targetUser: any) =>
       AuthDAL.canManageUser(safeUser, targetUser),
+  };
+}
+
+/**
+ * Hook para obtener el idioma asignado del usuario actual (para admins)
+ */
+export function useUserAssignedLanguage() {
+  const { user } = useAuth();
+
+  return {
+    assignedLanguageId: user?.assignedLanguageId,
+    assignedLanguage: user?.assignedLanguage,
+    isAdminWithLanguage:
+      user?.roles?.includes("admin") && !!user?.assignedLanguageId,
   };
 }

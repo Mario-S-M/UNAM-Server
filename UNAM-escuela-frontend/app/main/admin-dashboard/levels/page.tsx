@@ -162,11 +162,15 @@ function LevelsManagementContent() {
                     setSelectedLanguage(selected || "");
                   }}
                   isLoading={languagesLoading}
+                  color="default"
                   classNames={{
-                    trigger: "border-default-200 hover:border-default-300",
+                    trigger:
+                      "border-default-200 hover:border-default-300 !bg-default-50",
                     value: "text-default-700",
                     label: "text-default-600",
-                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                    selectorIcon: "text-default-600 !text-default-600",
+                    listbox: "bg-content1",
+                    popoverContent: "bg-content1",
                   }}
                 >
                   {filteredLanguages.map((lang: any) => (
@@ -479,6 +483,16 @@ function CreateLevelModal({
           onSelectionChange={(keys: any) => {
             const selectedArray = Array.from(keys);
             setDifficulty(selectedArray[0] as string);
+          }}
+          color="default"
+          classNames={{
+            trigger:
+              "border-default-200 hover:border-default-300 !bg-default-50",
+            value: "text-default-700",
+            label: "text-default-600",
+            selectorIcon: "text-default-600 !text-default-600",
+            listbox: "bg-content1",
+            popoverContent: "bg-content1",
           }}
         >
           <SelectItem key="beginner">Principiante</SelectItem>

@@ -258,11 +258,15 @@ function ContentsManagementContent() {
                     setSelectedLevel("");
                   }}
                   isLoading={languagesLoading}
+                  color="default"
                   classNames={{
-                    trigger: "border-default-200 hover:border-default-300",
+                    trigger:
+                      "border-default-200 hover:border-default-300 !bg-default-50",
                     value: "text-default-700",
                     label: "text-default-600",
-                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                    selectorIcon: "text-default-600 !text-default-600",
+                    listbox: "bg-content1",
+                    popoverContent: "bg-content1",
                   }}
                 >
                   {filteredLanguages.map((lang: any) => (
@@ -282,11 +286,15 @@ function ContentsManagementContent() {
                   }}
                   isLoading={levelsLoading}
                   isDisabled={!selectedLanguage}
+                  color="default"
                   classNames={{
-                    trigger: "border-default-200 hover:border-default-300",
+                    trigger:
+                      "border-default-200 hover:border-default-300 !bg-default-50",
                     value: "text-default-700",
                     label: "text-default-600",
-                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                    selectorIcon: "text-default-600 !text-default-600",
+                    listbox: "bg-content1",
+                    popoverContent: "bg-content1",
                   }}
                 >
                   {(levels?.data || []).map((level: any) => (
@@ -305,11 +313,15 @@ function ContentsManagementContent() {
                     setSelectedSkill(selected || "");
                   }}
                   isLoading={skillsLoading}
+                  color="default"
                   classNames={{
-                    trigger: "border-default-200 hover:border-default-300",
+                    trigger:
+                      "border-default-200 hover:border-default-300 !bg-default-50",
                     value: "text-default-700",
                     label: "text-default-600",
-                    selectorIcon: "text-default-600", // Fuerza el color del icono
+                    selectorIcon: "text-default-600 !text-default-600",
+                    listbox: "bg-content1",
+                    popoverContent: "bg-content1",
                   }}
                 >
                   {(skills?.data || []).map((skill: any) => (
@@ -738,6 +750,16 @@ function CreateContentModal({
           }}
           isRequired
           isDisabled={!skills?.data || skills.data.length === 0}
+          color="default"
+          classNames={{
+            trigger:
+              "border-default-200 hover:border-default-300 !bg-default-50",
+            value: "text-default-700",
+            label: "text-default-600",
+            selectorIcon: "text-default-600 !text-default-600",
+            listbox: "bg-content1",
+            popoverContent: "bg-content1",
+          }}
         >
           {(skills?.data || []).map((skill: any) => (
             <SelectItem key={skill.id} textValue={skill.name}>
@@ -804,15 +826,26 @@ function CreateContentModal({
             </div>
           ) : (
             <GlobalSelect
+              label="Asignar Profesores"
               placeholder="Selecciona profesores para asignar (opcional)"
               selectionMode="multiple"
               selectedKeys={selectedTeachers}
               onSelectionChange={(keys: any) => {
                 setSelectedTeachers(Array.from(keys) as string[]);
               }}
+              color="default"
+              classNames={{
+                trigger:
+                  "border-default-200 hover:border-default-300 !bg-default-50",
+                value: "text-default-700",
+                label: "text-default-600",
+                selectorIcon: "text-default-600 !text-default-600",
+                listbox: "bg-content1",
+                popoverContent: "bg-content1",
+              }}
             >
               {filteredTeachersForLanguage.map((teacher: any) => (
-                <SelectItem key={teacher.id}>
+                <SelectItem key={teacher.id} textValue={teacher.fullName}>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-default-100 rounded-full flex items-center justify-center">
                       <Users className="h-3 w-3 text-default-600" />
@@ -831,43 +864,6 @@ function CreateContentModal({
             </GlobalSelect>
           )}
         </div>
-
-        {selectedTeachers.length > 0 && (
-          <div className="bg-default-50 p-3 rounded-lg border border-default-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4 text-default-600" />
-              <p className="text-sm font-medium text-default-800">
-                Profesores seleccionados ({selectedTeachers.length}):
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {selectedTeachers.map((teacherId) => {
-                const teacher = filteredTeachersForLanguage?.find(
-                  (t: any) => t.id === teacherId
-                );
-                return teacher ? (
-                  <Chip
-                    key={teacherId}
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    onClose={() => {
-                      setSelectedTeachers((prev) =>
-                        prev.filter((id) => id !== teacherId)
-                      );
-                    }}
-                  >
-                    {teacher.fullName}
-                  </Chip>
-                ) : null;
-              })}
-            </div>
-            <p className="text-xs text-default-600 mt-2">
-              Estos profesores tendrán acceso para editar el contenido una vez
-              creado
-            </p>
-          </div>
-        )}
 
         <div className="flex justify-end gap-2 pt-4">
           <GlobalButton

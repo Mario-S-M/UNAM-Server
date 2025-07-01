@@ -157,11 +157,15 @@ function UsersManagementContent() {
                   const selected = Array.from(keys)[0] as string;
                   setRoleFilter(selected || "");
                 }}
+                color="default"
                 classNames={{
-                  trigger: "border-default-200 hover:border-default-300",
+                  trigger:
+                    "border-default-200 hover:border-default-300 !bg-default-50",
                   value: "text-default-700",
                   label: "text-default-600",
-                  selectorIcon: "text-default-600", // Fuerza el color del icono
+                  selectorIcon: "text-default-600 !text-default-600",
+                  listbox: "bg-content1",
+                  popoverContent: "bg-content1",
                 }}
               >
                 <SelectItem key="superUser">Super Usuario</SelectItem>

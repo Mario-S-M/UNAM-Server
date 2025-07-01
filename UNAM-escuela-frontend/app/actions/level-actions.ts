@@ -181,6 +181,87 @@ export async function createLevel(
   }
 }
 
+export async function updateLevel(
+  id: string,
+  formData: FormData
+): Promise<ActionResponse<Level>> {
+  try {
+    if (!id) {
+      throw new Error("ID inválido");
+    }
+
+    const rawData = {
+      id,
+      name: formData.get("name")?.toString() || "",
+      description: formData.get("description")?.toString() || "",
+      difficulty: formData.get("difficulty")?.toString() || "beginner",
+    };
+
+    // Validar solo los campos que no son ID ni lenguageId
+    const updateSchema = levelFormSchema.omit({ lenguageId: true });
+    const validated = updateSchema.safeParse({
+      ...rawData,
+      lenguageId: "dummy", // Agregar valor dummy para pasar validación
+    });
+    if (!validated.success) {
+      return {
+        error: validated.error.errors.map((e) => e.message).join(", "),
+      };
+    }
+
+    const headers = await getAuthHeaders();
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          mutation UpdateLevel($updateLevelInput: UpdateLevelInput!) {
+            updateLevel(updateLevelInput: $updateLevelInput) {
+              id
+              name
+              description
+              difficulty
+              isActive
+            }
+          }
+        `,
+        variables: {
+          updateLevelInput: {
+            id: rawData.id,
+            name: rawData.name,
+            description: rawData.description,
+            difficulty: rawData.difficulty,
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al actualizar el nivel");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    const validatedResponse = levelResponseSchema.safeParse(
+      result.data.updateLevel
+    );
+    if (!validatedResponse.success) {
+      throw new Error("Formato de respuesta inválido del servidor");
+    }
+
+    return { data: validatedResponse.data };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 export async function deleteLevel(id: string): Promise<ActionResponse<Level>> {
   try {
     if (!id) {

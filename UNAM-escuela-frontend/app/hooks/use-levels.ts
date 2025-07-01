@@ -3,6 +3,7 @@ import {
   getLevelsByLenguage,
   getLevel,
   createLevel,
+  updateLevel,
   deleteLevel,
 } from "../actions/level-actions";
 
@@ -32,6 +33,20 @@ export function useCreateLevel() {
     onSuccess: () => {
       // Invalidate and refetch levels queries
       queryClient.invalidateQueries({ queryKey: ["levels"] });
+    },
+  });
+}
+
+export function useUpdateLevel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, formData }: { id: string; formData: FormData }) =>
+      updateLevel(id, formData),
+    onSuccess: () => {
+      // Invalidate and refetch levels queries
+      queryClient.invalidateQueries({ queryKey: ["levels"] });
+      queryClient.invalidateQueries({ queryKey: ["level"] });
     },
   });
 }

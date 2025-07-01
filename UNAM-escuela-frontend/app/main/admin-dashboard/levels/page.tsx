@@ -17,6 +17,10 @@ import {
   Input,
   Select,
   SelectItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
 } from "@heroui/react";
 import {
   GraduationCap,
@@ -36,7 +40,11 @@ import {
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getActiveLenguages } from "@/app/actions/lenguage-actions";
-import { getLevelsByLenguage, createLevel } from "@/app/actions/level-actions";
+import {
+  getLevelsByLenguage,
+  createLevel,
+  updateLevel,
+} from "@/app/actions/level-actions";
 import { getContentsByLevel } from "@/app/actions/content-actions";
 import { GlobalModal } from "@/components/global/globalModal";
 import GlobalButton from "@/components/global/globalButton";
@@ -62,6 +70,8 @@ function LevelsManagementContent() {
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingLevel, setEditingLevel] = useState<any>(null);
 
   // Queries
   const { data: languages, isLoading: languagesLoading } = useQuery({
@@ -104,6 +114,11 @@ function LevelsManagementContent() {
       level.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       level.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEditLevel = (level: any) => {
+    setEditingLevel(level);
+    setIsEditModalOpen(true);
+  };
 
   if (!canManageContent) {
     return (
@@ -179,15 +194,13 @@ function LevelsManagementContent() {
                     </SelectItem>
                   ))}
                 </Select>
-
                 <Input
                   label="Buscar"
                   placeholder="Buscar niveles..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   startContent={<Search className="h-4 w-4" />}
-                />
-
+                />{" "}
                 <Button
                   color="primary"
                   startContent={<Plus className="h-4 w-4" />}
@@ -316,7 +329,12 @@ function LevelsManagementContent() {
                                     <BookOpen className="h-4 w-4 text-foreground" />
                                   </Button>
                                 </Link>
-                                <Button isIconOnly size="sm" variant="light">
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  variant="light"
+                                  onPress={() => handleEditLevel(level)}
+                                >
                                   <Edit className="h-4 w-4 text-foreground" />
                                 </Button>
                                 <Button
@@ -356,6 +374,13 @@ function LevelsManagementContent() {
         isOpen={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         languageId={selectedLanguage}
+      />
+
+      {/* Modal de editar nivel */}
+      <EditLevelModal
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        level={editingLevel}
       />
     </>
   );
@@ -515,5 +540,183 @@ function CreateLevelModal({
         </div>
       </form>
     </GlobalModal>
+  );
+}
+
+// Modal para editar nivel
+interface EditLevelModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  level: any;
+}
+
+function EditLevelModal({ isOpen, onOpenChange, level }: EditLevelModalProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [difficulty, setDifficulty] = useState("beginner");
+  const queryClient = useQueryClient();
+
+  // Cargar datos del nivel cuando se abre el modal
+  React.useEffect(() => {
+    if (level && isOpen) {
+      setName(level.name || "");
+      setDescription(level.description || "");
+      setDifficulty(level.difficulty || "beginner");
+    }
+  }, [level, isOpen]);
+
+  // Reset cuando se cierra el modal
+  React.useEffect(() => {
+    if (!isOpen) {
+      setName("");
+      setDescription("");
+      setDifficulty("beginner");
+    }
+  }, [isOpen]);
+
+  const updateLevelMutation = useMutation({
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: FormData;
+    }) => {
+      const result = await updateLevel(id, formData);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["levels"] });
+      addToast({
+        title: "Nivel actualizado",
+        description: "El nivel se ha actualizado exitosamente",
+        color: "success",
+        timeout: 3000,
+      });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el nivel",
+        color: "danger",
+        timeout: 3000,
+      });
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("🔍 HandleSubmit ejecutado");
+    console.log("🔍 Datos del formulario:", { name, description, difficulty });
+    console.log("🔍 Level ID:", level?.id);
+
+    if (!name.trim() || !description.trim()) {
+      console.log("🔍 Validación fallida - campos vacíos");
+      addToast({
+        title: "Error",
+        description: "Todos los campos son obligatorios",
+        color: "danger",
+        timeout: 3000,
+      });
+      return;
+    }
+
+    if (!level?.id) {
+      console.log("🔍 Validación fallida - no hay ID");
+      addToast({
+        title: "Error",
+        description: "No se encontró el ID del nivel",
+        color: "danger",
+        timeout: 3000,
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("difficulty", difficulty);
+
+    console.log("🔍 Ejecutando mutación...");
+    await updateLevelMutation.mutateAsync({ id: level.id, formData });
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      placement="top-center"
+      backdrop="blur"
+    >
+      <ModalContent>
+        <>
+          <ModalHeader className="flex flex-col gap-1">
+            Editar Nivel
+          </ModalHeader>
+          <ModalBody>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <GlobalInput
+                label="Nombre del Nivel"
+                placeholder="Ej: A1, A2, B1, B2..."
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                isRequired
+              />
+
+              <GlobalTextArea
+                label="Descripción"
+                placeholder="Descripción detallada del nivel..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                isRequired
+                minRows={3}
+              />
+
+              <GlobalSelect
+                label="Dificultad"
+                placeholder="Selecciona la dificultad"
+                selectedKeys={new Set([difficulty])}
+                onSelectionChange={(keys: any) => {
+                  const selectedArray = Array.from(keys);
+                  setDifficulty(selectedArray[0] as string);
+                }}
+                color="default"
+                classNames={{
+                  trigger:
+                    "border-default-200 hover:border-default-300 !bg-default-50",
+                  value: "text-default-700",
+                  label: "text-default-600",
+                  selectorIcon: "text-default-600 !text-default-600",
+                  listbox: "bg-content1",
+                  popoverContent: "bg-content1",
+                }}
+              >
+                <SelectItem key="beginner">Principiante</SelectItem>
+                <SelectItem key="intermediate">Intermedio</SelectItem>
+                <SelectItem key="advanced">Avanzado</SelectItem>
+              </GlobalSelect>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <GlobalButton
+                  text="Cancelar"
+                  variant="light"
+                  onPress={() => onOpenChange(false)}
+                />
+                <GlobalButton
+                  text="Actualizar Nivel"
+                  color="primary"
+                  type="submit"
+                  isLoading={updateLevelMutation.isPending}
+                />
+              </div>
+            </form>
+          </ModalBody>
+        </>
+      </ModalContent>
+    </Modal>
   );
 }

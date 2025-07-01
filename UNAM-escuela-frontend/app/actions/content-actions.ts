@@ -278,24 +278,36 @@ export async function updateContent(
       throw new Error("ID inválido");
     }
 
-    const title = formData.get("title")?.toString() || "";
+    const name = formData.get("name")?.toString() || "";
     const description = formData.get("description")?.toString() || "";
-    const content = formData.get("content")?.toString() || "";
+    const levelId = formData.get("levelId")?.toString() || "";
+    const skillId = formData.get("skillId")?.toString() || "";
 
+    const headers = await getAuthHeaders();
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         query: `
           mutation UpdateContent($updateContentInput: UpdateContentInput!) {
             updateContent(updateContentInput: $updateContentInput) {
               id
-              title
+              name
               description
-              content
               levelId
+              skillId
+              skill {
+                id
+                name
+                color
+              }
+              markdownPath
+              assignedTeachers {
+                id
+                fullName
+                email
+                roles
+              }
               createdAt
               updatedAt
             }
@@ -304,9 +316,10 @@ export async function updateContent(
         variables: {
           updateContentInput: {
             id,
-            title,
+            name,
             description,
-            content,
+            ...(levelId && { levelId }),
+            ...(skillId && { skillId }),
           },
         },
       }),

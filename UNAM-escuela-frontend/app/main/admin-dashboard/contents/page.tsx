@@ -12,6 +12,7 @@ import {
   assignTeachersToContent,
   removeTeacherFromContent,
   adminWorkaroundAssignTeachers,
+  updateContent,
 } from "@/app/actions/content-actions";
 import { getActiveSkills } from "@/app/actions/skill-actions";
 import {
@@ -85,7 +86,9 @@ function ContentsManagementContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTeachersModalOpen, setIsTeachersModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState("");
+  const [editingContent, setEditingContent] = useState<any>(null);
 
   // Queries
   const { data: languages, isLoading: languagesLoading } = useQuery({
@@ -521,6 +524,10 @@ function ContentsManagementContent() {
                                 variant="light"
                                 color="primary"
                                 title="Editar contenido"
+                                onPress={() => {
+                                  setEditingContent(content);
+                                  setIsEditModalOpen(true);
+                                }}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -564,6 +571,12 @@ function ContentsManagementContent() {
         isOpen={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         levelId={selectedLevel}
+      />
+
+      <EditContentModal
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        content={editingContent}
       />
 
       <TeachersManagementModal
@@ -881,6 +894,127 @@ function CreateContentModal({
               !skills?.data ||
               skills.data.length === 0
             }
+          />
+        </div>
+      </form>
+    </GlobalModal>
+  );
+}
+
+// Modal para editar contenido
+interface EditContentModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  content: any;
+}
+
+function EditContentModal({
+  isOpen,
+  onOpenChange,
+  content,
+}: EditContentModalProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const queryClient = useQueryClient();
+
+  // Reset form when modal opens with new content
+  useEffect(() => {
+    if (content && isOpen) {
+      setName(content.name || "");
+      setDescription(content.description || "");
+    }
+  }, [content, isOpen]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setName("");
+      setDescription("");
+    }
+  }, [isOpen]);
+
+  const updateContentMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const result = await updateContent(content.id, formData);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      addToast({
+        title: "¡Éxito!",
+        description: "Contenido actualizado exitosamente",
+        color: "success",
+      });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      addToast({
+        title: "Error",
+        description: error.message || "Error al actualizar el contenido",
+        color: "danger",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim() || !description.trim()) {
+      addToast({
+        title: "Error de validación",
+        description: "El nombre y la descripción son obligatorios",
+        color: "danger",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+
+    updateContentMutation.mutate(formData);
+  };
+
+  if (!content) return null;
+
+  return (
+    <GlobalModal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      title="Editar Contenido"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <GlobalInput
+          label="Nombre del Contenido"
+          placeholder="Ej: Introducción a la programación"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          isRequired
+        />
+
+        <GlobalTextArea
+          label="Descripción"
+          placeholder="Descripción detallada del contenido..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          isRequired
+          minRows={3}
+        />
+
+        <div className="flex justify-end gap-2 pt-4">
+          <GlobalButton
+            text="Cancelar"
+            variant="light"
+            onPress={() => onOpenChange(false)}
+          />
+          <GlobalButton
+            text="Actualizar Contenido"
+            color="primary"
+            type="submit"
+            isLoading={updateContentMutation.isPending}
           />
         </div>
       </form>

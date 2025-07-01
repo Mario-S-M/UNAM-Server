@@ -199,6 +199,140 @@ export async function getContent(id: string): Promise<ActionResponse<Content>> {
   }
 }
 
+export async function getContentsPaginated(
+  filters: {
+    search?: string;
+    levelId?: string;
+    skillId?: string;
+    validationStatus?: string;
+    page?: number;
+    limit?: number;
+  } = {}
+): Promise<{ data: any } | { error: string }> {
+  try {
+    const headers = await getAuthHeaders();
+    const {
+      search,
+      levelId,
+      skillId,
+      validationStatus,
+      page = 1,
+      limit = 5,
+    } = filters;
+
+    console.log("🔧 getContentsPaginated - Filters:", filters);
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          query ContentsPaginated(
+            $search: String,
+            $levelId: String,
+            $skillId: String,
+            $validationStatus: String,
+            $page: Int,
+            $limit: Int
+          ) {
+            contentsPaginated(
+              search: $search,
+              levelId: $levelId,
+              skillId: $skillId,
+              validationStatus: $validationStatus,
+              page: $page,
+              limit: $limit
+            ) {
+              contents {
+                id
+                name
+                description
+                levelId
+                validationStatus
+                markdownPath
+                skillId
+                skill {
+                  id
+                  name
+                  description
+                  color
+                  isActive
+                }
+                assignedTeachers {
+                  id
+                  fullName
+                  email
+                  roles
+                }
+                createdAt
+                updatedAt
+              }
+              total
+              page
+              limit
+              totalPages
+              hasNextPage
+              hasPreviousPage
+            }
+          }
+        `,
+        variables: { search, levelId, skillId, validationStatus, page, limit },
+      }),
+    });
+
+    console.log("🔧 getContentsPaginated - Response status:", response.status);
+
+    if (!response.ok) {
+      throw new Error("Error al cargar los contenidos paginados");
+    }
+
+    const result = await response.json();
+    console.log("🔧 getContentsPaginated - GraphQL result:", result);
+
+    if (result.errors) {
+      // Handle authorization errors gracefully
+      const authErrors = result.errors.some(
+        (error: any) =>
+          error.message?.includes("Forbidden") ||
+          error.message?.includes("Unauthorized") ||
+          error.extensions?.code === "FORBIDDEN" ||
+          error.extensions?.code === "UNAUTHENTICATED"
+      );
+
+      if (authErrors) {
+        console.warn(
+          "🔧 getContentsPaginated - Authorization error, returning empty data"
+        );
+        return {
+          data: {
+            contents: [],
+            total: 0,
+            page: 1,
+            limit: 5,
+            totalPages: 0,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+        };
+      }
+
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    console.log(
+      "🔧 getContentsPaginated - Content count:",
+      result.data.contentsPaginated?.contents?.length || 0
+    );
+
+    return { data: result.data.contentsPaginated };
+  } catch (error) {
+    console.error("Error en getContentsPaginated:", error);
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
 export async function createContent(
   formData: FormData
 ): Promise<ActionResponse<Content>> {

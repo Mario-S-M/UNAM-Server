@@ -13,6 +13,7 @@ import {
   removeTeacherFromContent,
   adminWorkaroundAssignTeachers,
   updateContent,
+  getContentsPaginated,
 } from "@/app/actions/content-actions";
 import { getActiveSkills } from "@/app/actions/skill-actions";
 import {
@@ -31,6 +32,7 @@ import {
   Input,
   Select,
   SelectItem,
+  Pagination,
 } from "@heroui/react";
 import {
   BookOpen,
@@ -84,6 +86,8 @@ function ContentsManagementContent() {
   );
   const [selectedSkill, setSelectedSkill] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTeachersModalOpen, setIsTeachersModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -107,17 +111,28 @@ function ContentsManagementContent() {
     queryFn: getActiveSkills,
   });
 
-  const { data: contents, isLoading: contentsLoading } = useQuery({
-    queryKey: ["contents", selectedLevel, selectedSkill],
+  // Use paginated contents query
+  const { data: paginatedContents, isLoading: contentsLoading } = useQuery({
+    queryKey: [
+      "contentsPaginated",
+      selectedLevel,
+      selectedSkill,
+      searchTerm,
+      currentPage,
+      itemsPerPage,
+    ],
     queryFn: () => {
-      if (selectedLevel && selectedSkill) {
-        return getContentsByLevelAndSkill(selectedLevel, selectedSkill);
-      } else if (selectedLevel) {
-        return getContentsByLevel(selectedLevel);
-      } else if (selectedSkill) {
-        return getContentsBySkill(selectedSkill);
+      // Only fetch if we have a level or skill selected
+      if (selectedLevel || selectedSkill) {
+        return getContentsPaginated({
+          levelId: selectedLevel || undefined,
+          skillId: selectedSkill || undefined,
+          search: searchTerm || undefined,
+          page: currentPage,
+          limit: itemsPerPage,
+        });
       }
-      return Promise.resolve({ data: [] });
+      return Promise.resolve({ data: null });
     },
     enabled: !!(selectedLevel || selectedSkill),
   });
@@ -146,12 +161,40 @@ function ContentsManagementContent() {
 
   const filteredLanguages = getFilteredLanguages();
 
-  const filteredContents =
-    contents?.data?.filter(
-      (content: any) =>
-        content.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        content.description.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  // Extract paginated data with proper type checking
+  const paginatedData =
+    paginatedContents && "data" in paginatedContents
+      ? paginatedContents.data
+      : null;
+  const contents = paginatedData?.contents || [];
+  const totalItems = paginatedData?.total || 0;
+  const totalPages = paginatedData?.totalPages || 1;
+  const hasNextPage = paginatedData?.hasNextPage || false;
+  const hasPreviousPage = paginatedData?.hasPreviousPage || false;
+
+  // Since search is handled by the backend, we don't need client-side filtering
+  const filteredContents = contents;
+
+  // Reset page when filters change
+  const resetPage = () => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  };
+
+  // Reset page when level or skill changes
+  React.useEffect(() => {
+    resetPage();
+  }, [selectedLevel, selectedSkill]);
+
+  // Reset page when search term changes (with debounce)
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      resetPage();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const queryClient = useQueryClient();
 
@@ -159,7 +202,7 @@ function ContentsManagementContent() {
   const validateContentMutation = useMutation({
     mutationFn: validateContent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      queryClient.invalidateQueries({ queryKey: ["contentsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Contenido validado exitosamente",
@@ -178,7 +221,7 @@ function ContentsManagementContent() {
   const invalidateContentMutation = useMutation({
     mutationFn: invalidateContent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      queryClient.invalidateQueries({ queryKey: ["contentsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Contenido marcado como no validado",
@@ -561,6 +604,47 @@ function ContentsManagementContent() {
                   </Table>
                 </div>
               )}
+
+              {/* Pagination */}
+              {filteredContents &&
+                filteredContents.length > 0 &&
+                totalPages > 1 && (
+                  <div className="flex justify-center mt-6">
+                    <Pagination
+                      total={totalPages}
+                      page={currentPage}
+                      onChange={setCurrentPage}
+                      color="primary"
+                      variant="light"
+                      size="lg"
+                      showControls
+                      className="gap-2"
+                      classNames={{
+                        wrapper: "gap-2 overflow-visible shadow-none",
+                        item: "w-10 h-10 text-sm bg-transparent border-0 rounded-lg hover:bg-default-100 text-default-600 hover:text-foreground",
+                        cursor:
+                          "bg-primary text-primary-foreground font-semibold shadow-sm",
+                        prev: "bg-transparent hover:bg-default-100 border-0 rounded-lg text-default-600 hover:text-foreground",
+                        next: "bg-transparent hover:bg-default-100 border-0 rounded-lg text-default-600 hover:text-foreground",
+                      }}
+                    />
+                  </div>
+                )}
+
+              {/* Pagination Info */}
+              {filteredContents && filteredContents.length > 0 && (
+                <div className="flex justify-between items-center mt-4 px-2 py-2 bg-default-50 rounded-lg">
+                  <div className="text-sm text-default-600">
+                    Mostrando {(currentPage - 1) * itemsPerPage + 1} a{" "}
+                    {Math.min(currentPage * itemsPerPage, totalItems)} de{" "}
+                    <span className="font-semibold">{totalItems}</span>{" "}
+                    contenidos
+                  </div>
+                  <div className="text-sm text-default-500">
+                    Página {currentPage} de {totalPages}
+                  </div>
+                </div>
+              )}
             </CardBody>
           </Card>
         </div>
@@ -668,7 +752,7 @@ function CreateContentModal({
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      queryClient.invalidateQueries({ queryKey: ["contentsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Contenido creado exitosamente",
@@ -942,7 +1026,7 @@ function EditContentModal({
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      queryClient.invalidateQueries({ queryKey: ["contentsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Contenido actualizado exitosamente",
@@ -1177,7 +1261,7 @@ function TeachersManagementModal({
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      queryClient.invalidateQueries({ queryKey: ["contentsPaginated"] });
       queryClient.invalidateQueries({ queryKey: ["content", contentId] });
       addToast({
         title: "¡Éxito!",
@@ -1237,7 +1321,7 @@ function TeachersManagementModal({
         throw new Error(result.error);
       }
 
-      queryClient.invalidateQueries({ queryKey: ["contents"] });
+      queryClient.invalidateQueries({ queryKey: ["contentsPaginated"] });
       queryClient.invalidateQueries({ queryKey: ["content", contentId] });
 
       addToast({

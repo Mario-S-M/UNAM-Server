@@ -8,6 +8,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { User } from '../users/entities/user.entity';
+import { PaginatedContents } from './dto/paginated-contents.output';
+import { ContentsFilterArgs } from './dto/args/contents-filter.arg';
 
 @Resolver(() => Content)
 export class ContentsResolver {
@@ -61,6 +63,16 @@ export class ContentsResolver {
     user: User,
   ): Promise<Content[]> {
     return this.contentsService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query(() => PaginatedContents, { name: 'contentsPaginated' })
+  findPaginated(
+    @Args() filters: ContentsFilterArgs,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente])
+    user: User,
+  ): Promise<PaginatedContents> {
+    return this.contentsService.findPaginated(filters, user);
   }
 
   @UseGuards(JwtAuthGuard)

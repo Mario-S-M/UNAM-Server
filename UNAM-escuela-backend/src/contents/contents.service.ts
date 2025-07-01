@@ -15,6 +15,8 @@ import { join } from 'path';
 import * as mammoth from 'mammoth';
 import * as TurndownService from 'turndown';
 import { tables } from 'turndown-plugin-gfm';
+import { PaginatedContents } from './dto/paginated-contents.output';
+import { ContentsFilterArgs } from './dto/args/contents-filter.arg';
 
 @Injectable()
 export class ContentsService {
@@ -68,6 +70,111 @@ export class ContentsService {
     return await this.contentsRepository.find({
       relations: ['assignedTeachers', 'skill'],
     });
+  }
+
+  async findPaginated(
+    filters: ContentsFilterArgs,
+    user?: User,
+  ): Promise<PaginatedContents> {
+    const {
+      search,
+      levelId,
+      skillId,
+      validationStatus,
+      page = 1,
+      limit = 5,
+    } = filters;
+
+    let query = this.contentsRepository
+      .createQueryBuilder('content')
+      .leftJoinAndSelect('content.assignedTeachers', 'assignedTeachers')
+      .leftJoinAndSelect('content.skill', 'skill');
+
+    // Apply filters based on user permissions
+    if (
+      user &&
+      this.getHighestRole(user.roles) === ValidRoles.admin &&
+      user.assignedLanguageId
+    ) {
+      // Admin with assigned language: filter contents by their assigned language
+      const levels = await this.usersRepository.manager
+        .createQueryBuilder()
+        .select(['level.id'])
+        .from('levels', 'level')
+        .where('level.lenguageId = :languageId', {
+          languageId: user.assignedLanguageId,
+        })
+        .getRawMany();
+
+      const levelIds = levels.map((level) => level.level_id);
+
+      if (levelIds.length === 0) {
+        return {
+          contents: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        };
+      }
+
+      query = query.andWhere('content.levelId IN (:...levelIds)', { levelIds });
+    }
+
+    // Filter by level if specified
+    if (levelId) {
+      query = query.andWhere('content.levelId = :levelId', { levelId });
+    }
+
+    // Filter by skill if specified
+    if (skillId) {
+      query = query.andWhere('content.skillId = :skillId', { skillId });
+    }
+
+    // Filter by validation status if specified
+    if (validationStatus) {
+      query = query.andWhere('content.validationStatus = :validationStatus', {
+        validationStatus,
+      });
+    }
+
+    // Filter by search if specified
+    if (search && search.trim()) {
+      query = query.andWhere(
+        '(LOWER(content.name) LIKE LOWER(:search) OR LOWER(content.description) LIKE LOWER(:search))',
+        { search: `%${search.trim()}%` },
+      );
+    }
+
+    // Order by creation date (newest first)
+    query = query.orderBy('content.createdAt', 'DESC');
+
+    // Get total count
+    const total = await query.getCount();
+
+    // Apply pagination
+    const offset = (page - 1) * limit;
+    query = query.skip(offset).take(limit);
+
+    // Get contents
+    const contents = await query.getMany();
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      contents,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNextPage,
+      hasPreviousPage,
+    };
   }
 
   async findByLevel(levelId: string, user?: User): Promise<Content[]> {

@@ -63,6 +63,16 @@ type Content {
   skillId: ID
 }
 
+type PaginatedContents {
+  contents: [Content!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
 type Activity {
   id: ID!
   name: String!
@@ -110,6 +120,7 @@ type Query {
   contentsByLevelAndSkillPublic(levelId: ID!, skillId: ID!): [Content!]!
   contentMarkdownPublic(contentId: ID!): String!
   contents: [Content!]!
+  contentsPaginated(search: String, levelId: String, skillId: String, validationStatus: String, page: Int! = 1, limit: Int! = 5): PaginatedContents!
   contentsByLevel(levelId: ID!): [Content!]!
   contentsByTeacher(teacherId: ID!): [Content!]!
   contentsBySkill(skillId: ID!): [Content!]!

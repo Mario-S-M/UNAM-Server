@@ -1,18 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Chip,
-  Select,
-  SelectItem,
-  Divider,
-} from "@heroui/react";
+import { Button, Chip, Select, SelectItem, Divider } from "@heroui/react";
 import {
   User,
   Crown,
@@ -27,6 +16,7 @@ import { useUpdateUserRolesWithLanguage } from "@/app/hooks/use-users";
 import { useActiveLenguages } from "@/app/hooks/use-lenguages";
 import { addToast } from "@heroui/react";
 import { Role } from "@/app/dal/auth-dal";
+import { GlobalModal } from "@/components/global/globalModal";
 
 interface AssignAdminWithLanguageModalProps {
   isOpen: boolean;
@@ -140,258 +130,218 @@ export function AssignAdminWithLanguageModal({
   }
 
   return (
-    <Modal
+    <GlobalModal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      size="lg"
-      scrollBehavior="inside"
+      title="Asignar Rol y Permisos"
     >
-      <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-primary" />
-                <span>Asignar Rol y Permisos</span>
-              </div>
-            </ModalHeader>
-            <ModalBody className="gap-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Información del usuario */}
-                <div className="bg-content2 p-4 rounded-lg">
-                  <h4 className="font-medium text-foreground mb-2">
-                    Usuario a modificar:
-                  </h4>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{user?.fullName}</p>
-                      <p className="text-sm text-foreground/70">
-                        {user?.email}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-default-600">
-                        Rol actual:
-                      </span>
-                      <Chip
-                        color={
-                          roleConfig[
-                            currentHighestRole as keyof typeof roleConfig
-                          ].color
-                        }
-                        size="sm"
-                        startContent={
-                          roleConfig[
-                            currentHighestRole as keyof typeof roleConfig
-                          ].icon
-                        }
-                      >
-                        {
-                          roleConfig[
-                            currentHighestRole as keyof typeof roleConfig
-                          ].label
-                        }
-                      </Chip>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Selección de rol */}
-                <div>
-                  <Select
-                    label="Nuevo Rol"
-                    placeholder="Selecciona un rol"
-                    selectedKeys={
-                      selectedRole ? new Set([selectedRole]) : new Set()
-                    }
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      setSelectedRole(selected || "");
-                    }}
-                    startContent={<UserCheck className="h-4 w-4" />}
-                    isRequired
-                    color="default"
-                    classNames={{
-                      trigger:
-                        "border-default-200 hover:border-default-300 !bg-default-50",
-                      value: "text-default-700",
-                      label: "text-default-600",
-                      selectorIcon: "text-default-600 !text-default-600",
-                      listbox: "bg-content1",
-                      popoverContent: "bg-content1",
-                    }}
-                  >
-                    {assignableRoles.map((role) => (
-                      <SelectItem
-                        key={role}
-                        textValue={
-                          roleConfig[role as keyof typeof roleConfig].label
-                        }
-                        startContent={
-                          roleConfig[role as keyof typeof roleConfig].icon
-                        }
-                      >
-                        <div>
-                          <div className="font-medium">
-                            {roleConfig[role as keyof typeof roleConfig].label}
-                          </div>
-                          <div className="text-sm text-default-500">
-                            {
-                              roleConfig[role as keyof typeof roleConfig]
-                                .description
-                            }
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-
-                {/* Selección de idioma (solo para admin) */}
-                {selectedRole === "admin" && (
-                  <div className="space-y-3">
-                    <div className="bg-warning-50 border border-warning-200 text-warning-800 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Globe className="h-4 w-4" />
-                        <span className="font-medium">
-                          Asignación de Idioma
-                        </span>
-                      </div>
-                      <p className="text-sm">
-                        Los administradores solo pueden gestionar contenido del
-                        idioma que se les asigne.
-                      </p>
-                    </div>
-
-                    <Select
-                      label="Idioma a Administrar"
-                      placeholder="Selecciona el idioma que administrará"
-                      selectedKeys={
-                        selectedLanguage
-                          ? new Set([selectedLanguage])
-                          : new Set()
-                      }
-                      onSelectionChange={(keys) => {
-                        const selected = Array.from(keys)[0] as string;
-                        setSelectedLanguage(selected || "");
-                      }}
-                      startContent={<Globe className="h-4 w-4" />}
-                      isRequired
-                      isLoading={languagesLoading}
-                      color="default"
-                      classNames={{
-                        trigger:
-                          "border-default-200 hover:border-default-300 !bg-default-50",
-                        value: "text-default-700",
-                        label: "text-default-600",
-                        selectorIcon: "text-default-600 !text-default-600",
-                        listbox: "bg-content1",
-                        popoverContent: "bg-content1",
-                      }}
-                    >
-                      {(languages?.data ?? []).map((language: any) => (
-                        <SelectItem key={language.id} textValue={language.name}>
-                          <div className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-primary" />
-                            <span>{language.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </div>
-                )}
-
-                {/* Información de permisos */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-800 mb-2">
-                    Tu nivel de acceso:
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <Chip
-                      color={
-                        roleConfig[userRole as keyof typeof roleConfig]
-                          ?.color || "default"
-                      }
-                      size="sm"
-                      startContent={
-                        roleConfig[userRole as keyof typeof roleConfig]
-                          ?.icon || <User className="h-4 w-4" />
-                      }
-                    >
-                      {roleConfig[userRole as keyof typeof roleConfig]?.label ||
-                        "Usuario"}
-                    </Chip>
-                  </div>
-                </div>
-
-                {selectedRole && (
-                  <div className="bg-content2 p-4 rounded-lg">
-                    <h4 className="font-medium text-foreground mb-2">
-                      Resumen de cambios:
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Nuevo rol:</span>
-                        <Chip
-                          color={
-                            roleConfig[selectedRole as keyof typeof roleConfig]
-                              .color
-                          }
-                          size="sm"
-                          startContent={
-                            roleConfig[selectedRole as keyof typeof roleConfig]
-                              .icon
-                          }
-                        >
-                          {
-                            roleConfig[selectedRole as keyof typeof roleConfig]
-                              .label
-                          }
-                        </Chip>
-                      </div>
-                      {selectedRole === "admin" && selectedLanguage && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Idioma asignado:</span>
-                          <Chip
-                            color="primary"
-                            size="sm"
-                            startContent={<Globe className="h-4 w-4" />}
-                          >
-                            {
-                              languages?.data?.find(
-                                (l) => l.id === selectedLanguage
-                              )?.name
-                            }
-                          </Chip>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </form>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onClose}>
-                Cancelar
-              </Button>
-              <Button
-                color="primary"
-                onPress={handleRoleUpdate}
-                isDisabled={
-                  !selectedRole ||
-                  assignableRoles.length === 0 ||
-                  !canChangeUserRole(user, [selectedRole as Role]) ||
-                  (selectedRole === "admin" && !selectedLanguage)
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Información del usuario */}
+        <div className="bg-content2 p-4 rounded-lg">
+          <h4 className="font-medium text-foreground mb-2">
+            Usuario a modificar:
+          </h4>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">{user?.fullName}</p>
+              <p className="text-sm text-foreground/70">{user?.email}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-default-600">Rol actual:</span>
+              <Chip
+                color={
+                  roleConfig[currentHighestRole as keyof typeof roleConfig]
+                    .color
                 }
-                isLoading={updateUserRolesMutation.isPending}
+                size="sm"
+                startContent={
+                  roleConfig[currentHighestRole as keyof typeof roleConfig].icon
+                }
               >
-                Asignar Rol
-                {selectedRole === "admin" && " e Idioma"}
-              </Button>
-            </ModalFooter>
-          </>
+                {
+                  roleConfig[currentHighestRole as keyof typeof roleConfig]
+                    .label
+                }
+              </Chip>
+            </div>
+          </div>
+        </div>
+
+        {/* Selección de rol */}
+        <div>
+          <Select
+            label="Nuevo Rol"
+            placeholder="Selecciona un rol"
+            selectedKeys={selectedRole ? new Set([selectedRole]) : new Set()}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+              setSelectedRole(selected || "");
+            }}
+            startContent={<UserCheck className="h-4 w-4" />}
+            isRequired
+            color="default"
+            classNames={{
+              trigger:
+                "border-default-200 hover:border-default-300 !bg-default-50",
+              value: "text-default-700",
+              label: "text-default-600",
+              selectorIcon: "text-default-600 !text-default-600",
+              listbox: "bg-content1",
+              popoverContent: "bg-content1",
+            }}
+          >
+            {assignableRoles.map((role) => (
+              <SelectItem
+                key={role}
+                textValue={roleConfig[role as keyof typeof roleConfig].label}
+                startContent={roleConfig[role as keyof typeof roleConfig].icon}
+              >
+                <div>
+                  <div className="font-medium">
+                    {roleConfig[role as keyof typeof roleConfig].label}
+                  </div>
+                  <div className="text-sm text-default-500">
+                    {roleConfig[role as keyof typeof roleConfig].description}
+                  </div>
+                </div>
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
+
+        {/* Selección de idioma (solo para admin) */}
+        {selectedRole === "admin" && (
+          <div className="space-y-3">
+            <div className="bg-warning-50 border border-warning-200 text-warning-800 p-3 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="h-4 w-4" />
+                <span className="font-medium">Asignación de Idioma</span>
+              </div>
+              <p className="text-sm">
+                Los administradores solo pueden gestionar contenido del idioma
+                que se les asigne.
+              </p>
+            </div>
+
+            <Select
+              label="Idioma a Administrar"
+              placeholder="Selecciona el idioma que administrará"
+              selectedKeys={
+                selectedLanguage ? new Set([selectedLanguage]) : new Set()
+              }
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0] as string;
+                setSelectedLanguage(selected || "");
+              }}
+              startContent={<Globe className="h-4 w-4" />}
+              isRequired
+              isLoading={languagesLoading}
+              color="default"
+              classNames={{
+                trigger:
+                  "border-default-200 hover:border-default-300 !bg-default-50",
+                value: "text-default-700",
+                label: "text-default-600",
+                selectorIcon: "text-default-600 !text-default-600",
+                listbox: "bg-content1",
+                popoverContent: "bg-content1",
+              }}
+            >
+              {(languages?.data ?? []).map((language: any) => (
+                <SelectItem key={language.id} textValue={language.name}>
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    <span>{language.name}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
         )}
-      </ModalContent>
-    </Modal>
+
+        {/* Información de permisos */}
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-medium text-blue-800 mb-2">
+            Tu nivel de acceso:
+          </h4>
+          <div className="flex items-center gap-2">
+            <Chip
+              color={
+                roleConfig[userRole as keyof typeof roleConfig]?.color ||
+                "default"
+              }
+              size="sm"
+              startContent={
+                roleConfig[userRole as keyof typeof roleConfig]?.icon || (
+                  <User className="h-4 w-4" />
+                )
+              }
+            >
+              {roleConfig[userRole as keyof typeof roleConfig]?.label ||
+                "Usuario"}
+            </Chip>
+          </div>
+        </div>
+
+        {selectedRole && (
+          <div className="bg-content2 p-4 rounded-lg">
+            <h4 className="font-medium text-foreground mb-2">
+              Resumen de cambios:
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Nuevo rol:</span>
+                <Chip
+                  color={
+                    roleConfig[selectedRole as keyof typeof roleConfig].color
+                  }
+                  size="sm"
+                  startContent={
+                    roleConfig[selectedRole as keyof typeof roleConfig].icon
+                  }
+                >
+                  {roleConfig[selectedRole as keyof typeof roleConfig].label}
+                </Chip>
+              </div>
+              {selectedRole === "admin" && selectedLanguage && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Idioma asignado:</span>
+                  <Chip
+                    color="primary"
+                    size="sm"
+                    startContent={<Globe className="h-4 w-4" />}
+                  >
+                    {
+                      languages?.data?.find((l) => l.id === selectedLanguage)
+                        ?.name
+                    }
+                  </Chip>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="light" onPress={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            color="primary"
+            onPress={handleRoleUpdate}
+            isDisabled={
+              !selectedRole ||
+              assignableRoles.length === 0 ||
+              !canChangeUserRole(user, [selectedRole as Role]) ||
+              (selectedRole === "admin" && !selectedLanguage)
+            }
+            isLoading={updateUserRolesMutation.isPending}
+          >
+            Asignar Rol
+            {selectedRole === "admin" && " e Idioma"}
+          </Button>
+        </div>
+      </form>
+    </GlobalModal>
   );
 }

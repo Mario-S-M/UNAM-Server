@@ -1,18 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Chip,
-  Select,
-  SelectItem,
-  Divider,
-} from "@heroui/react";
+import { Button, Chip, Select, SelectItem, Divider } from "@heroui/react";
 import {
   User,
   Crown,
@@ -25,6 +14,7 @@ import { usePermissions } from "@/app/hooks/use-authorization";
 import { useUpdateUserRoles } from "@/app/hooks/use-users";
 import { addToast } from "@heroui/react";
 import { Role } from "@/app/dal/auth-dal";
+import { GlobalModal } from "@/components/global/globalModal";
 
 interface ChangeUserRoleModalProps {
   isOpen: boolean;
@@ -127,168 +117,155 @@ export function ChangeUserRoleModal({
   if (!user) return null;
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg">
-      <ModalContent>
-        {(onClose) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">
-              <div className="flex items-center gap-3">
-                <UserCheck className="h-5 w-5 text-primary" />
-                <span>Cambiar Rol de Usuario</span>
-              </div>
-              <p className="text-sm text-default-500 font-normal">
-                Gestiona los roles de {user.fullName}
+    <GlobalModal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      title="Cambiar Rol de Usuario"
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-default-500">
+          Gestiona los roles de {user.fullName}
+        </p>
+
+        {/* Información del usuario */}
+        <div className="bg-default-50 p-4 rounded-lg">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+              <User className="h-5 w-5 text-primary-600" />
+            </div>
+            <div>
+              <h3 className="font-medium">{user.fullName}</h3>
+              <p className="text-sm text-default-500">{user.email}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-600">Rol actual:</span>
+            <Chip
+              color={
+                roleConfig[currentHighestRole as keyof typeof roleConfig].color
+              }
+              size="sm"
+              startContent={
+                roleConfig[currentHighestRole as keyof typeof roleConfig].icon
+              }
+            >
+              {roleConfig[currentHighestRole as keyof typeof roleConfig].label}
+            </Chip>
+          </div>
+        </div>
+
+        {/* Información de permisos */}
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-medium text-blue-800 mb-2">
+            Tu nivel de acceso:
+          </h4>
+          <div className="flex items-center gap-2">
+            <Chip
+              color={
+                roleConfig[userRole as keyof typeof roleConfig]?.color ||
+                "default"
+              }
+              size="sm"
+              startContent={
+                roleConfig[userRole as keyof typeof roleConfig]?.icon
+              }
+            >
+              {roleConfig[userRole as keyof typeof roleConfig]?.label ||
+                userRole}
+            </Chip>
+            <span className="text-sm text-blue-600">
+              Solo puedes asignar los roles mostrados abajo
+            </span>
+          </div>
+        </div>
+
+        <Divider />
+
+        {/* Selección de rol */}
+        <div className="space-y-3">
+          <h4 className="font-medium">Seleccionar Nuevo Rol</h4>
+          {assignableRoles.length > 0 ? (
+            <Select
+              label="Nuevo rol"
+              placeholder="Elige un rol"
+              selectedKeys={selectedRole ? new Set([selectedRole]) : new Set()}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0] as string;
+                setSelectedRole(selected || "");
+              }}
+              description="Solo se muestran los roles que puedes asignar"
+              classNames={{
+                trigger: "border-default-200 hover:border-default-300",
+                value: "text-default-700",
+                label: "text-default-600",
+                selectorIcon: "text-default-600",
+              }}
+            >
+              {assignableRoles.map((role) => (
+                <SelectItem key={role} textValue={roleConfig[role].label}>
+                  <div className="flex items-center gap-2">
+                    {roleConfig[role].icon}
+                    <div>
+                      <div>{roleConfig[role].label}</div>
+                      <div className="text-xs text-default-500">
+                        {roleConfig[role].description}
+                      </div>
+                    </div>
+                  </div>
+                </SelectItem>
+              ))}
+            </Select>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-default-500">
+                No tienes permisos para cambiar roles de usuarios
               </p>
-            </ModalHeader>
-            <ModalBody>
-              {/* Información del usuario */}
-              <div className="bg-default-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                    <User className="h-5 w-5 text-primary-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{user.fullName}</h3>
-                    <p className="text-sm text-default-500">{user.email}</p>
-                  </div>
-                </div>
+            </div>
+          )}
+        </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-default-600">Rol actual:</span>
-                  <Chip
-                    color={
-                      roleConfig[currentHighestRole as keyof typeof roleConfig]
-                        .color
-                    }
-                    size="sm"
-                    startContent={
-                      roleConfig[currentHighestRole as keyof typeof roleConfig]
-                        .icon
-                    }
-                  >
-                    {
-                      roleConfig[currentHighestRole as keyof typeof roleConfig]
-                        .label
-                    }
-                  </Chip>
-                </div>
-              </div>
+        {/* Información sobre la jerarquía */}
+        <div className="bg-yellow-50 p-4 rounded-lg">
+          <h4 className="font-medium text-yellow-800 mb-2">
+            Jerarquía de Roles:
+          </h4>
+          <div className="text-sm text-yellow-700 space-y-1">
+            <p>
+              • <strong>Super Usuario:</strong> Puede asignar: Super Usuario,
+              Administrador, Maestro, Alumno, Usuario
+            </p>
+            <p>
+              • <strong>Administrador:</strong> Puede asignar: Maestro, Alumno,
+              Usuario
+            </p>
+            <p>
+              • <strong>Maestro:</strong> Puede asignar: Alumno, Usuario
+            </p>
+            <p>
+              • <strong>Alumno/Usuario:</strong> No puede asignar roles
+            </p>
+          </div>
+        </div>
 
-              {/* Información de permisos */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">
-                  Tu nivel de acceso:
-                </h4>
-                <div className="flex items-center gap-2">
-                  <Chip
-                    color={
-                      roleConfig[userRole as keyof typeof roleConfig]?.color ||
-                      "default"
-                    }
-                    size="sm"
-                    startContent={
-                      roleConfig[userRole as keyof typeof roleConfig]?.icon
-                    }
-                  >
-                    {roleConfig[userRole as keyof typeof roleConfig]?.label ||
-                      userRole}
-                  </Chip>
-                  <span className="text-sm text-blue-600">
-                    Solo puedes asignar los roles mostrados abajo
-                  </span>
-                </div>
-              </div>
-
-              <Divider />
-
-              {/* Selección de rol */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Seleccionar Nuevo Rol</h4>
-                {assignableRoles.length > 0 ? (
-                  <Select
-                    label="Nuevo rol"
-                    placeholder="Elige un rol"
-                    selectedKeys={
-                      selectedRole ? new Set([selectedRole]) : new Set()
-                    }
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      setSelectedRole(selected || "");
-                    }}
-                    description="Solo se muestran los roles que puedes asignar"
-                    classNames={{
-                      trigger: "border-default-200 hover:border-default-300",
-                      value: "text-default-700",
-                      label: "text-default-600",
-                      selectorIcon: "text-default-600", // Fuerza el color del icono
-                    }}
-                  >
-                    {assignableRoles.map((role) => (
-                      <SelectItem key={role} textValue={roleConfig[role].label}>
-                        <div className="flex items-center gap-2">
-                          {roleConfig[role].icon}
-                          <div>
-                            <div>{roleConfig[role].label}</div>
-                            <div className="text-xs text-default-500">
-                              {roleConfig[role].description}
-                            </div>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </Select>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-default-500">
-                      No tienes permisos para cambiar roles de usuarios
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Información sobre la jerarquía */}
-              <div className="bg-yellow-50 p-4 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2">
-                  Jerarquía de Roles:
-                </h4>
-                <div className="text-sm text-yellow-700 space-y-1">
-                  <p>
-                    • <strong>Super Usuario:</strong> Puede asignar: Super
-                    Usuario, Administrador, Maestro, Alumno, Usuario
-                  </p>
-                  <p>
-                    • <strong>Administrador:</strong> Puede asignar: Maestro,
-                    Alumno, Usuario
-                  </p>
-                  <p>
-                    • <strong>Maestro:</strong> Puede asignar: Alumno, Usuario
-                  </p>
-                  <p>
-                    • <strong>Alumno/Usuario:</strong> No puede asignar roles
-                  </p>
-                </div>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button variant="light" onPress={onClose}>
-                Cancelar
-              </Button>
-              <Button
-                color="primary"
-                onPress={handleSubmit}
-                isDisabled={
-                  !selectedRole ||
-                  assignableRoles.length === 0 ||
-                  !canChangeUserRole(user, [selectedRole as Role])
-                }
-                isLoading={updateUserRolesMutation.isPending}
-              >
-                Actualizar Rol
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button variant="light" onPress={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            color="primary"
+            onPress={handleSubmit}
+            isDisabled={
+              !selectedRole ||
+              assignableRoles.length === 0 ||
+              !canChangeUserRole(user, [selectedRole as Role])
+            }
+            isLoading={updateUserRolesMutation.isPending}
+          >
+            Actualizar Rol
+          </Button>
+        </div>
+      </div>
+    </GlobalModal>
   );
 }

@@ -17,10 +17,6 @@ import {
   Input,
   Select,
   SelectItem,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
 } from "@heroui/react";
 import {
   GraduationCap,
@@ -646,77 +642,67 @@ function EditLevelModal({ isOpen, onOpenChange, level }: EditLevelModalProps) {
   };
 
   return (
-    <Modal
+    <GlobalModal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      placement="top-center"
-      backdrop="blur"
+      title="Editar Nivel"
     >
-      <ModalContent>
-        <>
-          <ModalHeader className="flex flex-col gap-1">
-            Editar Nivel
-          </ModalHeader>
-          <ModalBody>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <GlobalInput
-                label="Nombre del Nivel"
-                placeholder="Ej: A1, A2, B1, B2..."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                isRequired
-              />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <GlobalInput
+          label="Nombre del Nivel"
+          placeholder="Ej: A1, A2, B1, B2..."
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          isRequired
+        />
 
-              <GlobalTextArea
-                label="Descripción"
-                placeholder="Descripción detallada del nivel..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                isRequired
-                minRows={3}
-              />
+        <GlobalTextArea
+          label="Descripción"
+          placeholder="Descripción detallada del nivel..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          isRequired
+          minRows={3}
+        />
 
-              <GlobalSelect
-                label="Dificultad"
-                placeholder="Selecciona la dificultad"
-                selectedKeys={new Set([difficulty])}
-                onSelectionChange={(keys: any) => {
-                  const selectedArray = Array.from(keys);
-                  setDifficulty(selectedArray[0] as string);
-                }}
-                color="default"
-                classNames={{
-                  trigger:
-                    "border-default-200 hover:border-default-300 !bg-default-50",
-                  value: "text-default-700",
-                  label: "text-default-600",
-                  selectorIcon: "text-default-600 !text-default-600",
-                  listbox: "bg-content1",
-                  popoverContent: "bg-content1",
-                }}
-              >
-                <SelectItem key="beginner">Principiante</SelectItem>
-                <SelectItem key="intermediate">Intermedio</SelectItem>
-                <SelectItem key="advanced">Avanzado</SelectItem>
-              </GlobalSelect>
+        <GlobalSelect
+          label="Dificultad"
+          placeholder="Selecciona la dificultad"
+          selectedKeys={new Set([difficulty])}
+          onSelectionChange={(keys: any) => {
+            const selectedArray = Array.from(keys);
+            setDifficulty(selectedArray[0] as string);
+          }}
+          color="default"
+          classNames={{
+            trigger:
+              "border-default-200 hover:border-default-300 !bg-default-50",
+            value: "text-default-700",
+            label: "text-default-600",
+            selectorIcon: "text-default-600 !text-default-600",
+            listbox: "bg-content1",
+            popoverContent: "bg-content1",
+          }}
+        >
+          <SelectItem key="beginner">Principiante</SelectItem>
+          <SelectItem key="intermediate">Intermedio</SelectItem>
+          <SelectItem key="advanced">Avanzado</SelectItem>
+        </GlobalSelect>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <GlobalButton
-                  text="Cancelar"
-                  variant="light"
-                  onPress={() => onOpenChange(false)}
-                />
-                <GlobalButton
-                  text="Actualizar Nivel"
-                  color="primary"
-                  type="submit"
-                  isLoading={updateLevelMutation.isPending}
-                />
-              </div>
-            </form>
-          </ModalBody>
-        </>
-      </ModalContent>
-    </Modal>
+        <div className="flex justify-end gap-2 pt-4">
+          <GlobalButton
+            text="Cancelar"
+            variant="light"
+            onPress={() => onOpenChange(false)}
+          />
+          <GlobalButton
+            text="Actualizar Nivel"
+            color="primary"
+            type="submit"
+            isLoading={updateLevelMutation.isPending}
+          />
+        </div>
+      </form>
+    </GlobalModal>
   );
 }

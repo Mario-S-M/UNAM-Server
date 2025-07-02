@@ -24,11 +24,17 @@ export default function GlobalAccessMenu() {
       </PopoverTrigger>
       <PopoverContent>
         <div className="flex flex-col gap-2 p-4">
+          <span>Cambio de Tema</span>
           <ToogleTheme />
+          <span>Cambio de Tamaño de Fuente</span>
           <FontSizeChanger />
+          <span>Cambio de Espaciado de Letras</span>
           <LetterSpacingToggle />
+          <span>Ocultar Imágenes</span>
           <HideImagesToggle />
+          <span>Fuente para Dislexia</span>
           <DyslexiaFontToggle />
+          <span>Espaciado de Línea</span>
           <LineSpacingToggle />
         </div>
       </PopoverContent>

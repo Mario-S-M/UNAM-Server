@@ -84,6 +84,7 @@ export function usePageProtection(pagePath: string) {
         pagePath,
         hasUser: !!safeUser,
         userRoles: safeUser?.roles,
+        userHighestRole: AuthDAL.getHighestRole(safeUser),
         hasAccess: result.hasAccess,
         reason: result.reason,
         redirectTo: result.redirectTo,

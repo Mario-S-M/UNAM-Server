@@ -37,16 +37,6 @@ function TeacherDashboardContent() {
           <p className="text-gray-600">
             Gestiona tu contenido educativo y actividades para estudiantes.
           </p>
-
-          <div className="bg-blue-100 p-4 rounded-lg mt-4">
-            <h3 className="font-semibold text-blue-800 mb-2">
-              ¡Bienvenido, Maestro!
-            </h3>
-            <p className="text-blue-700">
-              Sistema DAL verificó que tienes permisos de docente. Rol actual:{" "}
-              {userRole}
-            </p>
-          </div>
         </div>
 
         {/* Contenido Asignado - Sección Principal */}
@@ -132,7 +122,6 @@ function TeacherDashboardContent() {
               </Card>
             </Link>
           )}
-
           {/* Gestión de Estudiantes */}
           {canTeach && (
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -162,7 +151,6 @@ function TeacherDashboardContent() {
               </CardBody>
             </Card>
           )}
-
           {/* Crear Actividades */}
           {canTeach && (
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -192,7 +180,6 @@ function TeacherDashboardContent() {
               </CardBody>
             </Card>
           )}
-
           {/* Reportes */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader className="pb-2">
@@ -220,7 +207,6 @@ function TeacherDashboardContent() {
               </button>
             </CardBody>
           </Card>
-
           {/* Material Educativo */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader className="pb-2">
@@ -245,7 +231,7 @@ function TeacherDashboardContent() {
                 Próximamente
               </button>
             </CardBody>
-          </Card>
+          </Card>{" "}
         </div>
       </div>
     </div>

@@ -43,7 +43,7 @@ const ROLE_HIERARCHY: RoleHierarchy = {
   },
   docente: {
     level: 3,
-    permissions: ["teacher", "content_view", "user_management"],
+    permissions: ["teacher", "content_view"],
     redirectTo: "/main/teacher",
     displayName: "Maestro",
   },

@@ -47,6 +47,16 @@ export class AuthService {
         throw new Error('Email o password no es correcto');
       }
 
+      // Verificar si el usuario está activo antes de permitir login
+      if (!user.isActive) {
+        this.logger.warn(
+          `Usuario bloqueado intentó hacer login: ${user.email} (ID: ${user.id})`,
+        );
+        throw new UnauthorizedException(
+          'Esta cuenta está suspendida temporalmente. Contáctese con un administrador para más detalles.',
+        );
+      }
+
       const token = this.getJwtToken(user.id);
       this.logger.log(
         `Login exitoso para usuario: ${user.email} (ID: ${user.id}) - Roles: ${user.roles.join(', ')}`,
@@ -68,7 +78,9 @@ export class AuthService {
         this.logger.warn(
           `Usuario inactivo intentó acceder: ${user.email} (ID: ${id})`,
         );
-        throw new UnauthorizedException('Usuario no activo');
+        throw new UnauthorizedException(
+          'Esta cuenta está suspendida temporalmente. Contáctese con un administrador para más detalles.',
+        );
       }
       delete (user as any).password;
       this.logger.log(

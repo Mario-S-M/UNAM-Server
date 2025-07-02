@@ -50,7 +50,7 @@ export class AuthDAL {
     },
     docente: {
       level: 3,
-      permissions: ["teacher", "content_view", "user_management"],
+      permissions: ["teacher", "content_view"],
       redirectTo: "/main/teacher",
       displayName: "Maestro",
     },
@@ -114,7 +114,21 @@ export class AuthDAL {
    * Verifica si el usuario tiene acceso a una página específica
    */
   static canAccessPage(user: User | null, page: string): AuthorizationResult {
-    // Si no hay usuario, redirigir a la página principal
+    // Definir páginas públicas que no requieren autenticación
+    const publicPages = [
+      "/",
+      "/main/levels",
+      "/main/content",
+      "/main/lenguages",
+      "/main/skills",
+    ];
+
+    // Permitir acceso a páginas públicas sin autenticación
+    if (publicPages.some((publicPage) => page.startsWith(publicPage))) {
+      return { hasAccess: true };
+    }
+
+    // Si no hay usuario y la página no es pública, redirigir a login o página principal
     if (!user) {
       return {
         hasAccess: false,
@@ -142,15 +156,18 @@ export class AuthDAL {
       };
     }
 
-    // Definir reglas de acceso por página
+    // Definir reglas de acceso por página para páginas protegidas
     const pageAccessRules: { [key: string]: Role[] } = {
       "/main/admin-dashboard": ["superUser", "admin"],
-      "/main/admin-dashboard/users": ["superUser", "admin", "docente"],
+      "/main/admin-dashboard/users": ["superUser", "admin"],
+      "/main/admin-dashboard/contents": ["superUser", "admin"],
+      "/main/admin-dashboard/levels": ["superUser", "admin"],
+      "/main/admin-dashboard/languages": ["superUser", "admin"],
+      "/main/admin-dashboard/skills": ["superUser", "admin"],
+      "/main/admin": ["superUser", "admin"],
       "/main/teacher": ["superUser", "admin", "docente"],
       "/main/student": ["superUser", "admin", "docente", "alumno"],
       "/main/users": ["superUser", "admin", "docente"],
-      "/main/levels": ["superUser", "admin", "docente"],
-      "/main/contents": ["superUser", "admin", "docente"],
     };
 
     const requiredRoles = pageAccessRules[page];

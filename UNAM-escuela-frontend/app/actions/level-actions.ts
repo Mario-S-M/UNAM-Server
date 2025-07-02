@@ -66,6 +66,64 @@ export async function getLevelsByLenguage(id: string): Promise<LevelsResponse> {
   return { data: validated.data.data.levelsByLenguage };
 }
 
+/**
+ * Versión pública de getLevelsByLenguage que no requiere autenticación
+ * Para uso en páginas públicas como /main/lenguages/[id]/view
+ */
+export async function getLevelsByLenguagePublic(
+  id: string
+): Promise<LevelsResponse> {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: `
+        query LevelsByLenguage($lenguageId: ID!) {
+          levelsByLenguage(lenguageId: $lenguageId) {
+            id
+            name
+            description
+            difficulty
+            isActive
+          }
+        }
+      `,
+      variables: { lenguageId: id },
+    }),
+  });
+
+  if (!response.ok) {
+    console.error(`Error HTTP ${response.status}: ${response.statusText}`);
+    throw new Error("Error al cargar los niveles");
+  }
+
+  const result = await response.json();
+
+  // Manejar errores de GraphQL
+  if (result.errors) {
+    console.error("GraphQL errors:", result.errors);
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  const validated = graphqlLevelsResponseSchema.safeParse(result);
+  if (!validated.success) {
+    console.error("Error de validación:", validated.error.errors);
+    console.error("Datos recibidos:", result);
+
+    // Intentar una validación más permisiva
+    if (result.data && result.data.levelsByLenguage) {
+      console.log("🔧 Intentando validación permisiva...");
+      return { data: result.data.levelsByLenguage };
+    }
+
+    throw new Error("Formato de respuesta inválido del servidor");
+  }
+
+  return { data: validated.data.data.levelsByLenguage };
+}
+
 export async function getLevel(id: string): Promise<ActionResponse<Level>> {
   try {
     if (!id) {

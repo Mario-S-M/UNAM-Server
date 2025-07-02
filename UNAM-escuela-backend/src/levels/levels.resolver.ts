@@ -40,20 +40,22 @@ export class LevelsResolver {
     return this.levelsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Query(() => [Level], { name: 'levelsByLenguage' })
   async findByLenguage(
     @Args('lenguageId', { type: () => ID }) lenguageId: string,
     @CurrentUser([
-      ValidRoles.superUser,
-      ValidRoles.admin,
-      ValidRoles.docente,
-      ValidRoles.alumno,
+      [
+        ValidRoles.superUser,
+        ValidRoles.admin,
+        ValidRoles.docente,
+        ValidRoles.alumno,
+      ],
+      { optional: true },
     ])
-    user: User,
+    user?: User,
   ): Promise<Level[]> {
     this.logger.log(
-      `User ${user.fullName} requesting levels for language: ${lenguageId}`,
+      `${user ? `User ${user.fullName}` : 'Guest user'} requesting levels for language: ${lenguageId}`,
     );
     return this.levelsService.findByLenguage(lenguageId, user);
   }

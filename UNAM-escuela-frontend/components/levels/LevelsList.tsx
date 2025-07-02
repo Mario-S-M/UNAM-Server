@@ -18,7 +18,7 @@ export function LevelsList({ languageId }: LevelsListProps) {
     isLoading,
     error,
     refetch,
-  } = useLevelsByLanguage(languageId);
+  } = useLevelsByLanguage(languageId, false); // false = no requiere autenticación
 
   // Calcular paginación
   const totalItems = levelsData?.data?.length || 0;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import Providers from "@/app/providers";
+import AccessibilityBodyEffect from "./AccessibilityBodyEffect";
 import GlobalAccessMenu from "@/components/global/globalAccessMenu";
 import Footer from "@/components/global/globalFooter";
 
@@ -22,8 +23,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${outfit.variable} antialiased`}>
+      <body className="antialiased">
         <Providers>
+          <AccessibilityBodyEffect />
           {children}
           <div className="fixed top-[calc(45%-5px)] right-2 -mt-4">
             <GlobalAccessMenu />

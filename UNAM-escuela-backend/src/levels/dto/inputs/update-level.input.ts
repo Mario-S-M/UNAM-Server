@@ -20,9 +20,19 @@ export class UpdateLevelInput {
 
   @IsOptional()
   @IsString()
-  @IsIn(['beginner', 'intermediate', 'advanced'], {
-    message: 'La dificultad debe ser: beginner, intermediate o advanced',
-  })
+  @IsIn(
+    [
+      'beginner',
+      'mid-intermediate',
+      'intermediate',
+      'upper-intermediate',
+      'advanced',
+    ],
+    {
+      message:
+        'La dificultad debe ser: beginner, mid-intermediate, intermediate, upper-intermediate o advanced',
+    },
+  )
   @Field(() => String, { nullable: true })
   difficulty?: string;
 }

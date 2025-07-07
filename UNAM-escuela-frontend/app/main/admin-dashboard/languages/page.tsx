@@ -31,20 +31,18 @@ import {
   useAuthorization,
 } from "@/app/hooks/use-authorization";
 import Link from "next/link";
-import {
-  getActiveLenguages,
-  createLenguage,
-} from "@/app/actions/lenguage-actions";
+import { getLanguagesList } from "@/app/actions/lenguage-actions";
 import { getLevelsByLenguage } from "@/app/actions/level-actions";
 import { GlobalModal } from "@/components/global/globalModal";
 import GlobalButton from "@/components/global/globalButton";
 import GlobalInput from "@/components/global/globalInput";
 import GlobalTextArea from "@/components/global/globalTextArea";
-import { addToast } from "@heroui/react";
+import { addToast } from "@heroui/toast";
+import { useActiveLenguages } from "@/app/hooks/use-lenguages";
 
 export default function LanguagesManagementPage() {
   return (
-    <RouteGuard requiredPage="/main/admin">
+    <RouteGuard requiredPage="/main/admin-dashboard/languages">
       <LanguagesManagementContent />
     </RouteGuard>
   );
@@ -57,14 +55,11 @@ function LanguagesManagementContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Queries
-  const { data: languages, isLoading: languagesLoading } = useQuery({
-    queryKey: ["languages"],
-    queryFn: getActiveLenguages,
-  });
+  const { data: languages, isLoading: languagesLoading } = useActiveLenguages();
 
   // Filtrar idiomas basado en el rol del usuario
   const getFilteredLanguages = () => {
-    let availableLanguages = languages?.data || [];
+    let availableLanguages = languages || [];
 
     // Si es admin con idioma asignado, solo mostrar su idioma
     if (
@@ -343,11 +338,8 @@ function CreateLanguageModal({
 
   const createLanguageMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const result = await createLenguage(formData);
-      if (result.error) {
-        throw new Error(result.error);
-      }
-      return result;
+      // TODO: Implementar createLenguage function
+      throw new Error("Función de crear idioma no implementada");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["languages"] });

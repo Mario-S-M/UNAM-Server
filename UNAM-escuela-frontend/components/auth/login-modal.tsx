@@ -22,17 +22,12 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      console.log("🔐 Modal: Iniciando login con:", credentials.email);
       const result = await loginAction(credentials);
-      console.log("📋 Modal: Resultado del login:", result);
       return result;
     },
-    onSuccess: (result) => {
-      console.log("✅ Modal: Procesando resultado del login:", result);
-
+    onSuccess: async (result) => {
       // Si hay un error en el resultado, mostrarlo directamente sin lanzar excepción
       if (result.error) {
-        console.log("ℹ️ Modal: Error de autenticación:", result.error);
         addToast({
           title: "Error de Inicio de Sesión",
           color: "danger",
@@ -44,10 +39,6 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
       }
 
       if (result.data) {
-        console.log(
-          "✅ Modal: Login exitoso, preparando redirección simple..."
-        );
-
         addToast({
           title: "¡Inicio de sesión exitoso!",
           color: "success",
@@ -61,36 +52,26 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
         setEmail("");
         setPassword("");
 
-        // ESTRATEGIA SIMPLE: Solo invalidar UNA VEZ y redirigir
+        // Invalidar queries para actualizar el estado
         queryClient.invalidateQueries({ queryKey: ["currentUser"] });
 
-        // Redirección simple con un delay mínimo
-        setTimeout(() => {
-          if (result.redirect) {
-            console.log(
-              "🔄 Modal: Redirigiendo a:",
-              result.redirect.destination
-            );
-            window.location.href = result.redirect.destination;
+        // Redirección inmediata
+        if (result.redirect) {
+          window.location.href = result.redirect.destination;
+        } else {
+          // Fallback inmediato
+          const userRoles = result.data?.roles || [];
+          if (userRoles.includes("superUser") || userRoles.includes("admin")) {
+            window.location.href = "/main/admin-dashboard";
+          } else if (userRoles.includes("docente")) {
+            window.location.href = "/main/teacher";
           } else {
-            // Fallback simple
-            const userRoles = result.data?.roles || [];
-            if (
-              userRoles.includes("superUser") ||
-              userRoles.includes("admin")
-            ) {
-              window.location.href = "/main/admin-dashboard";
-            } else if (userRoles.includes("docente")) {
-              window.location.href = "/main/teacher";
-            } else {
-              window.location.href = "/main/student";
-            }
+            window.location.href = "/main/student";
           }
-        }, 1000); // Delay mínimo pero suficiente
+        }
       }
     },
     onError: (error) => {
-      console.error("❌ Modal: Error en login:", error);
       addToast({
         title: "Error de Inicio de Sesión",
         color: "danger",
@@ -117,7 +98,6 @@ export function LoginModal({ isOpen, onOpenChange }: LoginModalProps) {
       return;
     }
 
-    console.log("📤 Modal: Enviando formulario de login");
     loginMutation.mutate({ email, password });
   };
 

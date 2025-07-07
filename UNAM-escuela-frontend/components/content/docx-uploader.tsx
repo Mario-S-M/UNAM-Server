@@ -7,7 +7,7 @@ import { useDocxConversion } from "@/app/hooks/use-docx-conversion";
 
 interface DocxUploaderProps {
   contentId: string;
-  onSuccess?: () => void;
+  onSuccess?: (data: string) => void;
   onError?: (error: string) => void;
   disabled?: boolean;
   className?: string;
@@ -60,56 +60,31 @@ export default function DocxUploader({
   };
 
   const handleUpload = async () => {
-    console.log("🚀 DocxUploader handleUpload called");
-    console.log("📁 Selected file:", selectedFile);
-    console.log("📋 Content ID:", contentId);
-
     if (!selectedFile || !contentId) {
-      console.error("❌ Missing file or contentId");
       return;
     }
 
-    console.log("🔄 Setting status to uploading...");
     setUploadStatus("uploading");
-    setErrorMessage("");
 
     try {
-      console.log("📞 Calling docxConversionMutation.mutateAsync...");
       const result = await docxConversionMutation.mutateAsync({
         contentId,
-        file: selectedFile,
+        docxBase64: await fileToBase64(selectedFile),
       });
 
-      console.log("📊 Mutation result:", result);
-
       if (result.error) {
-        console.error("❌ Result contains error:", result.error);
-        throw new Error(result.error);
-      }
-
-      console.log("✅ Upload successful");
-      setUploadStatus("success");
-      onSuccess?.();
-
-      // Reset after success
-      setTimeout(() => {
-        console.log("🔄 Resetting component state after success");
+        setUploadStatus("error");
+        setErrorMessage(result.error);
+      } else {
+        setUploadStatus("success");
         setSelectedFile(null);
-        setUploadStatus("idle");
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      }, 2000);
+        onSuccess?.(result.data);
+      }
     } catch (error) {
-      console.error("💥 Upload error:", error);
-      const errorMsg =
-        error instanceof Error
-          ? error.message
-          : "Error al convertir el archivo";
-      console.error("📝 Error message:", errorMsg);
-      setErrorMessage(errorMsg);
       setUploadStatus("error");
-      onError?.(errorMsg);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Error desconocido"
+      );
     }
   };
 

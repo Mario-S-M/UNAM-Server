@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { UserListSchema } from "../schemas";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -882,6 +883,205 @@ export async function updateUserRolesWithLanguage(
 
     // Si no es admin o no se especifica idioma, solo devolver el resultado del rol
     return roleUpdateResult;
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+export async function getUsersList() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetUsers {
+            users {
+              id
+              fullName
+              email
+              roles
+              isActive
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const usersData = result.data.users;
+
+    // Validar cada usuario con Zod
+    const validatedUsers = usersData
+      .map((user: any) => {
+        try {
+          return UserListSchema.parse(user);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedUsers };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getUserById(userId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetUserById($id: String!) {
+            user(id: $id) {
+              id
+              fullName
+              email
+              roles
+              isActive
+              assignedLanguageId
+              assignedLanguage {
+                id
+                name
+                isActive
+              }
+            }
+          }
+        `,
+        variables: { id: userId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const userData = result.data.user;
+
+    if (!userData) {
+      return { success: false, error: "Usuario no encontrado" };
+    }
+
+    // Validar el usuario con Zod
+    const validatedUser = UserListSchema.parse(userData);
+
+    return { success: true, data: validatedUser };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function updateUser(
+  userId: string,
+  formData: FormData,
+  token?: string
+): Promise<ActionResponse<User>> {
+  try {
+    const fullName = formData.get("fullName")?.toString();
+    const password = formData.get("password")?.toString();
+
+    // Validar que al menos el nombre esté presente
+    if (!fullName || fullName.trim() === "") {
+      return { error: "El nombre es obligatorio" };
+    }
+
+    // Validar longitud de contraseña si se proporciona
+    if (password && password.length < 6) {
+      return { error: "La contraseña debe tener al menos 6 caracteres" };
+    }
+
+    const headers = await getAuthHeaders();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Construir variables para la mutación
+    const variables: any = {
+      updateUserInput: {
+        id: userId,
+        fullName: fullName.trim(),
+      },
+    };
+
+    // Solo incluir contraseña si se proporcionó una nueva
+    if (password) {
+      variables.updateUserInput.password = password;
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          mutation UpdateUser($updateUserInput: UpdateUserInput!) {
+            updateUser(updateUserInput: $updateUserInput) {
+              id
+              fullName
+              email
+              roles
+              isActive
+              lastUpdateBy {
+                id
+                fullName
+              }
+            }
+          }
+        `,
+        variables,
+      }),
+    });
+
+    if (!response.ok) {
+      return { error: `Error HTTP: ${response.status}` };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { error: result.errors[0].message };
+    }
+
+    return { data: result.data.updateUser };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Error desconocido",

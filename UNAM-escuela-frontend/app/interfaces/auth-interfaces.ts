@@ -25,10 +25,10 @@ export interface User {
   email: string;
   roles: string[];
   isActive: boolean;
-  assignedLanguageId?: string;
+  assignedLanguageId?: string | null;
   assignedLanguage?: {
     id: string;
     name: string;
     isActive: boolean;
-  };
+  } | null;
 }

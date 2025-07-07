@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { getCookieConfig } from "../utils/cookie-config";
+import { AuthenticatedUserSchema } from "../schemas";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -11,14 +12,12 @@ export async function getCurrentUser() {
     const cookieStore = await cookies();
     const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
 
-    console.log("🔍 getCurrentUser - Verificando token:", {
-      hasToken: !!token,
-      tokenLength: token?.length || 0,
-      nodeEnv: process.env.NODE_ENV,
-    });
-
     if (!token) {
-      console.log("❌ getCurrentUser - No hay token disponible");
+      return null;
+    }
+
+    // Verificar que el token no esté vacío o sea solo espacios
+    if (token.trim() === "") {
       return null;
     }
 
@@ -39,6 +38,12 @@ export async function getCurrentUser() {
                 email
                 roles
                 isActive
+                assignedLanguageId
+                assignedLanguage {
+                  id
+                  name
+                  isActive
+                }
               }
             }
           }
@@ -46,49 +51,32 @@ export async function getCurrentUser() {
       }),
     });
 
-    console.log("📡 getCurrentUser - Respuesta del backend:", {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-    });
-
     if (!response.ok) {
-      console.log("❌ getCurrentUser - Respuesta no OK del backend");
       return null;
     }
 
     const result = await response.json();
-    console.log("📋 getCurrentUser - Datos recibidos:", {
-      hasData: !!result.data,
-      hasRevalidate: !!result.data?.revalidate,
-      hasUser: !!result.data?.revalidate?.user,
-      hasErrors: !!result.errors,
-      errors: result.errors,
-    });
 
     if (result.errors || !result.data?.revalidate) {
-      console.log(
-        "❌ getCurrentUser - Error en GraphQL o datos inválidos:",
-        result.errors
-      );
       return null;
     }
 
-    console.log("✅ getCurrentUser - Usuario autenticado:", {
-      id: result.data.revalidate.user.id,
-      email: result.data.revalidate.user.email,
-      roles: result.data.revalidate.user.roles,
-    });
+    const userData = result.data.revalidate.user;
 
-    return result.data.revalidate.user;
+    // Validar los datos con Zod
+    const validatedUser = AuthenticatedUserSchema.parse(userData);
+
+    return validatedUser;
   } catch (error) {
-    console.error("💥 getCurrentUser - Error:", error);
+    // Si hay error de validación, retornar null
+    if (error instanceof Error) {
+      return null;
+    }
     return null;
   }
 }
 
 export async function logoutServerAction() {
-  console.log("🚪 logoutServerAction - Eliminando cookie...");
   const cookieStore = await cookies();
   const cookieConfig = getCookieConfig();
 
@@ -103,5 +91,16 @@ export async function logoutServerAction() {
     maxAge: 0, // Expirar inmediatamente
   });
 
-  console.log("✅ logoutServerAction - Cookie eliminada");
+  // Eliminar con configuración específica para desarrollo
+  if (process.env.NODE_ENV === "development") {
+    cookieStore.set({
+      name: "UNAM-INCLUSION-TOKEN",
+      value: "",
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+  }
 }

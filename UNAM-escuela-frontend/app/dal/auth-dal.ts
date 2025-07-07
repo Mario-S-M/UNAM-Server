@@ -114,6 +114,9 @@ export class AuthDAL {
    * Verifica si el usuario tiene acceso a una página específica
    */
   static canAccessPage(user: User | null, page: string): AuthorizationResult {
+    // Normalizar la página para evitar problemas con trailing slashes
+    const normalizedPage = page.replace(/\/$/, "");
+
     // Definir páginas públicas que no requieren autenticación
     const publicPages = [
       "/",
@@ -124,7 +127,22 @@ export class AuthDAL {
     ];
 
     // Permitir acceso a páginas públicas sin autenticación
-    if (publicPages.some((publicPage) => page.startsWith(publicPage))) {
+    // Verificar coincidencia exacta o que la página pública sea un prefijo válido
+    const isPublicPage = publicPages.some((publicPage) => {
+      // Si la página pública es "/", solo permitir acceso a la raíz
+      if (publicPage === "/") {
+        return normalizedPage === "/" || normalizedPage === "";
+      }
+
+      // Para otras páginas, verificar coincidencia exacta o que sea un subdirectorio válido
+      return (
+        normalizedPage === publicPage ||
+        (normalizedPage.startsWith(publicPage + "/") &&
+          normalizedPage !== publicPage)
+      );
+    });
+
+    if (isPublicPage) {
       return { hasAccess: true };
     }
 
@@ -170,7 +188,7 @@ export class AuthDAL {
       "/main/users": ["superUser", "admin", "docente"],
     };
 
-    const requiredRoles = pageAccessRules[page];
+    const requiredRoles = pageAccessRules[normalizedPage];
 
     if (!requiredRoles) {
       // Si la página no tiene reglas específicas, permitir acceso

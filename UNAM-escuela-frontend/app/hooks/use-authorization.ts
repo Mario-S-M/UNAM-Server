@@ -61,50 +61,41 @@ export function useAuthorization() {
 /**
  * Hook para proteger páginas específicas
  */
-export function usePageProtection(pagePath: string) {
+export function usePageProtection(requiredPage: string) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [authorizationResult, setAuthorizationResult] =
-    useState<AuthorizationResult | null>(null);
 
-  useEffect(() => {
-    // Esperar a que termine de cargar
-    if (isLoading) return;
+  // Si está cargando, esperar
+  if (isLoading) {
+    return {
+      user,
+      isLoading: true,
+      isAuthorized: null,
+    };
+  }
 
-    // Normalizar el usuario
-    const safeUser = user === undefined ? null : user;
-    const result = AuthDAL.canAccessPage(safeUser, pagePath);
-    setAuthorizationResult(result);
-    setIsAuthorized(result.hasAccess);
+  // Si no hay usuario, no está autorizado
+  if (!user) {
+    return {
+      user,
+      isLoading: false,
+      isAuthorized: false,
+    };
+  }
 
-    // Log para debug en desarrollo
-    if (process.env.NODE_ENV === "development") {
-      console.log("🛡️ usePageProtection - Verificando acceso:", {
-        pagePath,
-        hasUser: !!safeUser,
-        userRoles: safeUser?.roles,
-        userHighestRole: AuthDAL.getHighestRole(safeUser),
-        hasAccess: result.hasAccess,
-        reason: result.reason,
-        redirectTo: result.redirectTo,
-      });
-    }
+  // Verificar autorización usando el DAL
+  const authorizationResult = AuthDAL.canAccessPage(user, requiredPage);
+  const isAuthorized = authorizationResult.hasAccess;
 
-    // Si no tiene acceso, redirigir
-    if (!result.hasAccess && result.redirectTo) {
-      console.warn(
-        `Redirigiendo de ${pagePath} a ${result.redirectTo}: ${result.reason}`
-      );
-      router.push(result.redirectTo);
-    }
-  }, [user, isLoading, pagePath, router]);
+  // Si no está autorizado, redirigir
+  if (!isAuthorized && authorizationResult.redirectTo) {
+    window.location.href = authorizationResult.redirectTo;
+  }
 
   return {
-    isLoading,
+    user,
+    isLoading: false,
     isAuthorized,
-    authorizationResult,
-    user: user === undefined ? null : user,
   };
 }
 

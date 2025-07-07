@@ -18,6 +18,7 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -27,40 +28,27 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
       email: string;
       password: string;
     }) => {
-      console.log(
-        "📝 Modal: Iniciando registro con:",
-        credentials.email,
-        credentials.fullName
-      );
       const result = await registerAction(credentials);
-      console.log("📋 Modal: Resultado del registro:", result);
       return result;
     },
-    onSuccess: (result) => {
-      console.log("✅ Modal: Procesando resultado del registro:", result);
-
-      // Si hay un error en el resultado, mostrarlo directamente sin lanzar excepción
+    onSuccess: async (result) => {
       if (result.error) {
-        console.log("ℹ️ Modal: Error de registro:", result.error);
         addToast({
-          title: "Error al crear cuenta",
+          title: "Error de Registro",
           color: "danger",
           description: result.error,
           timeout: 5000,
           shouldShowTimeoutProgress: true,
         });
-        return; // Salir temprano sin proceder con el registro exitoso
+        return;
       }
 
       if (result.data) {
-        // Invalidar el query del usuario para que se actualice el estado
-        queryClient.invalidateQueries({ queryKey: ["currentUser"] });
-
         addToast({
-          title: "¡Cuenta creada exitosamente!",
+          title: "¡Registro exitoso!",
           color: "success",
-          description: `¡Bienvenid@ ${result.data.fullName}! Tu cuenta ha sido creada. Un maestro puede actualizar tu rol si es necesario.`,
-          timeout: 4000,
+          description: `¡Bienvenid@ ${result.data.fullName}! Tu cuenta ha sido creada exitosamente.`,
+          timeout: 5000,
           shouldShowTimeoutProgress: true,
         });
 
@@ -69,30 +57,17 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
         setFullName("");
         setEmail("");
         setPassword("");
-
-        // Redirigir después de un breve delay para que se actualice el usuario
-        setTimeout(() => {
-          if (result.redirect) {
-            console.log(
-              "🔄 Modal: Redirigiendo a:",
-              result.redirect.destination
-            );
-            router.replace(result.redirect.destination);
-          } else {
-            router.replace("/");
-          }
-        }, 1000);
+        setConfirmPassword("");
       }
     },
     onError: (error) => {
-      console.error("❌ Modal: Error en registro:", error);
       addToast({
-        title: "Error al crear cuenta",
+        title: "Error de Registro",
         color: "danger",
         description:
           error instanceof Error
             ? error.message
-            : "Error desconocido al crear la cuenta",
+            : "Error desconocido al registrarse",
         timeout: 5000,
         shouldShowTimeoutProgress: true,
       });
@@ -102,7 +77,7 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !confirmPassword) {
       addToast({
         title: "Campos requeridos",
         description: "Por favor completa todos los campos",
@@ -112,17 +87,16 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
       return;
     }
 
-    if (password.length < 6) {
+    if (password !== confirmPassword) {
       addToast({
-        title: "Contraseña muy corta",
-        description: "La contraseña debe tener al menos 6 caracteres",
+        title: "Contraseñas no coinciden",
+        description: "Las contraseñas deben ser iguales",
         color: "warning",
         timeout: 3000,
       });
       return;
     }
 
-    console.log("📤 Modal: Enviando formulario de registro");
     registerMutation.mutate({ fullName, email, password });
   };
 
@@ -186,6 +160,23 @@ export function RegisterModal({ isOpen, onOpenChange }: RegisterModalProps) {
                   label: "text-content",
                 }}
                 description="Mínimo 6 caracteres"
+              />
+            </div>
+
+            <div>
+              <GlobalInput
+                name="confirmPassword"
+                type="password"
+                label="Confirmar Contraseña"
+                isRequired={true}
+                value={confirmPassword}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setConfirmPassword(e.target.value)
+                }
+                isDisabled={registerMutation.isPending}
+                classNames={{
+                  label: "text-content",
+                }}
               />
             </div>
 

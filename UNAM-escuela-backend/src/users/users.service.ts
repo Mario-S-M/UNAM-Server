@@ -8,6 +8,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { SignupInput } from '../auth/dto/inputs/signup.input';
+import { UpdateUserInput } from './dto/update-user.input';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -192,6 +193,45 @@ export class UsersService {
     this.logger.log(
       `Roles actualizados para ${userToUpdate.email}: ${roles.join(', ')}`,
     );
+    return await this.usersRepository.save(userToUpdate);
+  }
+
+  async updateUser(
+    updateUserInput: UpdateUserInput,
+    adminUser: User,
+  ): Promise<User> {
+    const { id, fullName, password } = updateUserInput;
+
+    this.logger.log(
+      `Actualizando usuario ${id} por admin ${adminUser.fullName}`,
+    );
+
+    const userToUpdate = await this.findOneById(id);
+
+    // Verificar que el admin puede editar este usuario
+    if (!this.canManageUser(adminUser, userToUpdate)) {
+      throw new BadRequestException(
+        'No tienes permisos para editar este usuario',
+      );
+    }
+
+    // Actualizar nombre si se proporciona
+    if (fullName && fullName.trim()) {
+      userToUpdate.fullName = fullName.trim();
+    }
+
+    // Actualizar contraseña si se proporciona
+    if (password && password.trim()) {
+      userToUpdate.password = bcrypt.hashSync(password, 10);
+    }
+
+    // Registrar quién hizo la actualización
+    userToUpdate.lastUpdateBy = adminUser;
+
+    this.logger.log(
+      `Usuario ${userToUpdate.email} actualizado por ${adminUser.fullName}`,
+    );
+
     return await this.usersRepository.save(userToUpdate);
   }
 

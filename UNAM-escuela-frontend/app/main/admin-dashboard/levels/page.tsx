@@ -35,7 +35,7 @@ import {
 } from "@/app/hooks/use-authorization";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getActiveLenguages } from "@/app/actions/lenguage-actions";
+import { useActiveLenguages } from "@/app/hooks/use-lenguages";
 import {
   getLevelsByLenguage,
   createLevel,
@@ -51,7 +51,7 @@ import { addToast } from "@heroui/react";
 
 export default function LevelsManagementPage() {
   return (
-    <RouteGuard requiredPage="/main/admin">
+    <RouteGuard requiredPage="/main/admin-dashboard/levels">
       <LevelsManagementContent />
     </RouteGuard>
   );
@@ -70,10 +70,7 @@ function LevelsManagementContent() {
   const [editingLevel, setEditingLevel] = useState<any>(null);
 
   // Queries
-  const { data: languages, isLoading: languagesLoading } = useQuery({
-    queryKey: ["languages"],
-    queryFn: getActiveLenguages,
-  });
+  const { data: languages, isLoading: languagesLoading } = useActiveLenguages();
 
   const { data: levels, isLoading: levelsLoading } = useQuery({
     queryKey: ["levels", selectedLanguage],
@@ -83,7 +80,7 @@ function LevelsManagementContent() {
 
   // Filtrar idiomas basado en el rol del usuario
   const getFilteredLanguages = () => {
-    let availableLanguages = languages?.data || [];
+    let availableLanguages = languages || [];
 
     // Si es admin con idioma asignado, solo mostrar su idioma
     if (
@@ -290,19 +287,11 @@ function LevelsManagementContent() {
                             <TableCell>
                               <Chip
                                 size="sm"
-                                color={
-                                  level.difficulty === "beginner"
-                                    ? "success"
-                                    : level.difficulty === "intermediate"
-                                    ? "warning"
-                                    : "danger"
-                                }
+                                color={getDifficultyColor(level.difficulty)}
+                                variant="flat"
+                                className="capitalize"
                               >
-                                {level.difficulty === "beginner"
-                                  ? "Principiante"
-                                  : level.difficulty === "intermediate"
-                                  ? "Intermedio"
-                                  : "Avanzado"}
+                                {getDifficultyLabel(level.difficulty)}
                               </Chip>
                             </TableCell>
                             <TableCell>
@@ -517,7 +506,9 @@ function CreateLevelModal({
           }}
         >
           <SelectItem key="beginner">Principiante</SelectItem>
+          <SelectItem key="mid-intermediate">Medio-Intermedio</SelectItem>
           <SelectItem key="intermediate">Intermedio</SelectItem>
+          <SelectItem key="upper-intermediate">Intermedio-Avanzado</SelectItem>
           <SelectItem key="advanced">Avanzado</SelectItem>
         </GlobalSelect>
 
@@ -685,7 +676,9 @@ function EditLevelModal({ isOpen, onOpenChange, level }: EditLevelModalProps) {
           }}
         >
           <SelectItem key="beginner">Principiante</SelectItem>
+          <SelectItem key="mid-intermediate">Medio-Intermedio</SelectItem>
           <SelectItem key="intermediate">Intermedio</SelectItem>
+          <SelectItem key="upper-intermediate">Intermedio-Avanzado</SelectItem>
           <SelectItem key="advanced">Avanzado</SelectItem>
         </GlobalSelect>
 
@@ -706,3 +699,37 @@ function EditLevelModal({ isOpen, onOpenChange, level }: EditLevelModalProps) {
     </GlobalModal>
   );
 }
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case "beginner":
+      return "success";
+    case "mid-intermediate":
+      return "secondary";
+    case "intermediate":
+      return "primary";
+    case "upper-intermediate":
+      return "warning";
+    case "advanced":
+      return "danger";
+    default:
+      return "default";
+  }
+};
+
+const getDifficultyLabel = (difficulty: string) => {
+  switch (difficulty) {
+    case "beginner":
+      return "Principiante";
+    case "mid-intermediate":
+      return "Medio-Intermedio";
+    case "intermediate":
+      return "Intermedio";
+    case "upper-intermediate":
+      return "Intermedio-Avanzado";
+    case "advanced":
+      return "Avanzado";
+    default:
+      return difficulty;
+  }
+};

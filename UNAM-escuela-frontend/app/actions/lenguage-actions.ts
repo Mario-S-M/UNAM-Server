@@ -1,186 +1,170 @@
-import { LenguageResponse, SingleLenguageResponse } from "../interfaces";
-import {
-  graphqlLenguagesResponseSchema,
-  graphqlSingleLenguageResponseSchema,
-} from "../schemas/lenguage-schema";
-import { getAuthHeaders } from "./user-actions";
+"use server";
+
+import { cookies } from "next/headers";
+import { BasicLanguageSchema, FullLanguageSchema } from "../schemas";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-export async function getActiveLenguages(): Promise<LenguageResponse> {
+export async function getLanguagesList() {
   try {
-    const headers = await getAuthHeaders();
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-        query LenguagesActivate {
-          lenguagesActivate {
-            id
-            name
-            isActive
-          }
-        }
-              `,
-      }),
-    });
-
-    if (!response.ok) {
-      console.error(`Error HTTP ${response.status}: ${response.statusText}`);
-      throw new Error("Error al cargar los idiomas");
-    }
-
-    const result = await response.json();
-    console.log(
-      "🔍 Respuesta del servidor (getActiveLenguages):",
-      JSON.stringify(result, null, 2)
-    );
-
-    // Manejar errores de GraphQL
-    if (result.errors) {
-      console.error("GraphQL errors:", result.errors);
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    const validated = graphqlLenguagesResponseSchema.safeParse(result);
-    if (!validated.success) {
-      console.error("Error de validación:", validated.error.errors);
-      console.error("Datos recibidos:", result);
-
-      // Intentar una validación más permisiva
-      if (result.data && result.data.lenguagesActivate) {
-        console.log("🔧 Intentando validación permisiva...");
-        return { data: result.data.lenguagesActivate };
-      }
-
-      throw new Error("Formato de respuesta inválido del servidor");
-    }
-    return { data: validated.data.data.lenguagesActivate };
-  } catch (error) {
-    console.error("Error en getActiveLenguages:", error);
-    throw error;
-  }
-}
-
-// Public version - no authentication required
-export async function getActiveLenguagesPublic(): Promise<LenguageResponse> {
-  try {
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `
-        query Lenguages {
-          lenguages {
-            id
-            name
-            isActive
-          }
-        }
-              `,
-      }),
-    });
-
-    if (!response.ok) throw new Error("Error al cargar los idiomas");
-
-    const result = await response.json();
-
-    // Manejar errores de GraphQL
-    if (result.errors) {
-      console.error("GraphQL errors:", result.errors);
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    // Para la versión pública, usar el campo 'lenguages' y filtrar solo activos
-    const languages =
-      result.data?.lenguages?.filter((lang: any) => lang.isActive) || [];
-
-    return { data: languages };
-  } catch (error) {
-    console.error("Error en getActiveLenguagesPublic:", error);
-    throw error;
-  }
-}
-
-export async function getLanguageById(
-  id: string
-): Promise<SingleLenguageResponse> {
-  const response = await fetch(GRAPHQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: `
-      query Lenguage($id: ID!) {
-        lenguage(id: $id) {
-          id
-          name
-          isActive
-        }
-      }
-      `,
-      variables: { id },
-    }),
-  });
-  if (!response.ok) throw new Error("Error al cargar el idioma");
-  const result = await response.json();
-  const validated = graphqlSingleLenguageResponseSchema.safeParse(result);
-  if (!validated.success) {
-    console.error("Error de validación:", validated.error.errors);
-    throw new Error("Formato de respuesta inválido del servidor");
-  }
-  return { data: validated.data.data.lenguage };
-}
-
-export async function createLenguage(
-  formData: FormData
-): Promise<{ data?: any; error?: string }> {
-  try {
-    const name = formData.get("name")?.toString() || "";
-
-    if (!name.trim()) {
-      return { error: "El nombre es requerido" };
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
     }
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         query: `
-          mutation CreateLenguage($name: String!) {
-            createLenguage(createLenguageInput: { name: $name }) {
+          query GetLanguages {
+            lenguagesActivate {
               id
               name
               isActive
             }
           }
         `,
-        variables: { name },
       }),
     });
 
     if (!response.ok) {
-      throw new Error("Error al crear el idioma");
+      return { success: false, error: "Error en la respuesta del servidor" };
     }
 
     const result = await response.json();
 
     if (result.errors) {
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+      return { success: false, error: "Error en GraphQL" };
     }
 
-    return { data: result.data.createLenguage };
+    const languagesData = result.data.lenguagesActivate;
+
+    // Validar cada idioma con Zod
+    const validatedLanguages = languagesData
+      .map((language: any) => {
+        try {
+          return BasicLanguageSchema.parse(language);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedLanguages };
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Error desconocido",
-    };
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getLanguageById(languageId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetLanguageById($id: String!) {
+            lenguage(id: $id) {
+              id
+              name
+              description
+              isActive
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: { id: languageId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const languageData = result.data.lenguage;
+
+    if (!languageData) {
+      return { success: false, error: "Idioma no encontrado" };
+    }
+
+    // Validar el idioma con Zod
+    const validatedLanguage = FullLanguageSchema.parse(languageData);
+
+    return { success: true, data: validatedLanguage };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getLanguagesListPublic() {
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          query GetLanguagesPublic {
+            lenguages {
+              id
+              name
+              isActive
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const languagesData = result.data.lenguages;
+
+    // Validar cada idioma con Zod
+    const validatedLanguages = languagesData
+      .map((language: any) => {
+        try {
+          return BasicLanguageSchema.parse(language);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedLanguages };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
   }
 }

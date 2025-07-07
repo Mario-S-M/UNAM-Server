@@ -6,6 +6,7 @@ import { ValidRolesArgs } from './dto/args/roles.arg';
 import { UsersFilterArgs } from './dto/args/users-filter.arg';
 import { PaginatedUsers } from './dto/paginated-users.output';
 import { UpdateUserRolesInput } from './dto/update-user-roles.input';
+import { UpdateUserInput } from './dto/update-user.input';
 import { AssignLanguageInput } from './dto/assign-language.input';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -71,6 +72,15 @@ export class UsersResolver {
       updateUserRolesInput.roles,
       user,
     );
+  }
+
+  @Mutation(() => User, { name: 'updateUser' })
+  updateUser(
+    @Args('updateUserInput') updateUserInput: UpdateUserInput,
+    @CurrentUser([ValidRoles.superUser, ValidRoles.admin])
+    adminUser: User,
+  ): Promise<User> {
+    return this.usersService.updateUser(updateUserInput, adminUser);
   }
 
   @Mutation(() => User, { name: 'assignLanguageToUser' })

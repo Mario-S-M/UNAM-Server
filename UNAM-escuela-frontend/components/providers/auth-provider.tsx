@@ -28,7 +28,6 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   React.useEffect(() => {
     if (error) {
       // Si es un error de usuario bloqueado, el AuthErrorProvider se encargará
-      console.warn("Error de autenticación:", error);
     }
   }, [error]);
 
@@ -36,32 +35,16 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   React.useEffect(() => {
     if (user) {
       setLastValidUser(user);
-      if (process.env.NODE_ENV === "development") {
-        console.log("✅ AuthProvider - Usuario actualizado:", {
-          id: user.id,
-          email: user.email,
-          roles: user.roles,
-        });
-      }
+    } else if (user === null && !isLoading) {
+      // Solo limpiar el lastValidUser si el usuario es explícitamente null Y no está cargando
+      // Esto evita limpiar el estado prematuramente durante la carga
+      setLastValidUser(null);
     }
-  }, [user]);
+  }, [user, isLoading]);
 
-  // Log para debug y monitoreo - SIMPLIFICADO para evitar bucles
-  React.useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("🔒 AuthProvider - Estado:", {
-        hasUser: !!user,
-        hasInitialUser: !!initialUser,
-        hasLastValidUser: !!lastValidUser,
-        isLoading,
-        hasError: !!error,
-        userRoles: user?.roles || lastValidUser?.roles || initialUser?.roles,
-      });
-    }
-  }, [user, initialUser, lastValidUser, isLoading, error]);
-
-  // Estrategia SIMPLIFICADA: usar el usuario más reciente disponible
-  const effectiveUser = user || lastValidUser || initialUser;
+  // Estrategia MÁS ESTRICTA: solo usar el usuario actual, no el lastValidUser
+  // Esto asegura que cuando el usuario se desautentica, no se mantenga el estado anterior
+  const effectiveUser = user;
 
   const contextValue: AuthContextType = {
     user: effectiveUser,

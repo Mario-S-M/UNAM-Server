@@ -6,6 +6,7 @@ import {
   isValidContentId,
   sanitizeErrorMessage,
 } from "../utils/content-error-handler";
+import { BasicContentSchema, FullContentSchema } from "../schemas";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -58,52 +59,173 @@ export interface ActionResponse<T> {
   error?: string;
 }
 
-export async function getContentsByLevel(
-  levelId: string
-): Promise<ContentsResponse> {
+export async function getContentsList() {
   try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
 
-    // Use public endpoint for non-authenticated users, private for authenticated
-    const queryName = hasAuth ? "contentsByLevel" : "contentsByLevelPublic";
-
-    console.log(
-      "🔧 getContentsByLevel - Using query:",
-      queryName,
-      "for levelId:",
-      levelId
-    );
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         query: `
-          query ContentsByLevel($levelId: ID!) {
-            ${queryName}(levelId: $levelId) {
+          query GetContents {
+            contents {
               id
+              title
+              isActive
+              levelId
+              skillId
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const contentsData = result.data.contents;
+
+    // Validar cada contenido con Zod
+    const validatedContents = contentsData
+      .map((content: any) => {
+        try {
+          return BasicContentSchema.parse(content);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedContents };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getContentById(contentId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetContentById($id: String!) {
+            content(id: $id) {
+              id
+              title
               name
               description
+              content
+              isActive
               levelId
-              validationStatus
-              markdownPath
               skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
+              createdAt
+              updatedAt
               assignedTeachers {
                 id
                 fullName
                 email
                 roles
               }
-              createdAt
-              updatedAt
+            }
+          }
+        `,
+        variables: { id: contentId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const contentData = result.data.content;
+
+    if (!contentData) {
+      return { success: false, error: "Contenido no encontrado" };
+    }
+
+    // Validar el contenido con Zod
+    const validatedContent = FullContentSchema.parse(contentData);
+
+    return { success: true, data: validatedContent };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getContentsByLevel(levelId: string) {
+  try {
+    const token = await getAuthToken();
+    if (!token) {
+      return { error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetContentsByLevel($levelId: String!) {
+            getContentsByLevel(levelId: $levelId) {
+              data {
+                id
+                name
+                description
+                isActive
+                validationStatus
+                levelId
+                skillId
+                skill {
+                  id
+                  name
+                  color
+                  isActive
+                }
+                assignedTeachers {
+                  id
+                  fullName
+                  email
+                  roles
+                }
+                createdAt
+                updatedAt
+              }
+              error
             }
           }
         `,
@@ -111,44 +233,31 @@ export async function getContentsByLevel(
       }),
     });
 
-    console.log("🔧 getContentsByLevel - Response status:", response.status);
-
     if (!response.ok) {
-      throw new Error("Error al cargar los contenidos");
+      return { error: `Error HTTP: ${response.status}` };
     }
 
     const result = await response.json();
-    console.log("🔧 getContentsByLevel - GraphQL result:", result);
 
     if (result.errors) {
-      // Handle authorization errors gracefully
-      const authErrors = result.errors.some(
-        (error: any) =>
-          error.message?.includes("Forbidden") ||
-          error.message?.includes("Unauthorized") ||
-          error.extensions?.code === "FORBIDDEN" ||
-          error.extensions?.code === "UNAUTHENTICATED"
-      );
-
-      if (authErrors) {
-        console.warn(
-          "🔧 getContentsByLevel - Authorization error, returning empty array"
-        );
-        return { data: [] };
-      }
-
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+      return { error: result.errors[0].message };
     }
 
-    console.log(
-      "🔧 getContentsByLevel - Content count:",
-      result.data[queryName]?.length || 0
+    const contents = result.data.getContentsByLevel;
+    if (contents.error) {
+      return { error: contents.error };
+    }
+
+    // Validar con Zod
+    const validatedContents = contents.data.map((content: any) =>
+      FullContentSchema.parse(content)
     );
 
-    return { data: result.data[queryName] || [] };
+    return { data: validatedContents };
   } catch (error) {
-    console.error("Error en getContentsByLevel:", error);
-    throw error;
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
   }
 }
 
@@ -736,75 +845,6 @@ export async function removeTeacherFromContent(
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-export async function getContentById(
-  id: string
-): Promise<ActionResponse<Content>> {
-  try {
-    if (!id) {
-      throw new Error("ID inválido");
-    }
-
-    // Validar formato del ID antes de hacer la consulta
-    if (!isValidContentId(id)) {
-      throw new Error("El identificador del contenido no es válido");
-    }
-
-    const headers = await getAuthHeaders();
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query GetContentById($id: ID!) {
-            content(id: $id) {
-              id
-              name
-              description
-              levelId
-              skillId
-              markdownPath
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
-            }
-          }
-        `,
-        variables: { id },
-      }),
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
-      );
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      const errorMessage = result.errors
-        .map((err: any) => err.message)
-        .join(", ");
-      throw new Error(sanitizeErrorMessage(errorMessage));
-    }
-
-    return { data: result.data.content };
-  } catch (error) {
-    console.error("Error en getContentById:", error);
-    const { error: errorMessage } =
-      ContentErrorHandler.handleContentError(error);
-    return {
-      error: errorMessage,
     };
   }
 }
@@ -1716,7 +1756,7 @@ export async function adminWorkaroundAssignTeachers(
         variables: {
           updateContentInput: {
             id: contentId,
-            name: contentResult.data.name,
+            name: contentResult.data.title,
             description: contentResult.data.description,
             levelId: contentResult.data.levelId,
             teacherIds: teacherIds,

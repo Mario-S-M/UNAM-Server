@@ -15,10 +15,12 @@ export function middleware(request: NextRequest) {
   response.headers.set("Referrer-Policy", "origin-when-cross-origin");
   response.headers.set("X-XSS-Protection", "1; mode=block");
 
-  // Verificar y reconfigurar cookie de autenticación si existe
+  // Verificar y reconfigurar cookie de autenticación si existe y es válida
   const token = request.cookies.get("UNAM-INCLUSION-TOKEN");
 
-  if (token) {
+  if (token && token.value && token.value.trim() !== "") {
+    // Solo reconfigurar si la cookie tiene un valor válido
+
     // En producción: Re-establecer con configuración segura optimizada
     // En desarrollo: Asegurar que la cookie se mantiene correctamente
     const cookieConfig =
@@ -45,8 +47,6 @@ export function middleware(request: NextRequest) {
       value: token.value,
       ...cookieConfig,
     });
-
-    // No hay acciones adicionales después de reconfigurar la cookie
   }
 
   return response;

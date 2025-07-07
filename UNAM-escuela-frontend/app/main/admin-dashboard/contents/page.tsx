@@ -56,7 +56,7 @@ import {
 } from "@/app/hooks/use-authorization";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getActiveLenguages } from "@/app/actions/lenguage-actions";
+import { useActiveLenguages } from "@/app/hooks/use-lenguages";
 import { getLevelsByLenguage } from "@/app/actions/level-actions";
 import { getTeachers } from "@/app/actions/user-actions";
 import { GlobalModal } from "@/components/global/globalModal";
@@ -68,7 +68,7 @@ import { addToast } from "@heroui/toast";
 
 export default function ContentsManagementPage() {
   return (
-    <RouteGuard requiredPage="/main/admin">
+    <RouteGuard requiredPage="/main/admin-dashboard/contents">
       <ContentsManagementContent />
     </RouteGuard>
   );
@@ -95,10 +95,7 @@ function ContentsManagementContent() {
   const [editingContent, setEditingContent] = useState<any>(null);
 
   // Queries
-  const { data: languages, isLoading: languagesLoading } = useQuery({
-    queryKey: ["languages"],
-    queryFn: getActiveLenguages,
-  });
+  const { data: languages, isLoading: languagesLoading } = useActiveLenguages();
 
   const { data: levels, isLoading: levelsLoading } = useQuery({
     queryKey: ["levels", selectedLanguage],
@@ -139,7 +136,7 @@ function ContentsManagementContent() {
 
   // Filtrar idiomas basado en el rol del usuario
   const getFilteredLanguages = () => {
-    let availableLanguages = languages?.data || [];
+    let availableLanguages = languages || [];
 
     // Si es admin con idioma asignado, solo mostrar su idioma
     if (
@@ -701,7 +698,10 @@ function CreateContentModal({
 
   const { data: teachers, isLoading: teachersLoading } = useQuery({
     queryKey: ["teachers"],
-    queryFn: () => getTeachers(),
+    queryFn: async () => {
+      const result = await getTeachers();
+      return result;
+    },
   });
 
   // Aplicar filtrado de idioma de forma asíncrona cuando cambien los datos
@@ -716,7 +716,7 @@ function CreateContentModal({
       try {
         const userLanguageRestriction =
           userAssignedLanguage?.isAdminWithLanguage
-            ? userAssignedLanguage.assignedLanguageId
+            ? userAssignedLanguage.assignedLanguageId || undefined
             : undefined;
 
         const filtered = await filterTeachersForLanguageCompatibility(
@@ -1142,12 +1142,7 @@ function TeachersManagementModal({
   } = useQuery({
     queryKey: ["teachers"],
     queryFn: async () => {
-      console.log(
-        "🔍 Obteniendo profesores desde el modal, rol de usuario:",
-        userRole
-      );
       const result = await getTeachers();
-      console.log("✅ Resultado:", result);
       return result;
     },
     enabled: isOpen,
@@ -1167,7 +1162,7 @@ function TeachersManagementModal({
       try {
         const userLanguageRestriction =
           userAssignedLanguage?.isAdminWithLanguage
-            ? userAssignedLanguage.assignedLanguageId
+            ? userAssignedLanguage.assignedLanguageId || undefined
             : undefined;
 
         const filtered = await filterTeachersForLanguageCompatibility(
@@ -1217,15 +1212,10 @@ function TeachersManagementModal({
 
   const assignTeachersMutation = useMutation({
     mutationFn: async (teacherIds: string[]) => {
-      console.log("🚀 Asignando profesores al contenido:", contentId);
-      console.log("👨‍🏫 Profesores seleccionados:", teacherIds);
-      console.log("👤 Rol de usuario:", userRole);
-
       let result;
 
       // Si el usuario es admin pero no es superUser, usar el workaround
       if (userRole === "admin") {
-        console.log("🔧 Usando workaround para usuario admin");
         // Usar nuestra función workaround especial para admins
         result = await adminWorkaroundAssignTeachers(contentId, teacherIds);
       } else {
@@ -1234,13 +1224,8 @@ function TeachersManagementModal({
       }
 
       if (result.error) {
-        console.error("❌ Error al asignar profesores:", result.error);
-
         // Si es un error de permisos, intentar el workaround como última opción
         if (result.error.includes("superUser")) {
-          console.log(
-            "🔄 Detectado error de permisos, intentando con workaround"
-          );
           // Intentar con el workaround en caso de error de permisos
           const workaroundResult = await adminWorkaroundAssignTeachers(
             contentId,

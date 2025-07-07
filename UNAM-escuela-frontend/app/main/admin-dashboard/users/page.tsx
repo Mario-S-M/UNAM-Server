@@ -33,6 +33,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useDebouncedSearch } from "@/app/hooks/use-debounced-value";
 import { ChangeUserRoleModal } from "@/components/ui/change-user-role-modal";
 import { AssignAdminWithLanguageModal } from "@/components/ui/assign-admin-with-language-modal";
+import { EditUserModal } from "@/components/ui/edit-user-modal";
 import { useBlockUser } from "@/app/hooks/use-users";
 import Link from "next/link";
 import {
@@ -44,7 +45,7 @@ import { addToast } from "@heroui/react";
 
 export default function UsersManagementPage() {
   return (
-    <RouteGuard requiredPage="/main/admin">
+    <RouteGuard requiredPage="/main/admin-dashboard/users">
       <UsersManagementContent />
     </RouteGuard>
   );
@@ -350,6 +351,7 @@ function UsersManagementContent() {
 // Componente para cada fila de usuario
 function UserRow({ user }: { user: any }) {
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { user: currentUser } = useAuth();
   const { canManageUser } = usePermissions();
 
@@ -464,7 +466,13 @@ function UserRow({ user }: { user: any }) {
       </td>
       <td className="py-3 px-4">
         <div className="flex items-center gap-1">
-          <Button isIconOnly size="sm" variant="light" title="Editar usuario">
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            title="Editar usuario"
+            onPress={() => setIsEditModalOpen(true)}
+          >
             <Edit className="h-4 w-4 text-foreground" />
           </Button>
           <Button
@@ -511,6 +519,13 @@ function UserRow({ user }: { user: any }) {
         user={user}
         isOpen={isRoleModalOpen}
         onOpenChange={setIsRoleModalOpen}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        user={user}
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
       />
     </tr>
   );

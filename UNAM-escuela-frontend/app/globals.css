@@ -41,34 +41,6 @@
     box-shadow: none !important;
   }
 
-  [data-slot="close-button"] {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    color: hsl(var(--heroui-foreground)) !important;
-    opacity: 0.7 !important;
-    transition: all 0.2s ease-in-out !important;
-    border-radius: 8px !important;
-    width: 32px !important;
-    height: 32px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  [data-slot="close-button"]:hover {
-    background: hsl(var(--heroui-default-100)) !important;
-    opacity: 1 !important;
-    transform: scale(1.05) !important;
-  }
-
-  [data-slot="close-button"]:focus,
-  [data-slot="close-button"]:focus-visible {
-    outline: 2px solid hsl(var(--heroui-primary)) !important;
-    outline-offset: 2px !important;
-    background: hsl(var(--heroui-default-100)) !important;
-  }
-
   /* Icono dentro del botón de cerrar */
   [data-slot="close-button"] svg {
     color: hsl(var(--heroui-foreground)) !important;
@@ -95,8 +67,8 @@
   /* Remover colores azules del toggle del navbar móvil */
   [data-slot="toggle"],
   .heroui-navbar-toggle,
-  button[aria-label*="menú"],
-  button[aria-label*="menu"] {
+  button[aria-label*="menú"]:not(#accessibility-trigger-btn),
+  button[aria-label*="menu"]:not(#accessibility-trigger-btn) {
     color: hsl(var(--heroui-foreground)) !important;
     background: transparent !important;
     background-color: transparent !important;
@@ -105,8 +77,8 @@
 
   [data-slot="toggle"]:hover,
   .heroui-navbar-toggle:hover,
-  button[aria-label*="menú"]:hover,
-  button[aria-label*="menu"]:hover {
+  button[aria-label*="menú"]:hover:not(#accessibility-trigger-btn),
+  button[aria-label*="menu"]:hover:not(#accessibility-trigger-btn) {
     color: hsl(var(--heroui-default-700)) !important;
     background: transparent !important;
     background-color: transparent !important;
@@ -117,8 +89,8 @@
   [data-slot="toggle"]:focus-visible,
   .heroui-navbar-toggle:focus,
   .heroui-navbar-toggle:focus-visible,
-  button[aria-label*="menú"]:focus,
-  button[aria-label*="menu"]:focus {
+  button[aria-label*="menú"]:focus:not(#accessibility-trigger-btn),
+  button[aria-label*="menu"]:focus:not(#accessibility-trigger-btn) {
     outline: none !important;
     box-shadow: none !important;
     background: transparent !important;

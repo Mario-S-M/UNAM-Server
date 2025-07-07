@@ -4,7 +4,13 @@ import { Tabs, Tab } from "@heroui/react";
 import { Contrast, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
-export function ToogleTheme() {
+export function ToogleTheme({
+  size = "md",
+  classNames = {},
+}: {
+  size?: "sm" | "md";
+  classNames?: any;
+}) {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -27,11 +33,23 @@ export function ToogleTheme() {
       selectedKey={theme || "unam-light-theme"}
       onSelectionChange={(key) => handleThemeChange(key.toString())}
       classNames={{
-        tabList: "gap-2 w-full relative rounded-lg p-1 bg-transparent",
-        cursor: "w-full bg-primary rounded-lg shadow-md",
-        tab: "max-w-fit px-4 h-10 rounded-lg bg-transparent border-0",
+        tabList:
+          size === "sm"
+            ? "gap-1 w-full rounded p-0.5 bg-transparent"
+            : "gap-2 w-full relative rounded-lg p-1 bg-transparent",
+        cursor:
+          size === "sm"
+            ? "w-full bg-primary rounded shadow"
+            : "w-full bg-primary rounded-lg shadow-md",
+        tab:
+          size === "sm"
+            ? "max-w-fit px-2 h-7 rounded bg-transparent border-0 text-xs"
+            : "max-w-fit px-4 h-10 rounded-lg bg-transparent border-0",
         tabContent:
-          "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-70",
+          size === "sm"
+            ? "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-80"
+            : "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-70",
+        ...classNames,
       }}
     >
       <Tab

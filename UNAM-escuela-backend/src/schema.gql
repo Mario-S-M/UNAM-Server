@@ -183,6 +183,7 @@ type Mutation {
   removeHomework(id: Int!): Homework!
   blockUser(id: ID!): User!
   updateUserRoles(updateUserRolesInput: UpdateUserRolesInput!): User!
+  updateUser(updateUserInput: UpdateUserInput!): User!
   assignLanguageToUser(assignLanguageInput: AssignLanguageInput!): User!
   signin(signUpInput: SignupInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
@@ -268,6 +269,14 @@ input UpdateHomeworkInput {
 input UpdateUserRolesInput {
   id: ID!
   roles: [ValidRoles!]!
+}
+
+input UpdateUserInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: ID!
+  fullName: String
+  password: String
 }
 
 input AssignLanguageInput {

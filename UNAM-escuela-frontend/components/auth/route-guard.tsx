@@ -23,7 +23,7 @@ export function RouteGuard({
     usePageProtection(requiredPage);
 
   // Mostrar loading mientras se verifica la autorización
-  if (isLoading) {
+  if (isLoading || isAuthorized === null) {
     if (!showLoadingSpinner) return null;
 
     return (
@@ -36,7 +36,7 @@ export function RouteGuard({
     );
   }
 
-  // Si no está autorizado, mostrar fallback o no mostrar nada
+  // Si no está autorizado (false), mostrar fallback o no mostrar nada
   if (isAuthorized === false) {
     if (fallback) {
       return <>{fallback}</>;
@@ -75,7 +75,7 @@ export function RouteGuard({
     return null;
   }
 
-  // Si está autorizado, mostrar el contenido
+  // Solo mostrar el contenido si está explícitamente autorizado
   return <>{children}</>;
 }
 

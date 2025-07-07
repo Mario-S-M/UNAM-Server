@@ -7,6 +7,8 @@ import {
 import { ActionResponse, Level, LevelsResponse } from "../interfaces";
 import { GraphQLResponse } from "../types/graphql";
 import { getAuthHeaders } from "./user-actions";
+import { cookies } from "next/headers";
+import { BasicLevelSchema, FullLevelSchema } from "../schemas";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -387,5 +389,180 @@ export async function deleteLevel(id: string): Promise<ActionResponse<Level>> {
           ? `Error al eliminar: ${error.message}`
           : "Error desconocido al eliminar el nivel",
     };
+  }
+}
+
+export async function getLevelsList() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetLevels {
+            levels {
+              id
+              name
+              isActive
+              languageId
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const levelsData = result.data.levels;
+
+    // Validar cada nivel con Zod
+    const validatedLevels = levelsData
+      .map((level: any) => {
+        try {
+          return BasicLevelSchema.parse(level);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedLevels };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getLevelById(levelId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetLevelById($id: String!) {
+            level(id: $id) {
+              id
+              name
+              description
+              isActive
+              languageId
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: { id: levelId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const levelData = result.data.level;
+
+    if (!levelData) {
+      return { success: false, error: "Nivel no encontrado" };
+    }
+
+    // Validar el nivel con Zod
+    const validatedLevel = FullLevelSchema.parse(levelData);
+
+    return { success: true, data: validatedLevel };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getLevelsByLanguage(languageId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetLevelsByLanguage($languageId: String!) {
+            levelsByLanguage(languageId: $languageId) {
+              id
+              name
+              isActive
+              languageId
+            }
+          }
+        `,
+        variables: { languageId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const levelsData = result.data.levelsByLanguage;
+
+    // Validar cada nivel con Zod
+    const validatedLevels = levelsData
+      .map((level: any) => {
+        try {
+          return BasicLevelSchema.parse(level);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedLevels };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
   }
 }

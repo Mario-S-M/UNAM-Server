@@ -15,7 +15,7 @@ import { usePermissions } from "@/app/hooks/use-authorization";
 
 export default function AdminDashboardPage() {
   return (
-    <RouteGuard requiredPage="/main/admin">
+    <RouteGuard requiredPage="/main/admin-dashboard">
       <AdminDashboardContent />
     </RouteGuard>
   );

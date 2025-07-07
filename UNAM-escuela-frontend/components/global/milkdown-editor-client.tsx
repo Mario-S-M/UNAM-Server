@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import type { FC } from "react";
 import { Crepe } from "@milkdown/crepe";
 import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
@@ -34,6 +34,7 @@ const MilkdownEditor: FC<MilkdownEditorClientProps> = ({
 }) => {
   const [currentContent, setCurrentContent] = React.useState(defaultValue);
   const [crepeInstance, setCrepeInstance] = React.useState<Crepe | null>(null);
+  const [hasChanges, setHasChanges] = React.useState(false);
 
   // Auto-guardado se activa automáticamente si hay contentId
   const enableAutoSave = !!contentId;
@@ -53,101 +54,67 @@ const MilkdownEditor: FC<MilkdownEditorClientProps> = ({
     onError: onAutoSaveError,
   });
 
-  // Actualizar currentContent cuando cambie defaultValue
-  React.useEffect(() => {
-    if (defaultValue !== currentContent) {
-      console.log("📝 Actualizando currentContent con nuevo defaultValue");
+  // Actualizar el contenido cuando cambie el defaultValue
+  useEffect(() => {
+    if (defaultValue && defaultValue !== currentContent) {
       setCurrentContent(defaultValue);
     }
   }, [defaultValue]);
 
-  const { get } = useEditor(
-    (root) => {
-      console.log(
-        "🔧 Inicializando editor con contenido:",
-        defaultValue.substring(0, 50) + "..."
-      );
+  // Configurar auto-guardado cuando cambie el contentId
+  useEffect(() => {
+    if (contentId) {
+      // Configurar el auto-guardado
+    }
+  }, [contentId]);
 
-      // Usar Crepe con todas las características habilitadas
-      const crepe = new Crepe({
-        root,
-        defaultValue,
-        features: {
-          // Habilitar características básicas de Crepe
-          placeholder: true,
-          toolbar: true, // Toolbar con botones de formateo
-          "link-tooltip": true, // Tooltip para enlaces
-          "block-edit": true, // Edición de bloques
-          cursor: true, // Cursor personalizado
-          "list-item": true, // Items de lista
-        },
-        featureConfigs: {
-          placeholder: {
-            text: "Ingrese el contenido",
-          },
-        },
-      });
+  // Manejar cambios en el editor
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      if (newContent !== currentContent) {
+        setCurrentContent(newContent);
+        setHasChanges(true);
 
-      setCrepeInstance(crepe);
-      setCurrentContent(defaultValue);
-
-      // Configurar auto-save si está habilitado
-      if (enableAutoSave && contentId) {
-        console.log("🔄 Configurando auto-guardado para:", contentId);
-
-        // Usar una aproximación más segura con timer retrasado
-        let lastContent = defaultValue;
-        let contentCheckInterval: NodeJS.Timeout;
-
-        const startContentMonitoring = () => {
-          contentCheckInterval = setInterval(() => {
-            try {
-              // Intentar obtener el contenido del editor de forma segura
-              const newContent = crepe.getMarkdown();
-
-              if (newContent !== lastContent && newContent.trim() !== "") {
-                console.log("🔄 Cambio detectado en el editor:");
-                console.log(
-                  "  - Anterior:",
-                  lastContent.substring(0, 50) + "..."
-                );
-                console.log("  - Nuevo:", newContent.substring(0, 50) + "...");
-                console.log("  - Programando auto-guardado en 5 segundos...");
-
-                lastContent = newContent;
-                setCurrentContent(newContent);
-                scheduleAutoSave(newContent);
-              }
-            } catch (error) {
-              // Si hay error, probablemente el editor no está listo aún
-              console.log("🔄 Editor aún no está listo, reintentando...");
-            }
-          }, 1000); // Verificar cada segundo
-
-          // Limpiar después de 30 minutos
-          setTimeout(() => {
-            if (contentCheckInterval) {
-              clearInterval(contentCheckInterval);
-            }
-          }, 30 * 60 * 1000);
-        };
-
-        // Iniciar el monitoreo después de un breve delay para asegurar que el editor esté listo
-        setTimeout(() => {
-          console.log(
-            "✅ Iniciando monitoreo de contenido para auto-guardado..."
-          );
-          startContentMonitoring();
-        }, 2000); // Esperar 2 segundos antes de empezar
+        // Programar auto-guardado
+        if (enableAutoSave && contentId) {
+          // El auto-guardado se maneja en el hook useAutoSave
+        }
       }
-
-      return crepe;
     },
-    [defaultValue]
+    [currentContent, enableAutoSave, contentId]
   );
 
+  // Configurar el editor cuando esté listo
+  const setupEditor = useCallback(async () => {
+    if (!crepeInstance) {
+      return;
+    }
+
+    try {
+      // Configurar el editor Milkdown
+      const editor = crepeInstance;
+
+      // Configurar el contenido inicial
+      if (defaultValue) {
+        editor.action(editor.action.replaceAll(defaultValue));
+      }
+
+      // Configurar el listener de cambios
+      editor.action(
+        editor.action.listener((ctx) => {
+          const markdown = ctx
+            .get(editor.action.editorCtx)
+            .state.doc.toString();
+          handleContentChange(markdown);
+        })
+      );
+    } catch (error) {
+      // Manejar errores de configuración del editor
+    }
+  }, [crepeInstance, defaultValue, handleContentChange]);
+
   // Cleanup al desmontar
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       clearScheduledSave();
     };

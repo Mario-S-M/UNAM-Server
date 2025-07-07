@@ -1,61 +1,45 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useAccessibility } from "@/app/providers";
+import { useEffect } from "react";
 import { ArrowRightLeft } from "lucide-react";
 import { Tabs, Tab } from "@heroui/react";
 
-export function LetterSpacingToggle() {
-  const [selected, setSelected] = useState("normal");
-
-  useEffect(() => {
-    // Recuperar la preferencia guardada si existe
-    const savedSpacing = localStorage.getItem("letter-spacing") || "normal";
-    setSelected(savedSpacing);
-
-    // Aplicar el espaciado guardado al cargar la página
-    applyLetterSpacing(savedSpacing);
-  }, []);
-
-  const applyLetterSpacing = (spacing: string) => {
-    // Determinar el valor de letter-spacing según la opción seleccionada
-    let spacingValue = "normal";
-    if (spacing === "wide") spacingValue = "0.1em";
-    if (spacing === "wider") spacingValue = "0.2em";
-
-    // Crear o actualizar el elemento de estilo
-    let styleElement = document.getElementById("letter-spacing-style");
-    if (!styleElement) {
-      styleElement = document.createElement("style");
-      styleElement.id = "letter-spacing-style";
-      document.head.appendChild(styleElement);
-    }
-
-    // Aplicar el estilo a todos los elementos de texto
-    styleElement.textContent = `
-      body, p, span, h1, h2, h3, h4, h5, h6, div, a, button, input, textarea, li, ul, ol {
-        letter-spacing: ${spacingValue} !important;
-      }
-    `;
-
-    // Guardar la preferencia en localStorage
-    localStorage.setItem("letter-spacing", spacing);
-  };
+export function LetterSpacingToggle({
+  size = "md",
+  classNames = {},
+}: {
+  size?: "sm" | "md";
+  classNames?: any;
+}) {
+  const { letterSpacing, setLetterSpacing } = useAccessibility();
 
   const handleSpacingChange = (key: string) => {
-    setSelected(key);
-    applyLetterSpacing(key);
+    setLetterSpacing(key as "normal" | "wide" | "wider");
   };
 
   return (
     <Tabs
-      selectedKey={selected}
+      selectedKey={letterSpacing}
       onSelectionChange={(key) => handleSpacingChange(key as string)}
       variant="bordered"
       classNames={{
-        tabList: "gap-2 w-full relative rounded-lg p-1 bg-transparent",
-        cursor: "w-full bg-primary rounded-lg shadow-md",
-        tab: "max-w-fit px-4 h-10 rounded-lg bg-transparent border-0",
+        tabList:
+          size === "sm"
+            ? "gap-1 w-full rounded p-0.5 bg-transparent flex"
+            : "gap-2 w-full relative rounded-lg p-1 bg-transparent flex",
+        cursor:
+          size === "sm"
+            ? "w-full bg-primary rounded shadow"
+            : "w-full bg-primary rounded-lg shadow-md",
+        tab:
+          size === "sm"
+            ? "flex-1 w-full px-2 h-7 rounded bg-transparent border-0 text-xs"
+            : "flex-1 w-full px-4 h-10 rounded-lg bg-transparent border-0",
         tabContent:
-          "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-70",
+          size === "sm"
+            ? "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-80"
+            : "group-data-[selected=true]:text-primary-foreground group-data-[selected=false]:text-foreground opacity-70",
+        ...classNames,
       }}
     >
       <Tab

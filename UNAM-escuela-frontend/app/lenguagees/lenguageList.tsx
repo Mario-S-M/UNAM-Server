@@ -3,14 +3,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter } from "next/navigation";
-import { getActiveLenguages } from "@/app/actions";
+import { getLanguagesList } from "@/app/actions/lenguage-actions";
 import { Lenguage, LenguageResponse } from "@/app/interfaces";
 
 export default function LenguageList() {
   const router = useRouter();
   const { data, error, isLoading } = useQuery<LenguageResponse>({
     queryKey: ["lenguages"],
-    queryFn: getActiveLenguages,
+    queryFn: async () => {
+      const result = await getLanguagesList();
+      if (!result.success) {
+        throw new Error(result.error || "Error al cargar idiomas");
+      }
+      return { data: result.data };
+    },
     refetchOnWindowFocus: true,
   });
 

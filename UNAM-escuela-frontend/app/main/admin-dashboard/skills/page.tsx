@@ -200,7 +200,7 @@ export default function SkillsManagementPage() {
   }
 
   return (
-    <RouteGuard requiredPage="/main/admin">
+    <RouteGuard requiredPage="/main/admin-dashboard/skills">
       <div className="flex flex-col gap-6 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

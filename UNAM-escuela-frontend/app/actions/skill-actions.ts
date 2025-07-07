@@ -1,3 +1,7 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { BasicSkillSchema, FullSkillSchema } from "../schemas";
 import {
   SkillsResponse,
   CreateSkillInput,
@@ -8,6 +12,120 @@ import { getAuthHeaders } from "../utils/auth-headers";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
+
+export async function getSkillsList() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetSkills {
+            skills {
+              id
+              name
+              isActive
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const skillsData = result.data.skills;
+
+    // Validar cada habilidad con Zod
+    const validatedSkills = skillsData
+      .map((skill: any) => {
+        try {
+          return BasicSkillSchema.parse(skill);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedSkills };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
+
+export async function getSkillById(skillId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetSkillById($id: String!) {
+            skill(id: $id) {
+              id
+              name
+              description
+              isActive
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: { id: skillId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const skillData = result.data.skill;
+
+    if (!skillData) {
+      return { success: false, error: "Habilidad no encontrada" };
+    }
+
+    // Validar la habilidad con Zod
+    const validatedSkill = FullSkillSchema.parse(skillData);
+
+    return { success: true, data: validatedSkill };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}
 
 export async function getSkills(): Promise<SkillsResponse> {
   const headers = await getAuthHeaders();
@@ -44,56 +162,64 @@ export async function getSkills(): Promise<SkillsResponse> {
   return { data: result.data.skills || [] };
 }
 
-export async function getActiveSkills(): Promise<SkillsResponse> {
+export async function getActiveSkills() {
   try {
-    const headers = await getAuthHeaders();
-    console.log("🔧 getActiveSkills - Headers:", {
-      ...headers,
-      Authorization: headers.Authorization ? "[TOKEN_PRESENT]" : "[NO_TOKEN]",
-    });
+    const token = await getAuthToken();
+    if (!token) {
+      return { error: "No hay token disponible" };
+    }
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         query: `
-          query SkillsActivePublic {
-            skillsActivePublic {
-              id
-              name
-              description
-              color
-              isActive
-              createdAt
-              updatedAt
+          query GetActiveSkills {
+            getActiveSkills {
+              data {
+                id
+                name
+                description
+                color
+                isActive
+                createdAt
+                updatedAt
+              }
+              error
             }
           }
         `,
       }),
     });
 
-    console.log("🔧 getActiveSkills - Response status:", response.status);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("🔧 getActiveSkills - Response error:", errorText);
-      throw new Error(
-        `Error al cargar las skills activas: ${response.status} ${response.statusText}`
-      );
+      return { error: `Error HTTP: ${response.status}` };
     }
 
     const result = await response.json();
-    console.log("🔧 getActiveSkills - Result:", result);
 
     if (result.errors) {
-      console.error("🔧 getActiveSkills - GraphQL errors:", result.errors);
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+      return { error: result.errors[0].message };
     }
 
-    return { data: result.data.skillsActivePublic || [] };
-  } catch (error: any) {
-    console.error("🔧 getActiveSkills - Full error:", error);
-    throw error;
+    const skills = result.data.getActiveSkills;
+    if (skills.error) {
+      return { error: skills.error };
+    }
+
+    // Validar con Zod
+    const validatedSkills = skills.data.map((skill: any) =>
+      FullSkillSchema.parse(skill)
+    );
+
+    return { data: validatedSkills };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
   }
 }
 

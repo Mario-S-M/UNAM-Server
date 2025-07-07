@@ -3,28 +3,29 @@ import React, { useState, useMemo } from "react";
 import { useActiveLenguages } from "@/app/hooks";
 import { Pagination, CircularProgress } from "@heroui/react";
 import Link from "next/link";
+import { Lenguage } from "@/app/interfaces/lenguage-interfaces";
 
 export function LanguagesList() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
   const {
-    data: languagesData,
+    data: languages,
     isLoading,
     error,
     refetch,
   } = useActiveLenguages(false); // Use public version for public pages
 
   // Calcular paginación
-  const totalItems = languagesData?.data?.length || 0;
+  const totalItems = languages?.length || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const paginatedLanguages = useMemo(() => {
-    if (!languagesData?.data) return [];
+    if (!languages) return [];
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return languagesData.data.slice(startIndex, endIndex);
-  }, [languagesData?.data, currentPage, itemsPerPage]);
+    return languages.slice(startIndex, endIndex);
+  }, [languages, currentPage, itemsPerPage]);
 
   if (isLoading) {
     return (
@@ -65,10 +66,10 @@ export function LanguagesList() {
       </div>
 
       <div className="max-w-6xl mx-auto">
-        {languagesData?.data?.length ? (
+        {languages && languages.length > 0 ? (
           <>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-              {paginatedLanguages.map((language, index) => {
+              {paginatedLanguages.map((language: Lenguage, index: number) => {
                 const globalIndex =
                   (currentPage - 1) * itemsPerPage + index + 1;
                 return (

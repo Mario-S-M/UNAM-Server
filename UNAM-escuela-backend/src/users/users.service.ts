@@ -9,11 +9,12 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { SignupInput } from '../auth/dto/inputs/signup.input';
 import { UpdateUserInput } from './dto/update-user.input';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
+import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { PaginatedUsers } from './dto/paginated-users.output';
 import { UsersFilterArgs } from './dto/args/users-filter.arg';
+import { Lenguage } from '../lenguages/entities/lenguage.entity';
 
 @Injectable()
 export class UsersService {
@@ -44,20 +45,55 @@ export class UsersService {
     }
   }
 
-  async findAll(roles: ValidRoles[]): Promise<User[]> {
-    if (roles.length === 0) return await this.usersRepository.find();
-    return this.usersRepository
-      .createQueryBuilder()
-      .andWhere('ARRAY[roles] && ARRAY[:...roles]')
-      .setParameter('roles', roles)
-      .getMany();
+  async findAll(roles: ValidRoles[], requestingUser?: User): Promise<User[]> {
+    let query = this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.assignedLanguage', 'assignedLanguage')
+      .leftJoinAndSelect('user.assignedLanguages', 'assignedLanguages')
+      .leftJoinAndSelect('user.lastUpdateBy', 'lastUpdateBy');
+
+    // Si se especifican roles, filtrar por ellos
+    if (roles.length > 0) {
+      query = query.andWhere('user.roles && ARRAY[:...roles]', { roles });
+    }
+
+    // Si el usuario que hace la petición es admin con idioma asignado, filtrar profesores
+    if (
+      requestingUser &&
+      this.getHighestRole(requestingUser.roles) === ValidRoles.admin
+    ) {
+      if (
+        requestingUser.assignedLanguageId &&
+        roles.includes(ValidRoles.docente)
+      ) {
+        // Para admins con idioma asignado buscando profesores:
+        // Solo mostrar profesores SIN idioma asignado (para poder asignarles su idioma)
+        // NUNCA mostrar profesores de otros idiomas
+        query = query.andWhere(
+          '(assignedLanguages.id IS NULL AND user.assignedLanguageId IS NULL)',
+        );
+      }
+    }
+
+    return await query.getMany();
   }
 
-  async findPaginated(filters: UsersFilterArgs): Promise<PaginatedUsers> {
-    const { roles = [], search, page = 1, limit = 10 } = filters;
+  async findPaginated(
+    filters: UsersFilterArgs,
+    requestingUser?: User,
+  ): Promise<PaginatedUsers> {
+    const {
+      roles = [],
+      search,
+      page = 1,
+      limit = 10,
+      assignedLanguageId,
+    } = filters;
 
     let query = this.usersRepository
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.assignedLanguage', 'assignedLanguage')
+      .leftJoinAndSelect('user.assignedLanguages', 'assignedLanguages')
       .leftJoinAndSelect('user.lastUpdateBy', 'lastUpdateBy');
 
     // Filtrar por roles si se especifican
@@ -65,6 +101,31 @@ export class UsersService {
       query = query
         .andWhere('ARRAY[user.roles] && ARRAY[:...roles]')
         .setParameter('roles', roles);
+    }
+
+    // Filtrar por idioma asignado si se especifica
+    if (assignedLanguageId) {
+      query = query.andWhere('user.assignedLanguageId = :assignedLanguageId', {
+        assignedLanguageId,
+      });
+    }
+
+    // Si el usuario que hace la petición es admin con idioma asignado, filtrar profesores
+    if (
+      requestingUser &&
+      this.getHighestRole(requestingUser.roles) === ValidRoles.admin
+    ) {
+      if (
+        requestingUser.assignedLanguageId &&
+        roles.includes(ValidRoles.docente)
+      ) {
+        // Para admins con idioma asignado buscando profesores:
+        // Solo mostrar profesores SIN idioma asignado (para poder asignarles su idioma)
+        // NUNCA mostrar profesores de otros idiomas
+        query = query.andWhere(
+          '(assignedLanguages.id IS NULL AND user.assignedLanguageId IS NULL)',
+        );
+      }
     }
 
     // Filtrar por búsqueda si se especifica
@@ -187,6 +248,65 @@ export class UsersService {
       );
     }
 
+    // Cargar las relaciones del usuario para poder modificar assignedLanguages
+    const userWithLanguages = await this.usersRepository.findOne({
+      where: { id: userToUpdate.id },
+      relations: ['assignedLanguages'],
+    });
+
+    if (!userWithLanguages) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+
+    // Determinar el rol más alto que tendrá el usuario después del cambio
+    const newHighestRole = this.getHighestRole(roles);
+
+    // Solo los roles admin, docente y superUser pueden tener idiomas asignados
+    const rolesWithLanguages = [
+      ValidRoles.admin,
+      ValidRoles.docente,
+      ValidRoles.superUser,
+    ];
+
+    if (!rolesWithLanguages.includes(newHighestRole)) {
+      // Si el nuevo rol no permite idiomas, quitar todos los idiomas asignados
+      this.logger.log(
+        `Removiendo idiomas asignados de ${userToUpdate.email} debido a cambio de rol a ${newHighestRole}`,
+      );
+
+      userWithLanguages.assignedLanguages = [];
+      userWithLanguages.assignedLanguageId = undefined;
+      await this.usersRepository.save(userWithLanguages);
+    } else {
+      // Lógica especial: Si un admin con idioma asignado convierte a un usuario en maestro,
+      // asignar automáticamente el idioma del admin usando la tabla de múltiples idiomas
+      const adminHighestRole = this.getHighestRole(adminUser.roles);
+      if (
+        adminHighestRole === ValidRoles.admin &&
+        adminUser.assignedLanguageId &&
+        roles.includes(ValidRoles.docente) &&
+        !userToUpdate.roles.includes(ValidRoles.docente)
+      ) {
+        this.logger.log(
+          `Admin ${adminUser.fullName} convirtiendo usuario en maestro. Asignando idioma ${adminUser.assignedLanguageId}`,
+        );
+
+        // Buscar el idioma del admin
+        const adminLanguage = await this.usersRepository.manager
+          .getRepository(Lenguage)
+          .findOne({
+            where: { id: adminUser.assignedLanguageId, isActive: true },
+          });
+
+        if (adminLanguage) {
+          // Asignar el idioma del admin al nuevo maestro usando la tabla de múltiples idiomas
+          userWithLanguages.assignedLanguages = [adminLanguage];
+          userWithLanguages.assignedLanguageId = adminUser.assignedLanguageId; // Mantener compatibilidad
+          await this.usersRepository.save(userWithLanguages);
+        }
+      }
+    }
+
     userToUpdate.roles = roles;
     userToUpdate.lastUpdateBy = adminUser;
 
@@ -268,6 +388,145 @@ export class UsersService {
       `Idioma ${languageId ? languageId : 'removido'} asignado a ${userToUpdate.email}`,
     );
     return await this.usersRepository.save(userToUpdate);
+  }
+
+  async assignMultipleLanguagesToUser(
+    userId: string,
+    languageIds: string[] | undefined,
+    adminUser: User,
+  ): Promise<User> {
+    this.logger.log(
+      `Asignando múltiples idiomas [${languageIds?.join(', ')}] al usuario ${userId} por admin ${adminUser.fullName}`,
+    );
+
+    const userToUpdate = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['assignedLanguages'],
+    });
+
+    if (!userToUpdate) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
+
+    // Verificar que el admin puede gestionar este usuario
+    if (!this.canManageUser(adminUser, userToUpdate)) {
+      throw new BadRequestException(
+        'No tienes permisos para gestionar este usuario',
+      );
+    }
+
+    // Solo SuperUsers pueden asignar idiomas múltiples
+    const adminHighestRole = this.getHighestRole(adminUser.roles);
+    if (adminHighestRole !== ValidRoles.superUser) {
+      throw new BadRequestException(
+        'Solo los Super Administradores pueden asignar idiomas a usuarios',
+      );
+    }
+
+    // Si no se proporcionan idiomas, limpiar la asignación
+    if (!languageIds || languageIds.length === 0) {
+      userToUpdate.assignedLanguages = [];
+    } else {
+      // Buscar los idiomas por ID
+      const languages = await this.usersRepository.manager
+        .getRepository(Lenguage)
+        .findBy({
+          id: In(languageIds),
+          isActive: true,
+        });
+
+      if (languages.length !== languageIds.length) {
+        throw new BadRequestException(
+          'Algunos idiomas no existen o no están activos',
+        );
+      }
+
+      userToUpdate.assignedLanguages = languages;
+    }
+
+    userToUpdate.lastUpdateBy = adminUser;
+
+    this.logger.log(
+      `Idiomas [${languageIds?.join(', ')}] asignados a ${userToUpdate.email}`,
+    );
+    return await this.usersRepository.save(userToUpdate);
+  }
+
+  async assignAdminLanguageToTeacher(
+    teacherId: string,
+    adminUser: User,
+  ): Promise<User> {
+    this.logger.log(
+      `Admin ${adminUser.fullName} asignando su idioma a maestro ${teacherId}`,
+    );
+
+    // Verificar que el usuario que hace la petición es admin con idioma asignado
+    const adminHighestRole = this.getHighestRole(adminUser.roles);
+    if (
+      adminHighestRole !== ValidRoles.admin ||
+      !adminUser.assignedLanguageId
+    ) {
+      throw new BadRequestException(
+        'Solo administradores con idioma asignado pueden usar esta función',
+      );
+    }
+
+    const teacherToUpdate = await this.usersRepository.findOne({
+      where: { id: teacherId },
+      relations: ['assignedLanguages'],
+    });
+
+    if (!teacherToUpdate) {
+      throw new BadRequestException('Maestro no encontrado');
+    }
+
+    // Verificar que es un maestro
+    if (!teacherToUpdate.roles.includes(ValidRoles.docente)) {
+      throw new BadRequestException('El usuario debe ser un maestro');
+    }
+
+    // Verificar que el maestro no tiene idioma asignado
+    const hasLanguage =
+      (teacherToUpdate.assignedLanguages &&
+        teacherToUpdate.assignedLanguages.length > 0) ||
+      teacherToUpdate.assignedLanguageId;
+
+    if (hasLanguage) {
+      throw new BadRequestException(
+        'Este maestro ya tiene un idioma asignado. Solo se puede asignar idioma a maestros sin idioma asignado.',
+      );
+    }
+
+    // Verificar que el admin puede gestionar este usuario
+    if (!this.canManageUser(adminUser, teacherToUpdate)) {
+      throw new BadRequestException(
+        'No tienes permisos para gestionar este usuario',
+      );
+    }
+
+    // Buscar el idioma del admin
+    const adminLanguage = await this.usersRepository.manager
+      .getRepository(Lenguage)
+      .findOne({
+        where: { id: adminUser.assignedLanguageId, isActive: true },
+      });
+
+    if (!adminLanguage) {
+      throw new BadRequestException(
+        'Tu idioma asignado no existe o no está activo',
+      );
+    }
+
+    // Asignar el idioma del admin al maestro
+    teacherToUpdate.assignedLanguages = [adminLanguage];
+    teacherToUpdate.assignedLanguageId = adminUser.assignedLanguageId; // Mantener compatibilidad
+    teacherToUpdate.lastUpdateBy = adminUser;
+
+    this.logger.log(
+      `Idioma ${adminLanguage.name} asignado a maestro ${teacherToUpdate.email} por admin ${adminUser.fullName}`,
+    );
+
+    return await this.usersRepository.save(teacherToUpdate);
   }
 
   private canManageUser(adminUser: User, targetUser: User): boolean {

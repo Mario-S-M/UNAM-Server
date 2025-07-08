@@ -31,4 +31,11 @@ export interface User {
     name: string;
     isActive: boolean;
   } | null;
+  assignedLanguages?:
+    | {
+        id: string;
+        name: string;
+        isActive: boolean;
+      }[]
+    | null;
 }

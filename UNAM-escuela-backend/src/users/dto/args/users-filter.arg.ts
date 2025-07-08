@@ -1,5 +1,5 @@
-import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
+import { ArgsType, Field, Int, ID } from '@nestjs/graphql';
+import { IsOptional, IsString, IsInt, Min, Max, IsUUID } from 'class-validator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 
 @ArgsType()
@@ -25,4 +25,9 @@ export class UsersFilterArgs {
   @Min(1)
   @Max(100)
   limit?: number = 10;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  assignedLanguageId?: string;
 }

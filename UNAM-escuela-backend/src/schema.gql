@@ -33,6 +33,7 @@ type User {
   isActive: Boolean!
   assignedLanguageId: ID
   assignedLanguage: Lenguage
+  assignedLanguages: [Lenguage!]
   lastUpdateBy: User
 }
 
@@ -141,7 +142,7 @@ type Query {
   homeworks: [Homework!]!
   homework(id: Int!): Homework!
   users(roles: [ValidRoles!] = []): [User!]!
-  usersPaginated(roles: [ValidRoles!] = [], search: String, page: Int = 1, limit: Int = 10): PaginatedUsers!
+  usersPaginated(roles: [ValidRoles!] = [], search: String, page: Int = 1, limit: Int = 10, assignedLanguageId: ID): PaginatedUsers!
   user(id: ID!): User!
   revalidate: AuthResponse!
   lenguages: [Lenguage!]!
@@ -185,6 +186,8 @@ type Mutation {
   updateUserRoles(updateUserRolesInput: UpdateUserRolesInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
   assignLanguageToUser(assignLanguageInput: AssignLanguageInput!): User!
+  assignMultipleLanguagesToUser(assignMultipleLanguagesInput: AssignMultipleLanguagesInput!): User!
+  assignAdminLanguageToTeacher(teacherId: ID!): User!
   signin(signUpInput: SignupInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
   createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!
@@ -282,6 +285,11 @@ input UpdateUserInput {
 input AssignLanguageInput {
   userId: ID!
   languageId: ID
+}
+
+input AssignMultipleLanguagesInput {
+  userId: ID!
+  languageIds: [ID!]
 }
 
 input SignupInput {

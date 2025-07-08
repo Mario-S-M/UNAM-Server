@@ -187,17 +187,11 @@ export async function getContentById(contentId: string) {
 
 export async function getContentsByLevel(levelId: string) {
   try {
-    const token = await getAuthToken();
-    if (!token) {
-      return { error: "No hay token disponible" };
-    }
+    const headers = await getAuthHeaders();
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
       body: JSON.stringify({
         query: `
           query GetContentsByLevel($levelId: String!) {

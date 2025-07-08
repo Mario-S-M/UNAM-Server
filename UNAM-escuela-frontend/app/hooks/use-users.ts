@@ -8,8 +8,11 @@ import {
   updateUserRoles,
   updateUserRolesWithLanguage,
   assignLanguageToUser,
+  assignMultipleLanguagesToUser,
+  assignAdminLanguageToTeacher,
   UpdateUserRolesInput,
 } from "../actions/user-actions";
+import { User } from "../interfaces/auth-interfaces";
 
 // Query hooks
 export function useUsers(token?: string) {
@@ -199,6 +202,89 @@ export function useUpdateUserRolesWithLanguage() {
       addToast({
         title: "Error",
         description: error.message || "No se pudieron actualizar los roles",
+        color: "danger",
+        timeout: 5000,
+      });
+    },
+  });
+}
+
+export function useAssignMultipleLanguagesToUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userId,
+      languageIds,
+      token,
+    }: {
+      userId: string;
+      languageIds: string[];
+      token?: string;
+    }) => assignMultipleLanguagesToUser(userId, languageIds, token),
+    onSuccess: (response) => {
+      // Invalidate and refetch users queries
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["usersPaginated"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+
+      // Show success toast
+      if (response.data) {
+        const user = response.data as User;
+        const languageNames =
+          user.assignedLanguages?.map((lang: any) => lang.name).join(", ") ||
+          "ninguno";
+        addToast({
+          title: "Idiomas asignados",
+          description: `Idiomas asignados: ${languageNames}`,
+          color: "success",
+          timeout: 3000,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      // Show error toast
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudieron asignar los idiomas",
+        color: "danger",
+        timeout: 5000,
+      });
+    },
+  });
+}
+
+export function useAssignAdminLanguageToTeacher() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ teacherId, token }: { teacherId: string; token?: string }) =>
+      assignAdminLanguageToTeacher(teacherId, token),
+    onSuccess: (response) => {
+      // Invalidate and refetch users queries
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["usersPaginated"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+
+      // Show success toast
+      if (response.data) {
+        const languageName =
+          (response.data as any).assignedLanguages?.[0]?.name ||
+          response.data.assignedLanguage?.name ||
+          "idioma";
+        addToast({
+          title: "Idioma asignado",
+          description: `Tu idioma (${languageName}) ha sido asignado exitosamente a ${response.data.fullName}`,
+          color: "success",
+          timeout: 3000,
+        });
+      }
+    },
+    onError: (error: Error) => {
+      // Show error toast
+      addToast({
+        title: "Error",
+        description: error.message || "No se pudo asignar el idioma",
         color: "danger",
         timeout: 5000,
       });

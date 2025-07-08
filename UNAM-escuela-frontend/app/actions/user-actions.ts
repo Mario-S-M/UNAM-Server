@@ -65,6 +65,7 @@ export interface UsersFilterArgs {
   search?: string;
   page?: number;
   limit?: number;
+  assignedLanguageId?: string;
 }
 
 export interface ActionResponse<T> {
@@ -97,6 +98,17 @@ export async function getUsers(token?: string): Promise<UsersResponse> {
             email
             roles
             isActive
+            assignedLanguageId
+            assignedLanguage {
+              id
+              name
+              isActive
+            }
+            assignedLanguages {
+              id
+              name
+              isActive
+            }
             lastUpdateBy {
               id
               fullName
@@ -142,13 +154,20 @@ export async function getUsersPaginated(
   filters: UsersFilterArgs = {},
   token?: string
 ): Promise<PaginatedUsersResponse> {
-  const { roles = [], search, page = 1, limit = 10 } = filters;
+  const {
+    roles = [],
+    search,
+    page = 1,
+    limit = 10,
+    assignedLanguageId,
+  } = filters;
 
   console.log("🔍 Obteniendo usuarios paginados:", {
     roles,
     search,
     page,
     limit,
+    assignedLanguageId,
   });
 
   const headers = await getAuthHeaders();
@@ -163,14 +182,17 @@ export async function getUsersPaginated(
     headers,
     body: JSON.stringify({
       query: `
-        query UsersPaginated($roles: [ValidRoles!], $search: String, $page: Int, $limit: Int) {
-          usersPaginated(roles: $roles, search: $search, page: $page, limit: $limit) {
+        query UsersPaginated($roles: [ValidRoles!], $search: String, $page: Int, $limit: Int, $assignedLanguageId: ID) {
+          usersPaginated(roles: $roles, search: $search, page: $page, limit: $limit, assignedLanguageId: $assignedLanguageId) {
             users {
               id
               fullName
               email
               roles
               isActive
+              assignedLanguageId
+              assignedLanguage { id name isActive }
+              assignedLanguages { id name isActive }
               lastUpdateBy {
                 id
                 fullName
@@ -185,7 +207,7 @@ export async function getUsersPaginated(
           }
         }
       `,
-      variables: { roles, search, page, limit },
+      variables: { roles, search, page, limit, assignedLanguageId },
     }),
   });
 
@@ -424,6 +446,17 @@ export async function getUsersByRole(
             email
             roles
             isActive
+            assignedLanguageId
+            assignedLanguage {
+              id
+              name
+              isActive
+            }
+            assignedLanguages {
+              id
+              name
+              isActive
+            }
             lastUpdateBy {
               id
               fullName
@@ -481,6 +514,17 @@ export async function getTeachers(token?: string): Promise<UsersResponse> {
               email
               roles
               isActive
+              assignedLanguageId
+              assignedLanguage {
+                id
+                name
+                isActive
+              }
+              assignedLanguages {
+                id
+                name
+                isActive
+              }
             }
           }
         `,
@@ -747,6 +791,17 @@ export async function updateUserRoles(
               email
               roles
               isActive
+              assignedLanguageId
+              assignedLanguage {
+                id
+                name
+                isActive
+              }
+              assignedLanguages {
+                id
+                name
+                isActive
+              }
               lastUpdateBy {
                 id
                 fullName
@@ -817,6 +872,11 @@ export async function assignLanguageToUser(
                 name
                 isActive
               }
+              assignedLanguages {
+                id
+                name
+                isActive
+              }
               lastUpdateBy {
                 id
                 fullName
@@ -847,8 +907,81 @@ export async function assignLanguageToUser(
 }
 
 /**
- * Actualiza los roles de un usuario y opcionalmente asigna un idioma si es admin
+ * Asigna múltiples idiomas a un usuario (función para SuperUser)
  */
+export async function assignMultipleLanguagesToUser(
+  userId: string,
+  languageIds: string[],
+  token?: string
+): Promise<ActionResponse<User>> {
+  try {
+    if (!userId) {
+      throw new Error("ID de usuario es requerido");
+    }
+
+    const headers = await getAuthHeaders();
+
+    // Si se proporciona un token específico, usarlo en su lugar
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          mutation AssignMultipleLanguagesToUser($assignMultipleLanguagesInput: AssignMultipleLanguagesInput!) {
+            assignMultipleLanguagesToUser(assignMultipleLanguagesInput: $assignMultipleLanguagesInput) {
+              id
+              fullName
+              email
+              roles
+              isActive
+              assignedLanguageId
+              assignedLanguage {
+                id
+                name
+                isActive
+              }
+              assignedLanguages {
+                id
+                name
+                isActive
+              }
+              lastUpdateBy {
+                id
+                fullName
+              }
+            }
+          }
+        `,
+        variables: {
+          assignMultipleLanguagesInput: {
+            userId,
+            languageIds: languageIds.length > 0 ? languageIds : undefined,
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al asignar idiomas al usuario");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    return { data: result.data.assignMultipleLanguagesToUser };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
 export async function updateUserRolesWithLanguage(
   userId: string,
   roles: string[],
@@ -1082,6 +1215,72 @@ export async function updateUser(
     }
 
     return { data: result.data.updateUser };
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error desconocido",
+    };
+  }
+}
+
+/**
+ * Permite a un admin asignar su idioma a un maestro sin idioma
+ */
+export async function assignAdminLanguageToTeacher(
+  teacherId: string,
+  token?: string
+): Promise<ActionResponse<User>> {
+  try {
+    const headers = await getAuthHeaders();
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          mutation AssignAdminLanguageToTeacher($teacherId: ID!) {
+            assignAdminLanguageToTeacher(teacherId: $teacherId) {
+              id
+              fullName
+              email
+              roles
+              isActive
+              assignedLanguageId
+              assignedLanguage {
+                id
+                name
+                isActive
+              }
+              assignedLanguages {
+                id
+                name
+                isActive
+              }
+              lastUpdateBy {
+                id
+                fullName
+              }
+            }
+          }
+        `,
+        variables: { teacherId },
+      }),
+    });
+
+    if (!response.ok) {
+      return { error: `Error HTTP: ${response.status}` };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { error: result.errors[0].message };
+    }
+
+    return { data: result.data.assignAdminLanguageToTeacher };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Error desconocido",

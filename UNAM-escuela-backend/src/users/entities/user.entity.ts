@@ -3,6 +3,8 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -34,16 +36,26 @@ export class User {
   @Field(() => Boolean)
   isActive: boolean;
 
-  // Campo para asignar idioma específico a usuarios admin
+  // Campo para asignar idioma específico a usuarios admin (mantener por compatibilidad)
   @Column({ nullable: true })
   @Field(() => ID, { nullable: true })
   assignedLanguageId?: string;
 
-  // Relación con el idioma asignado
+  // Relación con el idioma asignado (mantener por compatibilidad)
   @ManyToOne(() => Lenguage, { nullable: true })
   @JoinColumn({ name: 'assignedLanguageId' })
   @Field(() => Lenguage, { nullable: true })
   assignedLanguage?: Lenguage;
+
+  // Nuevos campos para múltiples idiomas
+  @ManyToMany(() => Lenguage, { nullable: true })
+  @JoinTable({
+    name: 'user_assigned_languages',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'languageId', referencedColumnName: 'id' },
+  })
+  @Field(() => [Lenguage], { nullable: true })
+  assignedLanguages?: Lenguage[];
 
   @ManyToOne(() => User, (user) => user.lastUpdateBy, { nullable: true })
   @JoinColumn({ name: 'lastUpdateBy' })

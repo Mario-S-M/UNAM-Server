@@ -3,6 +3,7 @@ import {
   getLanguagesList,
   getLanguageById,
   getLanguagesListPublic,
+  getAllLanguagesForSuperUser,
 } from "../actions/lenguage-actions";
 import { Lenguage } from "../interfaces/lenguage-interfaces";
 
@@ -49,5 +50,32 @@ export function useLanguageById(id: string) {
       return result.data;
     },
     enabled: !!id,
+  });
+}
+
+// Hook para SuperUsers que necesitan ver todos los idiomas
+export function useAllLanguagesForSuperUser() {
+  return useQuery({
+    queryKey: ["lenguages", "all-for-super-user"],
+    queryFn: async () => {
+      const result = await getAllLanguagesForSuperUser();
+
+      if (!result.success) {
+        throw new Error(result.error || "Error al cargar idiomas");
+      }
+
+      return result.data;
+    },
+    retry: (failureCount, error: any) => {
+      // No reintentar si es error de autenticación
+      if (
+        error?.message?.includes("No hay token disponible") ||
+        error?.message?.includes("Unauthorized") ||
+        error?.message?.includes("UNAUTHENTICATED")
+      ) {
+        return false;
+      }
+      return failureCount < 2;
+    },
   });
 }

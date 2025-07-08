@@ -8,6 +8,7 @@ import { PaginatedUsers } from './dto/paginated-users.output';
 import { UpdateUserRolesInput } from './dto/update-user-roles.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { AssignLanguageInput } from './dto/assign-language.input';
+import { AssignMultipleLanguagesInput } from './dto/assign-multiple-languages.input';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -28,7 +29,7 @@ export class UsersResolver {
     this.logger.log(
       `Finding users with roles: ${JSON.stringify(validRoles.roles)}`,
     );
-    return this.usersService.findAll(validRoles.roles);
+    return this.usersService.findAll(validRoles.roles, user);
   }
 
   @Query(() => PaginatedUsers, { name: 'usersPaginated' })
@@ -40,7 +41,7 @@ export class UsersResolver {
     this.logger.log(
       `Finding paginated users with filters: ${JSON.stringify(filters)}`,
     );
-    return this.usersService.findPaginated(filters);
+    return this.usersService.findPaginated(filters, user);
   }
 
   @Query(() => User, { name: 'user' })
@@ -97,5 +98,34 @@ export class UsersResolver {
       assignLanguageInput.languageId,
       user,
     );
+  }
+
+  @Mutation(() => User, { name: 'assignMultipleLanguagesToUser' })
+  assignMultipleLanguagesToUser(
+    @Args('assignMultipleLanguagesInput')
+    assignMultipleLanguagesInput: AssignMultipleLanguagesInput,
+    @CurrentUser([ValidRoles.superUser])
+    user: User,
+  ): Promise<User> {
+    this.logger.log(
+      `SuperUser ${user.fullName} assigning multiple languages to user: ${assignMultipleLanguagesInput.userId}`,
+    );
+    return this.usersService.assignMultipleLanguagesToUser(
+      assignMultipleLanguagesInput.userId,
+      assignMultipleLanguagesInput.languageIds,
+      user,
+    );
+  }
+
+  @Mutation(() => User, { name: 'assignAdminLanguageToTeacher' })
+  assignAdminLanguageToTeacher(
+    @Args('teacherId', { type: () => ID }) teacherId: string,
+    @CurrentUser([ValidRoles.admin])
+    adminUser: User,
+  ): Promise<User> {
+    this.logger.log(
+      `Admin ${adminUser.fullName} assigning their language to teacher: ${teacherId}`,
+    );
+    return this.usersService.assignAdminLanguageToTeacher(teacherId, adminUser);
   }
 }

@@ -164,17 +164,11 @@ export async function getSkills(): Promise<SkillsResponse> {
 
 export async function getActiveSkills() {
   try {
-    const token = await getAuthToken();
-    if (!token) {
-      return { error: "No hay token disponible" };
-    }
+    const headers = await getAuthHeaders();
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
       body: JSON.stringify({
         query: `
           query GetActiveSkills {

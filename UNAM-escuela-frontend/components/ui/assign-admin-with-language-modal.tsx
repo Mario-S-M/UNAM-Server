@@ -17,6 +17,7 @@ import { useActiveLenguages } from "@/app/hooks/use-lenguages";
 import { addToast } from "@heroui/react";
 import { Role } from "@/app/dal/auth-dal";
 import { GlobalModal } from "@/components/global/globalModal";
+import { useAuthorization } from "@/app/hooks/use-authorization";
 
 interface AssignAdminWithLanguageModalProps {
   isOpen: boolean;
@@ -64,7 +65,9 @@ export function AssignAdminWithLanguageModal({
 }: AssignAdminWithLanguageModalProps) {
   const { getAssignableRoles, canChangeUserRole, userRole } = usePermissions();
   const updateUserRolesMutation = useUpdateUserRolesWithLanguage();
-  const { data: languages, isLoading: languagesLoading } = useActiveLenguages();
+  const { data: languages, isLoading: languagesLoading } =
+    useActiveLenguages(false);
+  const { user: currentUser } = useAuthorization();
 
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
@@ -75,6 +78,8 @@ export function AssignAdminWithLanguageModal({
 
   // Obtener roles que el usuario actual puede asignar
   const assignableRoles = getAssignableRoles();
+
+  const isSuperUser = currentUser?.roles?.includes("superUser");
 
   // Reset selections when modal opens/closes
   useEffect(() => {
@@ -209,55 +214,72 @@ export function AssignAdminWithLanguageModal({
           </Select>
         </div>
 
-        {/* Selección de idioma (solo para admin) */}
-        {selectedRole === "admin" && (
-          <div className="space-y-3">
-            <div className="bg-warning-50 border border-warning-200 text-warning-800 p-3 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Globe className="h-4 w-4" />
-                <span className="font-medium">Asignación de Idioma</span>
+        {/* Selección de idioma (solo para superUser) */}
+        {isSuperUser &&
+          (selectedRole === "admin" || selectedRole === "docente") && (
+            <div className="space-y-3">
+              <div className="bg-warning-50 border border-warning-200 text-warning-800 p-3 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe className="h-4 w-4" />
+                  <span className="font-medium">Asignación de Idioma</span>
+                </div>
+                <p className="text-sm">
+                  {selectedRole === "admin"
+                    ? "Los administradores solo pueden gestionar contenido del idioma que se les asigne."
+                    : "Los maestros pueden tener múltiples idiomas asignados para gestionar contenido."}
+                </p>
               </div>
-              <p className="text-sm">
-                Los administradores solo pueden gestionar contenido del idioma
-                que se les asigne.
-              </p>
+              <Select
+                label="Idioma a Asignar"
+                placeholder="Selecciona el idioma que gestionará"
+                selectionMode={
+                  selectedRole === "docente" ? "multiple" : "single"
+                }
+                selectedKeys={
+                  selectedRole === "docente"
+                    ? new Set(selectedLanguage ? [selectedLanguage] : [])
+                    : selectedLanguage
+                    ? new Set([selectedLanguage])
+                    : new Set()
+                }
+                onSelectionChange={(keys) => {
+                  if (selectedRole === "docente") {
+                    // Para maestros, permitir múltiples idiomas
+                    const selected = Array.from(keys);
+                    setSelectedLanguage(
+                      selected.length > 0 ? (selected[0] as string) : ""
+                    );
+                  } else {
+                    // Para admins, solo un idioma
+                    const selected = Array.from(keys)[0] as string;
+                    setSelectedLanguage(selected || "");
+                  }
+                }}
+                startContent={<Globe className="h-4 w-4" />}
+                isRequired
+                isLoading={languagesLoading}
+                color="default"
+                classNames={{
+                  trigger:
+                    "border-default-200 hover:border-default-300 !bg-default-50",
+                  value: "text-default-700",
+                  label: "text-default-600",
+                  selectorIcon: "text-default-600 !text-default-600",
+                  listbox: "bg-content1",
+                  popoverContent: "bg-content1",
+                }}
+              >
+                {(languages ?? []).map((language: any) => (
+                  <SelectItem key={language.id} textValue={language.name}>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-primary" />
+                      <span>{language.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </Select>
             </div>
-
-            <Select
-              label="Idioma a Administrar"
-              placeholder="Selecciona el idioma que administrará"
-              selectedKeys={
-                selectedLanguage ? new Set([selectedLanguage]) : new Set()
-              }
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0] as string;
-                setSelectedLanguage(selected || "");
-              }}
-              startContent={<Globe className="h-4 w-4" />}
-              isRequired
-              isLoading={languagesLoading}
-              color="default"
-              classNames={{
-                trigger:
-                  "border-default-200 hover:border-default-300 !bg-default-50",
-                value: "text-default-700",
-                label: "text-default-600",
-                selectorIcon: "text-default-600 !text-default-600",
-                listbox: "bg-content1",
-                popoverContent: "bg-content1",
-              }}
-            >
-              {(languages?.data ?? []).map((language: any) => (
-                <SelectItem key={language.id} textValue={language.name}>
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-primary" />
-                    <span>{language.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-        )}
+          )}
 
         {/* Información de permisos */}
         <div className="bg-blue-50 p-4 rounded-lg">
@@ -312,7 +334,7 @@ export function AssignAdminWithLanguageModal({
                     startContent={<Globe className="h-4 w-4" />}
                   >
                     {
-                      languages?.data?.find((l) => l.id === selectedLanguage)
+                      languages?.find((l: any) => l.id === selectedLanguage)
                         ?.name
                     }
                   </Chip>
@@ -333,12 +355,16 @@ export function AssignAdminWithLanguageModal({
               !selectedRole ||
               assignableRoles.length === 0 ||
               !canChangeUserRole(user, [selectedRole as Role]) ||
-              (selectedRole === "admin" && !selectedLanguage)
+              (isSuperUser &&
+                (selectedRole === "admin" || selectedRole === "docente") &&
+                !selectedLanguage)
             }
             isLoading={updateUserRolesMutation.isPending}
           >
             Asignar Rol
-            {selectedRole === "admin" && " e Idioma"}
+            {isSuperUser &&
+              (selectedRole === "admin" || selectedRole === "docente") &&
+              " e Idioma"}
           </Button>
         </div>
       </form>

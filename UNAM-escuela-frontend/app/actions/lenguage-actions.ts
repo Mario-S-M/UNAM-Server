@@ -168,3 +168,61 @@ export async function getLanguagesListPublic() {
     return { success: false, error: "Error interno del servidor" };
   }
 }
+
+// Nueva función para SuperUsers que necesitan ver todos los idiomas
+export async function getAllLanguagesForSuperUser() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return { success: false, error: "No hay token disponible" };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query GetAllLanguages {
+            lenguages {
+              id
+              name
+              isActive
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      return { success: false, error: "Error en la respuesta del servidor" };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      return { success: false, error: "Error en GraphQL" };
+    }
+
+    const languagesData = result.data.lenguages;
+
+    // Validar cada idioma con Zod
+    const validatedLanguages = languagesData
+      .map((language: any) => {
+        try {
+          return BasicLanguageSchema.parse(language);
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    return { success: true, data: validatedLanguages };
+  } catch (error) {
+    return { success: false, error: "Error interno del servidor" };
+  }
+}

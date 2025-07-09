@@ -218,7 +218,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
                 </div>
               </div>
             </DropdownItem>
-            {currentUser && (
+            {currentUser ? (
               <>
                 <DropdownItem
                   key="panel"
@@ -247,8 +247,7 @@ function GlobalNavbar({ lenguageId }: PageProps) {
                   Cerrar Sesión
                 </DropdownItem>
               </>
-            )}
-            {!currentUser && (
+            ) : (
               <>
                 <DropdownItem
                   key="login"

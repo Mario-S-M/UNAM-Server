@@ -48,7 +48,7 @@ function ContentLenguage({ params }: PageProps) {
           <h1 className="text-4xl font-light text-foreground mb-4">
             {isLoadingLanguage
               ? "Cargando..."
-              : `Niveles de ${languageData?.data?.name || "Idioma"}`}
+              : `Niveles de ${languageData?.name || "Idioma"}`}
           </h1>
           <div className="w-24 h-px bg-divider mx-auto mb-6"></div>
           <p className="text-foreground/70 text-lg max-w-2xl mx-auto font-light">

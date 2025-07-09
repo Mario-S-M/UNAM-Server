@@ -1472,3 +1472,156 @@ export async function getValidatedContentsByLevel(
     throw error;
   }
 }
+
+// Get only validated content by skill for student/public view
+export async function getValidatedContentsBySkill(
+  skillId: string
+): Promise<ContentsResponse> {
+  try {
+    const headers = await getAuthHeaders();
+    const hasAuth = headers.Authorization;
+
+    // Use public endpoint for non-authenticated users (which only returns validated content)
+    // Use validated endpoint for authenticated users
+    const queryName = hasAuth
+      ? "validatedContentsBySkill"
+      : "contentsBySkillPublic";
+
+    console.log(
+      "🔧 getValidatedContentsBySkill - Using query:",
+      queryName,
+      "for skillId:",
+      skillId
+    );
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          query ValidatedContentsBySkill($skillId: ID!) {
+            ${queryName}(skillId: $skillId) {
+              id
+              name
+              description
+              levelId
+              validationStatus
+              markdownPath
+              skillId
+              skill {
+                id
+                name
+                description
+                color
+                isActive
+              }
+              assignedTeachers {
+                id
+                fullName
+                email
+                roles
+              }
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: { skillId },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al cargar los contenidos validados por skill");
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    return { data: result.data[queryName] || [] };
+  } catch (error) {
+    console.error("Error en getValidatedContentsBySkill:", error);
+    throw error;
+  }
+}
+
+// Get only validated content by level and skill for student/public view
+export async function getValidatedContentsByLevelAndSkill(
+  levelId: string,
+  skillId: string
+): Promise<ContentsResponse> {
+  try {
+    const headers = await getAuthHeaders();
+    const hasAuth = headers.Authorization;
+
+    // Use public endpoint for non-authenticated users (which only returns validated content)
+    // Use validated endpoint for authenticated users
+    const queryName = hasAuth
+      ? "validatedContentsByLevelAndSkill"
+      : "contentsByLevelAndSkillPublic";
+
+    console.log(
+      "🔧 getValidatedContentsByLevelAndSkill - Using query:",
+      queryName,
+      "for levelId:",
+      levelId,
+      "skillId:",
+      skillId
+    );
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: `
+          query ValidatedContentsByLevelAndSkill($levelId: ID!, $skillId: ID!) {
+            ${queryName}(levelId: $levelId, skillId: $skillId) {
+              id
+              name
+              description
+              levelId
+              validationStatus
+              markdownPath
+              skillId
+              skill {
+                id
+                name
+                description
+                color
+                isActive
+              }
+              assignedTeachers {
+                id
+                fullName
+                email
+                roles
+              }
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: { levelId, skillId },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "Error al cargar los contenidos validados por nivel y skill"
+      );
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+    }
+
+    return { data: result.data[queryName] || [] };
+  } catch (error) {
+    console.error("Error en getValidatedContentsByLevelAndSkill:", error);
+    throw error;
+  }
+}

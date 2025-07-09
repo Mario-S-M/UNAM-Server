@@ -29,6 +29,8 @@ import {
   RefreshCw,
   Monitor,
   Code,
+  Eye,
+  SplitSquareHorizontal,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -48,6 +50,11 @@ const MilkdownEditorClient = dynamic(
   { ssr: false }
 );
 
+const MilkdownReadOnlyViewer = dynamic(
+  () => import("@/components/global/milkdown-readonly-viewer"),
+  { ssr: false }
+);
+
 interface ContentPreviewAdvancedModalProps {
   contentId: string | null;
   isOpen: boolean;
@@ -61,6 +68,10 @@ export default function ContentPreviewAdvancedModal({
 }: ContentPreviewAdvancedModalProps) {
   const [editedContent, setEditedContent] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+  const [viewMode, setViewMode] = useState<"preview" | "edit" | "split">(
+    "preview"
+  );
+  const [isLivePreview, setIsLivePreview] = useState(true);
   const queryClient = useQueryClient();
 
   // Queries
@@ -155,7 +166,9 @@ export default function ContentPreviewAdvancedModal({
       setEditedContent(markdownContent.data);
     } else {
       // Si no hay contenido, inicializar con un contenido de ejemplo
-      setEditedContent("# Comienza a escribir aquí\n\nEste es el editor de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```");
+      setEditedContent(
+        "# Comienza a escribir aquí\n\nEste es el editor de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```"
+      );
     }
   }, [markdownContent]);
 
@@ -462,8 +475,13 @@ export default function ContentPreviewAdvancedModal({
                     ) : viewMode === "edit" ? (
                       <div className="h-full">
                         <MilkdownEditorClient
-                          key={`advanced-editor-${contentId}-${editedContent ? 'with-content' : 'empty'}`}
-                          defaultValue={editedContent || "# Comienza a escribir aquí\n\nEscribe tu contenido usando **Markdown**."}
+                          key={`advanced-editor-${contentId}-${
+                            editedContent ? "with-content" : "empty"
+                          }`}
+                          defaultValue={
+                            editedContent ||
+                            "# Comienza a escribir aquí\n\nEscribe tu contenido usando **Markdown**."
+                          }
                           contentId={contentId!}
                           autoSaveInterval={15000}
                           onAutoSave={handleAutoSave}
@@ -496,8 +514,13 @@ export default function ContentPreviewAdvancedModal({
                           </div>
                           <div className="h-full">
                             <MilkdownEditorClient
-                              key={`split-editor-${contentId}-${editedContent ? 'with-content' : 'empty'}`}
-                              defaultValue={editedContent || "# Comienza a escribir aquí\n\nEscribe tu contenido usando **Markdown**."}
+                              key={`split-editor-${contentId}-${
+                                editedContent ? "with-content" : "empty"
+                              }`}
+                              defaultValue={
+                                editedContent ||
+                                "# Comienza a escribir aquí\n\nEscribe tu contenido usando **Markdown**."
+                              }
                               contentId={contentId!}
                               autoSaveInterval={20000}
                               onAutoSave={handleAutoSave}

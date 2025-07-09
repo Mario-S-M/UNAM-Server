@@ -91,7 +91,9 @@ const ContentPage: FC = () => {
             {/* Selected Skill Header */}
             {skills?.data &&
               (() => {
-                const skill = skills.data.find((s) => s.id === selectedSkill);
+                const skill = skills.data.find(
+                  (s: Skill) => s.id === selectedSkill
+                );
                 return skill ? (
                   <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-3 mb-4">
@@ -185,7 +187,7 @@ const ContentPage: FC = () => {
           </div>
         ) : skills?.data && skills.data.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {skills.data.map((skill) => (
+            {skills.data.map((skill: Skill) => (
               <SkillCard
                 key={skill.id}
                 skill={skill}

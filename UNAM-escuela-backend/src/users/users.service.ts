@@ -617,7 +617,12 @@ export class UsersService {
     const adminLevel = roleHierarchy[adminHighestRole] || 0;
     const targetLevel = roleHierarchy[targetHighestRole] || 0;
 
-    // Solo puede gestionar usuarios con nivel menor
+    // SuperUser puede gestionar cualquier usuario, incluyendo otros superUsers
+    if (adminHighestRole === 'superUser') {
+      return true;
+    }
+
+    // Para otros roles, solo pueden gestionar usuarios con nivel menor
     return adminLevel > targetLevel;
   }
 

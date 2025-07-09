@@ -316,7 +316,12 @@ export class AuthDAL {
     const currentLevel = this.ROLE_HIERARCHY[currentHighestRole].level;
     const targetLevel = this.ROLE_HIERARCHY[targetHighestRole].level;
 
-    // Solo puede administrar usuarios con nivel menor
+    // SuperUser puede administrar cualquier usuario, incluyendo otros superUsers
+    if (currentHighestRole === "superUser") {
+      return true;
+    }
+
+    // Para otros roles, solo pueden administrar usuarios con nivel menor
     return currentLevel > targetLevel;
   }
 

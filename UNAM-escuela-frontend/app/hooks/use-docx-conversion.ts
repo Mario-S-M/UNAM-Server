@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { convertDocxToMarkdown } from "../actions/content-actions";
+// import { convertDocxToMarkdown } from "../actions/content-actions"; // Temporalmente comentado
 
 export function useDocxConversion() {
   const queryClient = useQueryClient();
@@ -13,8 +13,9 @@ export function useDocxConversion() {
       file: File;
     }) => {
       try {
-        const result = await convertDocxToMarkdown(contentId, file);
-        return result;
+        // const result = await convertDocxToMarkdown(contentId, file);
+        // return result;
+        throw new Error("convertDocxToMarkdown function not implemented yet");
       } catch (error) {
         throw error;
       }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateContent } from "@/app/actions/content-actions";
 import { addToast } from "@heroui/toast";
-import GlobalModal from "@/components/global/globalModal";
+import { GlobalModal } from "@/components/global/globalModal";
 import GlobalButton from "@/components/global/globalButton";
 import GlobalInput from "@/components/global/globalInput";
 import GlobalTextArea from "@/components/global/globalTextArea";

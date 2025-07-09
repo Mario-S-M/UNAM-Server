@@ -220,12 +220,51 @@ export class ContentsService {
       .getMany();
   }
 
-  async findOne(id: string): Promise<Content> {
+  async findOne(id: string, user?: User): Promise<Content> {
+    console.log('🔍 ContentsService.findOne - Called with:', {
+      id,
+      user: user ? { id: user.id, roles: user.roles } : null,
+    });
+
     const content = await this.contentsRepository.findOne({
       where: { id },
       relations: ['assignedTeachers', 'skill'],
     });
+
+    console.log('🔍 ContentsService.findOne - Content found:', !!content);
+
     if (!content) throw new NotFoundException('Contenido no encontrado');
+
+    // Access control: Teachers can only access content they are assigned to
+    if (user && this.getHighestRole(user.roles) === ValidRoles.docente) {
+      console.log(
+        '🔍 ContentsService.findOne - User is teacher, checking assignment',
+      );
+
+      const isAssignedTeacher = content.assignedTeachers?.some(
+        (teacher) => teacher.id === user.id,
+      );
+
+      console.log(
+        '🔍 ContentsService.findOne - Is assigned teacher:',
+        isAssignedTeacher,
+      );
+      console.log(
+        '🔍 ContentsService.findOne - Assigned teachers:',
+        content.assignedTeachers?.map((t) => ({ id: t.id, name: t.fullName })),
+      );
+
+      if (!isAssignedTeacher) {
+        console.log(
+          '🔍 ContentsService.findOne - Access denied, teacher not assigned to content',
+        );
+        throw new NotFoundException('Contenido no encontrado');
+      }
+    }
+
+    console.log(
+      '🔍 ContentsService.findOne - Access granted, returning content',
+    );
     return content;
   }
 
@@ -570,12 +609,22 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       throw new NotFoundException('Contenido no encontrado');
     }
 
-    // Verificar que el usuario es un profesor asignado
+    // Verificar que el usuario es un profesor asignado o admin
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
     const isAssignedTeacher =
       content.assignedTeachers?.some((teacher) => teacher.id === userId) ||
       false;
+    const isAdmin =
+      user.roles.includes('admin') || user.roles.includes('superUser');
 
-    if (!isAssignedTeacher) {
+    if (!isAssignedTeacher && !isAdmin) {
       throw new Error('No tienes permisos para editar este contenido');
     }
 
@@ -860,12 +909,22 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       throw new NotFoundException('Contenido no encontrado');
     }
 
-    // Verificar que el usuario es un profesor asignado
+    // Verificar que el usuario es un profesor asignado o admin
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
     const isAssignedTeacher =
       content.assignedTeachers?.some((teacher) => teacher.id === userId) ||
       false;
+    const isAdmin =
+      user.roles.includes('admin') || user.roles.includes('superUser');
 
-    if (!isAssignedTeacher) {
+    if (!isAssignedTeacher && !isAdmin) {
       throw new Error('No tienes permisos para editar este contenido');
     }
 

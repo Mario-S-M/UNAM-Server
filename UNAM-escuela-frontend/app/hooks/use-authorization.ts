@@ -65,21 +65,36 @@ export function usePageProtection(requiredPage: string) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
+  // Debug logging
+  console.log("🔍 usePageProtection Debug:", {
+    requiredPage,
+    user,
+    isLoading,
+    userRoles: user?.roles,
+    userId: user?.id,
+    isActive: user?.isActive,
+    timestamp: new Date().toISOString(),
+  });
+
   // Si está cargando, esperar
   if (isLoading) {
+    console.log("⏳ usePageProtection: Still loading, returning null");
     return {
       user,
       isLoading: true,
       isAuthorized: null,
+      authorizationResult: null,
     };
   }
 
   // Si no hay usuario, no está autorizado
   if (!user) {
+    console.log("❌ usePageProtection: No user, denying access");
     return {
       user,
       isLoading: false,
       isAuthorized: false,
+      authorizationResult: null,
     };
   }
 
@@ -87,8 +102,23 @@ export function usePageProtection(requiredPage: string) {
   const authorizationResult = AuthDAL.canAccessPage(user, requiredPage);
   const isAuthorized = authorizationResult.hasAccess;
 
+  // Debug logging para el resultado
+  console.log("📊 usePageProtection: Authorization result:", {
+    requiredPage,
+    user: { id: user.id, roles: user.roles, isActive: user.isActive },
+    authorizationResult,
+    isAuthorized,
+    redirectTo: authorizationResult.redirectTo,
+    reason: authorizationResult.reason,
+    timestamp: new Date().toISOString(),
+  });
+
   // Si no está autorizado, redirigir
   if (!isAuthorized && authorizationResult.redirectTo) {
+    console.log(
+      "🚨 usePageProtection: Redirecting to:",
+      authorizationResult.redirectTo
+    );
     window.location.href = authorizationResult.redirectTo;
   }
 
@@ -96,6 +126,7 @@ export function usePageProtection(requiredPage: string) {
     user,
     isLoading: false,
     isAuthorized,
+    authorizationResult,
   };
 }
 

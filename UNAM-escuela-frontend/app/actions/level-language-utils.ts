@@ -10,6 +10,11 @@ export async function getLevelLanguageInfo(
   levelId: string
 ): Promise<{ languageId: string; languageName: string } | null> {
   try {
+    if (!levelId) {
+      console.warn("getLevelLanguageInfo: levelId is empty");
+      return null;
+    }
+
     const headers = await getAuthHeaders();
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -29,17 +34,24 @@ export async function getLevelLanguageInfo(
     });
 
     if (!response.ok) {
-      throw new Error("Error al obtener información del nivel");
+      console.error(
+        "Level language info fetch failed:",
+        response.status,
+        response.statusText
+      );
+      return null; // Return null instead of throwing error
     }
 
     const result = await response.json();
 
     if (result.errors) {
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
+      console.error("GraphQL errors in getLevelLanguageInfo:", result.errors);
+      return null; // Return null instead of throwing error
     }
 
     const level = result.data?.level;
     if (!level || !level.lenguageId) {
+      console.warn("Level or language ID not found for level:", levelId);
       return null;
     }
 
@@ -61,19 +73,24 @@ export async function getLevelLanguageInfo(
     });
 
     if (!languageResponse.ok) {
-      throw new Error("Error al obtener información del idioma");
+      console.error(
+        "Language info fetch failed:",
+        languageResponse.status,
+        languageResponse.statusText
+      );
+      return null; // Return null instead of throwing error
     }
 
     const languageResult = await languageResponse.json();
 
     if (languageResult.errors) {
-      throw new Error(
-        languageResult.errors.map((err: any) => err.message).join(", ")
-      );
+      console.error("GraphQL errors in language fetch:", languageResult.errors);
+      return null; // Return null instead of throwing error
     }
 
     const language = languageResult.data?.lenguage;
     if (!language) {
+      console.warn("Language not found for ID:", level.lenguageId);
       return null;
     }
 
@@ -83,6 +100,7 @@ export async function getLevelLanguageInfo(
     };
   } catch (error) {
     console.error("Error getting level language info:", error);
+    // Return null instead of throwing to prevent breaking the app
     return null;
   }
 }
@@ -109,37 +127,75 @@ export async function filterTeachersForLanguageCompatibility(
   levelId: string,
   userLanguageRestriction?: string
 ): Promise<any[]> {
+  console.log("🔍 === INICIANDO FILTRADO DE PROFESORES ===");
+  console.log(`📊 Profesores iniciales: ${teachers.length}`);
+  console.log(
+    `🔐 Restricción de idioma: ${userLanguageRestriction || "ninguna"}`
+  );
+  console.log(`📚 Nivel ID: ${levelId}`);
+
   try {
-    // If user has language restriction, validate the level belongs to their language
-    if (userLanguageRestriction) {
-      const levelLanguageInfo = await getLevelLanguageInfo(levelId);
-
-      if (!levelLanguageInfo) {
-        console.warn(
-          "Could not determine level language, returning empty teacher list"
-        );
-        return [];
-      }
-
-      // If the level doesn't belong to the user's assigned language, return empty array
-      if (levelLanguageInfo.languageId !== userLanguageRestriction) {
-        console.warn(
-          `Level belongs to language ${levelLanguageInfo.languageName}, but user is restricted to language ${userLanguageRestriction}`
-        );
-        return [];
-      }
-    }
-
-    // Filter teachers based on language compatibility
-    // For now, return all teachers since we don't have teacher-language assignments yet
-    return teachers.filter(
+    // Primero filtrar profesores activos con rol docente
+    const activeTeachers = teachers.filter(
       (teacher) => teacher.roles?.includes("docente") && teacher.isActive
     );
-  } catch (error) {
-    console.error(
-      "Error filtering teachers for language compatibility:",
-      error
+
+    console.log(
+      `✅ Profesores activos con rol docente: ${activeTeachers.length}`
     );
-    return teachers; // Return all teachers on error to avoid breaking the UI
+    activeTeachers.forEach((teacher, index) => {
+      console.log(`  ${index + 1}. ${teacher.fullName} (${teacher.email})`);
+    });
+
+    // TEMPORAL: Devolver TODOS los profesores activos sin filtrar por idioma
+    console.log(
+      "🎯 TEMPORAL: Devolviendo todos los profesores activos sin filtrar"
+    );
+    return activeTeachers;
+
+    // TODO: Reactivar filtrado por idioma cuando sea necesario
+    /*
+    // Si no hay restricción de idioma del usuario, devolver todos los profesores activos
+    if (!userLanguageRestriction) {
+      console.log("✅ Sin restricción de idioma, devolviendo todos los profesores activos");
+      return activeTeachers;
+    }
+
+    // Si hay restricción de idioma, validar el nivel
+    console.log("🔍 Verificando compatibilidad de idioma...");
+    const levelLanguageInfo = await getLevelLanguageInfo(levelId);
+
+    if (!levelLanguageInfo) {
+      console.warn("⚠️ No se pudo determinar el idioma del nivel");
+      console.log("🎯 Devolviendo todos los profesores activos como fallback");
+      return activeTeachers;
+    }
+
+    console.log(`📋 Idioma del nivel: ${levelLanguageInfo.languageName} (${levelLanguageInfo.languageId})`);
+
+    // Verificar compatibilidad de idioma
+    if (levelLanguageInfo.languageId !== userLanguageRestriction) {
+      console.warn(
+        `⚠️ Incompatibilidad: Nivel pertenece a ${levelLanguageInfo.languageName}, pero usuario restringido a ${userLanguageRestriction}`
+      );
+      console.log("🎯 Devolviendo todos los profesores activos para evitar bloqueo total");
+      return activeTeachers;
+    }
+
+    console.log("✅ Idioma compatible, devolviendo profesores filtrados");
+    return activeTeachers;
+    */
+  } catch (error) {
+    console.error("❌ Error en filtrado de profesores:", error);
+
+    // En caso de error, devolver todos los profesores activos como fallback
+    const fallbackTeachers = teachers.filter(
+      (teacher) => teacher.roles?.includes("docente") && teacher.isActive
+    );
+
+    console.log(
+      `🎯 Fallback: devolviendo ${fallbackTeachers.length} profesores activos`
+    );
+    return fallbackTeachers;
   }
 }

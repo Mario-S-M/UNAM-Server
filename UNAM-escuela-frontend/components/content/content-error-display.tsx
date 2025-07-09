@@ -38,6 +38,14 @@ export function ContentErrorDisplay({
 }: ContentErrorDisplayProps) {
   const router = useRouter();
 
+  console.log("🔍 ContentErrorDisplay - Props:", {
+    error,
+    errorInfo,
+    context,
+    showBackButton,
+    backUrl,
+  });
+
   // Si no tenemos errorInfo, analizamos el error
   const analyzedError =
     errorInfo || ContentErrorHandler.analyzeError({ message: error });

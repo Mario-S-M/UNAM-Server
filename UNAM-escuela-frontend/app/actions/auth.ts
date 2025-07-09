@@ -13,13 +13,17 @@ export async function getCurrentUser() {
     const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
 
     if (!token) {
+      console.log("❌ getCurrentUser: No token found");
       return null;
     }
 
     // Verificar que el token no esté vacío o sea solo espacios
     if (token.trim() === "") {
+      console.log("❌ getCurrentUser: Empty token");
       return null;
     }
+
+    console.log("🔍 getCurrentUser: Token present, making request");
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
@@ -52,22 +56,31 @@ export async function getCurrentUser() {
     });
 
     if (!response.ok) {
+      console.log("❌ getCurrentUser: Response not ok:", response.status);
       return null;
     }
 
     const result = await response.json();
+    console.log("🔍 getCurrentUser: GraphQL response:", result);
 
     if (result.errors || !result.data?.revalidate) {
+      console.log(
+        "❌ getCurrentUser: GraphQL errors or no data:",
+        result.errors
+      );
       return null;
     }
 
     const userData = result.data.revalidate.user;
+    console.log("🔍 getCurrentUser: User data before validation:", userData);
 
     // Validar los datos con Zod
     const validatedUser = AuthenticatedUserSchema.parse(userData);
+    console.log("✅ getCurrentUser: Validated user:", validatedUser);
 
     return validatedUser;
   } catch (error) {
+    console.error("❌ getCurrentUser: Error:", error);
     // Si hay error de validación, retornar null
     if (error instanceof Error) {
       return null;

@@ -22,8 +22,18 @@ export function RouteGuard({
   const { isLoading, isAuthorized, authorizationResult } =
     usePageProtection(requiredPage);
 
+  console.log("🔍 RouteGuard Debug:", {
+    requiredPage,
+    isLoading,
+    isAuthorized,
+    authorizationResult,
+    showLoadingSpinner,
+    timestamp: new Date().toISOString(),
+  });
+
   // Mostrar loading mientras se verifica la autorización
   if (isLoading || isAuthorized === null) {
+    console.log("⏳ RouteGuard: Showing loading spinner");
     if (!showLoadingSpinner) return null;
 
     return (
@@ -38,6 +48,9 @@ export function RouteGuard({
 
   // Si no está autorizado (false), mostrar fallback o no mostrar nada
   if (isAuthorized === false) {
+    console.log(
+      "❌ RouteGuard: Access denied, showing fallback or access denied message"
+    );
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -76,6 +89,7 @@ export function RouteGuard({
   }
 
   // Solo mostrar el contenido si está explícitamente autorizado
+  console.log("✅ RouteGuard: Access granted, showing children");
   return <>{children}</>;
 }
 

@@ -67,9 +67,11 @@ export default function DocxUploader({
     setUploadStatus("uploading");
 
     try {
+      // Temporalmente comentado hasta que se implemente correctamente
+      /*
       const result = await docxConversionMutation.mutateAsync({
         contentId,
-        docxBase64: await fileToBase64(selectedFile),
+        file: selectedFile,
       });
 
       if (result.error) {
@@ -80,6 +82,8 @@ export default function DocxUploader({
         setSelectedFile(null);
         onSuccess?.(result.data);
       }
+      */
+      throw new Error("DOCX conversion not implemented yet");
     } catch (error) {
       setUploadStatus("error");
       setErrorMessage(

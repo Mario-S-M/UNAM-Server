@@ -151,7 +151,11 @@ export class ContentsResolver {
     ])
     user: User,
   ) {
-    return this.contentsService.findOne(id);
+    console.log('🔍 ContentsResolver.findOne - Called with:', {
+      id,
+      user: user ? { id: user.id, roles: user.roles } : null,
+    });
+    return this.contentsService.findOne(id, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -210,7 +214,8 @@ export class ContentsResolver {
   updateContentMarkdown(
     @Args('contentId', { type: () => ID }) contentId: string,
     @Args('markdownContent', { type: () => String }) markdownContent: string,
-    @CurrentUser([ValidRoles.docente]) user: User,
+    @CurrentUser([ValidRoles.docente, ValidRoles.admin, ValidRoles.superUser])
+    user: User,
   ): Promise<boolean> {
     return this.contentsService.updateMarkdownContent(
       contentId,
@@ -297,7 +302,8 @@ export class ContentsResolver {
   async convertDocxToMarkdown(
     @Args('contentId', { type: () => ID }) contentId: string,
     @Args('docxBase64', { type: () => String }) docxBase64: string,
-    @CurrentUser([ValidRoles.docente]) user: User,
+    @CurrentUser([ValidRoles.docente, ValidRoles.admin, ValidRoles.superUser])
+    user: User,
   ): Promise<boolean> {
     console.log('🚀 GraphQL convertDocxToMarkdown mutation called');
     console.log('📋 Content ID:', contentId);

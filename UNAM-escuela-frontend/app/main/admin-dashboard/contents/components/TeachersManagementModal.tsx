@@ -4,20 +4,21 @@ import {
   getContentById,
   assignTeachersToContent,
   removeTeacherFromContent,
-  adminWorkaroundAssignTeachers,
 } from "@/app/actions/content-actions";
 import { getTeachers } from "@/app/actions/user-actions";
+import { createTestTeachers } from "@/app/actions/create-test-teachers";
 import { filterTeachersForLanguageCompatibility } from "@/app/actions/level-language-utils";
 import { usePermissions } from "@/app/hooks/use-authorization";
 import { useAuthorization } from "@/app/hooks/use-authorization";
 import { addToast } from "@heroui/toast";
 import { Spinner, Button } from "@heroui/react";
-import { AlertCircle, Users, Trash2, Search } from "lucide-react";
-import GlobalModal from "@/components/global/globalModal";
+import { AlertCircle, Users, Trash2, Search, UserPlus } from "lucide-react";
+import { GlobalModal } from "@/components/global/globalModal";
 import GlobalButton from "@/components/global/globalButton";
 import GlobalInput from "@/components/global/globalInput";
 import GlobalSelect from "@/components/global/globalSelect";
 import { SelectItem } from "@heroui/react";
+import { TeachersDebugModal } from "./TeachersDebugModal";
 
 interface TeachersManagementModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function TeachersManagementModal({
   const [filteredTeachersForLanguage, setFilteredTeachersForLanguage] =
     useState<any[]>([]);
   const [isFilteringTeachers, setIsFilteringTeachers] = useState(false);
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { userRole } = usePermissions();
   const { userAssignedLanguage } = useAuthorization();
@@ -49,41 +51,35 @@ export default function TeachersManagementModal({
     data: teachers,
     isLoading: teachersLoading,
     error: teachersError,
+    refetch: refetchTeachers,
   } = useQuery({
     queryKey: ["teachers"],
-    queryFn: async () => {
-      const result = await getTeachers();
-      return result;
-    },
+    queryFn: () => getTeachers(),
     enabled: isOpen,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 30000, // 30 segundos
   });
 
   useEffect(() => {
     const applyLanguageFiltering = async () => {
-      if (!teachers?.data || !content?.data?.levelId) {
+      if (!teachers?.data) {
         setFilteredTeachersForLanguage([]);
         return;
       }
 
       setIsFilteringTeachers(true);
       try {
-        const userLanguageRestriction =
-          userAssignedLanguage?.isAdminWithLanguage
-            ? userAssignedLanguage.assignedLanguageId || undefined
-            : undefined;
-
-        const filtered = await filterTeachersForLanguageCompatibility(
-          teachers.data,
-          content.data.levelId,
-          userLanguageRestriction
+        // Usar directamente los profesores activos con rol docente
+        const directTeachers = teachers.data.filter(
+          (teacher: any) =>
+            teacher.roles?.includes("docente") && teacher.isActive
         );
 
-        setFilteredTeachersForLanguage(filtered);
+        setFilteredTeachersForLanguage(directTeachers);
       } catch (error) {
         console.error("Error applying language filtering:", error);
-        setFilteredTeachersForLanguage(teachers.data);
+        setFilteredTeachersForLanguage(teachers.data || []);
       } finally {
         setIsFilteringTeachers(false);
       }
@@ -106,42 +102,30 @@ export default function TeachersManagementModal({
   }, [content?.data?.assignedTeachers]);
 
   const searchFilteredTeachers = (() => {
-    if (!searchQuery) return filteredTeachersForLanguage;
+    if (!searchQuery) {
+      return filteredTeachersForLanguage;
+    }
 
     const searchLower = searchQuery.toLowerCase();
-    return filteredTeachersForLanguage.filter(
-      (teacher: any) =>
-        teacher.fullName?.toLowerCase().includes(searchLower) ||
-        teacher.email?.toLowerCase().includes(searchLower)
-    );
+    const filtered = filteredTeachersForLanguage.filter((teacher: any) => {
+      // Manejar el caso donde fullName puede ser undefined
+      const fullName = teacher.fullName || teacher.email || "";
+      const email = teacher.email || "";
+
+      const matchesName = fullName.toLowerCase().includes(searchLower);
+      const matchesEmail = email.toLowerCase().includes(searchLower);
+
+      return matchesName || matchesEmail;
+    });
+
+    return filtered;
   })();
 
   const assignTeachersMutation = useMutation({
     mutationFn: async (teacherIds: string[]) => {
-      let result;
-
-      if (userRole === "admin") {
-        result = await adminWorkaroundAssignTeachers(contentId, teacherIds);
-      } else {
-        result = await assignTeachersToContent(contentId, teacherIds);
-      }
+      const result = await assignTeachersToContent(contentId, teacherIds);
 
       if (result.error) {
-        if (result.error.includes("superUser")) {
-          const workaroundResult = await adminWorkaroundAssignTeachers(
-            contentId,
-            teacherIds
-          );
-
-          if (workaroundResult.error) {
-            throw new Error(
-              `No se pudieron asignar profesores: ${workaroundResult.error}`
-            );
-          }
-
-          return workaroundResult;
-        }
-
         throw new Error(result.error);
       }
       return result;
@@ -184,16 +168,6 @@ export default function TeachersManagementModal({
       timeout: 3000,
     });
 
-    if (userRole === "admin") {
-      addToast({
-        title: "Información importante",
-        description:
-          "Como administrador, se utilizará un método alternativo para asignar profesores, ya que el método directo está restringido a superUsuarios.",
-        color: "warning",
-        timeout: 5000,
-      });
-    }
-
     assignTeachersMutation.mutate(selectedTeacherIds);
   };
 
@@ -228,21 +202,49 @@ export default function TeachersManagementModal({
       onOpenChange={onOpenChange}
       title={`Gestionar Profesores - ${content?.data?.name || "Contenido"}`}
     >
-      {/* Info de diagnóstico */}
-      <div className="mb-4 p-2 bg-default-50 border border-default-200 text-default-800 text-xs rounded-md">
-        <p>
-          <strong>Rol de usuario:</strong> {userRole}
-        </p>
-        <p>
-          <strong>Estado carga:</strong>{" "}
-          {teachersLoading || isFilteringTeachers
-            ? "Cargando..."
-            : "Completado"}
-        </p>
-        <p>
-          <strong>Profesores encontrados:</strong>{" "}
-          {filteredTeachersForLanguage?.length || 0}
-        </p>
+      {/* Info de diagnóstico simplificada */}
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertCircle className="h-4 w-4" />
+          <strong>Estado del sistema:</strong>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p>
+              <strong>Rol de usuario:</strong> {userRole}
+            </p>
+            <p>
+              <strong>Profesores cargados:</strong>{" "}
+              {teachers?.data?.length || 0}
+            </p>
+          </div>
+          <div>
+            <p>
+              <strong>Profesores disponibles:</strong>{" "}
+              {filteredTeachersForLanguage?.length || 0}
+            </p>
+            <p>
+              <strong>Estado:</strong>{" "}
+              {teachersLoading
+                ? "Cargando..."
+                : isFilteringTeachers
+                ? "Filtrando..."
+                : teachersError
+                ? "Error"
+                : "Completado"}
+            </p>
+          </div>
+        </div>
+        {teachersError && (
+          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+            <p className="text-red-700 text-xs">
+              <strong>Error:</strong>{" "}
+              {teachersError instanceof Error
+                ? teachersError.message
+                : "Error desconocido"}
+            </p>
+          </div>
+        )}
       </div>
 
       {contentLoading ? (
@@ -335,42 +337,97 @@ export default function TeachersManagementModal({
                 </span>
               </div>
             ) : teachersError ? (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-md text-center">
-                <AlertCircle className="h-5 w-5 mx-auto text-red-400 mb-2" />
-                <p className="text-sm text-red-600">
-                  Error al cargar profesores
-                </p>
-                <p className="text-xs text-red-500 mt-1">
-                  Tu rol actual: {userRole}. El error es relacionado con
-                  permisos.
-                </p>
-                <p className="text-xs text-default-600 mt-2">
-                  Expandiendo búsqueda... usando método alternativo
-                </p>
-                <Button
-                  color="primary"
-                  size="sm"
-                  className="mt-2"
-                  onPress={() => {
-                    queryClient.invalidateQueries({ queryKey: ["teachers"] });
-                  }}
-                >
-                  Reintentar
-                </Button>
+              <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                <div className="text-center">
+                  <AlertCircle className="h-8 w-8 mx-auto text-red-400 mb-3" />
+                  <p className="text-sm text-red-600 font-medium mb-2">
+                    Error al cargar profesores
+                  </p>
+                  <p className="text-xs text-red-500 mb-3">
+                    {teachersError instanceof Error
+                      ? teachersError.message
+                      : "Error desconocido"}
+                  </p>
+                  <p className="text-xs text-red-500 mb-3">
+                    Tu rol actual: {userRole}. Puede ser un problema de
+                    permisos.
+                  </p>
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      color="primary"
+                      size="sm"
+                      onPress={() => {
+                        refetchTeachers();
+                      }}
+                    >
+                      Reintentar
+                    </Button>
+                    <Button
+                      color="secondary"
+                      size="sm"
+                      onPress={() => {
+                        queryClient.invalidateQueries({
+                          queryKey: ["teachers"],
+                        });
+                        refetchTeachers();
+                      }}
+                    >
+                      Forzar recarga
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : filteredTeachersForLanguage.length === 0 ? (
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center">
-                <Users className="h-5 w-5 mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600">
-                  No hay profesores disponibles para asignar
-                </p>
-                <p className="text-xs text-default-500 mt-1">
-                  Para añadir profesores, es necesario que haya usuarios con rol
-                  de docente en el sistema
-                </p>
-                <p className="text-xs text-default-500 mt-1">
-                  Tu rol actual: {userRole}
-                </p>
+              <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-md">
+                <div className="text-center">
+                  <Users className="h-12 w-12 mx-auto text-yellow-400 mb-3" />
+                  <p className="text-sm text-yellow-800 font-medium mb-2">
+                    No hay profesores disponibles para asignar
+                  </p>
+                  <div className="text-xs text-yellow-700 space-y-1 mb-4">
+                    <p>Posibles razones:</p>
+                    <ul className="list-disc list-inside text-left max-w-md mx-auto">
+                      <li>No hay usuarios con rol de docente en el sistema</li>
+                      <li>
+                        Los profesores existentes ya están asignados a otros
+                        idiomas
+                      </li>
+                      <li>Restricciones de permisos por tu rol: {userRole}</li>
+                      <li>Error en el sistema de filtrado por idioma</li>
+                    </ul>
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      color="primary"
+                      size="sm"
+                      onPress={() => {
+                        refetchTeachers();
+                      }}
+                    >
+                      Reintentar
+                    </Button>
+                    <Button
+                      color="secondary"
+                      size="sm"
+                      onPress={() => {
+                        setFilteredTeachersForLanguage([]);
+                        queryClient.invalidateQueries({
+                          queryKey: ["teachers"],
+                        });
+                        refetchTeachers();
+                      }}
+                    >
+                      Limpiar filtros
+                    </Button>
+                    <Button
+                      color="warning"
+                      size="sm"
+                      onPress={() => setIsDebugModalOpen(true)}
+                    >
+                      Debug Avanzado
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -396,23 +453,29 @@ export default function TeachersManagementModal({
                     popoverContent: "bg-content1",
                   }}
                 >
-                  {searchFilteredTeachers?.map((teacher: any) => (
-                    <SelectItem
-                      key={teacher.id}
-                      textValue={`${teacher.fullName} (${teacher.email})`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">
-                            {teacher.fullName}
-                          </span>
-                          <span className="text-xs text-default-500">
-                            {teacher.email}
-                          </span>
+                  {searchFilteredTeachers?.map((teacher: any) => {
+                    const displayName =
+                      teacher.fullName ||
+                      teacher.email ||
+                      `Usuario ${teacher.id}`;
+                    return (
+                      <SelectItem
+                        key={teacher.id}
+                        textValue={`${displayName} (${teacher.email})`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">
+                              {displayName}
+                            </span>
+                            <span className="text-xs text-default-500">
+                              {teacher.email}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </SelectItem>
-                  )) || []}
+                      </SelectItem>
+                    );
+                  }) || []}
                 </GlobalSelect>
 
                 {filteredTeachersForLanguage?.length === 0 && (
@@ -464,6 +527,12 @@ export default function TeachersManagementModal({
           </div>
         </form>
       )}
+
+      {/* Modal de Debug */}
+      <TeachersDebugModal
+        isOpen={isDebugModalOpen}
+        onClose={() => setIsDebugModalOpen(false)}
+      />
     </GlobalModal>
   );
 }

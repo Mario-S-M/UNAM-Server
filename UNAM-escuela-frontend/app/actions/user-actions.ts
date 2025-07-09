@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { UserListSchema } from "../schemas";
+import { extractRealTeachersFromDatabase } from "./teacher-extraction";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -482,7 +483,7 @@ export async function getUsersByRole(
 }
 
 export async function getTeachers(token?: string): Promise<UsersResponse> {
-  console.log("🔍 getTeachers called");
+  console.log("🔍 === INICIANDO getTeachers ===");
 
   // Obtener encabezados de autenticación
   const headers = await getAuthHeaders();
@@ -498,9 +499,9 @@ export async function getTeachers(token?: string): Promise<UsersResponse> {
     console.log("🔐 Token proporcionado externamente");
   }
 
+  // Estrategia 1: Intentar con users(roles: [docente])
   try {
-    // Primero intentar directamente con la API GraphQL para usuarios con rol de docente
-    console.log("📤 Consultando profesores (docentes) directamente");
+    console.log("📤 Estrategia 1: Consultando users(roles: [docente])");
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
@@ -533,52 +534,74 @@ export async function getTeachers(token?: string): Promise<UsersResponse> {
 
     console.log("📥 Respuesta HTTP:", response.status, response.statusText);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ Error en respuesta HTTP:", errorText);
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
+    if (response.ok) {
+      const result = await response.json();
 
-    const result = await response.json();
-
-    if (result.errors) {
-      console.error("❌ Errores GraphQL:", result.errors);
-      // Si hay un error de permisos, probablemente sea porque 'admin' no tiene permiso
-      // para usar users(roles: [docente]) en el backend
-      if (result.errors.some((err: any) => err.message.includes("superUser"))) {
+      if (!result.errors) {
+        const teachers = result.data?.users || [];
         console.log(
-          "⚠️ Error de permisos detectado, utilizando método alternativo"
+          `✅ Estrategia 1 exitosa: ${teachers.length} profesores encontrados`
         );
-        return getTeachersFallback(token);
+        return { data: teachers };
+      } else {
+        console.warn("⚠️ Errores en Estrategia 1:", result.errors);
+        if (
+          result.errors.some((err: any) => err.message.includes("superUser"))
+        ) {
+          console.log("🔄 Error de permisos detectado, pasando a Estrategia 2");
+        }
       }
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
     }
-
-    const teachers = result.data?.users || [];
-    console.log(`✅ Se encontraron ${teachers.length} profesores`);
-
-    return { data: teachers };
   } catch (error) {
-    console.error("❌ Excepción al obtener profesores:", error);
-    console.log("🔄 Intentando con getUsersByRole como alternativa");
-
-    // Si falla, intentar con getUsersByRole como fallback
-    try {
-      const roleResult = await getUsersByRole(["docente"], token);
-      if (roleResult.data && roleResult.data.length > 0) {
-        return roleResult;
-      }
-      throw new Error("getUsersByRole no devolvió resultados");
-    } catch (fallbackError) {
-      console.error("❌ Fallback getUsersByRole también falló:", fallbackError);
-      console.log(
-        "🔄 Intentando con getTeachersFallback como última alternativa"
-      );
-
-      // Si ambos métodos anteriores fallan, usar nuestro método custom que filtra todos los usuarios
-      return getTeachersFallback(token);
-    }
+    console.warn("⚠️ Estrategia 1 falló:", error);
   }
+
+  // Estrategia 2: Intentar con getUsersByRole
+  try {
+    console.log("📤 Estrategia 2: Usando getUsersByRole");
+    const roleResult = await getUsersByRole(["docente"], token);
+    if (roleResult.data && roleResult.data.length > 0) {
+      console.log(
+        `✅ Estrategia 2 exitosa: ${roleResult.data.length} profesores encontrados`
+      );
+      return roleResult;
+    }
+  } catch (error) {
+    console.warn("⚠️ Estrategia 2 falló:", error);
+  }
+
+  // Estrategia 3: Método alternativo con todos los usuarios
+  console.log(
+    "📤 Estrategia 3: Usando método alternativo (getTeachersFallback)"
+  );
+  try {
+    const fallbackResult = await getTeachersFallback(token);
+    if (fallbackResult.data && fallbackResult.data.length > 0) {
+      console.log(
+        `✅ Estrategia 3 exitosa: ${fallbackResult.data.length} profesores encontrados`
+      );
+      return fallbackResult;
+    }
+  } catch (error) {
+    console.warn("⚠️ Estrategia 3 falló:", error);
+  }
+
+  // Estrategia 4: Extraer profesores de contenidos existentes
+  console.log("📤 Estrategia 4: Extrayendo profesores de contenidos");
+  try {
+    const extractedTeachers = await extractRealTeachersFromDatabase(token);
+    if (extractedTeachers.length > 0) {
+      console.log(
+        `✅ Estrategia 4 exitosa: ${extractedTeachers.length} profesores encontrados`
+      );
+      return { data: extractedTeachers };
+    }
+  } catch (error) {
+    console.warn("⚠️ Estrategia 4 falló:", error);
+  }
+
+  console.error("❌ === TODAS LAS ESTRATEGIAS FALLARON ===");
+  return { data: [] };
 }
 
 // Función alternativa como fallback que no requiere permisos especiales

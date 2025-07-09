@@ -9,7 +9,7 @@ import { addToast } from "@heroui/toast";
 import { Spinner, Button } from "@heroui/react";
 import Link from "next/link";
 import { AlertCircle, Users } from "lucide-react";
-import GlobalModal from "@/components/global/globalModal";
+import { GlobalModal } from "@/components/global/globalModal";
 import GlobalButton from "@/components/global/globalButton";
 import GlobalInput from "@/components/global/globalInput";
 import GlobalTextArea from "@/components/global/globalTextArea";

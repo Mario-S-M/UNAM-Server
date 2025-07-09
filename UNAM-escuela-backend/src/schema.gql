@@ -74,6 +74,16 @@ type PaginatedContents {
   hasPreviousPage: Boolean!
 }
 
+type PaginatedSkills {
+  skills: [Skill!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
 type Activity {
   id: ID!
   name: String!
@@ -136,6 +146,7 @@ type Query {
   skills: [Skill!]!
   skillsActive: [Skill!]!
   skill(id: ID!): Skill!
+  skillsPaginated(search: String, page: Int = 1, limit: Int = 10, isActive: Boolean): PaginatedSkills!
   activities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
   activity(id: ID!): Activity!

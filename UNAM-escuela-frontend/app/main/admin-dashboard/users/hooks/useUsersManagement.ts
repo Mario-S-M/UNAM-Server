@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getUsersPaginated } from "@/app/actions/user-actions";
+import { getUsersPaginated, UsersFilterArgs } from "@/app/actions/user-actions";
 import { useAuthorization } from "@/app/hooks/use-authorization";
 
 export default function useUsersManagement() {
@@ -13,7 +13,7 @@ export default function useUsersManagement() {
 
   // Obtener el usuario actual y su idioma asignado (si es admin)
   const { user, isLoading } = useAuthorization();
-  const assignedLanguageId = user?.userAssignedLanguage?.assignedLanguageId;
+  const assignedLanguageId = user?.assignedLanguage?.id;
   const userRoles = user?.roles || [];
   const isSuperUser = userRoles.includes("superUser");
   const isAdmin = userRoles.includes("admin") && !isSuperUser;
@@ -27,7 +27,7 @@ export default function useUsersManagement() {
   }, [searchTerm]);
 
   // Filtros base
-  let filters = {
+  let filters: UsersFilterArgs = {
     search: debouncedSearchTerm || undefined,
     roles: roleFilter ? [roleFilter] : undefined,
     page: currentPage,

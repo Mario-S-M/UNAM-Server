@@ -7,6 +7,8 @@ import {
   CreateSkillInput,
   UpdateSkillInput,
   Skill,
+  PaginatedSkillsResponse,
+  SkillsFilterArgs,
 } from "@/app/interfaces/skill-interfaces";
 import { getAuthHeaders } from "../utils/auth-headers";
 
@@ -172,17 +174,14 @@ export async function getActiveSkills() {
       body: JSON.stringify({
         query: `
           query GetActiveSkills {
-            getActiveSkills {
-              data {
-                id
-                name
-                description
-                color
-                isActive
-                createdAt
-                updatedAt
-              }
-              error
+            skillsActive {
+              id
+              name
+              description
+              color
+              isActive
+              createdAt
+              updatedAt
             }
           }
         `,
@@ -199,13 +198,10 @@ export async function getActiveSkills() {
       return { error: result.errors[0].message };
     }
 
-    const skills = result.data.getActiveSkills;
-    if (skills.error) {
-      return { error: skills.error };
-    }
+    const skills = result.data.skillsActive;
 
     // Validar con Zod
-    const validatedSkills = skills.data.map((skill: any) =>
+    const validatedSkills = skills.map((skill: any) =>
       FullSkillSchema.parse(skill)
     );
 
@@ -359,4 +355,117 @@ export async function toggleSkillActive(id: string): Promise<Skill> {
   }
 
   return result.data.toggleSkillActive;
+}
+
+export async function getSkillsPaginated(
+  filters: SkillsFilterArgs = {}
+): Promise<PaginatedSkillsResponse> {
+  const { search, page = 1, limit = 10, isActive } = filters;
+
+  console.log("🔍 Obteniendo skills paginados:", {
+    search,
+    page,
+    limit,
+    isActive,
+  });
+
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+    if (!token) {
+      return {
+        data: {
+          skills: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+    }
+
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        query: `
+          query SkillsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean) {
+            skillsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive) {
+              skills {
+                id
+                name
+                description
+                color
+                isActive
+              }
+              total
+              page
+              limit
+              totalPages
+              hasNextPage
+              hasPreviousPage
+            }
+          }
+        `,
+        variables: { search, page, limit, isActive },
+      }),
+    });
+
+    console.log("📥 Respuesta HTTP:", response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Error en respuesta HTTP:", errorText);
+      return {
+        data: {
+          skills: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error("❌ GraphQL errors:", result.errors);
+      return {
+        data: {
+          skills: [],
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+    }
+
+    console.log("✅ Skills paginados obtenidos exitosamente");
+    return { data: result.data.skillsPaginated };
+  } catch (error) {
+    console.error("❌ Error obteniendo skills paginados:", error);
+    return {
+      data: {
+        skills: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
 }

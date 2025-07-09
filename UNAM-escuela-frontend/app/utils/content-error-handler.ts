@@ -24,8 +24,22 @@ export class ContentErrorHandler {
   static analyzeError(error: any): ErrorInfo {
     console.log("🔍 Analizando error:", error);
 
+    // Si el error es null o undefined
+    if (!error) {
+      return {
+        type: "UNKNOWN_ERROR",
+        message: "Error desconocido",
+        originalError: error,
+        suggestion: "Intenta recargar la página o contacta al administrador",
+      };
+    }
+
     // Error de red
-    if (error instanceof TypeError && error.message.includes("fetch")) {
+    if (
+      error instanceof TypeError &&
+      error.message &&
+      error.message.includes("fetch")
+    ) {
       return {
         type: "NETWORK_ERROR",
         message: "Error de conexión con el servidor",
@@ -36,7 +50,7 @@ export class ContentErrorHandler {
     }
 
     // Error de GraphQL con mensaje específico
-    if (error.message) {
+    if (error.message && typeof error.message === "string") {
       const message = error.message.toLowerCase();
 
       if (message.includes("contenido no encontrado")) {
@@ -124,10 +138,30 @@ export class ContentErrorHandler {
       }
     }
 
-    // Error desconocido
+    // Error desconocido - mejorar el manejo
+    let errorMessage = "Ha ocurrido un error inesperado";
+
+    // Intentar extraer mensaje de diferentes propiedades
+    if (error) {
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error.message && typeof error.message === "string") {
+        errorMessage = error.message;
+      } else if (error.error && typeof error.error === "string") {
+        errorMessage = error.error;
+      } else if (error.toString && typeof error.toString === "function") {
+        try {
+          errorMessage = error.toString();
+        } catch (e) {
+          // Si toString() falla, usar mensaje por defecto
+          errorMessage = "Ha ocurrido un error inesperado";
+        }
+      }
+    }
+
     return {
       type: "UNKNOWN_ERROR",
-      message: error.message || "Ha ocurrido un error inesperado",
+      message: errorMessage,
       originalError: error,
       suggestion: "Intenta recargar la página o contacta al soporte técnico",
     };

@@ -46,6 +46,10 @@ function EditContentPageContent() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<string>("");
 
+  // Debug content ID
+  console.log("🔍 EditContentPageContent - contentId:", contentId);
+  console.log("🔍 EditContentPageContent - canTeach:", canTeach);
+
   // Obtener información del contenido
   const {
     data: content,
@@ -66,6 +70,16 @@ function EditContentPageContent() {
     queryKey: ["contentMarkdown", contentId],
     queryFn: () => getContentMarkdown(contentId),
     enabled: !!contentId,
+  });
+
+  // Debug query results
+  console.log("🔍 EditContentPageContent - Query States:", {
+    contentLoading,
+    markdownLoading,
+    contentError,
+    markdownError,
+    contentData: content,
+    markdownData: markdownData,
   });
 
   // Cargar contenido markdown cuando esté disponible
@@ -223,14 +237,38 @@ Aquí puedes agregar el contenido educativo principal...
   }
 
   if (contentError || markdownError || !content?.data) {
+    // Mejorar el manejo de errores
+    const getErrorMessage = (error: any) => {
+      console.log("🔍 getErrorMessage - Analyzing error:", error);
+      console.log("🔍 getErrorMessage - Error type:", typeof error);
+      console.log("🔍 getErrorMessage - Error keys:", Object.keys(error || {}));
+
+      if (!error) return "Error desconocido";
+      if (typeof error === "string") return error;
+      if (error.message && typeof error.message === "string")
+        return error.message;
+      if (error.error && typeof error.error === "string") return error.error;
+      return "Error al cargar el contenido";
+    };
+
+    const errorMessage = contentError
+      ? getErrorMessage(contentError)
+      : markdownError
+      ? getErrorMessage(markdownError)
+      : "Error al cargar el contenido para edición";
+
+    console.log(
+      "🔍 EditContentPageContent - Final error message:",
+      errorMessage
+    );
+    console.log("🔍 EditContentPageContent - ContentError:", contentError);
+    console.log("🔍 EditContentPageContent - MarkdownError:", markdownError);
+    console.log("🔍 EditContentPageContent - Content data:", content);
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <ContentErrorDisplay
-          error={
-            contentError?.message ||
-            markdownError?.message ||
-            "Error al cargar el contenido para edición"
-          }
+          error={errorMessage}
           onRetry={() => {
             window.location.reload();
           }}

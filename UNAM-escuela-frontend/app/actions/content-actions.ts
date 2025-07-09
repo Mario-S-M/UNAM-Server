@@ -119,11 +119,16 @@ export async function getContentsList() {
 }
 
 export async function getContentById(contentId: string) {
+  console.log("🔍 getContentById - Starting with contentId:", contentId);
+
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
 
+    console.log("🔍 getContentById - Token available:", !!token);
+
     if (!token) {
+      console.log("🔍 getContentById - No token available");
       return { success: false, error: "No hay token disponible" };
     }
 
@@ -160,27 +165,47 @@ export async function getContentById(contentId: string) {
       }),
     });
 
+    console.log("🔍 getContentById - Response status:", response.status);
+    console.log("🔍 getContentById - Response OK:", response.ok);
+
     if (!response.ok) {
+      console.log(
+        "🔍 getContentById - Response not OK:",
+        response.status,
+        response.statusText
+      );
       return { success: false, error: "Error en la respuesta del servidor" };
     }
 
     const result = await response.json();
+    console.log("🔍 getContentById - GraphQL result:", result);
 
     if (result.errors) {
+      console.log("🔍 getContentById - GraphQL errors:", result.errors);
       return { success: false, error: "Error en GraphQL" };
     }
 
     const contentData = result.data.content;
+    console.log("🔍 getContentById - Content data:", contentData);
 
     if (!contentData) {
+      console.log("🔍 getContentById - No content data found");
       return { success: false, error: "Contenido no encontrado" };
     }
 
     // Validar el contenido con Zod
     const validatedContent = FullContentSchema.parse(contentData);
+    console.log("🔍 getContentById - Validation successful");
 
     return { success: true, data: validatedContent };
   } catch (error) {
+    console.error("🔍 getContentById - Error:", error);
+    console.error("🔍 getContentById - Error type:", typeof error);
+    console.error(
+      "🔍 getContentById - Error properties:",
+      Object.keys(error || {})
+    );
+
     return { success: false, error: "Error interno del servidor" };
   }
 }
@@ -846,13 +871,20 @@ export async function removeTeacherFromContent(
 export async function getContentMarkdown(
   contentId: string
 ): Promise<ActionResponse<string>> {
+  console.log("🔍 getContentMarkdown - Starting with contentId:", contentId);
+
   try {
     if (!contentId) {
+      console.log("🔍 getContentMarkdown - No contentId provided");
       throw new Error("ID del contenido es requerido");
     }
 
     // Validar formato del ID antes de hacer la consulta
     if (!isValidContentId(contentId)) {
+      console.log(
+        "🔍 getContentMarkdown - Invalid contentId format:",
+        contentId
+      );
       throw new Error("El identificador del contenido no es válido");
     }
 
@@ -860,6 +892,8 @@ export async function getContentMarkdown(
 
     const headers = await getAuthHeaders();
     const hasAuth = headers.Authorization;
+
+    console.log("🔍 getContentMarkdown - Has auth:", !!hasAuth);
 
     // Use public endpoint for non-authenticated users, private for authenticated
     const queryName = hasAuth ? "contentMarkdown" : "contentMarkdownPublic";
@@ -884,7 +918,15 @@ export async function getContentMarkdown(
       }),
     });
 
+    console.log("🔍 getContentMarkdown - Response status:", response.status);
+    console.log("🔍 getContentMarkdown - Response OK:", response.ok);
+
     if (!response.ok) {
+      console.log(
+        "🔍 getContentMarkdown - Response not OK:",
+        response.status,
+        response.statusText
+      );
       throw new Error(
         `Error HTTP: ${response.status} - ${response.statusText}`
       );
@@ -894,6 +936,8 @@ export async function getContentMarkdown(
     console.log("📦 Respuesta del servidor:", result);
 
     if (result.errors) {
+      console.log("🔍 getContentMarkdown - GraphQL errors:", result.errors);
+
       // Handle authorization errors gracefully for public access
       const authErrors = result.errors.some(
         (error: any) =>
@@ -951,6 +995,9 @@ export async function getContentMarkdown(
     return { data: result.data[queryName] };
   } catch (error) {
     console.error("❌ Error en getContentMarkdown:", error);
+    console.error("❌ Tipo de error:", typeof error);
+    console.error("❌ Propiedades del error:", Object.keys(error || {}));
+
     const { error: errorMessage } =
       ContentErrorHandler.handleContentError(error);
     return {
@@ -970,7 +1017,9 @@ export async function updateContentMarkdown(
 
     // Para IDs de prueba, simular el guardado exitoso
     if (contentId.startsWith("test-")) {
-      console.log(`🧪 [MODO PRUEBA] Simulando guardado para ID: ${contentId}`);
+      console.log(
+        `🧪 [MODO PRUEBA] Simulando el guardado para el ID: ${contentId}`
+      );
       console.log(
         `📝 Contenido a guardar: ${markdownContent.substring(0, 100)}...`
       );
@@ -1407,525 +1456,19 @@ export async function getValidatedContentsByLevel(
       }),
     });
 
-    console.log(
-      "🔧 getValidatedContentsByLevel - Response status:",
-      response.status
-    );
-
     if (!response.ok) {
-      if (response.status === 401) {
-        console.warn("Usuario no autorizado para ver contenidos validados");
-        return { data: [] };
-      }
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
-      );
+      throw new Error("Error al cargar los contenidos validados");
     }
 
     const result = await response.json();
-    console.log("🔧 getValidatedContentsByLevel - Result:", result);
-    console.log(
-      "🔧 getValidatedContentsByLevel - Content data length:",
-      result.data[queryName]?.length || 0
-    );
 
     if (result.errors) {
-      // Handle authorization errors gracefully
-      const authErrors = result.errors.some(
-        (error: any) =>
-          error.message?.includes("Forbidden") ||
-          error.message?.includes("Unauthorized") ||
-          error.extensions?.code === "FORBIDDEN" ||
-          error.extensions?.code === "UNAUTHENTICATED"
-      );
-
-      if (authErrors) {
-        console.warn(
-          "🔧 getValidatedContentsByLevel - Authorization error, returning empty array"
-        );
-        return { data: [] };
-      }
-
       throw new Error(result.errors.map((err: any) => err.message).join(", "));
     }
 
     return { data: result.data[queryName] || [] };
   } catch (error) {
     console.error("Error en getValidatedContentsByLevel:", error);
-
-    // Si es un error de autorización, retornar array vacío en lugar de throw
-    if (
-      error instanceof Error &&
-      (error.message.toLowerCase().includes("unauthorized") ||
-        error.message.toLowerCase().includes("forbidden"))
-    ) {
-      console.warn(
-        "Acceso denegado para contenidos validados, retornando lista vacía"
-      );
-      return { data: [] };
-    }
-
-    console.error("Error no relacionado con autorización:", error);
-    return { data: [] };
+    throw error;
   }
-}
-
-export async function getValidatedContentsBySkill(
-  skillId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
-
-    // Use public endpoint for non-authenticated users (which only returns validated content)
-    // Use validated endpoint for authenticated users
-    const queryName = hasAuth
-      ? "validatedContentsBySkill"
-      : "contentsBySkillPublic";
-
-    console.log(
-      "🔧 getValidatedContentsBySkill - Using query:",
-      queryName,
-      "for skillId:",
-      skillId
-    );
-
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ValidatedContentsBySkill($skillId: ID!) {
-            ${queryName}(skillId: $skillId) {
-              id
-              name
-              description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
-            }
-          }
-        `,
-        variables: { skillId },
-      }),
-    });
-
-    console.log(
-      "🔧 getValidatedContentsBySkill - Response status:",
-      response.status
-    );
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.warn(
-          "Usuario no autorizado para ver contenidos validados por skill"
-        );
-        return { data: [] };
-      }
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
-      );
-    }
-
-    const result = await response.json();
-    console.log("🔧 getValidatedContentsBySkill - Result:", result);
-
-    if (result.errors) {
-      // Handle authorization errors gracefully
-      const authErrors = result.errors.some(
-        (error: any) =>
-          error.message?.includes("Forbidden") ||
-          error.message?.includes("Unauthorized") ||
-          error.extensions?.code === "FORBIDDEN" ||
-          error.extensions?.code === "UNAUTHENTICATED"
-      );
-
-      if (authErrors) {
-        console.warn(
-          "🔧 getValidatedContentsBySkill - Authorization error, returning empty array"
-        );
-        return { data: [] };
-      }
-
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getValidatedContentsBySkill:", error);
-
-    if (
-      error instanceof Error &&
-      (error.message.toLowerCase().includes("unauthorized") ||
-        error.message.toLowerCase().includes("forbidden"))
-    ) {
-      console.warn("Acceso denegado para contenidos validados por skill");
-      return { data: [] };
-    }
-
-    return { data: [] };
-  }
-}
-
-export async function getValidatedContentsByLevelAndSkill(
-  levelId: string,
-  skillId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
-
-    // Use public endpoint for non-authenticated users (which only returns validated content)
-    // Use validated endpoint for authenticated users
-    const queryName = hasAuth
-      ? "validatedContentsByLevelAndSkill"
-      : "contentsByLevelAndSkillPublic";
-
-    console.log(
-      "🔧 getValidatedContentsByLevelAndSkill - Using query:",
-      queryName,
-      "for levelId:",
-      levelId,
-      "skillId:",
-      skillId
-    );
-
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ValidatedContentsByLevelAndSkill($levelId: ID!, $skillId: ID!) {
-            ${queryName}(levelId: $levelId, skillId: $skillId) {
-              id
-              name
-              description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
-            }
-          }
-        `,
-        variables: { levelId, skillId },
-      }),
-    });
-
-    console.log(
-      "🔧 getValidatedContentsByLevelAndSkill - Response status:",
-      response.status
-    );
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.warn(
-          "Usuario no autorizado para ver contenidos validados por nivel y skill"
-        );
-        return { data: [] };
-      }
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
-      );
-    }
-
-    const result = await response.json();
-    console.log("🔧 getValidatedContentsByLevelAndSkill - Result:", result);
-
-    if (result.errors) {
-      // Handle authorization errors gracefully
-      const authErrors = result.errors.some(
-        (error: any) =>
-          error.message?.includes("Forbidden") ||
-          error.message?.includes("Unauthorized") ||
-          error.extensions?.code === "FORBIDDEN" ||
-          error.extensions?.code === "UNAUTHENTICATED"
-      );
-
-      if (authErrors) {
-        console.warn(
-          "🔧 getValidatedContentsByLevelAndSkill - Authorization error, returning empty array"
-        );
-        return { data: [] };
-      }
-
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getValidatedContentsByLevelAndSkill:", error);
-
-    if (
-      error instanceof Error &&
-      (error.message.toLowerCase().includes("unauthorized") ||
-        error.message.toLowerCase().includes("forbidden"))
-    ) {
-      console.warn(
-        "Acceso denegado para contenidos validados por nivel y skill"
-      );
-      return { data: [] };
-    }
-
-    return { data: [] };
-  }
-}
-
-/**
- * Workaround function to assign teachers to content for admin users
- * This works around the backend restriction that only superUsers can assign teachers
- */
-export async function adminWorkaroundAssignTeachers(
-  contentId: string,
-  teacherIds: string[]
-): Promise<ActionResponse<Content>> {
-  try {
-    console.log("🔧 Usando workaround para admin para asignar profesores");
-    console.log("📋 teacherIds:", teacherIds);
-
-    // Obtener el contenido actual
-    const contentResult = await getContentById(contentId);
-    if (contentResult.error || !contentResult.data) {
-      throw new Error(contentResult.error || "No se pudo obtener el contenido");
-    }
-
-    // Intentar usar directamente la mutación de GraphQL para actualizar contenido
-    console.log("📤 Actualizando contenido con nuevos profesores directamente");
-
-    const headers = await getAuthHeaders();
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          mutation UpdateContent($updateContentInput: UpdateContentInput!) {
-            updateContent(updateContentInput: $updateContentInput) {
-              id
-              name
-              description
-              levelId
-              status
-              markdownPath
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
-            }
-          }
-        `,
-        variables: {
-          updateContentInput: {
-            id: contentId,
-            name: contentResult.data.title,
-            description: contentResult.data.description,
-            levelId: contentResult.data.levelId,
-            teacherIds: teacherIds,
-            skillId: contentResult.data.skillId,
-          },
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error HTTP al actualizar contenido: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      console.error("❌ Errores al actualizar contenido:", result.errors);
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    console.log(
-      "✅ Contenido actualizado exitosamente con profesores asignados"
-    );
-    return { data: result.data.updateContent };
-  } catch (error) {
-    console.error("Error en workaround para asignar profesores:", error);
-    return {
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-// Convert DOCX file to Markdown
-export async function convertDocxToMarkdown(
-  contentId: string,
-  file: File
-): Promise<ActionResponse<boolean>> {
-  try {
-    console.log("🚀 convertDocxToMarkdown function called");
-    console.log("📋 Content ID:", contentId);
-    console.log("📄 File object:", file);
-
-    if (!contentId || !file) {
-      console.error("❌ Missing required parameters");
-      throw new Error("ID del contenido y archivo son requeridos");
-    }
-
-    // Validate file type
-    console.log("🔍 Validating file type...");
-    console.log("📝 File name:", file.name);
-    console.log("📝 File type:", file.type);
-    console.log("📝 File size:", file.size);
-
-    if (
-      !file.name.toLowerCase().endsWith(".docx") &&
-      !file.type.includes("officedocument")
-    ) {
-      console.error("❌ Invalid file type");
-      throw new Error("Solo se permiten archivos Word (.docx)");
-    }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      console.error("❌ File too large:", file.size);
-      throw new Error("El archivo es demasiado grande. Máximo 10MB permitido.");
-    }
-
-    console.log("✅ File validation passed");
-    console.log(
-      `🔄 Convirtiendo archivo Word a Markdown para contenido: ${contentId}`
-    );
-    console.log(
-      `📁 Archivo: ${file.name}, Tamaño: ${(file.size / 1024 / 1024).toFixed(
-        2
-      )}MB`
-    );
-
-    // Convert file to base64 using browser-compatible method
-    console.log("🔧 Converting file to base64...");
-    const arrayBuffer = await file.arrayBuffer();
-    console.log("📄 ArrayBuffer created, length:", arrayBuffer.byteLength);
-
-    const bytes = new Uint8Array(arrayBuffer);
-    console.log("📄 Uint8Array created, length:", bytes.length);
-
-    const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join(
-      ""
-    );
-    console.log("📄 Binary string created, length:", binary.length);
-
-    const base64String = btoa(binary);
-    console.log("📄 Base64 string created, length:", base64String.length);
-    console.log(
-      "📄 Base64 preview (first 100 chars):",
-      base64String.substring(0, 100)
-    );
-
-    console.log("🔑 Getting auth headers...");
-    const headers = await getAuthHeaders();
-    console.log("✅ Auth headers obtained");
-
-    console.log("🌐 Sending GraphQL request...");
-    console.log("📡 Endpoint:", GRAPHQL_ENDPOINT);
-
-    const requestBody = {
-      query: `
-        mutation ConvertDocxToMarkdown($contentId: ID!, $docxBase64: String!) {
-          convertDocxToMarkdown(contentId: $contentId, docxBase64: $docxBase64)
-        }
-      `,
-      variables: {
-        contentId,
-        docxBase64: base64String,
-      },
-    };
-
-    console.log("📦 Request variables:", {
-      contentId,
-      docxBase64Length: base64String.length,
-    });
-
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log("📡 Response received, status:", response.status);
-    console.log("📡 Response ok:", response.ok);
-
-    if (!response.ok) {
-      console.error("❌ HTTP error:", response.status, response.statusText);
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
-      );
-    }
-
-    console.log("🔧 Parsing response JSON...");
-    const result = await response.json();
-    console.log("📊 Full response:", result);
-
-    if (result.errors) {
-      console.error("❌ GraphQL errors:", result.errors);
-      const errorMessage = result.errors
-        .map((err: any) => err.message)
-        .join(", ");
-      throw new Error(sanitizeErrorMessage(errorMessage));
-    }
-
-    console.log("📊 Response data:", result.data);
-    console.log("✅ Success result:", result.data.convertDocxToMarkdown);
-    console.log(`🎉 Archivo Word convertido exitosamente a Markdown`);
-
-    return { data: result.data.convertDocxToMarkdown };
-  } catch (error) {
-    console.error("💥 Error en convertDocxToMarkdown:", error);
-    console.error(
-      "Stack trace:",
-      error instanceof Error ? error.stack : "No stack"
-    );
-    const { error: errorMessage } =
-      ContentErrorHandler.handleContentError(error);
-    return {
-      error: errorMessage,
-    };
-  }
-}
-
-// Definición del tipo UpdateContentInput para TypeScript
-interface UpdateContentInput {
-  id: string;
-  name: string;
-  description: string;
-  levelId: string;
-  teacherIds?: string[];
-  skillId?: string;
 }

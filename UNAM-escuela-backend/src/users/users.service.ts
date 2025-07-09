@@ -46,6 +46,19 @@ export class UsersService {
   }
 
   async findAll(roles: ValidRoles[], requestingUser?: User): Promise<User[]> {
+    console.log('[DEBUG] findAll called with roles:', roles);
+    console.log(
+      '[DEBUG] requestingUser:',
+      requestingUser
+        ? {
+            id: requestingUser.id,
+            email: requestingUser.email,
+            roles: requestingUser.roles,
+            assignedLanguageId: requestingUser.assignedLanguageId,
+          }
+        : 'null',
+    );
+
     let query = this.usersRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.assignedLanguage', 'assignedLanguage')
@@ -62,20 +75,52 @@ export class UsersService {
       requestingUser &&
       this.getHighestRole(requestingUser.roles) === ValidRoles.admin
     ) {
+      console.log(
+        '[DEBUG] findAll: Admin user detected, roles:',
+        requestingUser.roles,
+      );
+      console.log(
+        '[DEBUG] findAll: Admin assignedLanguageId:',
+        requestingUser.assignedLanguageId,
+      );
+      console.log('[DEBUG] findAll: Searching for roles:', roles);
+
       if (
         requestingUser.assignedLanguageId &&
         roles.includes(ValidRoles.docente)
       ) {
+        console.log(
+          '[DEBUG] findAll: Applying teacher filter for admin language:',
+          requestingUser.assignedLanguageId,
+        );
         // Para admins con idioma asignado buscando profesores:
-        // Solo mostrar profesores SIN idioma asignado (para poder asignarles su idioma)
-        // NUNCA mostrar profesores de otros idiomas
+        // Mostrar profesores SIN idioma asignado (para poder asignarles su idioma)
+        // Y TAMBIÉN mostrar profesores de su mismo idioma (para gestionar contenido)
         query = query.andWhere(
-          '(assignedLanguages.id IS NULL AND user.assignedLanguageId IS NULL)',
+          '(assignedLanguages.id IS NULL AND user.assignedLanguageId IS NULL) OR (assignedLanguages.id = :adminLanguageId OR user.assignedLanguageId = :adminLanguageId)',
+          { adminLanguageId: requestingUser.assignedLanguageId },
         );
       }
     }
 
-    return await query.getMany();
+    console.log('[DEBUG] findAll SQL:', query.getSql());
+    console.log('[DEBUG] findAll parameters:', query.getParameters());
+
+    const users = await query.getMany();
+
+    console.log('[DEBUG] findAll found users count:', users.length);
+    users.forEach((user, index) => {
+      console.log(`[DEBUG] findAll User ${index + 1}:`, {
+        id: user.id,
+        email: user.email,
+        roles: user.roles,
+        assignedLanguageId: user.assignedLanguageId,
+        assignedLanguage: user.assignedLanguage?.name,
+        assignedLanguages: user.assignedLanguages?.map((lang) => lang.name),
+      });
+    });
+
+    return users;
   }
 
   async findPaginated(
@@ -115,15 +160,27 @@ export class UsersService {
       requestingUser &&
       this.getHighestRole(requestingUser.roles) === ValidRoles.admin
     ) {
+      console.log('[DEBUG] Admin user detected, roles:', requestingUser.roles);
+      console.log(
+        '[DEBUG] Admin assignedLanguageId:',
+        requestingUser.assignedLanguageId,
+      );
+      console.log('[DEBUG] Searching for roles:', roles);
+
       if (
         requestingUser.assignedLanguageId &&
         roles.includes(ValidRoles.docente)
       ) {
+        console.log(
+          '[DEBUG] Applying teacher filter for admin language:',
+          requestingUser.assignedLanguageId,
+        );
         // Para admins con idioma asignado buscando profesores:
-        // Solo mostrar profesores SIN idioma asignado (para poder asignarles su idioma)
-        // NUNCA mostrar profesores de otros idiomas
+        // Mostrar profesores SIN idioma asignado (para poder asignarles su idioma)
+        // Y TAMBIÉN mostrar profesores de su mismo idioma (para gestionar contenido)
         query = query.andWhere(
-          '(assignedLanguages.id IS NULL AND user.assignedLanguageId IS NULL)',
+          '(assignedLanguages.id IS NULL AND user.assignedLanguageId IS NULL) OR (assignedLanguages.id = :adminLanguageId OR user.assignedLanguageId = :adminLanguageId)',
+          { adminLanguageId: requestingUser.assignedLanguageId },
         );
       }
     }
@@ -146,8 +203,24 @@ export class UsersService {
     const offset = (page - 1) * limit;
     query = query.skip(offset).take(limit);
 
+    // Debug logging
+    console.log('[DEBUG] Final query SQL:', query.getSql());
+    console.log('[DEBUG] Query parameters:', query.getParameters());
+
     // Obtener los usuarios
     const users = await query.getMany();
+
+    console.log('[DEBUG] Found users count:', users.length);
+    users.forEach((user, index) => {
+      console.log(`[DEBUG] User ${index + 1}:`, {
+        id: user.id,
+        email: user.email,
+        roles: user.roles,
+        assignedLanguageId: user.assignedLanguageId,
+        assignedLanguage: user.assignedLanguage?.name,
+        assignedLanguages: user.assignedLanguages?.map((lang) => lang.name),
+      });
+    });
 
     // Calcular metadatos de paginación
     const totalPages = Math.ceil(total / limit);

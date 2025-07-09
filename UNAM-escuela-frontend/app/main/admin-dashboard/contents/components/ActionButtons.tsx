@@ -1,6 +1,6 @@
 import React from "react";
-import { Button } from "@heroui/react";
-import { Edit, Trash2, Users, CheckCircle, XCircle } from "lucide-react";
+import { Edit, Trash2, Users, CheckCircle, XCircle, Eye } from "lucide-react";
+import GlobalButton from "@/components/global/globalButton";
 
 interface ActionButtonsProps {
   validationStatus: string;
@@ -9,6 +9,7 @@ interface ActionButtonsProps {
   onEdit: () => void;
   onManageTeachers: () => void;
   onDelete: () => void;
+  onPreview?: () => void;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -18,61 +19,68 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   onEdit,
   onManageTeachers,
   onDelete,
+  onPreview,
 }) => (
   <div className="flex items-center gap-2">
+    {onPreview && (
+      <GlobalButton
+        isIconOnly
+        size="sm"
+        variant="light"
+        color="default"
+        onPress={onPreview}
+      >
+        <Eye className="h-4 w-4" />
+      </GlobalButton>
+    )}
     {validationStatus === "validado" ? (
-      <Button
+      <GlobalButton
         isIconOnly
         size="sm"
         variant="light"
         color="warning"
-        title="Marcar como no validado"
         onPress={onInvalidate}
       >
         <XCircle className="h-4 w-4" />
-      </Button>
+      </GlobalButton>
     ) : (
-      <Button
+      <GlobalButton
         isIconOnly
         size="sm"
         variant="light"
         color="success"
-        title="Validar contenido"
         onPress={onValidate}
       >
         <CheckCircle className="h-4 w-4" />
-      </Button>
+      </GlobalButton>
     )}
-    <Button
+    <GlobalButton
       isIconOnly
       size="sm"
       variant="light"
       color="primary"
-      title="Editar contenido"
       onPress={onEdit}
     >
       <Edit className="h-4 w-4" />
-    </Button>
-    <Button
+    </GlobalButton>
+    <GlobalButton
       isIconOnly
       size="sm"
       variant="light"
       color="secondary"
-      title="Gestionar profesores"
       onPress={onManageTeachers}
     >
       <Users className="h-4 w-4" />
-    </Button>
-    <Button
+    </GlobalButton>
+    <GlobalButton
       isIconOnly
       size="sm"
       variant="light"
       color="danger"
-      title="Eliminar contenido"
       onPress={onDelete}
     >
       <Trash2 className="h-4 w-4" />
-    </Button>
+    </GlobalButton>
   </div>
 );
 

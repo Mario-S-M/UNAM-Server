@@ -73,6 +73,7 @@ export class AuthDAL {
    */
   static getHighestRole(user: User | null): Role | null {
     if (!user || !user.roles || user.roles.length === 0) {
+      console.log("❌ AuthDAL.getHighestRole: No user or no roles");
       return null;
     }
 
@@ -86,6 +87,16 @@ export class AuthDAL {
         highestRole = role as Role;
       }
     }
+
+    console.log("📊 AuthDAL.getHighestRole:", {
+      userRoles: user.roles,
+      calculatedHighestRole: highestRole,
+      highestLevel,
+      allRoleData: user.roles.map((role) => ({
+        role,
+        data: this.ROLE_HIERARCHY[role as Role],
+      })),
+    });
 
     return highestRole;
   }
@@ -106,14 +117,45 @@ export class AuthDAL {
    * Verifica si el usuario tiene al menos uno de los roles especificados
    */
   static hasAnyRole(user: User | null, roles: Role[]): boolean {
-    if (!user || !user.roles) return false;
-    return user.roles.some((userRole) => roles.includes(userRole as Role));
+    if (!user || !user.roles) {
+      console.log("❌ AuthDAL.hasAnyRole: No user or no roles");
+      return false;
+    }
+
+    const hasRole = user.roles.some((userRole) =>
+      roles.includes(userRole as Role)
+    );
+
+    console.log("📊 AuthDAL.hasAnyRole:", {
+      userRoles: user.roles,
+      requiredRoles: roles,
+      hasRole,
+      matchingRoles: user.roles.filter((userRole) =>
+        roles.includes(userRole as Role)
+      ),
+    });
+
+    return hasRole;
   }
 
   /**
    * Verifica si el usuario tiene acceso a una página específica
    */
   static canAccessPage(user: User | null, page: string): AuthorizationResult {
+    // Debug logging
+    console.log("🔍 AuthDAL.canAccessPage Debug:", {
+      page,
+      user: user
+        ? {
+            id: user.id,
+            roles: user.roles,
+            isActive: user.isActive,
+            email: user.email,
+          }
+        : null,
+      timestamp: new Date().toISOString(),
+    });
+
     // Normalizar la página para evitar problemas con trailing slashes
     const normalizedPage = page.replace(/\/$/, "");
 
@@ -143,11 +185,13 @@ export class AuthDAL {
     });
 
     if (isPublicPage) {
+      console.log("✅ AuthDAL.canAccessPage: Public page access granted");
       return { hasAccess: true };
     }
 
     // Si no hay usuario y la página no es pública, redirigir a login o página principal
     if (!user) {
+      console.log("❌ AuthDAL.canAccessPage: No user for protected page");
       return {
         hasAccess: false,
         redirectTo: "/",
@@ -157,6 +201,7 @@ export class AuthDAL {
 
     // Si el usuario no está activo
     if (!user.isActive) {
+      console.log("❌ AuthDAL.canAccessPage: User not active");
       return {
         hasAccess: false,
         redirectTo: "/auth/inactive",
@@ -166,7 +211,10 @@ export class AuthDAL {
 
     // Obtener rol más alto
     const highestRole = this.getHighestRole(user);
+    console.log("📊 AuthDAL.canAccessPage: User highest role:", highestRole);
+
     if (!highestRole) {
+      console.log("❌ AuthDAL.canAccessPage: No valid role found");
       return {
         hasAccess: false,
         redirectTo: "/",
@@ -190,18 +238,37 @@ export class AuthDAL {
 
     const requiredRoles = pageAccessRules[normalizedPage];
 
+    console.log("📊 AuthDAL.canAccessPage: Access rules check:", {
+      normalizedPage,
+      requiredRoles,
+      userHighestRole: highestRole,
+      hasRequiredRoles: requiredRoles
+        ? this.hasAnyRole(user, requiredRoles)
+        : null,
+    });
+
     if (!requiredRoles) {
       // Si la página no tiene reglas específicas, permitir acceso
+      console.log(
+        "✅ AuthDAL.canAccessPage: No specific rules, access granted"
+      );
       return { hasAccess: true };
     }
 
     // Verificar si el usuario tiene alguno de los roles requeridos
     if (this.hasAnyRole(user, requiredRoles)) {
+      console.log(
+        "✅ AuthDAL.canAccessPage: User has required role, access granted"
+      );
       return { hasAccess: true };
     }
 
     // Si no tiene acceso, redirigir a su página principal
     const roleData = this.ROLE_HIERARCHY[highestRole];
+    console.log(
+      "❌ AuthDAL.canAccessPage: Access denied, redirecting to:",
+      roleData.redirectTo
+    );
     return {
       hasAccess: false,
       redirectTo: roleData.redirectTo,

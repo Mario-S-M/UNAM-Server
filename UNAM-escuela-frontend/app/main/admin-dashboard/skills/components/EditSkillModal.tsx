@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import GlobalModal from "@/components/global/globalModal";
+import { GlobalModal } from "@/components/global/globalModal";
 import GlobalInput from "@/components/global/globalInput";
 import GlobalTextArea from "@/components/global/globalTextArea";
 import { Button, Input } from "@heroui/react";

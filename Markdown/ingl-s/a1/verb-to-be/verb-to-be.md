@@ -1,39 +1,15 @@
-# Verb to be
+# Comienza a escribir aquí
 
-## Descripción
+Este es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.
 
-Descripción del nivel A1
+* Lista de elementos
 
-## Información del Contenido
+* Otro elemento
 
-- **Lenguaje**: Inglés
-- **Nivel**: A1
-- **Estado**: Borrador
-- **Fecha de creación**: 26/6/2025
+> Cita de ejemplo
 
-## Objetivos de Aprendizaje
+```javascript
+// Código de ejemplo
+console.log('Hola mundo');
+```
 
-- [ ] Objetivo 1: Pendiente de definir
-- [ ] Objetivo 2: Pendiente de definir
-- [ ] Objetivo 3: Pendiente de definir
-
-## Contenido Educativo
-
-*Escribe aquí el contenido educativo...*
-
-### Ejemplo Práctico
-
-*Incluye ejemplos prácticos aquí...*
-
-### Ejercicios
-
-*Agrega ejercicios relacionados...*
-
-## Recursos Adicionales
-
-- [Recurso 1](#)
-- [Recurso 2](#)
-
-## Notas para Profesores
-
-*Información específica para los docentes asignados...*

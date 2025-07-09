@@ -11,7 +11,6 @@ import {
   getContentById,
   assignTeachersToContent,
   removeTeacherFromContent,
-  adminWorkaroundAssignTeachers,
   updateContent,
   getContentsPaginated,
 } from "@/app/actions/content-actions";
@@ -29,6 +28,7 @@ import {
   Chip,
   Spinner,
   Button,
+  ButtonGroup,
   Input,
   Select,
   SelectItem,
@@ -46,6 +46,10 @@ import {
   XCircle,
   AlertCircle,
   User,
+  Settings,
+  PanelLeft,
+  Square,
+  Eye,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
@@ -69,9 +73,13 @@ import CreateContentModal from "./components/CreateContentModal";
 import EditContentModal from "./components/EditContentModal";
 import TeachersManagementModal from "./components/TeachersManagementModal";
 import ContentFilters from "./components/ContentFilters";
-import ContentTable from "./components/ContentTable";
+import SimpleContentTable from "./components/SimpleContentTable";
 import EmptyState from "./components/EmptyState";
 import PaginationInfo from "./components/PaginationInfo";
+import ContentPreviewModal from "./components/ContentPreviewModal";
+import ContentPreviewDrawer from "./components/ContentPreviewDrawer";
+import ContentPreviewAdvancedModal from "./components/ContentPreviewAdvancedModal";
+import ContentPreviewReadOnlyModal from "./components/ContentPreviewReadOnlyModal";
 
 export default function ContentsManagementPage() {
   return (
@@ -98,8 +106,18 @@ function ContentsManagementContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTeachersModalOpen, setIsTeachersModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
+  const [isAdvancedPreviewOpen, setIsAdvancedPreviewOpen] = useState(false);
+  const [isReadOnlyPreviewOpen, setIsReadOnlyPreviewOpen] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState("");
   const [editingContent, setEditingContent] = useState<any>(null);
+  const [previewingContentId, setPreviewingContentId] = useState<string | null>(
+    null
+  );
+  const [previewMode, setPreviewMode] = useState<
+    "modal" | "drawer" | "advanced" | "readonly"
+  >("advanced");
 
   // Queries
   const { data: languages, isLoading: languagesLoading } = useActiveLenguages();
@@ -125,18 +143,25 @@ function ContentsManagementContent() {
       currentPage,
       itemsPerPage,
     ],
-    queryFn: () => {
+    queryFn: async () => {
       // Only fetch if we have a level or skill selected
       if (selectedLevel || selectedSkill) {
-        return getContentsPaginated({
+        const result = await getContentsPaginated({
           levelId: selectedLevel || undefined,
           skillId: selectedSkill || undefined,
           search: searchTerm || undefined,
           page: currentPage,
           limit: itemsPerPage,
         });
+
+        // Handle the response structure
+        if ("error" in result) {
+          throw new Error(result.error);
+        }
+
+        return result.data;
       }
-      return Promise.resolve({ data: null });
+      return null;
     },
     enabled: !!(selectedLevel || selectedSkill),
   });
@@ -166,11 +191,10 @@ function ContentsManagementContent() {
   const filteredLanguages = getFilteredLanguages();
 
   // Extract paginated data with proper type checking
-  const paginatedData =
-    paginatedContents && "data" in paginatedContents
-      ? paginatedContents.data
-      : null;
-  const contents = paginatedData?.contents || [];
+  const paginatedData = paginatedContents;
+  const contents = Array.isArray(paginatedData?.contents)
+    ? paginatedData.contents
+    : [];
   const totalItems = paginatedData?.total || 0;
   const totalPages = paginatedData?.totalPages || 1;
   const hasNextPage = paginatedData?.hasNextPage || false;
@@ -250,6 +274,24 @@ function ContentsManagementContent() {
     invalidateContentMutation.mutate(contentId);
   };
 
+  const handlePreviewContent = (contentId: string) => {
+    setPreviewingContentId(contentId);
+    switch (previewMode) {
+      case "modal":
+        setIsPreviewModalOpen(true);
+        break;
+      case "drawer":
+        setIsPreviewDrawerOpen(true);
+        break;
+      case "advanced":
+        setIsAdvancedPreviewOpen(true);
+        break;
+      case "readonly":
+        setIsReadOnlyPreviewOpen(true);
+        break;
+    }
+  };
+
   if (!canManageContent) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -281,13 +323,45 @@ function ContentsManagementContent() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-3xl font-bold text-primary">
                   Gestión de Contenidos
                 </h1>
                 <p className="text-foreground/70">
                   Administra el contenido educativo del sistema
                 </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <ButtonGroup size="sm" variant="flat">
+                  <Button
+                    color={previewMode === "modal" ? "primary" : "default"}
+                    onPress={() => setPreviewMode("modal")}
+                    startContent={<Square className="h-4 w-4" />}
+                  >
+                    Modal
+                  </Button>
+                  <Button
+                    color={previewMode === "drawer" ? "primary" : "default"}
+                    onPress={() => setPreviewMode("drawer")}
+                    startContent={<PanelLeft className="h-4 w-4" />}
+                  >
+                    Drawer
+                  </Button>
+                  <Button
+                    color={previewMode === "advanced" ? "primary" : "default"}
+                    onPress={() => setPreviewMode("advanced")}
+                    startContent={<Settings className="h-4 w-4" />}
+                  >
+                    Avanzado
+                  </Button>
+                  <Button
+                    color={previewMode === "readonly" ? "primary" : "default"}
+                    onPress={() => setPreviewMode("readonly")}
+                    startContent={<Eye className="h-4 w-4" />}
+                  >
+                    Vista Maestro
+                  </Button>
+                </ButtonGroup>
               </div>
             </div>
           </div>
@@ -353,7 +427,7 @@ function ContentsManagementContent() {
                 />
               ) : (
                 <div className="overflow-x-auto">
-                  <ContentTable
+                  <SimpleContentTable
                     contents={filteredContents}
                     onValidate={handleValidateContent}
                     onInvalidate={handleInvalidateContent}
@@ -366,6 +440,7 @@ function ContentsManagementContent() {
                       setIsTeachersModalOpen(true);
                     }}
                     onDelete={() => {}}
+                    onPreview={handlePreviewContent}
                   />
                 </div>
               )}
@@ -427,6 +502,30 @@ function ContentsManagementContent() {
         isOpen={isTeachersModalOpen}
         onOpenChange={setIsTeachersModalOpen}
         contentId={selectedContentId}
+      />
+
+      <ContentPreviewModal
+        contentId={previewingContentId}
+        isOpen={isPreviewModalOpen}
+        onOpenChange={setIsPreviewModalOpen}
+      />
+
+      <ContentPreviewDrawer
+        contentId={previewingContentId}
+        isOpen={isPreviewDrawerOpen}
+        onOpenChange={setIsPreviewDrawerOpen}
+      />
+
+      <ContentPreviewAdvancedModal
+        contentId={previewingContentId}
+        isOpen={isAdvancedPreviewOpen}
+        onOpenChange={setIsAdvancedPreviewOpen}
+      />
+
+      <ContentPreviewReadOnlyModal
+        contentId={previewingContentId}
+        isOpen={isReadOnlyPreviewOpen}
+        onOpenChange={setIsReadOnlyPreviewOpen}
       />
     </>
   );

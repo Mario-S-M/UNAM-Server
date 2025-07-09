@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getSkills,
+  getSkillsPaginated,
   createSkill,
   updateSkill,
   deleteSkill,
@@ -18,27 +18,54 @@ export default function useSkillsManagement() {
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<boolean | undefined>(
+    undefined
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(5);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Filtros
+  const filters = {
+    search: debouncedSearchTerm || undefined,
+    isActive: statusFilter,
+    page: currentPage,
+    limit: pageSize,
+  };
+
   // Queries
   const {
-    data: skillsData,
+    data: paginatedSkillsResponse,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["skills"],
-    queryFn: getSkills,
+    queryKey: ["skillsPaginated", filters],
+    queryFn: () => getSkillsPaginated(filters),
+    staleTime: 1000 * 60,
   });
+
+  const paginatedData = paginatedSkillsResponse?.data;
+  const skills = paginatedData?.skills || [];
+  const totalPages = paginatedData?.totalPages || 1;
 
   // Mutations
   const createSkillMutation = useMutation({
     mutationFn: createSkill,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
+      queryClient.invalidateQueries({ queryKey: ["skillsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Skill creada exitosamente",
@@ -58,7 +85,7 @@ export default function useSkillsManagement() {
   const updateSkillMutation = useMutation({
     mutationFn: updateSkill,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
+      queryClient.invalidateQueries({ queryKey: ["skillsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Skill actualizada exitosamente",
@@ -79,7 +106,7 @@ export default function useSkillsManagement() {
   const deleteSkillMutation = useMutation({
     mutationFn: deleteSkill,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
+      queryClient.invalidateQueries({ queryKey: ["skillsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Skill eliminada exitosamente",
@@ -98,7 +125,7 @@ export default function useSkillsManagement() {
   const toggleSkillMutation = useMutation({
     mutationFn: toggleSkillActive,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
+      queryClient.invalidateQueries({ queryKey: ["skillsPaginated"] });
       addToast({
         title: "¡Éxito!",
         description: "Estado de la skill actualizado",
@@ -140,19 +167,25 @@ export default function useSkillsManagement() {
   };
 
   // Filter skills based on search term
-  const filteredSkills =
-    skillsData?.data?.filter(
-      (skill: Skill) =>
-        skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        skill.description.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const filteredSkills = skills || [];
 
   return {
     searchTerm,
     setSearchTerm,
+    debouncedSearchTerm,
+    setDebouncedSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    currentPage,
+    setCurrentPage,
+    pageSize,
     filteredSkills,
-    isLoading,
-    error,
+    skills,
+    skillsLoading: isLoading,
+    skillsError: error,
+    paginatedData,
+    totalPages,
+    filters,
     isCreateModalOpen,
     setIsCreateModalOpen,
     isEditModalOpen,

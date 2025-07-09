@@ -4,6 +4,8 @@ import { SkillsService } from './skills.service';
 import { Skill } from './entities/skill.entity';
 import { CreateSkillInput } from './dto/create-skill.input';
 import { UpdateSkillInput } from './dto/update-skill.input';
+import { SkillsFilterArgs } from './dto/args/skills-filter.arg';
+import { PaginatedSkills } from './dto/paginated-skills.output';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
@@ -87,5 +89,15 @@ export class SkillsResolver {
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser]) user: User,
   ): Promise<Skill> {
     return this.skillsService.toggleActive(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query(() => PaginatedSkills, { name: 'skillsPaginated' })
+  findPaginated(
+    @Args() filters: SkillsFilterArgs,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser])
+    user: User,
+  ): Promise<PaginatedSkills> {
+    return this.skillsService.findPaginated(filters);
   }
 }

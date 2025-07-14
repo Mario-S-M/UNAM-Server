@@ -7,6 +7,8 @@ import {
   sanitizeErrorMessage,
 } from "../utils/content-error-handler";
 import { BasicContentSchema, FullContentSchema } from "../schemas";
+import { graphqlClient, contentService } from "../utils/graphql-client";
+import { Content } from "../interfaces/content-interfaces";
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -31,25 +33,6 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
-export interface Content {
-  id: string;
-  name: string;
-  title?: string; // Para compatibilidad
-  description: string;
-  content?: string;
-  levelId: string;
-  skillId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  markdownPath?: string;
-  assignedTeachers?: {
-    id: string;
-    fullName: string;
-    email: string;
-    roles: string[];
-  }[];
-}
-
 export interface ContentsResponse {
   data: Content[];
 }
@@ -59,13 +42,13 @@ export interface ActionResponse<T> {
   error?: string;
 }
 
-export async function getContentsList() {
+export async function getContentsList(): Promise<ActionResponse<Content[]>> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
 
     if (!token) {
-      return { success: false, error: "No hay token disponible" };
+      return { error: "No hay token disponible" };
     }
 
     const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -90,13 +73,13 @@ export async function getContentsList() {
     });
 
     if (!response.ok) {
-      return { success: false, error: "Error en la respuesta del servidor" };
+      return { error: "Error en la respuesta del servidor" };
     }
 
     const result = await response.json();
 
     if (result.errors) {
-      return { success: false, error: "Error en GraphQL" };
+      return { error: "Error en GraphQL" };
     }
 
     const contentsData = result.data.contents;
@@ -112,92 +95,59 @@ export async function getContentsList() {
       })
       .filter(Boolean);
 
-    return { success: true, data: validatedContents };
+    return { data: validatedContents };
   } catch (error) {
-    return { success: false, error: "Error interno del servidor" };
+    return { error: "Error interno del servidor" };
   }
 }
 
-export async function getContentById(contentId: string) {
+export async function getContentById(contentId: string): Promise<Content> {
   console.log("🔍 getContentById - Starting with contentId:", contentId);
 
+  // Verificar si el ID es válido
+  if (!isValidContentId(contentId)) {
+    console.log("🔍 getContentById - Invalid content ID format");
+    throw new Error("ID de contenido inválido");
+  }
+
+  // Obtener token de autenticación
+  const cookieStore = await cookies();
+  const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+
+  console.log("🔍 getContentById - Token available:", !!token);
+
+  if (!token) {
+    console.log("🔍 getContentById - No token available");
+    throw new Error("No hay token disponible. Inicia sesión nuevamente.");
+  }
+
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("UNAM-INCLUSION-TOKEN")?.value;
+    // Usar el cliente GraphQL mejorado con token
+    const result = await contentService.getById(contentId, token);
 
-    console.log("🔍 getContentById - Token available:", !!token);
-
-    if (!token) {
-      console.log("🔍 getContentById - No token available");
-      return { success: false, error: "No hay token disponible" };
-    }
-
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        query: `
-          query GetContentById($id: String!) {
-            content(id: $id) {
-              id
-              title
-              name
-              description
-              content
-              isActive
-              levelId
-              skillId
-              createdAt
-              updatedAt
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-            }
-          }
-        `,
-        variables: { id: contentId },
-      }),
-    });
-
-    console.log("🔍 getContentById - Response status:", response.status);
-    console.log("🔍 getContentById - Response OK:", response.ok);
-
-    if (!response.ok) {
-      console.log(
-        "🔍 getContentById - Response not OK:",
-        response.status,
-        response.statusText
-      );
-      return { success: false, error: "Error en la respuesta del servidor" };
-    }
-
-    const result = await response.json();
     console.log("🔍 getContentById - GraphQL result:", result);
 
-    if (result.errors) {
+    if (result.errors && result.errors.length > 0) {
       console.log("🔍 getContentById - GraphQL errors:", result.errors);
-      return { success: false, error: "Error en GraphQL" };
+
+      // Analizar el tipo de error
+      const error = result.errors[0];
+      if (error.extensions?.code === "UNAUTHENTICATED") {
+        throw new Error("No autenticado. Inicia sesión nuevamente.");
+      } else if (error.extensions?.code === "NOT_FOUND") {
+        throw new Error("Contenido no encontrado");
+      } else {
+        throw new Error(sanitizeErrorMessage(error.message));
+      }
     }
 
-    const contentData = result.data.content;
-    console.log("🔍 getContentById - Content data:", contentData);
-
-    if (!contentData) {
-      console.log("🔍 getContentById - No content data found");
-      return { success: false, error: "Contenido no encontrado" };
+    if (!result.data?.content) {
+      console.log("🔍 getContentById - No content data returned");
+      throw new Error("Contenido no encontrado");
     }
 
-    // Validar el contenido con Zod
-    const validatedContent = FullContentSchema.parse(contentData);
-    console.log("🔍 getContentById - Validation successful");
-
-    return { success: true, data: validatedContent };
+    console.log("🔍 getContentById - Success, returning content");
+    return result.data.content;
   } catch (error) {
     console.error("🔍 getContentById - Error:", error);
     console.error("🔍 getContentById - Error type:", typeof error);
@@ -206,78 +156,79 @@ export async function getContentById(contentId: string) {
       Object.keys(error || {})
     );
 
-    return { success: false, error: "Error interno del servidor" };
+    // Si ya es un Error, re-lanzarlo
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    const { error: errorMessage } =
+      ContentErrorHandler.handleContentError(error);
+    throw new Error(errorMessage);
   }
 }
 
-export async function getContentsByLevel(levelId: string) {
-  try {
-    const headers = await getAuthHeaders();
+export async function getContentsByLevel(levelId: string): Promise<Content[]> {
+  const headers = await getAuthHeaders();
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query GetContentsByLevel($levelId: String!) {
-            getContentsByLevel(levelId: $levelId) {
-              data {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query GetContentsByLevel($levelId: String!) {
+          getContentsByLevel(levelId: $levelId) {
+            data {
+              id
+              name
+              description
+              isActive
+              validationStatus
+              levelId
+              skillId
+              skill {
                 id
                 name
-                description
+                color
                 isActive
-                validationStatus
-                levelId
-                skillId
-                skill {
-                  id
-                  name
-                  color
-                  isActive
-                }
-                assignedTeachers {
-                  id
-                  fullName
-                  email
-                  roles
-                }
-                createdAt
-                updatedAt
               }
-              error
+              assignedTeachers {
+                id
+                fullName
+                email
+                roles
+              }
+              createdAt
+              updatedAt
             }
+            error
           }
-        `,
-        variables: { levelId },
-      }),
-    });
+        }
+      `,
+      variables: { levelId },
+    }),
+  });
 
-    if (!response.ok) {
-      return { error: `Error HTTP: ${response.status}` };
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      return { error: result.errors[0].message };
-    }
-
-    const contents = result.data.getContentsByLevel;
-    if (contents.error) {
-      return { error: contents.error };
-    }
-
-    // Validar con Zod
-    const validatedContents = contents.data.map((content: any) =>
-      FullContentSchema.parse(content)
-    );
-
-    return { data: validatedContents };
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Error desconocido",
-    };
+  if (!response.ok) {
+    throw new Error(`Error HTTP: ${response.status}`);
   }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
+
+  const contents = result.data.getContentsByLevel;
+  if (contents.error) {
+    throw new Error(contents.error);
+  }
+
+  // Validar con Zod
+  const validatedContents = contents.data.map((content: any) =>
+    FullContentSchema.parse(content)
+  );
+
+  return validatedContents;
 }
 
 export async function getContent(id: string): Promise<ActionResponse<Content>> {
@@ -698,53 +649,59 @@ export async function getContentsByTeacher(
   return { data: result.data.contentsByTeacher || [] };
 }
 
-export async function getMyAssignedContents(): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query MyAssignedContents {
-            myAssignedContents {
+export async function getMyAssignedContents(): Promise<Content[]> {
+  console.log("🔍 getMyAssignedContents called");
+  const headers = await getAuthHeaders();
+  console.log("🔍 getMyAssignedContents headers:", headers);
+
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query MyAssignedContents {
+          myAssignedContents {
+            id
+            name
+            description
+            levelId
+            markdownPath
+            assignedTeachers {
               id
-              name
-              description
-              levelId
-              markdownPath
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
+              fullName
+              email
+              roles
             }
+            createdAt
+            updatedAt
           }
-        `,
-      }),
-    });
+        }
+      `,
+    }),
+  });
 
-    if (!response.ok) {
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
-      );
-    }
+  console.log("🔍 getMyAssignedContents response status:", response.status);
 
-    const result = await response.json();
-
-    if (result.errors) {
-      console.error("GraphQL errors:", result.errors);
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    return { data: result.data.myAssignedContents || [] };
-  } catch (error) {
-    console.error("Error en getMyAssignedContents:", error);
-    throw error;
+  if (!response.ok) {
+    console.error(
+      "🔍 getMyAssignedContents HTTP error:",
+      response.status,
+      response.statusText
+    );
+    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
   }
+
+  const result = await response.json();
+  console.log("🔍 getMyAssignedContents result:", result);
+
+  if (result.errors) {
+    console.error("GraphQL errors:", result.errors);
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  const contents = result.data.myAssignedContents || [];
+  console.log("🔍 getMyAssignedContents final contents:", contents);
+  return contents;
 }
 
 export async function assignTeachersToContent(
@@ -868,26 +825,21 @@ export async function removeTeacherFromContent(
   }
 }
 
-export async function getContentMarkdown(
-  contentId: string
-): Promise<ActionResponse<string>> {
+export async function getContentMarkdown(contentId: string): Promise<string> {
   console.log("🔍 getContentMarkdown - Starting with contentId:", contentId);
 
+  if (!contentId) {
+    console.log("🔍 getContentMarkdown - No contentId provided");
+    throw new Error("ID del contenido es requerido");
+  }
+
+  // Validar formato del ID antes de hacer la consulta
+  if (!isValidContentId(contentId)) {
+    console.log("🔍 getContentMarkdown - Invalid contentId format:", contentId);
+    throw new Error("El identificador del contenido no es válido");
+  }
+
   try {
-    if (!contentId) {
-      console.log("🔍 getContentMarkdown - No contentId provided");
-      throw new Error("ID del contenido es requerido");
-    }
-
-    // Validar formato del ID antes de hacer la consulta
-    if (!isValidContentId(contentId)) {
-      console.log(
-        "🔍 getContentMarkdown - Invalid contentId format:",
-        contentId
-      );
-      throw new Error("El identificador del contenido no es válido");
-    }
-
     console.log("🔍 Cargando markdown para contentId:", contentId);
 
     const headers = await getAuthHeaders();
@@ -970,15 +922,14 @@ export async function getContentMarkdown(
           if (publicResponse.ok) {
             const publicResult = await publicResponse.json();
             if (!publicResult.errors) {
-              return { data: publicResult.data.contentMarkdownPublic };
+              return publicResult.data.contentMarkdownPublic;
             }
           }
         }
 
-        return {
-          error:
-            "No tienes permisos para acceder a este contenido o el contenido no está validado",
-        };
+        throw new Error(
+          "No tienes permisos para acceder a este contenido o el contenido no está validado"
+        );
       }
 
       const errorMessage = result.errors
@@ -992,17 +943,20 @@ export async function getContentMarkdown(
       "✅ Contenido markdown cargado exitosamente, longitud:",
       result.data[queryName]?.length || 0
     );
-    return { data: result.data[queryName] };
+    return result.data[queryName];
   } catch (error) {
     console.error("❌ Error en getContentMarkdown:", error);
     console.error("❌ Tipo de error:", typeof error);
     console.error("❌ Propiedades del error:", Object.keys(error || {}));
 
+    // Si ya es un Error, re-lanzarlo
+    if (error instanceof Error) {
+      throw error;
+    }
+
     const { error: errorMessage } =
       ContentErrorHandler.handleContentError(error);
-    return {
-      error: errorMessage,
-    };
+    throw new Error(errorMessage);
   }
 }
 
@@ -1076,200 +1030,188 @@ export async function updateContentMarkdown(
   }
 }
 
-export async function getContentsBySkill(
-  skillId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
+export async function getContentsBySkill(skillId: string): Promise<Content[]> {
+  const headers = await getAuthHeaders();
+  const hasAuth = headers.Authorization;
 
-    // Use public endpoint for non-authenticated users, private for authenticated
-    const queryName = hasAuth ? "contentsBySkill" : "contentsBySkillPublic";
+  // Use public endpoint for non-authenticated users, private for authenticated
+  const queryName = hasAuth ? "contentsBySkill" : "contentsBySkillPublic";
 
-    console.log(
-      "🔧 getContentsBySkill - Using query:",
-      queryName,
-      "for skillId:",
-      skillId
-    );
+  console.log(
+    "🔧 getContentsBySkill - Using query:",
+    queryName,
+    "for skillId:",
+    skillId
+  );
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ContentsBySkill($skillId: ID!) {
-            ${queryName}(skillId: $skillId) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query ContentsBySkill($skillId: ID!) {
+          ${queryName}(skillId: $skillId) {
+            id
+            name
+            description
+            levelId
+            validationStatus
+            markdownPath
+            skillId
+            skill {
               id
               name
               description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
+              color
+              isActive
             }
+            assignedTeachers {
+              id
+              fullName
+              email
+              roles
+            }
+            createdAt
+            updatedAt
           }
-        `,
-        variables: { skillId },
-      }),
-    });
+        }
+      `,
+      variables: { skillId },
+    }),
+  });
 
-    console.log("🔧 getContentsBySkill - Response status:", response.status);
+  console.log("🔧 getContentsBySkill - Response status:", response.status);
 
-    if (!response.ok) {
-      throw new Error("Error al cargar los contenidos por skill");
-    }
+  if (!response.ok) {
+    throw new Error("Error al cargar los contenidos por skill");
+  }
 
-    const result = await response.json();
-    console.log("🔧 getContentsBySkill - GraphQL result:", result);
+  const result = await response.json();
+  console.log("🔧 getContentsBySkill - GraphQL result:", result);
 
-    if (result.errors) {
-      // Handle authorization errors gracefully
-      const authErrors = result.errors.some(
-        (error: any) =>
-          error.message?.includes("Forbidden") ||
-          error.message?.includes("Unauthorized") ||
-          error.extensions?.code === "FORBIDDEN" ||
-          error.extensions?.code === "UNAUTHENTICATED"
-      );
-
-      if (authErrors) {
-        console.warn(
-          "🔧 getContentsBySkill - Authorization error, returning empty array"
-        );
-        return { data: [] };
-      }
-
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    console.log(
-      "🔧 getContentsBySkill - Content count:",
-      result.data[queryName]?.length || 0
+  if (result.errors) {
+    // Handle authorization errors gracefully
+    const authErrors = result.errors.some(
+      (error: any) =>
+        error.message?.includes("Forbidden") ||
+        error.message?.includes("Unauthorized") ||
+        error.extensions?.code === "FORBIDDEN" ||
+        error.extensions?.code === "UNAUTHENTICATED"
     );
 
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getContentsBySkill:", error);
-    throw error;
+    if (authErrors) {
+      console.warn(
+        "🔧 getContentsBySkill - Authorization error, returning empty array"
+      );
+      return [];
+    }
+
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
   }
+
+  console.log(
+    "🔧 getContentsBySkill - Content count:",
+    result.data[queryName]?.length || 0
+  );
+
+  return result.data[queryName] || [];
 }
 
 export async function getContentsByLevelAndSkill(
   levelId: string,
   skillId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
+): Promise<Content[]> {
+  const headers = await getAuthHeaders();
+  const hasAuth = headers.Authorization;
 
-    // Use public endpoint for non-authenticated users, private for authenticated
-    const queryName = hasAuth
-      ? "contentsByLevelAndSkill"
-      : "contentsByLevelAndSkillPublic";
+  // Use public endpoint for non-authenticated users, private for authenticated
+  const queryName = hasAuth
+    ? "contentsByLevelAndSkill"
+    : "contentsByLevelAndSkillPublic";
 
-    console.log(
-      "🔧 getContentsByLevelAndSkill - Using query:",
-      queryName,
-      "for levelId:",
-      levelId,
-      "skillId:",
-      skillId
-    );
+  console.log(
+    "🔧 getContentsByLevelAndSkill - Using query:",
+    queryName,
+    "for levelId:",
+    levelId,
+    "skillId:",
+    skillId
+  );
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ContentsByLevelAndSkill($levelId: ID!, $skillId: ID!) {
-            ${queryName}(levelId: $levelId, skillId: $skillId) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query ContentsByLevelAndSkill($levelId: ID!, $skillId: ID!) {
+          ${queryName}(levelId: $levelId, skillId: $skillId) {
+            id
+            name
+            description
+            levelId
+            validationStatus
+            markdownPath
+            skillId
+            skill {
               id
               name
               description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
+              color
+              isActive
             }
+            assignedTeachers {
+              id
+              fullName
+              email
+              roles
+            }
+            createdAt
+            updatedAt
           }
-        `,
-        variables: { levelId, skillId },
-      }),
-    });
+        }
+      `,
+      variables: { levelId, skillId },
+    }),
+  });
 
-    console.log(
-      "🔧 getContentsByLevelAndSkill - Response status:",
-      response.status
-    );
+  console.log(
+    "🔧 getContentsByLevelAndSkill - Response status:",
+    response.status
+  );
 
-    if (!response.ok) {
-      throw new Error("Error al cargar los contenidos por nivel y skill");
-    }
-
-    const result = await response.json();
-    console.log("🔧 getContentsByLevelAndSkill - GraphQL result:", result);
-
-    if (result.errors) {
-      // Handle authorization errors gracefully
-      const authErrors = result.errors.some(
-        (error: any) =>
-          error.message?.includes("Forbidden") ||
-          error.message?.includes("Unauthorized") ||
-          error.extensions?.code === "FORBIDDEN" ||
-          error.extensions?.code === "UNAUTHENTICATED"
-      );
-
-      if (authErrors) {
-        console.warn(
-          "🔧 getContentsByLevelAndSkill - Authorization error, returning empty array"
-        );
-        return { data: [] };
-      }
-
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    console.log(
-      "🔧 getContentsByLevelAndSkill - Content count:",
-      result.data[queryName]?.length || 0
-    );
-
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getContentsByLevelAndSkill:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error("Error al cargar los contenidos por nivel y skill");
   }
+
+  const result = await response.json();
+  console.log("🔧 getContentsByLevelAndSkill - GraphQL result:", result);
+
+  if (result.errors) {
+    // Handle authorization errors gracefully
+    const authErrors = result.errors.some(
+      (error: any) =>
+        error.message?.includes("Forbidden") ||
+        error.message?.includes("Unauthorized") ||
+        error.extensions?.code === "FORBIDDEN" ||
+        error.extensions?.code === "UNAUTHENTICATED"
+    );
+
+    if (authErrors) {
+      console.warn(
+        "🔧 getContentsByLevelAndSkill - Authorization error, returning empty array"
+      );
+      return [];
+    }
+
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  console.log(
+    "🔧 getContentsByLevelAndSkill - Content count:",
+    result.data[queryName]?.length || 0
+  );
+
+  return result.data[queryName] || [];
 }
 
 // Validation functions for admins
@@ -1402,226 +1344,211 @@ export async function invalidateContent(
 // Get only validated content for student/public view
 export async function getValidatedContentsByLevel(
   levelId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
+): Promise<Content[]> {
+  const headers = await getAuthHeaders();
+  const hasAuth = headers.Authorization;
 
-    // Use public endpoint for non-authenticated users (which only returns validated content)
-    // Use validated endpoint for authenticated users
-    const queryName = hasAuth
-      ? "validatedContentsByLevel"
-      : "contentsByLevelPublic";
+  // Use public endpoint for non-authenticated users (which only returns validated content)
+  // Use validated endpoint for authenticated users
+  const queryName = hasAuth
+    ? "validatedContentsByLevel"
+    : "contentsByLevelPublic";
 
-    console.log(
-      "🔧 getValidatedContentsByLevel - Using query:",
-      queryName,
-      "for levelId:",
-      levelId
-    );
+  console.log(
+    "🔧 getValidatedContentsByLevel - Using query:",
+    queryName,
+    "for levelId:",
+    levelId
+  );
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ValidatedContentsByLevel($levelId: ID!) {
-            ${queryName}(levelId: $levelId) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query ValidatedContentsByLevel($levelId: ID!) {
+          ${queryName}(levelId: $levelId) {
+            id
+            name
+            description
+            levelId
+            validationStatus
+            markdownPath
+            skillId
+            skill {
               id
               name
               description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
+              color
+              isActive
             }
+            assignedTeachers {
+              id
+              fullName
+              email
+              roles
+            }
+            createdAt
+            updatedAt
           }
-        `,
-        variables: { levelId },
-      }),
-    });
+        }
+      `,
+      variables: { levelId },
+    }),
+  });
 
-    if (!response.ok) {
-      throw new Error("Error al cargar los contenidos validados");
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getValidatedContentsByLevel:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error("Error al cargar los contenidos validados");
   }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  return result.data[queryName] || [];
 }
 
 // Get only validated content by skill for student/public view
 export async function getValidatedContentsBySkill(
   skillId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
+): Promise<Content[]> {
+  const headers = await getAuthHeaders();
+  const hasAuth = headers.Authorization;
 
-    // Use public endpoint for non-authenticated users (which only returns validated content)
-    // Use validated endpoint for authenticated users
-    const queryName = hasAuth
-      ? "validatedContentsBySkill"
-      : "contentsBySkillPublic";
+  // Use public endpoint for non-authenticated users (which only returns validated content)
+  // Use validated endpoint for authenticated users
+  const queryName = hasAuth
+    ? "validatedContentsBySkill"
+    : "contentsBySkillPublic";
 
-    console.log(
-      "🔧 getValidatedContentsBySkill - Using query:",
-      queryName,
-      "for skillId:",
-      skillId
-    );
+  console.log(
+    "🔧 getValidatedContentsBySkill - Using query:",
+    queryName,
+    "for skillId:",
+    skillId
+  );
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ValidatedContentsBySkill($skillId: ID!) {
-            ${queryName}(skillId: $skillId) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query ValidatedContentsBySkill($skillId: ID!) {
+          ${queryName}(skillId: $skillId) {
+            id
+            name
+            description
+            levelId
+            validationStatus
+            markdownPath
+            skillId
+            skill {
               id
               name
               description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
+              color
+              isActive
             }
+            assignedTeachers {
+              id
+              fullName
+              email
+              roles
+            }
+            createdAt
+            updatedAt
           }
-        `,
-        variables: { skillId },
-      }),
-    });
+        }
+      `,
+      variables: { skillId },
+    }),
+  });
 
-    if (!response.ok) {
-      throw new Error("Error al cargar los contenidos validados por skill");
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getValidatedContentsBySkill:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error("Error al cargar los contenidos validados por skill");
   }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  return result.data[queryName] || [];
 }
 
 // Get only validated content by level and skill for student/public view
 export async function getValidatedContentsByLevelAndSkill(
   levelId: string,
   skillId: string
-): Promise<ContentsResponse> {
-  try {
-    const headers = await getAuthHeaders();
-    const hasAuth = headers.Authorization;
+): Promise<Content[]> {
+  const headers = await getAuthHeaders();
+  const hasAuth = headers.Authorization;
 
-    // Use public endpoint for non-authenticated users (which only returns validated content)
-    // Use validated endpoint for authenticated users
-    const queryName = hasAuth
-      ? "validatedContentsByLevelAndSkill"
-      : "contentsByLevelAndSkillPublic";
+  // Use public endpoint for non-authenticated users (which only returns validated content)
+  // Use validated endpoint for authenticated users
+  const queryName = hasAuth
+    ? "validatedContentsByLevelAndSkill"
+    : "contentsByLevelAndSkillPublic";
 
-    console.log(
-      "🔧 getValidatedContentsByLevelAndSkill - Using query:",
-      queryName,
-      "for levelId:",
-      levelId,
-      "skillId:",
-      skillId
-    );
+  console.log(
+    "🔧 getValidatedContentsByLevelAndSkill - Using query:",
+    queryName,
+    "for levelId:",
+    levelId,
+    "skillId:",
+    skillId
+  );
 
-    const response = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        query: `
-          query ValidatedContentsByLevelAndSkill($levelId: ID!, $skillId: ID!) {
-            ${queryName}(levelId: $levelId, skillId: $skillId) {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: `
+        query ValidatedContentsByLevelAndSkill($levelId: ID!, $skillId: ID!) {
+          ${queryName}(levelId: $levelId, skillId: $skillId) {
+            id
+            name
+            description
+            levelId
+            validationStatus
+            markdownPath
+            skillId
+            skill {
               id
               name
               description
-              levelId
-              validationStatus
-              markdownPath
-              skillId
-              skill {
-                id
-                name
-                description
-                color
-                isActive
-              }
-              assignedTeachers {
-                id
-                fullName
-                email
-                roles
-              }
-              createdAt
-              updatedAt
+              color
+              isActive
             }
+            assignedTeachers {
+              id
+              fullName
+              email
+              roles
+            }
+            createdAt
+            updatedAt
           }
-        `,
-        variables: { levelId, skillId },
-      }),
-    });
+        }
+      `,
+      variables: { levelId, skillId },
+    }),
+  });
 
-    if (!response.ok) {
-      throw new Error(
-        "Error al cargar los contenidos validados por nivel y skill"
-      );
-    }
-
-    const result = await response.json();
-
-    if (result.errors) {
-      throw new Error(result.errors.map((err: any) => err.message).join(", "));
-    }
-
-    return { data: result.data[queryName] || [] };
-  } catch (error) {
-    console.error("Error en getValidatedContentsByLevelAndSkill:", error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(
+      "Error al cargar los contenidos validados por nivel y skill"
+    );
   }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    throw new Error(result.errors.map((err: any) => err.message).join(", "));
+  }
+
+  return result.data[queryName] || [];
 }

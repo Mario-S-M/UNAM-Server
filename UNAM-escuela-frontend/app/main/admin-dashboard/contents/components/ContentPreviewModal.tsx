@@ -36,12 +36,13 @@ import {
   invalidateContent,
 } from "@/app/actions/content-actions";
 import { addToast } from "@heroui/react";
+import { useAutoSave } from "@/app/hooks/use-auto-save";
 import dynamic from "next/dynamic";
 import GlobalButton from "@/components/global/globalButton";
 
 // Importar componentes de Milkdown de forma dinámica
-const MilkdownEditorClient = dynamic(
-  () => import("@/components/global/milkdown-editor-client"),
+const MilkdownEditorClientFixed = dynamic(
+  () => import("@/components/global/milkdown-editor-client-fixed"),
   { ssr: false }
 );
 
@@ -58,7 +59,30 @@ export default function ContentPreviewModal({
 }: ContentPreviewModalProps) {
   const [editedContent, setEditedContent] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+  const [lastSaveIndicator, setLastSaveIndicator] = useState<string>("");
   const queryClient = useQueryClient();
+
+  // Auto-guardado sutil cada 5 segundos
+  const autoSave = useAutoSave({
+    contentId: contentId || undefined,
+    enabled: !!contentId && hasChanges,
+    interval: 5000, // 5 segundos
+    onSave: (success: boolean) => {
+      if (success) {
+        setHasChanges(false);
+        // Indicador MUY sutil
+        setLastSaveIndicator("✓");
+        setTimeout(() => setLastSaveIndicator(""), 2000);
+        queryClient.invalidateQueries({
+          queryKey: ["contentMarkdown", contentId],
+        });
+      }
+    },
+    onError: () => {
+      setLastSaveIndicator("!");
+      setTimeout(() => setLastSaveIndicator(""), 3000);
+    },
+  });
 
   // Queries
   const {
@@ -148,8 +172,8 @@ export default function ContentPreviewModal({
 
   // Effects
   useEffect(() => {
-    if (markdownContent?.data) {
-      setEditedContent(markdownContent.data);
+    if (markdownContent) {
+      setEditedContent(markdownContent);
     } else {
       // Si no hay contenido, inicializar con un contenido de ejemplo
       setEditedContent(
@@ -234,29 +258,29 @@ export default function ContentPreviewModal({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold">
-                    {content?.data?.name || "Contenido"}
+                    {content?.name || "Contenido"}
                   </h2>
                   <p className="text-sm text-default-500">
                     Previsualización y edición de contenido
                   </p>
                 </div>
-                {content?.data && (
+                {content && (
                   <div className="flex items-center gap-2">
                     <Chip
                       color={getValidationColor(
-                        (content.data as any)?.validationStatus || "sin validar"
+                        (content as any)?.validationStatus || "sin validar"
                       )}
                       variant="flat"
                       startContent={getValidationIcon(
-                        (content.data as any)?.validationStatus || "sin validar"
+                        (content as any)?.validationStatus || "sin validar"
                       )}
                       size="sm"
                     >
-                      {(content.data as any)?.validationStatus || "sin validar"}
+                      {(content as any)?.validationStatus || "sin validar"}
                     </Chip>
                     <ButtonGroup size="sm" variant="flat">
-                      {((content.data as any)?.validationStatus ||
-                        "sin validar") === "validado" ? (
+                      {((content as any)?.validationStatus || "sin validar") ===
+                      "validado" ? (
                         <GlobalButton
                           color="warning"
                           onPress={handleInvalidate}
@@ -325,7 +349,7 @@ export default function ContentPreviewModal({
               ) : (
                 <div className="flex flex-col h-full">
                   {/* Información del contenido */}
-                  {content?.data && (
+                  {content && (
                     <div className="px-6 py-4 bg-gray-50 border-b">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div>
@@ -333,7 +357,7 @@ export default function ContentPreviewModal({
                             Descripción:
                           </span>
                           <p className="text-gray-600 mt-1">
-                            {content.data.description}
+                            {content.description}
                           </p>
                         </div>
                         <div>
@@ -341,7 +365,7 @@ export default function ContentPreviewModal({
                             Skill:
                           </span>
                           <p className="text-gray-600 mt-1">
-                            {(content.data as any)?.skill?.name ||
+                            {(content as any)?.skill?.name ||
                               "Sin skill asignado"}
                           </p>
                         </div>
@@ -350,8 +374,7 @@ export default function ContentPreviewModal({
                             Profesores:
                           </span>
                           <p className="text-gray-600 mt-1">
-                            {content.data.assignedTeachers?.length || 0}{" "}
-                            asignados
+                            {content.assignedTeachers?.length || 0} asignados
                           </p>
                         </div>
                       </div>
@@ -380,8 +403,23 @@ export default function ContentPreviewModal({
 
                   {/* Content - Solo Editor */}
                   <div className="flex-1 overflow-hidden">
-                    <div className="h-full min-h-[500px] w-full">
-                      <MilkdownEditorClient
+                    <div className="h-full min-h-[500px] w-full relative">
+                      {/* Indicador de guardado MUY sutil */}
+                      {lastSaveIndicator && (
+                        <div
+                          className="absolute top-4 right-4 z-10 w-3 h-3 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm"
+                          style={{
+                            backgroundColor:
+                              lastSaveIndicator === "✓" ? "#22c55e" : "#ef4444",
+                            color: "white",
+                            opacity: 0.7,
+                          }}
+                        >
+                          {lastSaveIndicator}
+                        </div>
+                      )}
+
+                      <MilkdownEditorClientFixed
                         key={`editor-${contentId}-${
                           editedContent ? "with-content" : "empty"
                         }`}
@@ -390,18 +428,13 @@ export default function ContentPreviewModal({
                           "# Comienza a escribir aquí\n\nEste es el editor de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```"
                         }
                         contentId={contentId!}
-                        autoSaveInterval={5000}
-                        onAutoSave={handleAutoSave}
-                        onAutoSaveError={(error) => {
-                          addToast({
-                            title: "Error de guardado automático",
-                            description: error,
-                            color: "danger",
-                          });
+                        onSave={async (content) => {
+                          setEditedContent(content);
+                          setHasChanges(true);
+                          // Programar auto-guardado sutil
+                          autoSave.scheduleAutoSave(content);
                         }}
-                        showButtons={false}
-                        showStatusIndicator={true}
-                        statusPosition="top"
+                        className="h-full"
                       />
                     </div>
                   </div>

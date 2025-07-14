@@ -2,10 +2,8 @@
 import React, { useEffect, useRef } from "react";
 import type { FC } from "react";
 import { Crepe } from "@milkdown/crepe";
-import { Milkdown, useEditor } from "@milkdown/react";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import "../../app/milkdown-custom-theme.css";
 
 interface MilkdownReadOnlyViewerProps {
   content: string;
@@ -16,48 +14,49 @@ const MilkdownReadOnlyViewer: FC<MilkdownReadOnlyViewerProps> = ({
   content,
   onReady,
 }) => {
-  const [editor, setEditor] = React.useState<Crepe | null>(null);
-  const onReadyRef = useRef(onReady);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const crepeRef = useRef<Crepe | null>(null);
 
-  // Actualizar la referencia cuando cambie la prop
   useEffect(() => {
-    onReadyRef.current = onReady;
-  }, [onReady]);
+    if (!editorRef.current) return;
 
-  useEditor(
-    (root) => {
-      const crepe = new Crepe({
-        root,
-        defaultValue: content,
-      });
+    const initEditor = async () => {
+      try {
+        const crepe = new Crepe({
+          root: editorRef.current!,
+          defaultValue: content,
+        });
 
-      setEditor(crepe);
+        crepeRef.current = crepe;
+        await crepe.create();
 
-      // Configurar el editor como solo lectura después de que se cree
-      crepe.create().then(() => {
+        // Configurar como readonly
         crepe.setReadonly(true);
 
-        // Llamar onReady cuando el editor esté listo
-        if (onReadyRef.current) {
-          onReadyRef.current();
+        // Llamar onReady si está definido
+        if (onReady) {
+          onReady();
         }
-      });
+      } catch (error) {
+        console.error("Error al inicializar Milkdown readonly:", error);
+      }
+    };
 
-      return crepe;
-    },
-    [content]
-  );
+    initEditor();
 
-  return (
-    <div
-      className="milkdown-readonly h-full w-full flex justify-center"
-      style={{ padding: 0, margin: 0 }}
-    >
-      <div className="w-full max-w-none" style={{ padding: 0, margin: 0 }}>
-        <Milkdown />
-      </div>
-    </div>
-  );
+    return () => {
+      if (crepeRef.current) {
+        try {
+          crepeRef.current.destroy();
+        } catch (error) {
+          console.error("Error al destruir editor:", error);
+        }
+        crepeRef.current = null;
+      }
+    };
+  }, [content, onReady]);
+
+  return <div ref={editorRef} className="milkdown-readonly-viewer" />;
 };
 
 export default MilkdownReadOnlyViewer;

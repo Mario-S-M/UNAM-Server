@@ -3,7 +3,7 @@
 import { Card, CardBody, CardHeader, Chip, Button } from "@heroui/react";
 import { BookOpen, Edit, Eye, Users } from "lucide-react";
 import Link from "next/link";
-import { Content } from "@/app/actions/content-actions";
+import { Content } from "@/app/interfaces/content-interfaces";
 
 interface AssignedContentCardProps {
   content: Content;

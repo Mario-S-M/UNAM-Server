@@ -13,7 +13,15 @@ import {
   Button,
   Spinner,
 } from "@heroui/react";
-import { BookOpen, Eye, FileText, Calendar, Users, User } from "lucide-react";
+import {
+  BookOpen,
+  Eye,
+  FileText,
+  Calendar,
+  Users,
+  User,
+  Edit,
+} from "lucide-react";
 import { getActiveSkills } from "../../actions/skill-actions";
 import {
   getContentsBySkill,
@@ -28,6 +36,7 @@ import { Content } from "../../interfaces/content-interfaces";
 import { Skill } from "../../interfaces/skill-interfaces";
 import { BackButton } from "../../../components/ui/back-button";
 import { usePermissions } from "../../hooks/use-authorization";
+import { useAuth } from "../../../components/providers/auth-provider";
 
 // Server Component
 const ContentPage: FC = () => {
@@ -73,7 +82,7 @@ const ContentPage: FC = () => {
           ? getContentsByLevel(levelId)
           : getValidatedContentsByLevel(levelId);
       }
-      return Promise.resolve({ data: [] });
+      return Promise.resolve([]);
     },
     enabled: !!(selectedSkill || levelId),
   });
@@ -125,9 +134,9 @@ const ContentPage: FC = () => {
                   <p className="mt-4 text-gray-600">Cargando contenidos...</p>
                 </div>
               </div>
-            ) : skillContents?.data && skillContents.data.length > 0 ? (
+            ) : skillContents && skillContents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {skillContents.data.map((content: Content) => (
+                {skillContents.map((content: Content) => (
                   <ContentCard key={content.id} content={content} />
                 ))}
               </div>
@@ -263,7 +272,7 @@ function SkillCard({ skill, levelId, onSelect }: SkillCardProps) {
     },
   });
 
-  const contentCount = skillContents?.data?.length || 0;
+  const contentCount = skillContents?.length || 0;
 
   return (
     <Card
@@ -330,6 +339,16 @@ interface ContentCardProps {
 
 function ContentCard({ content }: ContentCardProps) {
   const { canTeach, canManageContent } = usePermissions();
+  const { user } = useAuth();
+
+  // Verificar si el usuario actual está asignado a este contenido
+  const isAssignedTeacher =
+    user &&
+    content.assignedTeachers &&
+    content.assignedTeachers.some((teacher: any) => teacher.id === user.id);
+
+  // Determinar si puede editar: es admin/manager O es profesor asignado
+  const canEdit = canManageContent || (canTeach && isAssignedTeacher);
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -361,6 +380,12 @@ function ContentCard({ content }: ContentCardProps) {
                 ? "Validado"
                 : "Sin validar"}
             </Chip>
+            {/* Indicator if user is assigned teacher */}
+            {isAssignedTeacher && (
+              <Chip color="primary" variant="flat" size="sm">
+                Asignado
+              </Chip>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -423,6 +448,20 @@ function ContentCard({ content }: ContentCardProps) {
               Ver Contenido
             </Button>
           </Link>
+          {/* Botón de editar para profesores asignados o administradores */}
+          {canEdit && (
+            <Link href={`/main/teacher/content/${content.id}/edit`}>
+              <Button
+                size="sm"
+                variant="flat"
+                color="secondary"
+                startContent={<Edit className="h-4 w-4" />}
+                className="text-sm"
+              >
+                Editar
+              </Button>
+            </Link>
+          )}
         </div>
       </CardBody>
     </Card>

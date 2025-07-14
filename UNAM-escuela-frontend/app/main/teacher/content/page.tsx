@@ -23,7 +23,7 @@ import Link from "next/link";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { usePermissions } from "@/app/hooks/use-authorization";
 import { getMyAssignedContents } from "@/app/actions/content-actions";
-import { Content } from "@/app/actions/content-actions";
+import { Content, Teacher } from "@/app/interfaces/content-interfaces";
 
 export default function TeacherContentPage() {
   return (
@@ -91,7 +91,7 @@ function TeacherContentContent() {
             </h3>
             <p className="text-blue-700">
               Rol actual: {userRole} | Total de contenidos asignados:{" "}
-              {assignedContents?.data?.length || 0}
+              {assignedContents?.length || 0}
             </p>
           </div>
         </div>
@@ -148,7 +148,7 @@ function TeacherContentContent() {
                 </div>
               </CardBody>
             </Card>
-          ) : assignedContents?.data?.length === 0 ? (
+          ) : assignedContents?.length === 0 ? (
             <Card>
               <CardBody>
                 <div className="text-center py-12">
@@ -165,7 +165,7 @@ function TeacherContentContent() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {assignedContents?.data?.map((content: Content) => (
+              {assignedContents?.map((content: Content) => (
                 <ContentCard key={content.id} content={content} />
               ))}
             </div>
@@ -191,7 +191,7 @@ function ContentCard({ content }: ContentCardProps) {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-lg line-clamp-2">
-                {content.name || content.title}
+                {content.name}
               </h3>
             </div>
           </div>
@@ -210,15 +210,17 @@ function ContentCard({ content }: ContentCardProps) {
             </p>
             <div className="flex items-center gap-1">
               <div className="flex -space-x-2">
-                {content.assignedTeachers.slice(0, 3).map((teacher, index) => (
-                  <Avatar
-                    key={teacher.id}
-                    size="sm"
-                    name={teacher.fullName}
-                    className="border-2 border-white"
-                    title={teacher.fullName}
-                  />
-                ))}
+                {content.assignedTeachers
+                  .slice(0, 3)
+                  .map((teacher: Teacher, index: number) => (
+                    <Avatar
+                      key={teacher.id}
+                      size="sm"
+                      name={teacher.fullName}
+                      className="border-2 border-white"
+                      title={teacher.fullName}
+                    />
+                  ))}
                 {content.assignedTeachers.length > 3 && (
                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium">
                     +{content.assignedTeachers.length - 3}

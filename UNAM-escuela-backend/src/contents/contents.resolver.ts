@@ -136,6 +136,11 @@ export class ContentsResolver {
   findMyAssignedContents(
     @CurrentUser([ValidRoles.docente]) user: User,
   ): Promise<Content[]> {
+    console.log(
+      '🔍 findMyAssignedContents called for user:',
+      user.id,
+      user.email,
+    );
     return this.contentsService.findByTeacher(user.id);
   }
 

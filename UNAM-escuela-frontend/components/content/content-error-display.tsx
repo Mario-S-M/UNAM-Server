@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardBody, Button, Chip } from "@heroui/react";
 import {
   FileText,
@@ -11,6 +11,7 @@ import {
   Lock,
   Wifi,
   AlertCircle,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ import {
   ContentErrorHandler,
   ErrorInfo,
 } from "@/app/utils/content-error-handler";
+import { ContentFixer } from "./content-fixer";
 
 interface ContentErrorDisplayProps {
   error: string;
@@ -26,6 +28,7 @@ interface ContentErrorDisplayProps {
   showBackButton?: boolean;
   backUrl?: string;
   context?: string;
+  contentId?: string; // Agregar contentId para el fixer
 }
 
 export function ContentErrorDisplay({
@@ -35,8 +38,10 @@ export function ContentErrorDisplay({
   showBackButton = true,
   backUrl = "/main/teacher/content",
   context = "contenido",
+  contentId,
 }: ContentErrorDisplayProps) {
   const router = useRouter();
+  const [showFixer, setShowFixer] = useState(false);
 
   console.log("🔍 ContentErrorDisplay - Props:", {
     error,
@@ -64,6 +69,12 @@ export function ContentErrorDisplay({
         return (
           <AlertTriangle className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
         );
+      case "FILE_NOT_FOUND_ERROR":
+        return <FileText className="h-16 w-16 text-purple-400 mx-auto mb-4" />;
+      case "PARSE_ERROR":
+        return (
+          <AlertTriangle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
+        );
       default:
         return <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />;
     }
@@ -83,6 +94,10 @@ export function ContentErrorDisplay({
         return "Datos inválidos";
       case "SERVER_ERROR":
         return "Error del servidor";
+      case "FILE_NOT_FOUND_ERROR":
+        return "Archivo no encontrado";
+      case "PARSE_ERROR":
+        return "Error de formato";
       default:
         return "Error inesperado";
     }
@@ -101,6 +116,10 @@ export function ContentErrorDisplay({
         return "warning";
       case "SERVER_ERROR":
         return "danger";
+      case "FILE_NOT_FOUND_ERROR":
+        return "secondary";
+      case "PARSE_ERROR":
+        return "warning";
       default:
         return "danger";
     }
@@ -158,6 +177,18 @@ export function ContentErrorDisplay({
               </Button>
             )}
 
+            {/* Botón del solucionador de problemas */}
+            {contentId && (
+              <Button
+                color="secondary"
+                variant="bordered"
+                onClick={() => setShowFixer(true)}
+                startContent={<Wrench className="h-4 w-4" />}
+              >
+                Solucionador
+              </Button>
+            )}
+
             {/* Botón de login para errores de autenticación */}
             {analyzedError.type === "AUTHENTICATION_ERROR" && (
               <Button
@@ -208,6 +239,19 @@ export function ContentErrorDisplay({
             )}
         </CardBody>
       </Card>
+
+      {/* Modal del solucionador de problemas */}
+      {contentId && (
+        <ContentFixer
+          contentId={contentId}
+          isOpen={showFixer}
+          onOpenChange={setShowFixer}
+          onFixed={() => {
+            console.log("Problema resuelto según el usuario");
+            if (onRetry) onRetry();
+          }}
+        />
+      )}
     </div>
   );
 }

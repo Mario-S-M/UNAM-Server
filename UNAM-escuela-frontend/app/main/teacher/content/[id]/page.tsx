@@ -74,7 +74,7 @@ function ViewContentPageContent() {
     );
   }
 
-  if (contentError || markdownError || !content?.data) {
+  if (contentError || markdownError || !content) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <ContentErrorDisplay
@@ -111,26 +111,23 @@ function ViewContentPageContent() {
           <div className="flex items-center justify-between mt-4">
             <div>
               <h1 className="text-3xl font-bold text-primary mb-2">
-                {content.data.name}
+                {content.name}
               </h1>
               <div className="flex items-center space-x-4 text-sm text-gray-600">
-                {content.data.assignedTeachers && (
+                {content.assignedTeachers && (
                   <div className="flex items-center space-x-1">
                     <Users className="h-4 w-4" />
                     <span>
-                      {content.data.assignedTeachers.length} profesor(es)
-                      asignado(s)
+                      {content.assignedTeachers.length} profesor(es) asignado(s)
                     </span>
                   </div>
                 )}
-                {content.data.updatedAt && (
+                {content.updatedAt && (
                   <div className="flex items-center space-x-1">
                     <Calendar className="h-4 w-4" />
                     <span>
                       Última actualización:{" "}
-                      {new Date(content.data.updatedAt).toLocaleDateString(
-                        "es-ES"
-                      )}
+                      {new Date(content.updatedAt).toLocaleDateString("es-ES")}
                     </span>
                   </div>
                 )}
@@ -168,16 +165,16 @@ function ViewContentPageContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <span className="font-medium text-gray-700">Descripción:</span>
-                <p className="text-gray-600 mt-1">{content.data.description}</p>
+                <p className="text-gray-600 mt-1">{content.description}</p>
               </div>
-              {content.data.assignedTeachers &&
-                content.data.assignedTeachers.length > 0 && (
+              {content.assignedTeachers &&
+                content.assignedTeachers.length > 0 && (
                   <div className="md:col-span-2">
                     <span className="font-medium text-gray-700">
                       Profesores asignados:
                     </span>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {content.data.assignedTeachers.map((teacher) => (
+                      {content.assignedTeachers.map((teacher: any) => (
                         <Chip
                           key={teacher.id}
                           variant="flat"
@@ -200,9 +197,9 @@ function ViewContentPageContent() {
             <h2 className="text-xl font-semibold">Contenido</h2>
           </CardHeader>
           <CardBody className="p-2">
-            {markdownData?.data ? (
-              <div className="prose prose-gray max-w-none">
-                <MilkdownReadOnlyViewer content={markdownData.data} />
+            {markdownData ? (
+              <div className="prose prose-gray max-w-none pl-8">
+                <MilkdownReadOnlyViewer content={markdownData} />
               </div>
             ) : (
               <div className="text-center py-12">

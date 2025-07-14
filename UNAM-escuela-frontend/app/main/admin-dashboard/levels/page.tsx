@@ -261,7 +261,7 @@ function LevelContentsCell({ levelId }: { levelId: string }) {
       ) : (
         <>
           <BookOpen className="h-4 w-4 text-foreground/50" />
-          <span className="text-sm">{contents?.data?.length || 0}</span>
+          <span className="text-sm">{contents?.length || 0}</span>
         </>
       )}
     </div>

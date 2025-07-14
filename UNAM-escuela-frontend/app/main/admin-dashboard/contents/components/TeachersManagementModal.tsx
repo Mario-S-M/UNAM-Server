@@ -88,18 +88,18 @@ export default function TeachersManagementModal({
     applyLanguageFiltering();
   }, [
     teachers?.data,
-    content?.data?.levelId,
+    content?.levelId,
     userAssignedLanguage?.isAdminWithLanguage,
     userAssignedLanguage?.assignedLanguageId,
   ]);
 
   useEffect(() => {
-    if (content?.data?.assignedTeachers) {
+    if (content?.assignedTeachers) {
       setSelectedTeacherIds(
-        content.data.assignedTeachers.map((teacher: any) => teacher.id)
+        content.assignedTeachers.map((teacher: any) => teacher.id)
       );
     }
-  }, [content?.data?.assignedTeachers]);
+  }, [content?.assignedTeachers]);
 
   const searchFilteredTeachers = (() => {
     if (!searchQuery) {
@@ -200,7 +200,7 @@ export default function TeachersManagementModal({
     <GlobalModal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      title={`Gestionar Profesores - ${content?.data?.name || "Contenido"}`}
+      title={`Gestionar Profesores - ${content?.name || "Contenido"}`}
     >
       {/* Info de diagnóstico simplificada */}
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md">
@@ -260,56 +260,55 @@ export default function TeachersManagementModal({
             </h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p>
-                <strong>Nombre:</strong> {content?.data?.name}
+                <strong>Nombre:</strong> {content?.name}
               </p>
               <p>
-                <strong>Descripción:</strong> {content?.data?.description}
+                <strong>Descripción:</strong> {content?.description}
               </p>
             </div>
           </div>
 
           {/* Profesores actualmente asignados */}
-          {content?.data?.assignedTeachers &&
-            content.data.assignedTeachers.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">
-                  Profesores Actualmente Asignados (
-                  {content.data.assignedTeachers.length})
-                </h4>
-                <div className="space-y-2">
-                  {content.data.assignedTeachers.map((teacher: any) => (
-                    <div
-                      key={teacher.id}
-                      className="flex items-center justify-between p-3 bg-default-50 rounded-lg border border-default-200"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-default-100 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-default-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {teacher.fullName}
-                          </p>
-                          <p className="text-sm text-default-500">
-                            {teacher.email}
-                          </p>
-                        </div>
+          {content?.assignedTeachers && content.assignedTeachers.length > 0 && (
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">
+                Profesores Actualmente Asignados (
+                {content.assignedTeachers.length})
+              </h4>
+              <div className="space-y-2">
+                {content.assignedTeachers.map((teacher: any) => (
+                  <div
+                    key={teacher.id}
+                    className="flex items-center justify-between p-3 bg-default-50 rounded-lg border border-default-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-default-100 rounded-full flex items-center justify-center">
+                        <Users className="h-4 w-4 text-default-600" />
                       </div>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        color="danger"
-                        title="Remover profesor"
-                        onPress={() => handleRemoveTeacher(teacher.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {teacher.fullName}
+                        </p>
+                        <p className="text-sm text-default-500">
+                          {teacher.email}
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      title="Remover profesor"
+                      onPress={() => handleRemoveTeacher(teacher.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
           {/* Buscar y asignar nuevos profesores */}
           <div>

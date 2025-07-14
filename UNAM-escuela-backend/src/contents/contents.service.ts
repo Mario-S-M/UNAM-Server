@@ -212,12 +212,16 @@ export class ContentsService {
   }
 
   async findByTeacher(teacherId: string): Promise<Content[]> {
-    return await this.contentsRepository
+    console.log('🔍 findByTeacher called with teacherId:', teacherId);
+    const contents = await this.contentsRepository
       .createQueryBuilder('content')
       .leftJoinAndSelect('content.assignedTeachers', 'teacher')
       .leftJoinAndSelect('content.skill', 'skill')
       .where('teacher.id = :teacherId', { teacherId })
       .getMany();
+
+    console.log('🔍 findByTeacher found contents:', contents.length);
+    return contents;
   }
 
   async findOne(id: string, user?: User): Promise<Content> {

@@ -11,7 +11,9 @@ export interface ErrorInfo {
     | "PERMISSION_ERROR"
     | "VALIDATION_ERROR"
     | "SERVER_ERROR"
-    | "UNKNOWN_ERROR";
+    | "UNKNOWN_ERROR"
+    | "FILE_NOT_FOUND_ERROR"
+    | "PARSE_ERROR";
   message: string;
   originalError?: any;
   suggestion?: string;
@@ -93,6 +95,28 @@ export class ContentErrorHandler {
           message: "El identificador del contenido no es válido",
           originalError: error,
           suggestion: "Verifica que el enlace sea correcto",
+        };
+      }
+
+      // Nuevo: Manejo específico para archivos markdown no encontrados
+      if (message.includes("enoent") || message.includes("no such file")) {
+        return {
+          type: "FILE_NOT_FOUND_ERROR",
+          message: "El archivo de contenido no se encuentra en el servidor",
+          originalError: error,
+          suggestion:
+            "El contenido puede estar en proceso de creación. Intenta crear nuevo contenido o contacta al administrador",
+        };
+      }
+
+      // Nuevo: Manejo para errores de parseo de markdown
+      if (message.includes("markdown") || message.includes("parse")) {
+        return {
+          type: "PARSE_ERROR",
+          message: "Error al procesar el contenido markdown",
+          originalError: error,
+          suggestion:
+            "El contenido puede tener formato incorrecto. Intenta editarlo nuevamente",
         };
       }
     }
@@ -193,7 +217,12 @@ export class ContentErrorHandler {
    * Determina si un error es recuperable
    */
   static isRecoverableError(errorInfo: ErrorInfo): boolean {
-    return ["NETWORK_ERROR", "SERVER_ERROR"].includes(errorInfo.type);
+    return [
+      "NETWORK_ERROR",
+      "SERVER_ERROR",
+      "FILE_NOT_FOUND_ERROR",
+      "PARSE_ERROR",
+    ].includes(errorInfo.type);
   }
 
   /**

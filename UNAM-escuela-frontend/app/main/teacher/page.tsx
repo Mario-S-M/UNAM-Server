@@ -27,6 +27,9 @@ function TeacherDashboardContent() {
     queryFn: getMyAssignedContents,
   });
 
+  console.log("🔍 TeacherDashboard - assignedContents:", assignedContents);
+  console.log("🔍 TeacherDashboard - contentsLoading:", contentsLoading);
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-6xl mx-auto">
@@ -44,9 +47,9 @@ function TeacherDashboardContent() {
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" />
             Contenido Asignado
-            {assignedContents?.data && (
+            {assignedContents && (
               <span className="text-sm font-normal text-foreground/60 ml-2">
-                ({assignedContents.data.length} contenidos)
+                ({assignedContents.length} contenidos)
               </span>
             )}
           </h2>
@@ -55,7 +58,7 @@ function TeacherDashboardContent() {
             <div className="flex justify-center py-12">
               <Spinner size="lg" />
             </div>
-          ) : !assignedContents?.data || assignedContents.data.length === 0 ? (
+          ) : !assignedContents || assignedContents.length === 0 ? (
             <Card className="p-8">
               <CardBody className="text-center">
                 <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -70,17 +73,17 @@ function TeacherDashboardContent() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {assignedContents.data.slice(0, 6).map((content: any) => (
+              {assignedContents.slice(0, 6).map((content: any) => (
                 <AssignedContentCard key={content.id} content={content} />
               ))}
             </div>
           )}
 
-          {assignedContents?.data && assignedContents.data.length > 6 && (
+          {assignedContents && assignedContents.length > 6 && (
             <div className="text-center mt-6">
               <Link href="/main/teacher/content">
                 <Button color="primary" variant="light">
-                  Ver todos los contenidos ({assignedContents.data.length})
+                  Ver todos los contenidos ({assignedContents.length})
                 </Button>
               </Link>
             </div>

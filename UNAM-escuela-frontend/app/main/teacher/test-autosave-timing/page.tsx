@@ -6,8 +6,8 @@ import { RouteGuard } from "@/components/auth/route-guard";
 import dynamic from "next/dynamic";
 
 // Importar Milkdown de forma dinámica para evitar SSR issues
-const MilkdownEditorClient = dynamic(
-  () => import("@/components/global/milkdown-editor-client"),
+const MilkdownEditorClientFixed = dynamic(
+  () => import("@/components/global/milkdown-editor-client-fixed"),
   { ssr: false }
 );
 
@@ -36,6 +36,59 @@ function TestAutoSaveTimingContent() {
     setLogs((prev) => [logEntry, ...prev.slice(0, 9)]); // Mantener solo los últimos 10 logs
     console.log(logEntry);
   };
+
+  // Auto-save hook for testing
+  const useAutoSave = (
+    onSave: (content: string) => void,
+    interval: number = 5000
+  ) => {
+    const [content, setContent] = useState<string>("");
+    const [isSaving, setIsSaving] = useState(false);
+    const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+    const scheduleAutoSave = React.useCallback(
+      (newContent: string) => {
+        setContent(newContent);
+        setChangeCount((prev) => prev + 1);
+        addLog(
+          `📝 Cambio detectado (#${
+            changeCount + 1
+          }) - Programando guardado en 5s`
+        );
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          addLog(`⏱️ Guardado previo cancelado - Reprogramando`);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          setIsSaving(true);
+          onSave(newContent);
+          setTimeout(() => setIsSaving(false), 1000);
+        }, interval);
+      },
+      [onSave, interval, changeCount]
+    );
+
+    React.useEffect(() => {
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
+    }, []);
+
+    return { scheduleAutoSave, isSaving };
+  };
+
+  const { scheduleAutoSave, isSaving } = useAutoSave((content: string) => {
+    setSaveCount((prev) => prev + 1);
+    addLog(
+      `✅ GUARDADO #${saveCount + 1} exitoso - Contenido: ${
+        content.length
+      } caracteres`
+    );
+  }, 5000);
 
   const testContent = `# ⏰ Prueba de Timing de Auto-Guardado
 
@@ -69,23 +122,6 @@ Edita este texto para probar:
 ---
 *Edita cualquier parte de este contenido para probar*
 `;
-
-  const handleAutoSave = (success: boolean, content: string) => {
-    if (success) {
-      setSaveCount((prev) => prev + 1);
-      addLog(
-        `✅ GUARDADO #${saveCount + 1} exitoso - Contenido: ${
-          content.length
-        } caracteres`
-      );
-    } else {
-      addLog(`❌ ERROR en guardado - Contenido: ${content.length} caracteres`);
-    }
-  };
-
-  const handleAutoSaveError = (error: string) => {
-    addLog(`🚨 ERROR de auto-guardado: ${error}`);
-  };
 
   React.useEffect(() => {
     addLog("🚀 Iniciando prueba de timing de auto-guardado");
@@ -139,15 +175,11 @@ Edita este texto para probar:
             </CardHeader>
             <CardBody>
               <div className="h-[500px]">
-                <MilkdownEditorClient
+                <MilkdownEditorClientFixed
                   defaultValue={testContent}
-                  contentId="test-timing-auto-save"
-                  autoSaveInterval={5000} // Exactamente 5 segundos
-                  onAutoSave={handleAutoSave}
-                  onAutoSaveError={handleAutoSaveError}
-                  showButtons={false}
-                  showStatusIndicator={true}
-                  statusPosition="top"
+                  onSave={async (content: string) => {
+                    scheduleAutoSave(content);
+                  }}
                 />
               </div>
             </CardBody>

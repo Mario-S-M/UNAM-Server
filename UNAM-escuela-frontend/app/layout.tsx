@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${outfit.variable} antialiased`}>
         <Providers>
           <AccessibilityBodyEffect />
           {children}

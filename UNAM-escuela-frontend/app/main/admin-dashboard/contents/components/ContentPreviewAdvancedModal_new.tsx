@@ -42,11 +42,73 @@ import { addToast } from "@heroui/react";
 import dynamic from "next/dynamic";
 import GlobalButton from "@/components/global/globalButton";
 
+// Add CSS animation styles
+const autoSaveStyles = `
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: scale(0.8); }
+  20% { opacity: 0.7; transform: scale(1); }
+  80% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+`;
+
+if (
+  typeof document !== "undefined" &&
+  !document.getElementById("autosave-styles")
+) {
+  const style = document.createElement("style");
+  style.id = "autosave-styles";
+  style.textContent = autoSaveStyles;
+  document.head.appendChild(style);
+}
+
 // Importar componentes de Milkdown de forma dinámica
-const MilkdownEditorClient = dynamic(
-  () => import("@/components/global/milkdown-editor-client"),
+const MilkdownEditorClientFixed = dynamic(
+  () => import("@/components/global/milkdown-editor-client-fixed"),
   { ssr: false }
 );
+
+// Auto-save hook
+const useAutoSave = (
+  contentId: string | null,
+  onSave: (content: string) => void,
+  interval: number = 5000
+) => {
+  const [content, setContent] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const scheduleAutoSave = React.useCallback(
+    (newContent: string) => {
+      setContent(newContent);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        if (contentId && newContent.trim()) {
+          setIsSaving(true);
+          onSave(newContent);
+          setLastSaved(new Date());
+          setTimeout(() => setIsSaving(false), 2000);
+        }
+      }, interval);
+    },
+    [contentId, onSave, interval]
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return { scheduleAutoSave, isSaving, lastSaved };
+};
 
 interface ContentPreviewAdvancedModalProps {
   contentId: string | null;
@@ -62,6 +124,15 @@ export default function ContentPreviewAdvancedModal({
   const [editedContent, setEditedContent] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const queryClient = useQueryClient();
+
+  // Auto-save functionality
+  const { scheduleAutoSave, isSaving } = useAutoSave(
+    contentId,
+    (content: string) => {
+      saveMarkdownMutation.mutate(content);
+    },
+    5000
+  );
 
   // Queries
   const {
@@ -151,8 +222,8 @@ export default function ContentPreviewAdvancedModal({
 
   // Effects
   useEffect(() => {
-    if (markdownContent?.data) {
-      setEditedContent(markdownContent.data);
+    if (markdownContent) {
+      setEditedContent(markdownContent);
     } else {
       // Si no hay contenido, inicializar con un contenido de ejemplo
       setEditedContent(
@@ -183,12 +254,6 @@ export default function ContentPreviewAdvancedModal({
   const handleInvalidate = () => {
     if (contentId) {
       invalidateMutation.mutate(contentId);
-    }
-  };
-
-  const handleAutoSave = (success: boolean, content: string) => {
-    if (success) {
-      setHasChanges(false);
     }
   };
 
@@ -237,7 +302,7 @@ export default function ContentPreviewAdvancedModal({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold">
-                    {content?.data?.name || "Contenido"}
+                    {content?.name || "Contenido"}
                   </h2>
                   <p className="text-sm text-default-500">
                     Editor avanzado de contenido con vista completa
@@ -245,25 +310,22 @@ export default function ContentPreviewAdvancedModal({
                 </div>
                 <div className="flex items-center gap-4">
                   {/* Status and Actions */}
-                  {content?.data && (
+                  {content && (
                     <div className="flex items-center gap-2">
                       <Chip
                         color={getValidationColor(
-                          (content.data as any)?.validationStatus ||
-                            "sin validar"
+                          (content as any)?.validationStatus || "sin validar"
                         )}
                         variant="flat"
                         startContent={getValidationIcon(
-                          (content.data as any)?.validationStatus ||
-                            "sin validar"
+                          (content as any)?.validationStatus || "sin validar"
                         )}
                         size="sm"
                       >
-                        {(content.data as any)?.validationStatus ||
-                          "sin validar"}
+                        {(content as any)?.validationStatus || "sin validar"}
                       </Chip>
                       <ButtonGroup size="sm" variant="flat">
-                        {((content.data as any)?.validationStatus ||
+                        {((content as any)?.validationStatus ||
                           "sin validar") === "validado" ? (
                           <GlobalButton
                             color="warning"
@@ -334,7 +396,7 @@ export default function ContentPreviewAdvancedModal({
               ) : (
                 <div className="flex flex-col h-full">
                   {/* Información del contenido */}
-                  {content?.data && (
+                  {content && (
                     <div className="px-6 py-4 bg-gray-50 border-b">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div>
@@ -342,7 +404,7 @@ export default function ContentPreviewAdvancedModal({
                             Descripción:
                           </span>
                           <p className="text-gray-600 mt-1">
-                            {content.data.description}
+                            {content.description}
                           </p>
                         </div>
                         <div>
@@ -350,7 +412,7 @@ export default function ContentPreviewAdvancedModal({
                             Skill:
                           </span>
                           <p className="text-gray-600 mt-1">
-                            {(content.data as any)?.skill?.name ||
+                            {(content as any)?.skill?.name ||
                               "Sin skill asignado"}
                           </p>
                         </div>
@@ -359,7 +421,7 @@ export default function ContentPreviewAdvancedModal({
                             Profesores:
                           </span>
                           <p className="text-gray-600 mt-1">
-                            {content.data.assignedTeachers?.length || 0}{" "}
+                            {(content as any)?.assignedTeachers?.length || 0}{" "}
                             asignados
                           </p>
                         </div>
@@ -380,17 +442,30 @@ export default function ContentPreviewAdvancedModal({
                           <span>Cambios sin guardar</span>
                         </div>
                       )}
+                      {/* Auto-save indicator */}
+                      <div className="relative">
+                        {isSaving && (
+                          <div
+                            className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full opacity-70 transition-opacity duration-300"
+                            style={{
+                              animation: "fadeInOut 3s ease-in-out",
+                              zIndex: 1000,
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
                       Editor de pantalla completa con todas las funciones
-                      avanzadas. Los cambios se guardan automáticamente.
+                      avanzadas. Los cambios se guardan automáticamente cada 5
+                      segundos.
                     </p>
                   </div>
 
                   {/* Editor */}
                   <div className="flex-1 overflow-hidden">
                     <div className="h-full min-h-[600px] w-full">
-                      <MilkdownEditorClient
+                      <MilkdownEditorClientFixed
                         key={`advanced-editor-${contentId}-${
                           editedContent ? "with-content" : "empty"
                         }`}
@@ -398,19 +473,11 @@ export default function ContentPreviewAdvancedModal({
                           editedContent ||
                           "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```"
                         }
-                        contentId={contentId!}
-                        autoSaveInterval={3000}
-                        onAutoSave={handleAutoSave}
-                        onAutoSaveError={(error) => {
-                          addToast({
-                            title: "Error de guardado automático",
-                            description: error,
-                            color: "danger",
-                          });
+                        onSave={async (content: string) => {
+                          scheduleAutoSave(content);
+                          setEditedContent(content);
+                          setHasChanges(true);
                         }}
-                        showButtons={false}
-                        showStatusIndicator={true}
-                        statusPosition="top"
                       />
                     </div>
                   </div>

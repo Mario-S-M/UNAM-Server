@@ -183,29 +183,29 @@ export default function ContentPreviewReadOnlyModal({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold">
-                    {content?.data?.name || "Contenido"}
+                    {content?.name || "Contenido"}
                   </h2>
                   <p className="text-sm text-default-500">
                     Vista de solo lectura - Igual que ve el maestro
                   </p>
                 </div>
-                {content?.data && (
+                {content && (
                   <div className="flex items-center gap-2">
                     <Chip
                       color={getValidationColor(
-                        (content.data as any)?.validationStatus || "sin validar"
+                        (content as any)?.validationStatus || "sin validar"
                       )}
                       variant="flat"
                       startContent={getValidationIcon(
-                        (content.data as any)?.validationStatus || "sin validar"
+                        (content as any)?.validationStatus || "sin validar"
                       )}
                       size="sm"
                     >
-                      {(content.data as any)?.validationStatus || "sin validar"}
+                      {(content as any)?.validationStatus || "sin validar"}
                     </Chip>
                     <ButtonGroup size="sm" variant="flat">
-                      {((content.data as any)?.validationStatus ||
-                        "sin validar") === "validado" ? (
+                      {((content as any)?.validationStatus || "sin validar") ===
+                      "validado" ? (
                         <GlobalButton
                           color="warning"
                           onPress={handleInvalidate}
@@ -276,7 +276,7 @@ export default function ContentPreviewReadOnlyModal({
               ) : (
                 <div className="flex flex-col h-full">
                   {/* Información del contenido - igual que teacher */}
-                  {content?.data && (
+                  {content && (
                     <Card className="m-6 mb-0">
                       <CardBody>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -285,7 +285,7 @@ export default function ContentPreviewReadOnlyModal({
                               Descripción:
                             </span>
                             <p className="text-gray-600 mt-1">
-                              {content.data.description}
+                              {content.description}
                             </p>
                           </div>
                           <div>
@@ -293,18 +293,18 @@ export default function ContentPreviewReadOnlyModal({
                               Skill:
                             </span>
                             <p className="text-gray-600 mt-1">
-                              {(content.data as any)?.skill?.name ||
+                              {(content as any)?.skill?.name ||
                                 "Sin skill asignado"}
                             </p>
                           </div>
-                          {content.data.assignedTeachers &&
-                            content.data.assignedTeachers.length > 0 && (
+                          {content.assignedTeachers &&
+                            content.assignedTeachers.length > 0 && (
                               <div className="md:col-span-2">
                                 <span className="font-medium text-gray-700">
                                   Profesores asignados:
                                 </span>
                                 <div className="flex flex-wrap gap-2 mt-2">
-                                  {content.data.assignedTeachers.map(
+                                  {content.assignedTeachers.map(
                                     (teacher: any) => (
                                       <Chip
                                         key={teacher.id}
@@ -320,22 +320,22 @@ export default function ContentPreviewReadOnlyModal({
                               </div>
                             )}
                           <div className="md:col-span-2 flex items-center space-x-4 text-sm text-gray-600">
-                            {content.data.assignedTeachers && (
+                            {content.assignedTeachers && (
                               <div className="flex items-center space-x-1">
                                 <Users className="h-4 w-4" />
                                 <span>
-                                  {content.data.assignedTeachers.length}{" "}
-                                  profesor(es) asignado(s)
+                                  {content.assignedTeachers.length} profesor(es)
+                                  asignado(s)
                                 </span>
                               </div>
                             )}
-                            {content.data.updatedAt && (
+                            {content.updatedAt && (
                               <div className="flex items-center space-x-1">
                                 <Calendar className="h-4 w-4" />
                                 <span>
                                   Última actualización:{" "}
                                   {new Date(
-                                    content.data.updatedAt
+                                    content.updatedAt
                                   ).toLocaleDateString("es-ES")}
                                 </span>
                               </div>
@@ -349,11 +349,9 @@ export default function ContentPreviewReadOnlyModal({
                   {/* Contenido Markdown - IGUAL QUE EL TEACHER */}
                   <Card className="m-6 mt-4 flex-1">
                     <CardBody className="p-2">
-                      {markdownContent?.data ? (
-                        <div className="prose prose-gray max-w-none">
-                          <MilkdownReadOnlyViewer
-                            content={markdownContent.data}
-                          />
+                      {markdownContent ? (
+                        <div className="prose prose-gray max-w-none pl-8">
+                          <MilkdownReadOnlyViewer content={markdownContent} />
                         </div>
                       ) : (
                         <div className="text-center py-12">

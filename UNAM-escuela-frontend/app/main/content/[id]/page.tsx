@@ -104,7 +104,7 @@ export default function ContentViewPage() {
     );
   }
 
-  if (markdownError || !markdownContent?.data) {
+  if (markdownError || !markdownContent) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -193,7 +193,7 @@ export default function ContentViewPage() {
               padding: "0",
             }}
           >
-            {markdownContent?.data ? (
+            {markdownContent ? (
               <ScrollShadow
                 className="h-[calc(100vh-80px)]"
                 hideScrollBar={false}
@@ -204,8 +204,8 @@ export default function ContentViewPage() {
                   className="h-full w-full flex justify-center items-start"
                   style={{ margin: 0, padding: "8px 12px" }}
                 >
-                  <div className="w-full max-w-none">
-                    <MilkdownReadOnlyViewer content={markdownContent.data} />
+                  <div className="prose prose-gray max-w-none pl-8">
+                    <MilkdownReadOnlyViewer content={markdownContent} />
                   </div>
                 </div>
               </ScrollShadow>
@@ -279,7 +279,7 @@ export default function ContentViewPage() {
                 <h2 className="text-xl font-semibold">Contenido Markdown</h2>
               </DrawerHeader>
               <DrawerBody className="p-0">
-                {markdownContent?.data ? (
+                {markdownContent ? (
                   <ScrollShadow
                     className="h-full"
                     hideScrollBar={false}
@@ -289,10 +289,8 @@ export default function ContentViewPage() {
                       style={{ padding: "8px 12px" }}
                       className="flex justify-center items-start"
                     >
-                      <div className="w-full max-w-none">
-                        <MilkdownReadOnlyViewer
-                          content={markdownContent.data}
-                        />
+                      <div className="prose prose-gray max-w-none pl-8">
+                        <MilkdownReadOnlyViewer content={markdownContent} />
                       </div>
                     </div>
                   </ScrollShadow>

@@ -30,28 +30,46 @@ export function useAutoSave({
   const [lastSavedContent, setLastSavedContent] = useState("");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  console.log("🔧 useAutoSave hook inicializado", {
+    contentId,
+    enabled,
+    interval,
+    hasOnSave: !!onSave,
+    hasOnError: !!onError,
+  });
+
   const saveContent = useCallback(
     async (content: string) => {
       if (!contentId || !enabled) {
-        return;
-      }
-
-      if (content === lastSavedContent) {
+        console.log("⏭️ Auto-save: Deshabilitado o sin contentId", {
+          contentId,
+          enabled,
+        });
         return;
       }
 
       if (!content || content.trim() === "") {
+        console.log("⏭️ Auto-save: Contenido vacío, no guardando");
         return;
       }
+
+      console.log("💾 Auto-save: Iniciando guardado...", {
+        contentId,
+        contentLength: content.length,
+        timestamp: new Date().toISOString(),
+        lastSavedLength: lastSavedContent.length,
+      });
 
       try {
         setIsSaving(true);
         const result = await updateContentMarkdown(contentId, content);
 
         if (result.error) {
+          console.error("❌ Auto-save: Error del servidor:", result.error);
           onError?.(result.error);
           onSave?.(false, content);
         } else {
+          console.log("✅ Auto-save: Guardado exitoso");
           setLastSavedContent(content);
           setLastSaveTime(new Date());
           onSave?.(true, content);
@@ -59,6 +77,10 @@ export function useAutoSave({
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Error desconocido";
+        console.error(
+          "❌ Auto-save: Excepción durante guardado:",
+          errorMessage
+        );
         onError?.(errorMessage);
         onSave?.(false, content);
       } finally {
@@ -70,13 +92,27 @@ export function useAutoSave({
 
   const scheduleAutoSave = useCallback(
     (content: string) => {
-      if (!enabled || !contentId) return;
+      if (!enabled || !contentId) {
+        console.log(
+          "⏭️ Auto-save: Programación cancelada (deshabilitado o sin contentId)"
+        );
+        return;
+      }
+
+      if (!content || content.trim() === "") {
+        console.log("⏭️ Auto-save: Contenido vacío, no programando");
+        return;
+      }
+
+      console.log("⏰ Auto-save: Programando guardado en", interval, "ms");
 
       if (saveTimeoutRef.current) {
+        console.log("⏰ Auto-save: Cancelando guardado anterior");
         clearTimeout(saveTimeoutRef.current);
       }
 
       saveTimeoutRef.current = setTimeout(() => {
+        console.log("⏰ Auto-save: Ejecutando guardado programado");
         saveContent(content);
       }, interval);
     },

@@ -10,17 +10,8 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Chip,
 } from "@heroui/react";
-import {
-  ArrowLeft,
-  Calendar,
-  Upload,
-  Save,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Calendar, Upload } from "lucide-react";
 import Link from "next/link";
 import { useAutoSave } from "@/app/hooks/use-auto-save";
 import dynamic from "next/dynamic";
@@ -64,13 +55,20 @@ export default function EditContentClientPage({
     onOpenChange: onWordModalOpenChange,
   } = useDisclosure();
 
-  // Auto-save con nuevos estados
+  // Auto-save con configuración optimizada
   const autoSave = useAutoSave({
     contentId,
     enabled: true,
-    interval: 3000,
+    interval: 2000, // 2 segundos para testing
     onSave: (success: boolean, content: string) => {
+      console.log("🔄 Auto-save callback:", {
+        success,
+        contentLength: content.length,
+        contentId,
+      });
+
       if (success) {
+        console.log("✅ Auto-save exitoso - actualizando estado UI");
         setAutoSaveStatus("saved");
         setLastSaveTime(new Date());
         setHasUnsavedChanges(false);
@@ -78,15 +76,20 @@ export default function EditContentClientPage({
           queryKey: ["contentMarkdown", contentId],
         });
         // Resetear a "idle" después de 2 segundos
-        setTimeout(() => setAutoSaveStatus("idle"), 2000);
+        setTimeout(() => {
+          setAutoSaveStatus("idle");
+          console.log("🔄 Auto-save: Estado reseteado a idle");
+        }, 2000);
       } else {
+        console.error("❌ Auto-save falló - actualizando estado UI");
         setAutoSaveStatus("error");
-        setTimeout(() => setAutoSaveStatus("idle"), 3000);
+        setTimeout(() => setAutoSaveStatus("idle"), 4000);
       }
     },
-    onError: () => {
+    onError: (error: string) => {
+      console.error("❌ Auto-save error:", error);
       setAutoSaveStatus("error");
-      setTimeout(() => setAutoSaveStatus("idle"), 3000);
+      setTimeout(() => setAutoSaveStatus("idle"), 4000);
     },
   });
 
@@ -97,47 +100,41 @@ export default function EditContentClientPage({
     }
   }, [hasUnsavedChanges, autoSaveStatus]);
 
-  // Función para forzar guardado manual
-  const handleManualSave = useCallback(() => {
-    try {
-      const editorInstance = (window as any).milkdownEditorInstance;
-      if (editorInstance && editorInstance.getMarkdown) {
-        const content = editorInstance.getMarkdown();
-        console.log("🔄 Guardado manual iniciado");
-        setAutoSaveStatus("saving");
-        autoSave.scheduleAutoSave(content);
-      } else {
-        console.log("❌ No se pudo acceder al editor para guardado manual");
-        setAutoSaveStatus("error");
-        setTimeout(() => setAutoSaveStatus("idle"), 3000);
-      }
-    } catch (error) {
-      console.error("Error en guardado manual:", error);
-      setAutoSaveStatus("error");
-      setTimeout(() => setAutoSaveStatus("idle"), 3000);
-    }
-  }, [autoSave]);
-
-  // Handler para auto-save desde el editor
+  // Handler para auto-save desde el editor con mejor logging
   const handleEditorSave = useCallback(
     async (content: string) => {
-      console.log("💾 Auto-save desde editor único:", content.length);
+      console.log("📝 Editor save callback EJECUTADO:", {
+        contentLength: content.length,
+        isDifferentFromInitial: content !== initialMarkdown,
+        isDifferentFromCurrent: content !== currentContent,
+        timestamp: new Date().toISOString(),
+        contentPreview: content.substring(0, 100) + "...",
+      });
+
+      // Verificar si hay cambios ANTES de actualizar el estado
+      const hasChanges = content.trim() !== "" && content !== currentContent;
 
       // Actualizar contenido actual
       setCurrentContent(content);
 
-      // Solo marcar cambios si el contenido es diferente al inicial
-      if (content !== initialMarkdown) {
+      // Marcar cambios y programar auto-save si hay cambios válidos
+      if (hasChanges) {
+        console.log("✏️ Contenido modificado, programando auto-save");
         setHasUnsavedChanges(true);
         setAutoSaveStatus("saving");
+
+        // Programar auto-save inmediatamente
         autoSave.scheduleAutoSave(content);
-      } else {
-        // Si el contenido vuelve a ser igual al inicial, no hay cambios pendientes
+      } else if (content.trim() === "") {
+        console.log("↩️ Contenido vacío, no guardando");
         setHasUnsavedChanges(false);
         setAutoSaveStatus("idle");
+      } else {
+        console.log("↩️ Sin cambios detectados");
+        setHasUnsavedChanges(false);
       }
     },
-    [autoSave, initialMarkdown]
+    [autoSave, currentContent]
   );
 
   // Manejadores para Word upload
@@ -154,73 +151,6 @@ export default function EditContentClientPage({
     setAutoSaveStatus("error");
     setTimeout(() => setAutoSaveStatus("idle"), 5000);
   }, []);
-
-  // Función para renderizar el chip de estado elegante
-  const renderAutoSaveChip = () => {
-    const getChipConfig = () => {
-      switch (autoSaveStatus) {
-        case "changes":
-          return {
-            color: "warning" as const,
-            variant: "dot" as const,
-            icon: <AlertCircle className="w-3 h-3" />,
-            text: "Cambios por guardar",
-          };
-        case "saving":
-          return {
-            color: "primary" as const,
-            variant: "dot" as const,
-            icon: <Clock className="w-3 h-3 animate-spin" />,
-            text: "Guardando...",
-          };
-        case "saved":
-          return {
-            color: "success" as const,
-            variant: "dot" as const,
-            icon: <CheckCircle2 className="w-3 h-3" />,
-            text: lastSaveTime
-              ? `Guardado ${lastSaveTime.toLocaleTimeString("es-ES", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`
-              : "Guardado",
-          };
-        case "error":
-          return {
-            color: "danger" as const,
-            variant: "dot" as const,
-            icon: <AlertCircle className="w-3 h-3" />,
-            text: "Error al guardar",
-          };
-        case "idle":
-        default:
-          if (!hasUnsavedChanges) {
-            return {
-              color: "default" as const,
-              variant: "flat" as const,
-              icon: <Save className="w-3 h-3" />,
-              text: "Sin cambios",
-            };
-          }
-          return null;
-      }
-    };
-
-    const config = getChipConfig();
-    if (!config) return null;
-
-    return (
-      <Chip
-        color={config.color}
-        variant={config.variant}
-        size="sm"
-        startContent={config.icon}
-        className="animate-in fade-in-0 duration-200"
-      >
-        {config.text}
-      </Chip>
-    );
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -273,23 +203,6 @@ export default function EditContentClientPage({
             </div>
 
             <div className="flex items-center space-x-3">
-              {/* Chip de estado de autoguardado */}
-              {renderAutoSaveChip()}
-
-              {/* Botón de guardado manual */}
-              {hasUnsavedChanges && (
-                <Button
-                  color="success"
-                  variant="flat"
-                  size="sm"
-                  startContent={<Save className="h-4 w-4" />}
-                  onPress={handleManualSave}
-                  isLoading={autoSaveStatus === "saving"}
-                >
-                  Guardar ahora
-                </Button>
-              )}
-
               <Button
                 color="primary"
                 variant="flat"

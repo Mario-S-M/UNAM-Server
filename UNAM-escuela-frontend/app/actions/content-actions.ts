@@ -421,6 +421,17 @@ export async function createContent(
     const levelId = formData.get("levelId")?.toString() || "";
     const skillId = formData.get("skillId")?.toString() || "";
 
+    // Extraer teacherIds del FormData
+    const teacherIdsString = formData.get("teacherIds")?.toString();
+    let teacherIds: string[] = [];
+    if (teacherIdsString) {
+      try {
+        teacherIds = JSON.parse(teacherIdsString);
+      } catch (error) {
+        console.warn("Error al parsear teacherIds:", error);
+      }
+    }
+
     if (!name || !description || !levelId) {
       throw new Error("Nombre, descripción y nivel son obligatorios");
     }
@@ -428,6 +439,8 @@ export async function createContent(
     if (!skillId) {
       throw new Error("Skill es obligatorio");
     }
+
+    console.log("📤 Creando contenido con teacherIds:", teacherIds);
 
     const headers = await getAuthHeaders();
     const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -448,6 +461,12 @@ export async function createContent(
                 color
               }
               markdownPath
+              assignedTeachers {
+                id
+                fullName
+                email
+                roles
+              }
               createdAt
               updatedAt
             }
@@ -459,6 +478,7 @@ export async function createContent(
             description,
             levelId,
             skillId,
+            ...(teacherIds.length > 0 && { teacherIds }),
           },
         },
       }),
@@ -969,6 +989,12 @@ export async function updateContentMarkdown(
       throw new Error("ID del contenido y contenido markdown son requeridos");
     }
 
+    console.log("💾 updateContentMarkdown: Iniciando guardado", {
+      contentId,
+      contentLength: markdownContent.length,
+      timestamp: new Date().toISOString(),
+    });
+
     // Para IDs de prueba, simular el guardado exitoso
     if (contentId.startsWith("test-")) {
       console.log(
@@ -991,6 +1017,8 @@ export async function updateContentMarkdown(
     }
 
     const headers = await getAuthHeaders();
+    console.log("💾 updateContentMarkdown: Enviando request al servidor");
+
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
       headers,
@@ -1004,24 +1032,68 @@ export async function updateContentMarkdown(
       }),
     });
 
+    console.log(
+      "💾 updateContentMarkdown: Status de respuesta",
+      response.status
+    );
+
+    // Obtener el texto de la respuesta primero
+    const responseText = await response.text();
+    console.log(
+      "💾 updateContentMarkdown: Raw response:",
+      responseText.substring(0, 500)
+    );
+
     if (!response.ok) {
+      console.error("💾 updateContentMarkdown: Error HTTP", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        responseText: responseText.substring(0, 200),
+      });
+
       throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`
+        `Error HTTP: ${response.status} - ${
+          response.statusText
+        }. Response: ${responseText.substring(0, 200)}`
       );
     }
 
-    const result = await response.json();
+    // Parsear el JSON del texto obtenido
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (jsonError) {
+      console.error(
+        "💾 updateContentMarkdown: Error al parsear JSON:",
+        jsonError
+      );
+      console.error(
+        "💾 updateContentMarkdown: Respuesta no JSON:",
+        responseText.substring(0, 500)
+      );
+      throw new Error(
+        `Respuesta inválida del servidor. No es JSON válido: ${responseText.substring(
+          0,
+          100
+        )}`
+      );
+    }
+
+    console.log("💾 updateContentMarkdown: Respuesta del servidor", result);
 
     if (result.errors) {
       const errorMessage = result.errors
         .map((err: any) => err.message)
         .join(", ");
+      console.error("💾 updateContentMarkdown: Error GraphQL", errorMessage);
       throw new Error(sanitizeErrorMessage(errorMessage));
     }
 
+    console.log("✅ updateContentMarkdown: Guardado exitoso");
     return { data: result.data.updateContentMarkdown };
   } catch (error) {
-    console.error("Error en updateContentMarkdown:", error);
+    console.error("❌ updateContentMarkdown: Error durante guardado:", error);
     const { error: errorMessage } =
       ContentErrorHandler.handleContentError(error);
     return {

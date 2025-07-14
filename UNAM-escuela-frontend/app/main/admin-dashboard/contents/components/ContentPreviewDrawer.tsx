@@ -37,7 +37,7 @@ import {
   invalidateContent,
 } from "@/app/actions/content-actions";
 import { addToast } from "@heroui/react";
-import { useAutoSave } from "@/app/hooks/use-auto-save";
+import { useSubtleAutoSave } from "@/app/hooks/use-subtle-auto-save";
 import dynamic from "next/dynamic";
 import GlobalButton from "@/components/global/globalButton";
 
@@ -63,28 +63,11 @@ export default function ContentPreviewDrawer({
   const [lastSaveIndicator, setLastSaveIndicator] = useState<string>("");
   const queryClient = useQueryClient();
 
-  // Auto-guardado sutil cada 5 segundos
-  const autoSave = useAutoSave({
+  // Auto-guardado sutil y transparente
+  const autoSave = useSubtleAutoSave({
     contentId: contentId || undefined,
-    enabled: !!contentId && hasChanges,
-    interval: 5000, // 5 segundos
-    onSave: (success: boolean) => {
-      if (success) {
-        setHasChanges(false);
-        // Indicador MUY sutil - solo un pequeño punto verde por 2 segundos
-        setLastSaveIndicator("✓");
-        setTimeout(() => setLastSaveIndicator(""), 2000);
-        // Invalidar queries silenciosamente
-        queryClient.invalidateQueries({
-          queryKey: ["contentMarkdown", contentId],
-        });
-      }
-    },
-    onError: () => {
-      // Error sutil - punto rojo muy pequeño
-      setLastSaveIndicator("!");
-      setTimeout(() => setLastSaveIndicator(""), 3000);
-    },
+    enabled: !!contentId,
+    interval: 3000, // 3 segundos para ser más sutil
   });
 
   // Queries
@@ -425,11 +408,16 @@ export default function ContentPreviewDrawer({
                           "# Comienza a escribir aquí\n\nEste es el editor de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```"
                         }
                         onSave={async (content) => {
-                          // Esta función se llama cuando el contenido cambia
+                          // Auto-guardado sutil y transparente
                           setEditedContent(content);
                           setHasChanges(true);
-                          // Programar auto-guardado
+
+                          // Programar auto-guardado sutil
                           autoSave.scheduleAutoSave(content);
+
+                          // Mostrar indicador muy sutil por 1 segundo
+                          setLastSaveIndicator("⋯");
+                          setTimeout(() => setLastSaveIndicator(""), 1000);
                         }}
                       />
                     </div>
@@ -440,11 +428,25 @@ export default function ContentPreviewDrawer({
 
             <DrawerFooter className="bg-gray-50 border-t">
               <div className="flex justify-between items-center w-full">
-                <div className="text-sm text-gray-500">
-                  {hasChanges && (
-                    <span className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                      Hay cambios sin guardar
+                <div className="text-sm text-gray-500 flex items-center gap-2">
+                  {autoSave.isSaving && (
+                    <span className="flex items-center gap-1 text-xs">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                      Guardando...
+                    </span>
+                  )}
+                  {autoSave.lastSaveTime && !autoSave.isSaving && (
+                    <span className="text-xs text-green-600">
+                      ✓ Guardado{" "}
+                      {autoSave.lastSaveTime.toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  )}
+                  {lastSaveIndicator && (
+                    <span className="text-xs opacity-60">
+                      {lastSaveIndicator}
                     </span>
                   )}
                 </div>
@@ -455,8 +457,9 @@ export default function ContentPreviewDrawer({
                       onPress={handleSave}
                       isLoading={saveMarkdownMutation.isPending}
                       startContent={<Save className="h-4 w-4" />}
+                      size="sm"
                     >
-                      Guardar Cambios
+                      Guardar ahora
                     </GlobalButton>
                   )}
                   <GlobalButton

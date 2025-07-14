@@ -6,7 +6,7 @@ import {
   removeTeacherFromContent,
 } from "@/app/actions/content-actions";
 import { getTeachers } from "@/app/actions/user-actions";
-import { createTestTeachers } from "@/app/actions/create-test-teachers";
+// Eliminado: import { createTestTeachers } from "@/app/actions/create-test-teachers";
 import { filterTeachersForLanguageCompatibility } from "@/app/actions/level-language-utils";
 import { usePermissions } from "@/app/hooks/use-authorization";
 import { useAuthorization } from "@/app/hooks/use-authorization";

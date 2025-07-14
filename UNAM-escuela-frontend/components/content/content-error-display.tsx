@@ -19,7 +19,6 @@ import {
   ContentErrorHandler,
   ErrorInfo,
 } from "@/app/utils/content-error-handler";
-import { ContentFixer } from "./content-fixer";
 
 interface ContentErrorDisplayProps {
   error: string;
@@ -41,7 +40,7 @@ export function ContentErrorDisplay({
   contentId,
 }: ContentErrorDisplayProps) {
   const router = useRouter();
-  const [showFixer, setShowFixer] = useState(false);
+  // Eliminado: const [showFixer, setShowFixer] = useState(false);
 
   console.log("🔍 ContentErrorDisplay - Props:", {
     error,
@@ -177,17 +176,7 @@ export function ContentErrorDisplay({
               </Button>
             )}
 
-            {/* Botón del solucionador de problemas */}
-            {contentId && (
-              <Button
-                color="secondary"
-                variant="bordered"
-                onClick={() => setShowFixer(true)}
-                startContent={<Wrench className="h-4 w-4" />}
-              >
-                Solucionador
-              </Button>
-            )}
+            {/* Botón del solucionador eliminado - funcionalidad no disponible */}
 
             {/* Botón de login para errores de autenticación */}
             {analyzedError.type === "AUTHENTICATION_ERROR" && (
@@ -240,18 +229,7 @@ export function ContentErrorDisplay({
         </CardBody>
       </Card>
 
-      {/* Modal del solucionador de problemas */}
-      {contentId && (
-        <ContentFixer
-          contentId={contentId}
-          isOpen={showFixer}
-          onOpenChange={setShowFixer}
-          onFixed={() => {
-            console.log("Problema resuelto según el usuario");
-            if (onRetry) onRetry();
-          }}
-        />
-      )}
+      {/* Componente eliminado: ContentFixer no disponible */}
     </div>
   );
 }

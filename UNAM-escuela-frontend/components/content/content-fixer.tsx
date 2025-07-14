@@ -24,11 +24,6 @@ import {
   Copy,
 } from "lucide-react";
 import testGraphQLConnection from "@/app/utils/graphql-client";
-import {
-  useContentDebugger,
-  ContentDiagnostic,
-  ContentDebugger,
-} from "@/app/utils/content-debug";
 
 interface ContentFixerProps {
   contentId: string;

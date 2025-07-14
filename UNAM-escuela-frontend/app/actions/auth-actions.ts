@@ -14,10 +14,32 @@ import {
 } from "../interfaces/auth-interfaces";
 import { getUserMainPage, getHighestRole } from "../dal/auth-dal-server";
 import { getCookieConfig } from "../utils/cookie-config";
-import {
-  setCookieWithDebug,
-  debugCookieConfiguration,
-} from "../utils/cookie-debug";
+
+// Funciones simples para reemplazar las de cookie-debug
+const setCookieWithDebug = async (token: string, isDevelopment: boolean) => {
+  try {
+    const cookieConfig = getCookieConfig();
+    (await cookies()).set("UNAM-INCLUSION-TOKEN", token, cookieConfig);
+    console.log(`🍪 Cookie set successfully: UNAM-INCLUSION-TOKEN`);
+
+    return {
+      success: true,
+      wasSet: true,
+      error: null,
+    };
+  } catch (error) {
+    console.error("❌ Error setting cookie:", error);
+    return {
+      success: false,
+      wasSet: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+};
+
+const debugCookieConfiguration = async () => {
+  console.log("🔍 Cookie configuration debug - function simplified");
+};
 
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";

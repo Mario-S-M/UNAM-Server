@@ -362,12 +362,7 @@ export async function getSkillsPaginated(
 ): Promise<PaginatedSkillsResponse> {
   const { search, page = 1, limit = 10, isActive } = filters;
 
-  console.log("🔍 Obteniendo skills paginados:", {
-    search,
-    page,
-    limit,
-    isActive,
-  });
+  
 
   try {
     const cookieStore = await cookies();
@@ -417,11 +412,11 @@ export async function getSkillsPaginated(
       }),
     });
 
-    console.log("📥 Respuesta HTTP:", response.status, response.statusText);
+    
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ Error en respuesta HTTP:", errorText);
+      
       return {
         data: {
           skills: [],
@@ -438,7 +433,7 @@ export async function getSkillsPaginated(
     const result = await response.json();
 
     if (result.errors) {
-      console.error("❌ GraphQL errors:", result.errors);
+      
       return {
         data: {
           skills: [],
@@ -452,10 +447,10 @@ export async function getSkillsPaginated(
       };
     }
 
-    console.log("✅ Skills paginados obtenidos exitosamente");
+    
     return { data: result.data.skillsPaginated };
   } catch (error) {
-    console.error("❌ Error obteniendo skills paginados:", error);
+    
     return {
       data: {
         skills: [],

@@ -1,6 +1,6 @@
 // Utilidad para manejar editores duplicados
 export function cleanupAllEditors() {
-  console.log("🧹 Iniciando limpieza de todos los editores...");
+  
 
   // Seleccionar todos los editores en el DOM
   const allEditorContainers = document.querySelectorAll("[data-editor-id]");
@@ -9,9 +9,7 @@ export function cleanupAllEditors() {
   );
   const allProseMirrorEditors = document.querySelectorAll(".ProseMirror");
 
-  console.log(
-    `📊 Encontrados: ${allEditorContainers.length} containers, ${allMilkdownContainers.length} milkdown, ${allProseMirrorEditors.length} ProseMirror`
-  );
+  
 
   let removedCount = 0;
 
@@ -20,7 +18,7 @@ export function cleanupAllEditors() {
   allEditorContainers.forEach((container) => {
     const editorId = container.getAttribute("data-editor-id");
     if (editorIds.has(editorId)) {
-      console.log(`🗑️ Removiendo editor duplicado: ${editorId}`);
+      
       container.remove();
       removedCount++;
     } else {
@@ -32,7 +30,7 @@ export function cleanupAllEditors() {
   allMilkdownContainers.forEach((container) => {
     const hasValidParent = container.closest("[data-editor-id]");
     if (!hasValidParent) {
-      console.log("🗑️ Removiendo container milkdown huérfano");
+      
       container.remove();
       removedCount++;
     }
@@ -50,7 +48,7 @@ export function cleanupAllEditors() {
       proseMirrorByContainer.get(containerId).push(editor);
     } else {
       // ProseMirror sin container válido - remover
-      console.log("🗑️ Removiendo editor ProseMirror huérfano");
+      
       editor.remove();
       removedCount++;
     }
@@ -59,23 +57,17 @@ export function cleanupAllEditors() {
   // Remover ProseMirror duplicados dentro del mismo container
   proseMirrorByContainer.forEach((editors, containerId) => {
     if (editors.length > 1) {
-      console.log(
-        `🗑️ Encontrados ${editors.length} ProseMirror en container ${containerId}, removiendo duplicados`
-      );
+      
       // Mantener solo el primero, remover el resto
       for (let i = 1; i < editors.length; i++) {
-        console.log(
-          `🗑️ Removiendo ProseMirror duplicado #${
-            i + 1
-          } en container ${containerId}`
-        );
+        
         editors[i].remove();
         removedCount++;
       }
     }
   });
 
-  console.log(`✅ Limpieza completada: ${removedCount} elementos removidos`);
+  
 
   // Verificar estado final
   const finalEditorCount = document.querySelectorAll("[data-editor-id]").length;
@@ -85,9 +77,7 @@ export function cleanupAllEditors() {
   const finalProseMirrorCount =
     document.querySelectorAll(".ProseMirror").length;
 
-  console.log(
-    `📊 Estado final: ${finalEditorCount} containers, ${finalMilkdownCount} milkdown, ${finalProseMirrorCount} ProseMirror`
-  );
+  
 
   return {
     removed: removedCount,
@@ -104,7 +94,7 @@ export function forceCleanReload() {
   const result = cleanupAllEditors();
 
   if (result.remaining.containers > 1) {
-    console.log("⚠️ Aún hay múltiples editores, recargando página...");
+    
     window.location.reload();
   }
 
@@ -172,7 +162,7 @@ export function checkForDuplicates() {
 
 // Función específica para limpiar solo ProseMirror duplicados
 export function cleanupDuplicateProseMirror() {
-  console.log("🧹 Limpiando específicamente ProseMirror duplicados...");
+  
 
   const allProseMirrorEditors = document.querySelectorAll(".ProseMirror");
   const proseMirrorByContainer = new Map();
@@ -193,26 +183,20 @@ export function cleanupDuplicateProseMirror() {
   // Remover duplicados en cada container
   proseMirrorByContainer.forEach((editors, containerId) => {
     if (editors.length > 1) {
-      console.log(
-        `🗑️ Container ${containerId}: ${
-          editors.length
-        } ProseMirror encontrados, removiendo ${editors.length - 1} duplicados`
-      );
+      
       // Mantener solo el primero, remover el resto
       for (let i = 1; i < editors.length; i++) {
-        console.log(`🗑️ Removiendo ProseMirror duplicado #${i + 1}`);
+        
         editors[i].remove();
         removedCount++;
       }
     }
   });
 
-  console.log(
-    `✅ Limpieza ProseMirror completada: ${removedCount} editores duplicados removidos`
-  );
+  
 
   const finalCount = document.querySelectorAll(".ProseMirror").length;
-  console.log(`📊 ProseMirror restantes: ${finalCount}`);
+  
 
   return {
     removed: removedCount,

@@ -50,7 +50,7 @@ export function useSubtleAutoSave({
         const result = await updateContentMarkdown(contentId, content);
 
         if (result.error) {
-          console.warn("💾 Auto-save: Error silencioso:", result.error);
+          
           return false;
         } else {
           lastContentRef.current = content;
@@ -58,7 +58,7 @@ export function useSubtleAutoSave({
           return true;
         }
       } catch (error) {
-        console.warn("💾 Auto-save: Fallo silencioso:", error);
+        
         return false;
       } finally {
         setIsSaving(false);

@@ -182,7 +182,7 @@ interface ContentCardProps {
 
 function ContentCard({ content }: ContentCardProps) {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:bg-gray-50 transition-colors border border-gray-200">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start w-full">
           <div className="flex items-start space-x-3">

@@ -4,7 +4,7 @@
 
 | Present | Past   | Participle |
 | :------ | :----- | :--------- |
-| eat     | ate    | eatten     |
+| eate    | ate    | eatten     |
 | <br />  | <br /> | <br />     |
 
 <br />

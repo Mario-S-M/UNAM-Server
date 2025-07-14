@@ -40,7 +40,7 @@ function StudentDashboardContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Mis Cursos */}
           {canStudy && (
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
               <CardHeader className="pb-2">
                 <div className="flex items-center space-x-3">
                   <div className="bg-blue-100 p-3 rounded-full">
@@ -67,7 +67,7 @@ function StudentDashboardContent() {
           )}
 
           {/* Mi Progreso */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-3">
                 <div className="bg-green-100 p-3 rounded-full">
@@ -95,7 +95,7 @@ function StudentDashboardContent() {
           </Card>
 
           {/* Mis Logros */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-3">
                 <div className="bg-yellow-100 p-3 rounded-full">
@@ -123,7 +123,7 @@ function StudentDashboardContent() {
           </Card>
 
           {/* Mi Perfil */}
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-3">
                 <div className="bg-purple-100 p-3 rounded-full">

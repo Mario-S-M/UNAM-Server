@@ -65,7 +65,7 @@ Aqui puedes agregar el contenido educativo principal...
       />
     );
   } catch (error) {
-    console.error("Error en EditContentServer:", error);
+    
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

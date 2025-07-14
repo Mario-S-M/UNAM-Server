@@ -276,7 +276,7 @@ function SkillCard({ skill, levelId, onSelect }: SkillCardProps) {
 
   return (
     <Card
-      className="hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02] border hover:border-primary/20"
+      className="hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200 hover:border-primary/30"
       isPressable
       onPress={onSelect}
     >
@@ -351,7 +351,7 @@ function ContentCard({ content }: ContentCardProps) {
   const canEdit = canManageContent || (canTeach && isAssignedTeacher);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:bg-gray-50 transition-colors border border-gray-200">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between w-full">
           <div className="flex items-start gap-3 flex-1">
@@ -450,7 +450,7 @@ function ContentCard({ content }: ContentCardProps) {
           </Link>
           {/* Botón de editar para profesores asignados o administradores */}
           {canEdit && (
-            <Link href={`/main/teacher/content/${content.id}/edit`}>
+            <Link href={`/main/teacher/edit/${content.id}`}>
               <Button
                 size="sm"
                 variant="flat"

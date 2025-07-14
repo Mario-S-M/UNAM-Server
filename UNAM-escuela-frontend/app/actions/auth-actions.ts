@@ -20,7 +20,7 @@ const setCookieWithDebug = async (token: string, isDevelopment: boolean) => {
   try {
     const cookieConfig = getCookieConfig();
     (await cookies()).set("UNAM-INCLUSION-TOKEN", token, cookieConfig);
-    console.log(`🍪 Cookie set successfully: UNAM-INCLUSION-TOKEN`);
+    
 
     return {
       success: true,
@@ -28,7 +28,7 @@ const setCookieWithDebug = async (token: string, isDevelopment: boolean) => {
       error: null,
     };
   } catch (error) {
-    console.error("❌ Error setting cookie:", error);
+    
     return {
       success: false,
       wasSet: false,
@@ -38,7 +38,7 @@ const setCookieWithDebug = async (token: string, isDevelopment: boolean) => {
 };
 
 const debugCookieConfiguration = async () => {
-  console.log("🔍 Cookie configuration debug - function simplified");
+  
 };
 
 const GRAPHQL_ENDPOINT =
@@ -57,11 +57,11 @@ export async function loginAction(
     const validLoginInput = loginFormSchema.safeParse(loginInput);
 
     if (!validLoginInput.success) {
-      console.error("❌ Validación fallida:", validLoginInput.error);
+      
       throw new Error("Datos de inicio de sesión inválidos");
     }
 
-    console.log("📤 Enviando petición al backend...");
+    
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
       headers: {
@@ -91,11 +91,7 @@ export async function loginAction(
       }),
     });
 
-    console.log(
-      "📡 Respuesta del servidor:",
-      response.status,
-      response.statusText
-    );
+    
 
     if (!response.ok) {
       throw new Error(
@@ -104,15 +100,15 @@ export async function loginAction(
     }
 
     const result = await response.json();
-    console.log("📋 Datos recibidos del backend:", result);
+    
 
     if (result.errors) {
-      console.error("❌ Errores del GraphQL:", result.errors);
+      
       throw new Error(result.errors.map((err: any) => err.message).join(", "));
     }
 
     if (!result.data || !result.data.login) {
-      console.error("❌ No se recibió data.login:", result);
+      
       throw new Error("No se recibió respuesta de autenticación");
     }
 
@@ -121,7 +117,7 @@ export async function loginAction(
       throw new Error("Token de autenticación inválido");
     }
 
-    console.log("✅ Login exitoso, guardando cookie...");
+    
 
     // Debug de configuración antes de guardar
     await debugCookieConfiguration();
@@ -132,18 +128,16 @@ export async function loginAction(
 
     // Solo en producción, si falló con dominio específico, intentar sin dominio
     if (!isDevelopment && (!cookieResult.success || !cookieResult.wasSet)) {
-      console.warn(
-        "⚠️ Falló con dominio específico, intentando sin dominio..."
-      );
+      
       cookieResult = await setCookieWithDebug(validated.token, true);
     }
 
     if (!cookieResult.success) {
-      console.error("❌ Falló al establecer cookie:", cookieResult.error);
+      
       throw new Error("Error al guardar sesión");
     }
 
-    console.log("🍪 Cookie establecida exitosamente:", cookieResult);
+    
 
     // Debug de configuración después de guardar
     await debugCookieConfiguration();
@@ -152,7 +146,7 @@ export async function loginAction(
     const redirectPath = getUserMainPage(validated.user);
     const userRole = getHighestRole(validated.user);
 
-    console.log("🎯 Redirección determinada:", { redirectPath, userRole });
+    
 
     const response_data: AuthResponse<User> = {
       data: validated.user,
@@ -163,14 +157,14 @@ export async function loginAction(
       },
     };
 
-    console.log("📤 Retornando respuesta:", response_data);
+    
     return response_data;
   } catch (error) {
-    console.error("💥 Error en loginAction:", error);
+    
     const errorResponse: AuthResponse<User> = {
       error: error instanceof Error ? error.message : "Error desconocido",
     };
-    console.log("📤 Retornando error:", errorResponse);
+    
     return errorResponse;
   }
 }
@@ -178,10 +172,7 @@ export async function loginAction(
 export async function registerAction(
   registerInput: Register
 ): Promise<AuthResponse<User>> {
-  console.log("📝 RegisterAction iniciada con:", {
-    email: registerInput.email,
-    fullName: registerInput.fullName,
-  });
+  
 
   try {
     if (!registerInput) {
@@ -191,11 +182,11 @@ export async function registerAction(
     const validRegisterInput = registerFormSchema.safeParse(registerInput);
 
     if (!validRegisterInput.success) {
-      console.error("❌ Validación fallida:", validRegisterInput.error);
+      
       throw new Error("Datos de registro inválidos");
     }
 
-    console.log("📤 Enviando petición de registro al backend...");
+    
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
       headers: {
@@ -226,11 +217,7 @@ export async function registerAction(
       }),
     });
 
-    console.log(
-      "📡 Respuesta del servidor:",
-      response.status,
-      response.statusText
-    );
+    
 
     if (!response.ok) {
       throw new Error(
@@ -239,15 +226,15 @@ export async function registerAction(
     }
 
     const result = await response.json();
-    console.log("📋 Datos recibidos del backend:", result);
+    
 
     if (result.errors) {
-      console.error("❌ Errores del GraphQL:", result.errors);
+      
       throw new Error(result.errors.map((err: any) => err.message).join(", "));
     }
 
     if (!result.data || !result.data.signin) {
-      console.error("❌ No se recibió data.signin:", result);
+      
       throw new Error("No se recibió respuesta de registro");
     }
 
@@ -256,7 +243,7 @@ export async function registerAction(
       throw new Error("Token de autenticación inválido");
     }
 
-    console.log("✅ Registro exitoso, guardando cookie...");
+    
 
     // Debug de configuración antes de guardar
     await debugCookieConfiguration();
@@ -267,18 +254,16 @@ export async function registerAction(
 
     // Solo en producción, si falló con dominio específico, intentar sin dominio
     if (!isDevelopment && (!cookieResult.success || !cookieResult.wasSet)) {
-      console.warn(
-        "⚠️ Falló con dominio específico, intentando sin dominio..."
-      );
+      
       cookieResult = await setCookieWithDebug(validated.token, true);
     }
 
     if (!cookieResult.success) {
-      console.error("❌ Falló al establecer cookie:", cookieResult.error);
+      
       throw new Error("Error al guardar sesión");
     }
 
-    console.log("🍪 Cookie establecida exitosamente:", cookieResult);
+    
 
     // Debug de configuración después de guardar
     await debugCookieConfiguration();
@@ -286,10 +271,7 @@ export async function registerAction(
     // Los nuevos usuarios van a la página principal por defecto (rol mortal)
     const redirectPath = "/";
 
-    console.log("🎯 Redirección determinada:", {
-      redirectPath,
-      role: "mortal",
-    });
+    
 
     const response_data: AuthResponse<User> = {
       data: validated.user,
@@ -300,14 +282,14 @@ export async function registerAction(
       },
     };
 
-    console.log("📤 Retornando respuesta:", response_data);
+    
     return response_data;
   } catch (error) {
-    console.error("💥 Error en registerAction:", error);
+    
     const errorResponse: AuthResponse<User> = {
       error: error instanceof Error ? error.message : "Error desconocido",
     };
-    console.log("📤 Retornando error:", errorResponse);
+    
     return errorResponse;
   }
 }

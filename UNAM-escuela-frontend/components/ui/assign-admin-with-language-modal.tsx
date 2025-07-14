@@ -115,7 +115,7 @@ export function AssignAdminWithLanguageModal({
       setSelectedRole("");
       setSelectedLanguage("");
     } catch (error) {
-      console.error("Error updating user role:", error);
+      
     }
   };
 

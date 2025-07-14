@@ -27,7 +27,7 @@ const ContentTableRow: React.FC<ContentTableRowProps> = ({
 }) => {
   // Add defensive checks
   if (!content || !content.id) {
-    console.error("ContentTableRow: Invalid content data", content);
+    
     return null;
   }
 

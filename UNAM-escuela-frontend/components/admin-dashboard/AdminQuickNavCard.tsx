@@ -11,7 +11,7 @@ export const AdminQuickNavCard: React.FC<AdminQuickNavCardProps> = ({
   colorClass,
 }) => (
   <Link href={href} className="group">
-    <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+    <Card className="hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200">
       <CardBody className="p-6 text-center">
         <div className={colorClass + " mx-auto mb-3"}>{icon}</div>
         <h3 className="font-semibold text-lg mb-2">{title}</h3>

@@ -42,13 +42,7 @@ export function ContentErrorDisplay({
   const router = useRouter();
   // Eliminado: const [showFixer, setShowFixer] = useState(false);
 
-  console.log("🔍 ContentErrorDisplay - Props:", {
-    error,
-    errorInfo,
-    context,
-    showBackButton,
-    backUrl,
-  });
+  
 
   // Si no tenemos errorInfo, analizamos el error
   const analyzedError =

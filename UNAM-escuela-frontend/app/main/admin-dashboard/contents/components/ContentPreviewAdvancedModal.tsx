@@ -180,7 +180,7 @@ export default function ContentPreviewAdvancedModal({
     } else {
       // Si no hay contenido, inicializar con un contenido de ejemplo
       setEditedContent(
-        "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```"
+        "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\n\n```"
       );
     }
   }, [markdownContent]);
@@ -431,7 +431,7 @@ export default function ContentPreviewAdvancedModal({
                         }`}
                         defaultValue={
                           editedContent ||
-                          "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\nconsole.log('Hola mundo');\n```"
+                          "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\n\n```"
                         }
                         contentId={contentId!}
                         onSave={async (content) => {

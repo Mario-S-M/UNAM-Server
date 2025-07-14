@@ -78,7 +78,7 @@ export default function TeachersManagementModal({
 
         setFilteredTeachersForLanguage(directTeachers);
       } catch (error) {
-        console.error("Error applying language filtering:", error);
+        
         setFilteredTeachersForLanguage(teachers.data || []);
       } finally {
         setIsFilteringTeachers(false);

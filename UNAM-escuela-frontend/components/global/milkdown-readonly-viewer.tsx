@@ -38,7 +38,7 @@ const MilkdownReadOnlyViewer: FC<MilkdownReadOnlyViewerProps> = ({
           onReady();
         }
       } catch (error) {
-        console.error("Error al inicializar Milkdown readonly:", error);
+        
       }
     };
 
@@ -49,7 +49,7 @@ const MilkdownReadOnlyViewer: FC<MilkdownReadOnlyViewerProps> = ({
         try {
           crepeRef.current.destroy();
         } catch (error) {
-          console.error("Error al destruir editor:", error);
+          
         }
         crepeRef.current = null;
       }

@@ -19,7 +19,7 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
       headers.Authorization = `Bearer ${token}`;
     }
   } catch (error) {
-    console.error("Error getting auth headers:", error);
+    
   }
 
   return headers;

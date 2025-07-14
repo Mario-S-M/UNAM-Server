@@ -91,7 +91,7 @@ export function AssignMultipleLanguagesModal({
       onOpenChange(false);
       setSelectedLanguages([]);
     } catch (error) {
-      console.error("Error assigning languages:", error);
+      
     }
   };
 

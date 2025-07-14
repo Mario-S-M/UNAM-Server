@@ -40,7 +40,7 @@ const ContentTable: React.FC<ContentTableProps> = ({
   const safeContents = Array.isArray(contents) ? contents : [];
 
   // Add debug logging
-  console.log("ContentTable - safeContents:", safeContents);
+  
 
   // If no contents, show empty state
   if (safeContents.length === 0) {
@@ -56,7 +56,7 @@ const ContentTable: React.FC<ContentTableProps> = ({
     return content && content.id && content.name && content.description;
   });
 
-  console.log("ContentTable - validatedContents:", validatedContents);
+  
 
   if (validatedContents.length === 0) {
     return (

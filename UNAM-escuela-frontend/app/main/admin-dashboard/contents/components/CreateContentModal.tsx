@@ -72,7 +72,7 @@ export default function CreateContentModal({
 
         setFilteredTeachersForLanguage(filtered);
       } catch (error) {
-        console.error("Error applying language filtering:", error);
+        
         setFilteredTeachersForLanguage(teachers.data);
       } finally {
         setIsFilteringTeachers(false);

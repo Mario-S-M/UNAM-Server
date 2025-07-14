@@ -11,7 +11,7 @@ interface AssignedContentCardProps {
 
 export function AssignedContentCard({ content }: AssignedContentCardProps) {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:bg-gray-50 transition-colors border border-gray-200">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between w-full">
           <div className="flex items-start space-x-3">
@@ -47,10 +47,7 @@ export function AssignedContentCard({ content }: AssignedContentCardProps) {
 
           {/* Acciones */}
           <div className="flex space-x-2">
-            <Link
-              href={`/main/teacher/content/${content.id}/edit`}
-              className="flex-1"
-            >
+            <Link href={`/main/teacher/edit/${content.id}`} className="flex-1">
               <Button
                 color="primary"
                 variant="flat"
@@ -58,16 +55,6 @@ export function AssignedContentCard({ content }: AssignedContentCardProps) {
                 startContent={<Edit className="h-4 w-4" />}
               >
                 Editar
-              </Button>
-            </Link>
-            <Link href={`/main/teacher/content/${content.id}`}>
-              <Button
-                color="default"
-                variant="light"
-                isIconOnly
-                aria-label="Ver contenido"
-              >
-                <Eye className="h-4 w-4" />
               </Button>
             </Link>
           </div>

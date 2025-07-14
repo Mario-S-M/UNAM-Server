@@ -24,7 +24,7 @@ export class ContentErrorHandler {
    * Analiza un error y devuelve información estructurada
    */
   static analyzeError(error: any): ErrorInfo {
-    console.log("🔍 Analizando error:", error);
+    
 
     // Si el error es null o undefined
     if (!error) {
@@ -201,11 +201,7 @@ export class ContentErrorHandler {
     const errorInfo = this.analyzeError(error);
 
     // Log del error para debugging
-    console.error("❌ Error de contenido:", {
-      type: errorInfo.type,
-      message: errorInfo.message,
-      originalError: errorInfo.originalError,
-    });
+    
 
     return {
       error: errorInfo.message,
@@ -259,11 +255,11 @@ export function useContentErrorHandler() {
     const errorId = ContentErrorHandler.generateErrorId();
 
     console.group(`🚨 Error en contexto: ${context || "Desconocido"}`);
-    console.log("ID del error:", errorId);
-    console.log("Tipo:", errorInfo.type);
-    console.log("Mensaje:", errorInfo.message);
-    console.log("Sugerencia:", errorInfo.suggestion);
-    console.log("Error original:", errorInfo.originalError);
+    
+    
+    
+    
+    
     console.groupEnd();
 
     return {

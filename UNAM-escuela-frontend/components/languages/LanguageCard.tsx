@@ -11,9 +11,9 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
     href={`/main/lenguages/${language.id}/view`}
     className="group block"
   >
-    <div className="bg-background border border-divider rounded-2xl p-10 shadow-sm cursor-pointer hover:shadow-lg transition-all duration-300 group-hover:border-primary/30 group-hover:bg-content1/30">
+    <div className="bg-background border border-divider rounded-2xl p-10 cursor-pointer hover:bg-content1/30 transition-all duration-300 group-hover:border-primary/30">
       <div className="flex justify-center mb-8">
-        <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-600 text-primary-foreground rounded-2xl flex items-center justify-center font-semibold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+        <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary-600 text-primary-foreground rounded-2xl flex items-center justify-center font-semibold text-lg group-hover:scale-110 transition-transform duration-300">
           {globalIndex}
         </div>
       </div>

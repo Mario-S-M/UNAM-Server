@@ -192,8 +192,23 @@
 }
 
 /* Estilos para el divisor redimensionable */
-.resizer-dragging {
+.resizer-dragging * {
   user-select: none !important;
+}
+
+/* Ocultar elementos de debug y desarrollo */
+.debug-tools,
+.development-tools,
+[data-debug="true"],
+.debug-panel,
+.fixed-bottom-debug {
+  display: none !important;
+}
+
+/* Prevenir elementos flotantes problemáticos en editores */
+.milkdown-client-container > .debug-element,
+.milkdown-client-container > .development-element {
+  display: none !important;
 }
 
 .resizer-dragging * {

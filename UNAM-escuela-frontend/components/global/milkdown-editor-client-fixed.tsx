@@ -8,32 +8,73 @@ import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import "./milkdown-simple.css";
 
-// Map global para rastrear editores activos
-const activeEditors = new Map<string, boolean>();
+// Map global para rastrear editores activos con información detallada
+const activeEditors = new Map<string, {
+  instance: any;
+  container: HTMLElement;
+  contentId?: string;
+  timestamp: number;
+}>();
 
-// Función global para limpiar editores duplicados
-const cleanupDuplicateEditors = () => {
-  // Buscar todos los editores ProseMirror en la página
-  const allProseMirrorEditors = document.querySelectorAll(".ProseMirror");
+// Singleton global para controlar la inicialización
+let isInitializingEditor = false;
+let initializationQueue: Array<() => void> = [];
 
-  if (allProseMirrorEditors.length > 1) {
-    console.log(
-      `🧹 GLOBAL: Detectados ${allProseMirrorEditors.length} editores ProseMirror, limpiando duplicados...`
-    );
-
-    // Mantener solo el último editor (más reciente) y remover los anteriores
-    for (let i = 0; i < allProseMirrorEditors.length - 1; i++) {
-      const editorToRemove = allProseMirrorEditors[i];
-      const container = editorToRemove.closest(".milkdown-client-container");
-
-      if (container) {
-        console.log(`🗑️ GLOBAL: Removiendo editor duplicado #${i + 1}`);
-        container.remove();
-      } else {
-        editorToRemove.remove();
+// Función global mejorada para prevenir duplicados
+const preventDuplicateEditors = (contentId?: string, currentContainer?: HTMLElement) => {
+  // Si hay un contentId específico, verificar si ya existe
+  if (contentId) {
+    for (const [key, editorInfo] of activeEditors.entries()) {
+      if (editorInfo.contentId === contentId && editorInfo.container !== currentContainer) {
+        console.log(`⚠️ PREVENCIÓN: Ya existe un editor activo para contentId ${contentId}`);
+        return false; // Prevenir creación
       }
     }
   }
+
+  // Verificar editores ProseMirror en la página
+  const allProseMirrorEditors = document.querySelectorAll(".ProseMirror");
+  
+  if (allProseMirrorEditors.length > 0) {
+    // Si ya hay editores y estamos intentando crear uno nuevo, verificar si es necesario
+    const existingContainers = new Set<Element>();
+    
+    allProseMirrorEditors.forEach(editor => {
+      const container = editor.closest(".milkdown-client-container");
+      if (container && container !== currentContainer) {
+        existingContainers.add(container);
+      }
+    });
+    
+    if (existingContainers.size > 0 && !contentId) {
+      console.log(`⚠️ PREVENCIÓN: Ya existen ${existingContainers.size} editores en la página`);
+      return false; // Prevenir creación de editores adicionales sin contentId específico
+    }
+  }
+  
+  return true; // Permitir creación
+};
+
+// Función para limpiar editores huérfanos
+const cleanupOrphanedEditors = () => {
+  const allProseMirrorEditors = document.querySelectorAll(".ProseMirror");
+  const validContainers = new Set<Element>();
+  
+  // Recopilar containers válidos del Map
+  for (const editorInfo of activeEditors.values()) {
+    if (editorInfo.container && document.contains(editorInfo.container)) {
+      validContainers.add(editorInfo.container);
+    }
+  }
+  
+  // Eliminar editores que no están en el Map de activos
+  allProseMirrorEditors.forEach(editor => {
+    const container = editor.closest(".milkdown-client-container");
+    if (container && !validContainers.has(container)) {
+      console.log(`🗑️ LIMPIEZA: Removiendo editor huérfano`);
+      container.remove();
+    }
+  });
 };
 
 // Función para convertir contenido de ProseMirror HTML a Markdown
@@ -481,11 +522,9 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
       return;
     }
 
-    // Verificar si ya hay un editor ProseMirror en este contenedor
-    if (editorRef.current.querySelector(".ProseMirror")) {
-      console.log(
-        "⚠️ Ya existe un editor ProseMirror en este contenedor, evitando duplicación"
-      );
+    // Prevenir re-inicialización si ya hay un editor funcionando
+    if (crepeRef.current && isEditorReady) {
+      console.log("⚠️ Editor ya está inicializado y funcionando, evitando re-inicialización");
       return;
     }
 
@@ -493,6 +532,17 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
 
     const initEditor = async () => {
       try {
+        // Control de singleton global - solo un editor puede inicializarse a la vez
+        if (isInitializingEditor) {
+          console.log("⏳ Otro editor se está inicializando, agregando a la cola...");
+          return new Promise<void>((resolve) => {
+            initializationQueue.push(() => {
+              initEditor().then(resolve);
+            });
+          });
+        }
+
+        isInitializingEditor = true;
         initializationRef.current = true;
 
         // Crear una clave única más robusta
@@ -500,50 +550,42 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
           ? `content-${contentId}`
           : `instance-${editorInstanceId.current}`;
 
-        // Verificar duplicados con clave mejorada
+        // Verificar si ya existe un editor con esta clave
         if (activeEditors.has(editorKey)) {
           console.log("⚠️ Editor ya existe con clave:", editorKey);
+          isInitializingEditor = false;
           return;
         }
 
-        // Verificar globalmente si hay algún editor activo en este elemento DOM
-        if (editorRef.current && editorRef.current.children.length > 0) {
-          console.log(
-            "⚠️ Contenedor ya tiene elementos, limpiando antes de continuar"
-          );
-          editorRef.current.innerHTML = "";
+        // Verificación de prevención de duplicados
+        if (!preventDuplicateEditors(contentId, editorRef.current || undefined)) {
+          console.log("⚠️ Prevención de duplicados activada, abortando inicialización");
+          isInitializingEditor = false;
+          return;
         }
 
-        // Verificación adicional: Si es un contentId específico, asegurar que no hay otros editores para el mismo contenido
-        if (contentId) {
-          const existingContentEditors = document.querySelectorAll(
-            `[data-content-id="${contentId}"]`
-          );
-          if (existingContentEditors.length > 0) {
-            console.log(
-              `⚠️ Ya existe un editor para contentId ${contentId}, limpiando duplicados...`
-            );
-            existingContentEditors.forEach((editor, index) => {
-              if (index > 0) {
-                // Mantener solo el primero
-                const container = editor.closest(".milkdown-client-container");
-                if (container) {
-                  container.remove();
-                  console.log(
-                    `🗑️ Editor duplicado #${
-                      index + 1
-                    } para contentId ${contentId} removido`
-                  );
-                }
-              }
-            });
+        // Limpiar editores huérfanos antes de crear uno nuevo
+        cleanupOrphanedEditors();
+
+        // Verificación del container actual
+        if (editorRef.current) {
+          const existingProseMirror = editorRef.current.querySelector(".ProseMirror");
+          if (existingProseMirror) {
+            console.log("⚠️ Ya existe un editor ProseMirror en este container, abortando inicialización");
+            isInitializingEditor = false;
+            return;
+          }
+          
+          // Limpiar cualquier contenido residual de forma segura
+          if (editorRef.current.children.length > 0) {
+            console.log("🧹 Limpiando contenido residual del container...");
+            editorRef.current.innerHTML = "";
           }
         }
 
-        // Registrar este editor inmediatamente
-        activeEditors.set(editorKey, true);
         console.log("🚀 Iniciando editor Milkdown...", {
           editorKey,
+          contentId,
           activeEditorsCount: activeEditors.size,
           containerId: editorInstanceId.current,
         });
@@ -567,26 +609,43 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
         const crepe = new Crepe({
           root: editorRef.current!,
           defaultValue: defaultValue,
+          // Mantener todas las funcionalidades del editor
         });
 
         crepeRef.current = crepe;
         await crepe.create();
 
-        // Verificar que solo hay un ProseMirror en este container
+        // Registrar el editor en el Map global DESPUÉS de la creación exitosa
+        activeEditors.set(editorKey, {
+          instance: crepe,
+          container: editorRef.current!,
+          contentId: contentId,
+          timestamp: Date.now()
+        });
+
+        // Verificación post-creación: asegurar que solo hay un ProseMirror en este container
         if (editorRef.current) {
-          const proseMirrorEditors =
-            editorRef.current.querySelectorAll(".ProseMirror");
+          const proseMirrorEditors = editorRef.current.querySelectorAll(".ProseMirror");
+          
+          if (proseMirrorEditors.length === 0) {
+            console.error("❌ No se creó ningún editor ProseMirror");
+            // Limpiar del Map si falló la creación
+            activeEditors.delete(editorKey);
+            isInitializingEditor = false;
+            return;
+          }
+          
           if (proseMirrorEditors.length > 1) {
-            console.log(
-              `⚠️ Múltiples ProseMirror detectados (${proseMirrorEditors.length}), limpiando duplicados...`
-            );
-            // Mantener solo el primero
+            console.log(`⚠️ Múltiples ProseMirror detectados (${proseMirrorEditors.length}), manteniendo solo el primero`);
+            // Mantener solo el primero y eliminar el resto
             for (let i = 1; i < proseMirrorEditors.length; i++) {
               proseMirrorEditors[i].remove();
               console.log(`🗑️ ProseMirror duplicado #${i + 1} removido`);
             }
           }
         }
+
+        console.log(`✅ Editor ${editorKey} creado exitosamente. Total activos: ${activeEditors.size}`);
 
         if (readonly) {
           crepe.setReadonly(true);
@@ -654,16 +713,44 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
         }
 
         setHasBeenInitialized(true);
-
-        // Ejecutar limpieza global después de un pequeño delay
-        setTimeout(() => {
-          cleanupDuplicateEditors();
-          setIsEditorReady(true);
-          console.log("✅ Editor Milkdown inicializado correctamente");
-        }, 500);
+        setIsEditorReady(true);
+        
+        console.log("✅ Editor Milkdown inicializado correctamente");
+        
+        // Liberar el singleton y procesar la cola
+        isInitializingEditor = false;
+        
+        // Procesar el siguiente editor en la cola si existe
+        if (initializationQueue.length > 0) {
+          const nextInit = initializationQueue.shift();
+          if (nextInit) {
+            console.log(`📋 Procesando siguiente editor en cola (${initializationQueue.length} restantes)`);
+            setTimeout(nextInit, 100); // Pequeño delay para evitar conflictos
+          }
+        }
       } catch (error) {
         console.error("❌ Error al inicializar Milkdown:", error);
         setIsEditorReady(false);
+        setHasBeenInitialized(false);
+        
+        // Limpiar del Map en caso de error
+        const editorKey = contentId
+          ? `content-${contentId}`
+          : `instance-${editorInstanceId.current}`;
+        activeEditors.delete(editorKey);
+        
+        // Liberar el singleton
+        isInitializingEditor = false;
+        
+        // Procesar el siguiente editor en la cola si existe
+        if (initializationQueue.length > 0) {
+          const nextInit = initializationQueue.shift();
+          if (nextInit) {
+            console.log(`📋 Procesando siguiente editor en cola tras error (${initializationQueue.length} restantes)`);
+            setTimeout(nextInit, 100);
+          }
+        }
+        
         initializationRef.current = false;
       }
     };
@@ -702,11 +789,17 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
           }
 
           crepeRef.current.destroy();
+          console.log(`🧹 Editor Crepe ${editorKey} destruido correctamente`);
         } catch (error) {
           console.debug("Error al destruir editor:", error);
         }
         crepeRef.current = null;
       }
+
+      // Limpiar editores huérfanos
+      cleanupOrphanedEditors();
+      
+      console.log(`🧹 Cleanup completado para ${editorKey}. Editores activos restantes: ${activeEditors.size}`);
 
       initializationRef.current = false;
       mountedRef.current = false;
@@ -735,7 +828,7 @@ const MilkdownEditorClientFixed: FC<MilkdownEditorClientProps> = ({
         </div>
       )}
 
-      {isEditorReady && !readonly && (
+      {process.env.NODE_ENV === 'development' && isEditorReady && !readonly && (
         <div className="absolute top-2 right-2 opacity-30 transition-opacity duration-500">
           <div className="text-xs text-gray-500 bg-white bg-opacity-60 px-1.5 py-0.5 rounded-full shadow-sm">
             💾

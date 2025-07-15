@@ -57,12 +57,14 @@ services:
       context: ./UNAM-escuela-frontend
       dockerfile: Dockerfile
       args:
+        # Para build time, usar URLs externas
         NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:50001
         NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:50001/graphql
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:50001
-      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:50001/graphql
+      # Para runtime, usar nombres de servicio internos
+      NEXT_PUBLIC_BACKEND_URL: http://backend:3000
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://backend:3000/graphql
     env_file:
       - .env
     ports:

@@ -47,9 +47,6 @@ import {
   AlertCircle,
   User,
   Settings,
-  PanelLeft,
-  Square,
-  Eye,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RouteGuard } from "@/components/auth/route-guard";
@@ -76,10 +73,7 @@ import ContentFilters from "./components/ContentFilters";
 import SimpleContentTable from "./components/SimpleContentTable";
 import EmptyState from "./components/EmptyState";
 import PaginationInfo from "./components/PaginationInfo";
-import ContentPreviewModal from "./components/ContentPreviewModal";
-import ContentPreviewDrawer from "./components/ContentPreviewDrawer";
 import ContentPreviewAdvancedModal from "./components/ContentPreviewAdvancedModal";
-import ContentPreviewReadOnlyModal from "./components/ContentPreviewReadOnlyModal";
 
 export default function ContentsManagementPage() {
   return (
@@ -106,18 +100,12 @@ function ContentsManagementContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTeachersModalOpen, setIsTeachersModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [isPreviewDrawerOpen, setIsPreviewDrawerOpen] = useState(false);
   const [isAdvancedPreviewOpen, setIsAdvancedPreviewOpen] = useState(false);
-  const [isReadOnlyPreviewOpen, setIsReadOnlyPreviewOpen] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState("");
   const [editingContent, setEditingContent] = useState<any>(null);
   const [previewingContentId, setPreviewingContentId] = useState<string | null>(
     null
   );
-  const [previewMode, setPreviewMode] = useState<
-    "modal" | "drawer" | "advanced" | "readonly"
-  >("advanced");
 
   // Queries
   const { data: languages, isLoading: languagesLoading } = useActiveLenguages();
@@ -276,20 +264,8 @@ function ContentsManagementContent() {
 
   const handlePreviewContent = (contentId: string) => {
     setPreviewingContentId(contentId);
-    switch (previewMode) {
-      case "modal":
-        setIsPreviewModalOpen(true);
-        break;
-      case "drawer":
-        setIsPreviewDrawerOpen(true);
-        break;
-      case "advanced":
-        setIsAdvancedPreviewOpen(true);
-        break;
-      case "readonly":
-        setIsReadOnlyPreviewOpen(true);
-        break;
-    }
+    // Siempre usar el modal avanzado con autoguardado
+    setIsAdvancedPreviewOpen(true);
   };
 
   if (!canManageContent) {
@@ -332,36 +308,13 @@ function ContentsManagementContent() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <ButtonGroup size="sm" variant="flat">
-                  <Button
-                    color={previewMode === "modal" ? "primary" : "default"}
-                    onPress={() => setPreviewMode("modal")}
-                    startContent={<Square className="h-4 w-4" />}
-                  >
-                    Modal
-                  </Button>
-                  <Button
-                    color={previewMode === "drawer" ? "primary" : "default"}
-                    onPress={() => setPreviewMode("drawer")}
-                    startContent={<PanelLeft className="h-4 w-4" />}
-                  >
-                    Drawer
-                  </Button>
-                  <Button
-                    color={previewMode === "advanced" ? "primary" : "default"}
-                    onPress={() => setPreviewMode("advanced")}
-                    startContent={<Settings className="h-4 w-4" />}
-                  >
-                    Avanzado
-                  </Button>
-                  <Button
-                    color={previewMode === "readonly" ? "primary" : "default"}
-                    onPress={() => setPreviewMode("readonly")}
-                    startContent={<Eye className="h-4 w-4" />}
-                  >
-                    Vista Maestro
-                  </Button>
-                </ButtonGroup>
+                <Chip
+                  color="primary"
+                  variant="flat"
+                  startContent={<Settings className="h-4 w-4" />}
+                >
+                  Vista Previa con Auto-guardado
+                </Chip>
               </div>
             </div>
           </div>
@@ -504,28 +457,11 @@ function ContentsManagementContent() {
         contentId={selectedContentId}
       />
 
-      <ContentPreviewModal
-        contentId={previewingContentId}
-        isOpen={isPreviewModalOpen}
-        onOpenChange={setIsPreviewModalOpen}
-      />
-
-      <ContentPreviewDrawer
-        contentId={previewingContentId}
-        isOpen={isPreviewDrawerOpen}
-        onOpenChange={setIsPreviewDrawerOpen}
-      />
-
+      {/* Modal unificado con auto-guardado */}
       <ContentPreviewAdvancedModal
         contentId={previewingContentId}
         isOpen={isAdvancedPreviewOpen}
         onOpenChange={setIsAdvancedPreviewOpen}
-      />
-
-      <ContentPreviewReadOnlyModal
-        contentId={previewingContentId}
-        isOpen={isReadOnlyPreviewOpen}
-        onOpenChange={setIsReadOnlyPreviewOpen}
       />
     </>
   );

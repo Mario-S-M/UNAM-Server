@@ -41,11 +41,49 @@
     box-shadow: none !important;
   }
 
+  /* Botón de cerrar del modal - forzar colores del tema */
+  [data-slot="close-button"] {
+    color: hsl(var(--heroui-foreground)) !important;
+    background-color: transparent !important;
+    border: none !important;
+  }
+
+  [data-slot="close-button"]:hover {
+    color: hsl(var(--heroui-default-700)) !important;
+    background-color: hsl(var(--heroui-default-100)) !important;
+  }
+
+  [data-slot="close-button"]:focus,
+  [data-slot="close-button"]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: hsl(var(--heroui-default-100)) !important;
+  }
+
   /* Icono dentro del botón de cerrar */
   [data-slot="close-button"] svg {
     color: hsl(var(--heroui-foreground)) !important;
     width: 18px !important;
     height: 18px !important;
+  }
+
+  [data-slot="close-button"]:hover svg {
+    color: hsl(var(--heroui-default-700)) !important;
+  }
+
+  /* Remover cualquier color azul del botón de cerrar */
+  [data-slot="close-button"][data-color="primary"],
+  [data-slot="close-button"][data-color="secondary"],
+  [data-slot="close-button"][data-color="default"] {
+    color: hsl(var(--heroui-foreground)) !important;
+    background-color: transparent !important;
+  }
+
+  [data-slot="close-button"][data-color="primary"]:hover,
+  [data-slot="close-button"][data-color="secondary"]:hover,
+  [data-slot="close-button"][data-color="default"]:hover {
+    color: hsl(var(--heroui-default-700)) !important;
+    background-color: hsl(var(--heroui-default-100)) !important;
   }
 
   /* Remover shadows específicamente de todos los elementos de modal */

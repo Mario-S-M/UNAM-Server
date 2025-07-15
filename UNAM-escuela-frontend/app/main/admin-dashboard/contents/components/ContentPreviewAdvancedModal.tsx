@@ -20,13 +20,11 @@ import {
 } from "@heroui/react";
 import {
   Edit,
-  Save,
   X,
   FileText,
   AlertCircle,
   CheckCircle,
   XCircle,
-  RefreshCw,
   Monitor,
   Code,
 } from "lucide-react";
@@ -41,7 +39,7 @@ import {
 import { addToast } from "@heroui/react";
 import { useAutoSave } from "@/app/hooks/use-auto-save";
 import dynamic from "next/dynamic";
-import GlobalButton from "@/components/global/globalButton";
+
 
 // Importar componentes de Milkdown de forma dinámica
 const MilkdownEditorClientFixed = dynamic(
@@ -68,7 +66,7 @@ export default function ContentPreviewAdvancedModal({
   // Auto-guardado sutil cada 3 segundos (más rápido que el modal normal)
   const autoSave = useAutoSave({
     contentId: contentId || undefined,
-    enabled: !!contentId && hasChanges,
+    enabled: !!contentId, // Siempre habilitado cuando hay contentId
     interval: 3000, // 3 segundos para modal avanzado
     onSave: (success: boolean) => {
       if (success) {
@@ -177,11 +175,12 @@ export default function ContentPreviewAdvancedModal({
   useEffect(() => {
     if (markdownContent) {
       setEditedContent(markdownContent);
+      setHasChanges(false); // El contenido cargado no tiene cambios
     } else {
       // Si no hay contenido, inicializar con un contenido de ejemplo
-      setEditedContent(
-        "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\n\n```"
-      );
+      const defaultContent = "# Comienza a escribir aquí\n\nEste es el editor avanzado de contenido. Puedes usar **Markdown** para formatear tu texto.\n\n- Lista de elementos\n- Otro elemento\n\n> Cita de ejemplo\n\n```javascript\n// Código de ejemplo\n\n```";
+      setEditedContent(defaultContent);
+      setHasChanges(false); // Contenido por defecto no tiene cambios
     }
   }, [markdownContent]);
 
@@ -192,11 +191,6 @@ export default function ContentPreviewAdvancedModal({
   }, [isOpen]);
 
   // Handlers
-  const handleSave = () => {
-    if (editedContent.trim()) {
-      saveMarkdownMutation.mutate(editedContent);
-    }
-  };
 
   const handleValidate = () => {
     if (contentId) {
@@ -245,10 +239,10 @@ export default function ContentPreviewAdvancedModal({
     <Modal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      size="full"
+      size="3xl"
       scrollBehavior="inside"
       classNames={{
-        base: "max-h-[95vh] m-2",
+        base: "max-h-[90vh] m-4",
         body: "p-0",
         header: "px-6 py-4 border-b",
         footer: "px-6 py-4 border-t",
@@ -286,7 +280,7 @@ export default function ContentPreviewAdvancedModal({
                       <ButtonGroup size="sm" variant="flat">
                         {((content as any)?.validationStatus ||
                           "sin validar") === "validado" ? (
-                          <GlobalButton
+                          <Button
                             color="warning"
                             onPress={handleInvalidate}
                             isLoading={invalidateMutation.isPending}
@@ -294,9 +288,9 @@ export default function ContentPreviewAdvancedModal({
                             size="sm"
                           >
                             Invalidar
-                          </GlobalButton>
+                          </Button>
                         ) : (
-                          <GlobalButton
+                          <Button
                             color="success"
                             onPress={handleValidate}
                             isLoading={validateMutation.isPending}
@@ -304,16 +298,8 @@ export default function ContentPreviewAdvancedModal({
                             size="sm"
                           >
                             Validar
-                          </GlobalButton>
+                          </Button>
                         )}
-                        <GlobalButton
-                          color="default"
-                          onPress={() => refetchMarkdown()}
-                          startContent={<RefreshCw className="h-4 w-4" />}
-                          size="sm"
-                        >
-                          Recargar
-                        </GlobalButton>
                       </ButtonGroup>
                     </div>
                   )}
@@ -341,15 +327,15 @@ export default function ContentPreviewAdvancedModal({
                         markdownError?.message ||
                         "Error desconocido"}
                     </p>
-                    <GlobalButton
+                    <Button
                       color="primary"
                       onPress={() => {
                         refetchMarkdown();
                       }}
-                      startContent={<RefreshCw className="h-4 w-4" />}
+                      startContent={<AlertCircle className="h-4 w-4" />}
                     >
                       Reintentar
-                    </GlobalButton>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -402,14 +388,13 @@ export default function ContentPreviewAdvancedModal({
                       )}
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
-                      Editor de pantalla completa con todas las funciones
-                      avanzadas. Los cambios se guardan automáticamente.
-                    </p>
+                    Editor avanzado con auto-guardado. Los cambios se guardan automáticamente cada 3 segundos.
+                  </p>
                   </div>
 
                   {/* Editor */}
                   <div className="flex-1 overflow-hidden">
-                    <div className="h-full min-h-[600px] w-full relative">
+                    <div className="h-full min-h-[400px] w-full relative">
                       {/* Indicador de guardado MUY sutil */}
                       {lastSaveIndicator && (
                         <div
@@ -451,32 +436,26 @@ export default function ContentPreviewAdvancedModal({
             <ModalFooter>
               <div className="flex justify-between items-center w-full">
                 <div className="text-sm text-gray-500">
-                  {hasChanges && (
+                  {hasChanges ? (
                     <span className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                      Hay cambios sin guardar
+                      Auto-guardando cambios...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-green-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      Cambios guardados automáticamente
                     </span>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {hasChanges && (
-                    <GlobalButton
-                      color="primary"
-                      onPress={handleSave}
-                      isLoading={saveMarkdownMutation.isPending}
-                      startContent={<Save className="h-4 w-4" />}
-                    >
-                      Guardar Cambios
-                    </GlobalButton>
-                  )}
-                  <GlobalButton
+                  <Button
                     color="default"
                     variant="light"
                     onPress={onClose}
-                    isDisabled={saveMarkdownMutation.isPending}
                   >
                     Cerrar
-                  </GlobalButton>
+                  </Button>
                 </div>
               </div>
             </ModalFooter>

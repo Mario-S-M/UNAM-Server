@@ -48,6 +48,8 @@ services:
       - .env
     ports:
       - "50001:3000" # Backend en puerto 50001 como está configurado en el servidor
+    volumes:
+      - ./Markdown:/Markdown
     networks:
       - unam-net
     restart: unless-stopped

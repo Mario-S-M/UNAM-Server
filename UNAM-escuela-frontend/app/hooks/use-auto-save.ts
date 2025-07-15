@@ -53,6 +53,12 @@ export function useAutoSave({
         return;
       }
 
+      // Verificar si el contenido realmente ha cambiado
+      if (content === lastSavedContent) {
+        console.log("⏭️ Auto-save: Contenido sin cambios, no guardando");
+        return;
+      }
+
       console.log("💾 Auto-save: Iniciando guardado...", {
         contentId,
         contentLength: content.length,
@@ -101,6 +107,12 @@ export function useAutoSave({
 
       if (!content || content.trim() === "") {
         console.log("⏭️ Auto-save: Contenido vacío, no programando");
+        return;
+      }
+
+      // Verificar si el contenido realmente ha cambiado
+      if (content === lastSavedContent) {
+        console.log("⏭️ Auto-save: Contenido sin cambios, no programando");
         return;
       }
 

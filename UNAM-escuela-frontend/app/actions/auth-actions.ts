@@ -14,12 +14,24 @@ import {
 } from "../interfaces/auth-interfaces";
 import { getUserMainPage, getHighestRole } from "../dal/auth-dal-server";
 import { getCookieConfig } from "../utils/cookie-config";
+import { getOptimizedCookieConfig, logCookieDebugInfo } from "../utils/production-cookie-fix";
 
 // Funciones simples para reemplazar las de cookie-debug
 const setCookieWithDebug = async (token: string, isDevelopment: boolean) => {
   try {
-    const cookieConfig = getCookieConfig();
+    // Usar configuración optimizada para producción
+    const cookieConfig = getOptimizedCookieConfig();
+    logCookieDebugInfo("UNAM-INCLUSION-TOKEN", token, cookieConfig);
+    
     (await cookies()).set("UNAM-INCLUSION-TOKEN", token, cookieConfig);
+    
+    console.log("✅ Cookie set successfully", {
+      environment: process.env.NODE_ENV,
+      isDevelopment,
+      tokenLength: token.length,
+      config: cookieConfig,
+      timestamp: new Date().toISOString()
+    });
     
 
     return {

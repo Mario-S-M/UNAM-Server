@@ -30,7 +30,8 @@ export function middleware(request: NextRequest) {
             secure: false, // CRÍTICO: false porque no usas HTTPS
             sameSite: "lax" as const,
             path: "/",
-            domain: "132.247.186.91", // Dominio específico
+            // REMOVIDO domain específico para evitar problemas
+            // domain: "132.247.186.91",
             maxAge: 60 * 60 * 24 * 7,
             priority: "high" as const,
           }
@@ -41,6 +42,14 @@ export function middleware(request: NextRequest) {
             path: "/",
             maxAge: 60 * 60 * 24 * 7,
           };
+
+    console.log("🔧 Middleware: Reconfiguring cookie", {
+      environment: process.env.NODE_ENV,
+      hasToken: !!token?.value,
+      tokenLength: token?.value?.length || 0,
+      cookieConfig,
+      timestamp: new Date().toISOString()
+    });
 
     response.cookies.set({
       name: "UNAM-INCLUSION-TOKEN",

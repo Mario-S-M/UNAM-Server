@@ -6,6 +6,9 @@ import AccessibilityBodyEffect from "./AccessibilityBodyEffect";
 import GlobalAccessMenu from "@/components/global/globalAccessMenu";
 import Footer from "@/components/global/globalFooter";
 
+// Importar funciones de diagnóstico para depuración
+import "@/app/utils/auth-diagnostics";
+
 const outfit = Outfit({
   variable: "--font-geist-sans",
   subsets: ["latin"],

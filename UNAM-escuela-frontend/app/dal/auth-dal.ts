@@ -73,7 +73,14 @@ export class AuthDAL {
    */
   static getHighestRole(user: User | null): Role | null {
     if (!user || !user.roles || user.roles.length === 0) {
-      console.log("❌ AuthDAL.getHighestRole: No user or no roles");
+      // Solo loggear si hay un usuario pero sin roles (caso problemático)
+      if (user && (!user.roles || user.roles.length === 0)) {
+        console.log("⚠️ AuthDAL.getHighestRole: User exists but has no roles", {
+          userId: user.id,
+          email: user.email,
+          roles: user.roles
+        });
+      }
       return null;
     }
 
@@ -88,15 +95,16 @@ export class AuthDAL {
       }
     }
 
-    console.log("📊 AuthDAL.getHighestRole:", {
-      userRoles: user.roles,
-      calculatedHighestRole: highestRole,
-      highestLevel,
-      allRoleData: user.roles.map((role) => ({
-        role,
-        data: this.ROLE_HIERARCHY[role as Role],
-      })),
-    });
+    // Solo loggear si hay roles no reconocidos o problemas
+    const unrecognizedRoles = user.roles.filter(role => !this.ROLE_HIERARCHY[role as Role]);
+    if (unrecognizedRoles.length > 0) {
+      console.log("⚠️ AuthDAL.getHighestRole: Unrecognized roles found", {
+        userRoles: user.roles,
+        unrecognizedRoles,
+        calculatedHighestRole: highestRole,
+        userId: user.id
+      });
+    }
 
     return highestRole;
   }
@@ -118,7 +126,14 @@ export class AuthDAL {
    */
   static hasAnyRole(user: User | null, roles: Role[]): boolean {
     if (!user || !user.roles) {
-      console.log("❌ AuthDAL.hasAnyRole: No user or no roles");
+      // Solo loggear si hay un usuario pero sin roles (caso problemático)
+      if (user && !user.roles) {
+        console.log("⚠️ AuthDAL.hasAnyRole: User exists but has no roles", {
+          userId: user.id,
+          email: user.email,
+          requiredRoles: roles
+        });
+      }
       return false;
     }
 
@@ -126,14 +141,14 @@ export class AuthDAL {
       roles.includes(userRole as Role)
     );
 
-    console.log("📊 AuthDAL.hasAnyRole:", {
-      userRoles: user.roles,
-      requiredRoles: roles,
-      hasRole,
-      matchingRoles: user.roles.filter((userRole) =>
-        roles.includes(userRole as Role)
-      ),
-    });
+    // Solo loggear cuando hay problemas de acceso (no tiene el rol requerido)
+    if (!hasRole) {
+      console.log("⚠️ AuthDAL.hasAnyRole: Access check failed", {
+        userRoles: user.roles,
+        requiredRoles: roles,
+        userId: user.id
+      });
+    }
 
     return hasRole;
   }
@@ -142,19 +157,29 @@ export class AuthDAL {
    * Verifica si el usuario tiene acceso a una página específica
    */
   static canAccessPage(user: User | null, page: string): AuthorizationResult {
-    // Debug logging
-    console.log("🔍 AuthDAL.canAccessPage Debug:", {
-      page,
-      user: user
-        ? {
-            id: user.id,
-            roles: user.roles,
-            isActive: user.isActive,
-            email: user.email,
-          }
-        : null,
-      timestamp: new Date().toISOString(),
+    // Solo loggear para páginas protegidas o cuando hay problemas específicos
+    const isProtectedPage = !["/", "/main/levels", "/main/content", "/main/lenguages", "/main/skills"].some(publicPage => {
+      const normalizedPage = page.replace(/\/$/, "");
+      if (publicPage === "/") {
+        return normalizedPage === "/" || normalizedPage === "";
+      }
+      return normalizedPage === publicPage || normalizedPage.startsWith(publicPage + "/");
     });
+    
+    if (isProtectedPage || (user && (!user.roles || user.roles.length === 0))) {
+      console.log("🔍 AuthDAL.canAccessPage Debug:", {
+        page,
+        user: user
+          ? {
+              id: user.id,
+              roles: user.roles,
+              isActive: user.isActive,
+              email: user.email,
+            }
+          : null,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // Normalizar la página para evitar problemas con trailing slashes
     const normalizedPage = page.replace(/\/$/, "");
@@ -185,13 +210,11 @@ export class AuthDAL {
     });
 
     if (isPublicPage) {
-      console.log("✅ AuthDAL.canAccessPage: Public page access granted");
       return { hasAccess: true };
     }
 
     // Si no hay usuario y la página no es pública, redirigir a login o página principal
     if (!user) {
-      console.log("❌ AuthDAL.canAccessPage: No user for protected page");
       return {
         hasAccess: false,
         redirectTo: "/",
@@ -201,7 +224,10 @@ export class AuthDAL {
 
     // Si el usuario no está activo
     if (!user.isActive) {
-      console.log("❌ AuthDAL.canAccessPage: User not active");
+      console.log("❌ AuthDAL.canAccessPage: User not active", {
+        userId: user.id,
+        email: user.email
+      });
       return {
         hasAccess: false,
         redirectTo: "/auth/inactive",
@@ -211,10 +237,13 @@ export class AuthDAL {
 
     // Obtener rol más alto
     const highestRole = this.getHighestRole(user);
-    console.log("📊 AuthDAL.canAccessPage: User highest role:", highestRole);
 
     if (!highestRole) {
-      console.log("❌ AuthDAL.canAccessPage: No valid role found");
+      console.log("❌ AuthDAL.canAccessPage: No valid role found", {
+        userId: user.id,
+        email: user.email,
+        roles: user.roles
+      });
       return {
         hasAccess: false,
         redirectTo: "/",
@@ -238,37 +267,24 @@ export class AuthDAL {
 
     const requiredRoles = pageAccessRules[normalizedPage];
 
-    console.log("📊 AuthDAL.canAccessPage: Access rules check:", {
-      normalizedPage,
-      requiredRoles,
-      userHighestRole: highestRole,
-      hasRequiredRoles: requiredRoles
-        ? this.hasAnyRole(user, requiredRoles)
-        : null,
-    });
-
     if (!requiredRoles) {
       // Si la página no tiene reglas específicas, permitir acceso
-      console.log(
-        "✅ AuthDAL.canAccessPage: No specific rules, access granted"
-      );
       return { hasAccess: true };
     }
 
     // Verificar si el usuario tiene alguno de los roles requeridos
     if (this.hasAnyRole(user, requiredRoles)) {
-      console.log(
-        "✅ AuthDAL.canAccessPage: User has required role, access granted"
-      );
       return { hasAccess: true };
     }
 
     // Si no tiene acceso, redirigir a su página principal
     const roleData = this.ROLE_HIERARCHY[highestRole];
-    console.log(
-      "❌ AuthDAL.canAccessPage: Access denied, redirecting to:",
-      roleData.redirectTo
-    );
+    console.log("❌ AuthDAL.canAccessPage: Access denied", {
+      page: normalizedPage,
+      userRole: highestRole,
+      requiredRoles,
+      redirectTo: roleData.redirectTo
+    });
     return {
       hasAccess: false,
       redirectTo: roleData.redirectTo,

@@ -15,6 +15,11 @@ export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LoggingInterceptor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    // Solo aplicar logging a GraphQL
+    if (context.getType<string>() !== 'graphql') {
+      return next.handle();
+    }
+
     const gqlContext = GqlExecutionContext.create(context);
     const info = gqlContext.getInfo();
     const request = gqlContext.getContext().req;

@@ -10,6 +10,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
+import { LevelsFilterArgs } from './dto/args/levels-filter.arg';
+import { PaginatedLevels } from './dto/paginated-levels.output';
 
 @Injectable()
 export class LevelsService {
@@ -166,5 +168,53 @@ export class LevelsService {
     return await this.itemsRepository.find({
       where: { lenguageId, isActive: true },
     });
+  }
+
+  async findPaginated(filters: LevelsFilterArgs): Promise<PaginatedLevels> {
+    const { search, page = 1, limit = 5, isActive, lenguageId, difficulty } = filters;
+    
+    const queryBuilder = this.itemsRepository
+      .createQueryBuilder('level')
+      .leftJoinAndSelect('level.lenguage', 'lenguage');
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(level.name ILIKE :search OR level.description ILIKE :search OR lenguage.name ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('level.isActive = :isActive', { isActive });
+    }
+
+    if (lenguageId) {
+      queryBuilder.andWhere('level.lenguageId = :lenguageId', { lenguageId });
+    }
+
+    if (difficulty) {
+      queryBuilder.andWhere('level.difficulty ILIKE :difficulty', { difficulty: `%${difficulty}%` });
+    }
+
+    const total = await queryBuilder.getCount();
+    const levels = await queryBuilder
+      .orderBy('level.name', 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      levels,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNextPage,
+      hasPreviousPage,
+    };
   }
 }

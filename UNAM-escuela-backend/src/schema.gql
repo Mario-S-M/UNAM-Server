@@ -2,6 +2,33 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Lenguage {
+  id: ID!
+  name: String!
+  eslogan_atractivo: String
+  descripcion_corta: String
+  descripcion_completa: String
+  nivel: String
+  duracion_total_horas: Int
+  color_tema: String
+  icono_curso: String
+  imagen_hero: String
+  badge_destacado: String
+  idioma_origen: String
+  idioma_destino: String
+  certificado_digital: Boolean!
+  puntuacion_promedio: Float!
+  total_estudiantes_inscritos: Int!
+  estado: String!
+  featured: Boolean!
+  fecha_creacion: String!
+  fecha_actualizacion: String!
+  icons: [String!]
+  isActive: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
 type Level {
   id: ID!
   name: String!
@@ -14,15 +41,8 @@ type Level {
   userId: Int!
   isActive: Boolean!
   difficulty: String!
-  lenguageId: ID!
-}
-
-type Lenguage {
-  id: ID!
-  name: String!
-  createdAt: String!
-  updatedAt: String!
-  isActive: Boolean!
+  lenguageId: ID
+  lenguage: Lenguage
 }
 
 type User {
@@ -35,6 +55,16 @@ type User {
   assignedLanguage: Lenguage
   assignedLanguages: [Lenguage!]
   lastUpdateBy: User
+}
+
+type PaginatedLevels {
+  levels: [Level!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
 }
 
 type Skill {
@@ -122,8 +152,19 @@ type AuthResponse {
   user: User!
 }
 
+type PaginatedLenguages {
+  lenguages: [Lenguage!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
 type Query {
   levels: [Level!]!
+  levelsPaginated(search: String, page: Int = 1, limit: Int = 5, isActive: Boolean, lenguageId: ID, difficulty: String): PaginatedLevels!
   level(id: ID!): Level!
   levelsByLenguage(lenguageId: ID!): [Level!]!
   contentsByLevelPublic(levelId: ID!): [Content!]!
@@ -158,6 +199,9 @@ type Query {
   revalidate: AuthResponse!
   lenguages: [Lenguage!]!
   lenguagesActivate: [Lenguage!]!
+  lenguagesFeatured: [Lenguage!]!
+  lenguagesByNivel(nivel: String!): [Lenguage!]!
+  lenguagesPaginated(search: String, page: Int = 1, limit: Int = 5, isActive: Boolean): PaginatedLenguages!
   lenguage(id: ID!): Lenguage!
 }
 
@@ -209,8 +253,9 @@ type Mutation {
 input CreateLevelInput {
   name: String!
   description: String!
-  difficulty: String = "beginner"
+  difficulty: String = "Básico"
   lenguageId: ID!
+  isActive: Boolean = true
 }
 
 input UpdateLevelInput {
@@ -218,6 +263,8 @@ input UpdateLevelInput {
   name: String
   description: String
   difficulty: String
+  lenguageId: ID
+  isActive: Boolean
 }
 
 input CreateContentInput {
@@ -316,9 +363,44 @@ input LoginInput {
 
 input CreateLenguageInput {
   name: String!
+  eslogan_atractivo: String
+  descripcion_corta: String
+  descripcion_completa: String
+  nivel: String
+  duracion_total_horas: Int
+  color_tema: String
+  icono_curso: String
+  imagen_hero: String
+  badge_destacado: String
+  idioma_origen: String
+  idioma_destino: String
+  certificado_digital: Boolean! = false
+  puntuacion_promedio: Float! = 0
+  total_estudiantes_inscritos: Int! = 0
+  estado: String! = "Activo"
+  featured: Boolean! = false
+  icons: [String!]
 }
 
 input UpdateLenguageInput {
   name: String
+  eslogan_atractivo: String
+  descripcion_corta: String
+  descripcion_completa: String
+  nivel: String
+  duracion_total_horas: Int
+  color_tema: String
+  icono_curso: String
+  imagen_hero: String
+  badge_destacado: String
+  idioma_origen: String
+  idioma_destino: String
+  certificado_digital: Boolean
+  puntuacion_promedio: Float
+  total_estudiantes_inscritos: Int
+  estado: String
+  featured: Boolean
+  icons: [String!]
   id: ID!
+  dificultad: Int
 }

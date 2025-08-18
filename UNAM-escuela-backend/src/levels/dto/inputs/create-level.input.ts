@@ -1,5 +1,5 @@
-import { InputType, Field, ID } from '@nestjs/graphql';
-import { IsNotEmpty, IsString, IsOptional, IsIn } from 'class-validator';
+import { InputType, Field, ID, Int } from '@nestjs/graphql';
+import { IsNotEmpty, IsString, IsOptional, IsIn, IsBoolean, IsNumber } from 'class-validator';
 
 @InputType()
 export class CreateLevelInput {
@@ -17,22 +17,29 @@ export class CreateLevelInput {
   @IsString()
   @IsIn(
     [
-      'beginner',
-      'mid-intermediate',
-      'intermediate',
-      'upper-intermediate',
-      'advanced',
+      'Básico',
+      'Básico-Intermedio',
+      'Intermedio',
+      'Intermedio-Avanzado',
+      'Avanzado',
     ],
     {
       message:
-        'La dificultad debe ser: beginner, mid-intermediate, intermediate, upper-intermediate o advanced',
+        'La dificultad debe ser: Básico, Básico-Intermedio, Intermedio, Intermedio-Avanzado o Avanzado',
     },
   )
-  @Field(() => String, { nullable: true, defaultValue: 'beginner' })
+  @Field(() => String, { nullable: true, defaultValue: 'Básico' })
   difficulty?: string;
 
   @IsNotEmpty()
   @IsString()
   @Field(() => ID)
   lenguageId: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Field(() => Boolean, { nullable: true, defaultValue: true })
+  isActive?: boolean;
+
+
 }

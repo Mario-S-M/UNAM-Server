@@ -14,8 +14,10 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { formatError } from './graphql/format-errors';
 import { LenguagesModule } from './lenguages/lenguages.module';
+import { UploadsModule } from './uploads/uploads.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -54,6 +56,10 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
       retryDelay: 3000,
       logging: process.env.NODE_ENV !== 'production',
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
     LevelsModule,
     ContentsModule,
     SkillsModule,
@@ -62,6 +68,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     UsersModule,
     AuthModule,
     LenguagesModule,
+    UploadsModule,
   ],
   controllers: [],
   providers: [

@@ -7,6 +7,8 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 import { User } from 'src/users/entities/user.entity';
+import { LevelsFilterArgs } from './dto/args/levels-filter.arg';
+import { PaginatedLevels } from './dto/paginated-levels.output';
 
 @Resolver(() => Level)
 export class LevelsResolver {
@@ -33,6 +35,11 @@ export class LevelsResolver {
     user: User,
   ): Promise<Level[]> {
     return this.levelsService.findAll(user);
+  }
+
+  @Query(() => PaginatedLevels, { name: 'levelsPaginated' })
+  async findPaginated(@Args() filters: LevelsFilterArgs): Promise<PaginatedLevels> {
+    return this.levelsService.findPaginated(filters);
   }
 
   @Query(() => Level, { name: 'level' })

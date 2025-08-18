@@ -52,11 +52,16 @@ export class Level {
   @Field(() => Boolean)
   isActive: boolean;
 
-  @Column({ default: 'beginner' })
+  @Column({ default: 'Básico' })
   @Field(() => String)
-  difficulty: string; // beginner, intermediate, advanced
+  difficulty: string; // Básico, Básico-Intermedio, Intermedio, Intermedio-Avanzado, Avanzado
 
-  @Column()
-  @Field(() => ID)
+  @Column({ nullable: true })
+  @Field(() => ID, { nullable: true })
   lenguageId: string;
+
+  @ManyToOne(() => Lenguage)
+  @JoinColumn({ name: 'lenguageId' })
+  @Field(() => Lenguage, { nullable: true })
+  lenguage: Lenguage;
 }

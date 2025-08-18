@@ -4,6 +4,8 @@ import { LenguagesService } from './lenguages.service';
 import { Lenguage } from './entities/lenguage.entity';
 import { CreateLenguageInput } from './dto/create-lenguage.input';
 import { UpdateLenguageInput } from './dto/update-lenguage.input';
+import { LenguagesFilterArgs } from './dto/args/lenguages-filter.arg';
+import { PaginatedLenguages } from './dto/paginated-lenguages.output';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -32,21 +34,26 @@ export class LenguagesResolver {
     return this.lenguagesService.findAll();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Query(() => [Lenguage], { name: 'lenguagesActivate' })
-  findActivate(
-    @CurrentUser([
-      ValidRoles.superUser,
-      ValidRoles.admin,
-      ValidRoles.docente,
-      ValidRoles.alumno,
-    ])
-    user: User,
-  ): Promise<Lenguage[]> {
-    this.logger.log(
-      `User ${user.fullName} (${user.roles.join(', ')}) fetching active languages`,
-    );
-    return this.lenguagesService.findActive(user);
+  findActivate(): Promise<Lenguage[]> {
+    return this.lenguagesService.findActive();
+  }
+
+  @Query(() => [Lenguage], { name: 'lenguagesFeatured' })
+  findFeatured(): Promise<Lenguage[]> {
+    return this.lenguagesService.findFeatured();
+  }
+
+  @Query(() => [Lenguage], { name: 'lenguagesByNivel' })
+  findByNivel(@Args('nivel', { type: () => String }) nivel: string): Promise<Lenguage[]> {
+    return this.lenguagesService.findByNivel(nivel);
+  }
+
+
+
+  @Query(() => PaginatedLenguages, { name: 'lenguagesPaginated' })
+  findPaginated(@Args() filters: LenguagesFilterArgs): Promise<PaginatedLenguages> {
+    return this.lenguagesService.findPaginated(filters);
   }
 
   @Query(() => Lenguage, { name: 'lenguage' })

@@ -13,6 +13,7 @@ async function bootstrap() {
       origin: [
         'http://localhost',
         'http://localhost:3000',
+        'http://localhost:3001',
         'http://localhost:11434',
         'http://132.247.186.91',
         'http://132.247.186.91:80',
@@ -34,9 +35,10 @@ async function bootstrap() {
       optionsSuccessStatus: 200,
     });
 
-    logger.log('Starting server on port 3000...');
-    await app.listen(3000, '0.0.0.0');
-    logger.log('Server started successfully on http://0.0.0.0:3000');
+    const port = process.env.PORT || 3002;
+    logger.log(`Starting server on port ${port}...`);
+    await app.listen(port, '0.0.0.0');
+    logger.log(`Server started successfully on http://0.0.0.0:${port}`);
   } catch (error) {
     logger.error('Error starting application:', error);
     process.exit(1);

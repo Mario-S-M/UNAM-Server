@@ -1,4 +1,4 @@
-import { ArgsType, Field, Int } from '@nestjs/graphql';
+import { ArgsType, Field, Int, ID } from '@nestjs/graphql';
 import {
   IsOptional,
   IsString,
@@ -6,6 +6,7 @@ import {
   Min,
   Max,
   IsBoolean,
+  IsUUID,
 } from 'class-validator';
 
 @ArgsType()
@@ -32,4 +33,14 @@ export class SkillsFilterArgs {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID('4', { message: 'El ID del nivel debe ser un UUID válido' })
+  levelId?: string;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID('4', { message: 'El ID del idioma debe ser un UUID válido' })
+  lenguageId?: string;
 }

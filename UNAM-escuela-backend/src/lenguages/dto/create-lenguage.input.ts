@@ -117,4 +117,9 @@ export class CreateLenguageInput {
   @IsString({ each: true })
   @Field(() => [String], { nullable: true })
   icons?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  @Field(() => Boolean, { defaultValue: true })
+  isActive?: boolean;
 }

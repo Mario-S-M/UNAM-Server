@@ -24,6 +24,7 @@ export class SkillsService {
 
   async findAll(): Promise<Skill[]> {
     return await this.skillsRepository.find({
+      relations: ['level', 'lenguage'],
       order: { name: 'ASC' },
     });
   }
@@ -31,6 +32,7 @@ export class SkillsService {
   async findActive(): Promise<Skill[]> {
     return await this.skillsRepository.find({
       where: { isActive: true },
+      relations: ['level', 'lenguage'],
       order: { name: 'ASC' },
     });
   }
@@ -38,11 +40,28 @@ export class SkillsService {
   async findOne(id: string): Promise<Skill> {
     const skill = await this.skillsRepository.findOne({
       where: { id },
+      relations: ['level', 'lenguage'],
     });
     if (!skill) {
       throw new NotFoundException('Skill no encontrada');
     }
     return skill;
+  }
+
+  async findByLevel(levelId: string): Promise<Skill[]> {
+    return await this.skillsRepository.find({
+      where: { levelId, isActive: true },
+      relations: ['level', 'lenguage'],
+      order: { name: 'ASC' },
+    });
+  }
+
+  async findByLanguage(lenguageId: string): Promise<Skill[]> {
+    return await this.skillsRepository.find({
+      where: { lenguageId, isActive: true },
+      relations: ['level', 'lenguage'],
+      order: { name: 'ASC' },
+    });
   }
 
   async update(id: string, updateSkillInput: UpdateSkillInput): Promise<Skill> {
@@ -64,14 +83,17 @@ export class SkillsService {
   }
 
   async findPaginated(filters: SkillsFilterArgs): Promise<PaginatedSkills> {
-    const { search, page = 1, limit = 10, isActive } = filters;
+    const { search, page = 1, limit = 10, isActive, levelId, lenguageId } = filters;
 
-    const queryBuilder = this.skillsRepository.createQueryBuilder('skill');
+    const queryBuilder = this.skillsRepository
+      .createQueryBuilder('skill')
+      .leftJoinAndSelect('skill.level', 'level')
+      .leftJoinAndSelect('skill.lenguage', 'lenguage');
 
     // Apply search filter
     if (search) {
       queryBuilder.where(
-        '(skill.name ILIKE :search OR skill.description ILIKE :search)',
+        '(skill.name ILIKE :search OR skill.description ILIKE :search OR level.name ILIKE :search OR lenguage.name ILIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -85,8 +107,28 @@ export class SkillsService {
       }
     }
 
-    // Order by name
-    queryBuilder.orderBy('skill.name', 'ASC');
+    // Apply level filter
+    if (levelId) {
+      if (search || typeof isActive === 'boolean') {
+        queryBuilder.andWhere('skill.levelId = :levelId', { levelId });
+      } else {
+        queryBuilder.where('skill.levelId = :levelId', { levelId });
+      }
+    }
+
+    // Apply language filter
+    if (lenguageId) {
+      if (search || typeof isActive === 'boolean' || levelId) {
+        queryBuilder.andWhere('skill.lenguageId = :lenguageId', { lenguageId });
+      } else {
+        queryBuilder.where('skill.lenguageId = :lenguageId', { lenguageId });
+      }
+    }
+
+    // Order by language name, level name, then skill name
+    queryBuilder.orderBy('lenguage.name', 'ASC')
+                .addOrderBy('level.name', 'ASC')
+                .addOrderBy('skill.name', 'ASC');
 
     // Pagination
     const offset = (page - 1) * limit;

@@ -72,7 +72,18 @@ type Skill {
   name: String!
   description: String!
   color: String!
+  imageUrl: String
+  icon: String
+  objectives: String
+  prerequisites: String
+  difficulty: String!
+  estimatedHours: Int
+  tags: [String!]!
   isActive: Boolean!
+  levelId: ID
+  level: Level
+  lenguageId: ID
+  lenguage: Lenguage
   createdAt: String!
   updatedAt: String!
 }
@@ -184,10 +195,14 @@ type Query {
   validatedContentsBySkill(skillId: ID!): [Content!]!
   validatedContentsByLevelAndSkill(levelId: ID!, skillId: ID!): [Content!]!
   skillsActivePublic: [Skill!]!
+  skillsByLevelPublic(levelId: ID!): [Skill!]!
+  skillPublic(id: ID!): Skill!
   skills: [Skill!]!
   skillsActive: [Skill!]!
   skill(id: ID!): Skill!
-  skillsPaginated(search: String, page: Int = 1, limit: Int = 10, isActive: Boolean): PaginatedSkills!
+  skillsByLevel(levelId: ID!): [Skill!]!
+  skillsByLanguage(lenguageId: ID!): [Skill!]!
+  skillsPaginated(search: String, page: Int = 1, limit: Int = 10, isActive: Boolean, levelId: ID, lenguageId: ID): PaginatedSkills!
   activities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
   activity(id: ID!): Activity!
@@ -290,12 +305,30 @@ input CreateSkillInput {
   name: String!
   description: String!
   color: String
+  imageUrl: String
+  icon: String
+  objectives: String
+  prerequisites: String
+  difficulty: String
+  estimatedHours: Int
+  tags: [String!]
+  levelId: ID
+  lenguageId: ID
 }
 
 input UpdateSkillInput {
   name: String
   description: String
   color: String
+  imageUrl: String
+  icon: String
+  objectives: String
+  prerequisites: String
+  difficulty: String
+  estimatedHours: Int
+  tags: [String!]
+  levelId: ID
+  lenguageId: ID
   id: ID!
 }
 
@@ -380,6 +413,7 @@ input CreateLenguageInput {
   estado: String! = "Activo"
   featured: Boolean! = false
   icons: [String!]
+  isActive: Boolean! = true
 }
 
 input UpdateLenguageInput {
@@ -401,6 +435,7 @@ input UpdateLenguageInput {
   estado: String
   featured: Boolean
   icons: [String!]
+  isActive: Boolean = true
   id: ID!
   dificultad: Int
 }

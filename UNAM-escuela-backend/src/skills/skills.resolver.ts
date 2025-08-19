@@ -21,6 +21,22 @@ export class SkillsResolver {
     return this.skillsService.findActive();
   }
 
+  // Public endpoint for skills by level - no authentication required
+  @Query(() => [Skill], { name: 'skillsByLevelPublic' })
+  findByLevelPublic(
+    @Args('levelId', { type: () => ID }) levelId: string,
+  ): Promise<Skill[]> {
+    return this.skillsService.findByLevel(levelId);
+  }
+
+  // Public endpoint for single skill - no authentication required
+  @Query(() => Skill, { name: 'skillPublic' })
+  findOnePublic(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<Skill> {
+    return this.skillsService.findOne(id);
+  }
+
   // Protected endpoints below
   @UseGuards(JwtAuthGuard)
   @Mutation(() => Skill)
@@ -62,6 +78,36 @@ export class SkillsResolver {
     user: User,
   ): Promise<Skill> {
     return this.skillsService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query(() => [Skill], { name: 'skillsByLevel' })
+  findByLevel(
+    @Args('levelId', { type: () => ID }) levelId: string,
+    @CurrentUser([
+      ValidRoles.admin,
+      ValidRoles.superUser,
+      ValidRoles.docente,
+      ValidRoles.alumno,
+    ])
+    user: User,
+  ): Promise<Skill[]> {
+    return this.skillsService.findByLevel(levelId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query(() => [Skill], { name: 'skillsByLanguage' })
+  findByLanguage(
+    @Args('lenguageId', { type: () => ID }) lenguageId: string,
+    @CurrentUser([
+      ValidRoles.admin,
+      ValidRoles.superUser,
+      ValidRoles.docente,
+      ValidRoles.alumno,
+    ])
+    user: User,
+  ): Promise<Skill[]> {
+    return this.skillsService.findByLanguage(lenguageId);
   }
 
   @UseGuards(JwtAuthGuard)

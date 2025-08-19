@@ -35,7 +35,7 @@ async function bootstrap() {
       optionsSuccessStatus: 200,
     });
 
-    const port = process.env.PORT || 3002;
+    const port = process.env.PORT || 3000;
     logger.log(`Starting server on port ${port}...`);
     await app.listen(port, '0.0.0.0');
     logger.log(`Server started successfully on http://0.0.0.0:${port}`);

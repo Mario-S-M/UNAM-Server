@@ -74,11 +74,9 @@ RUN echo 'const { createServer } = require("http");' > server.js && \
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
 
-# Create logs directory
-RUN mkdir -p /app/logs/frontend
-
-# Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
+# Create logs directory and change ownership of specific directories
+RUN mkdir -p /app/logs/frontend && \
+    chown -R nextjs:nodejs /app/.next /app/public /app/logs /app/server.js /app/ecosystem.config.js /app/next.config.js
 USER nextjs
 
 EXPOSE 3001

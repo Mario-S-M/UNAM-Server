@@ -76,7 +76,7 @@ RUN adduser -S nextjs -u 1001
 
 # Create logs directory and change ownership of specific directories
 RUN mkdir -p /app/logs/frontend && \
-    chown -R nextjs:nodejs /app/.next /app/public /app/logs /app/server.js /app/ecosystem.config.js /app/next.config.ts /app/node_modules
+    chown -R nextjs:nodejs /app/.next /app/public /app/logs /app/server.js /app/ecosystem.config.js /app/next.config.ts /app/node_modules /app/package.json /app/package-lock.json
 USER nextjs
 
 EXPOSE 3001

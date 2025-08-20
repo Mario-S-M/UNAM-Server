@@ -70,12 +70,12 @@ RUN echo 'const { createServer } = require("http");' > server.js && \
     echo '    });' >> server.js && \
     echo '});' >> server.js
 
-# Create logs directory
-RUN mkdir -p /app/logs/frontend
-
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
+
+# Create logs directory
+RUN mkdir -p /app/logs/frontend
 
 # Change ownership of the app directory
 RUN chown -R nextjs:nodejs /app

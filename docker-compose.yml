@@ -47,7 +47,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3000:3000" # Backend en puerto 3000
+      - "50001:3000" # Backend en puerto 50001
     volumes:
       - ./Markdown:/Markdown
       - ./logs/backend:/app/logs/backend
@@ -71,8 +71,8 @@ services:
       dockerfile: Dockerfile
       args:
         # Para build time, usar URLs locales
-        NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
-        NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:3000/graphql
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:50001
+        NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:50001/graphql
     environment:
       NODE_ENV: production
       # Para runtime, usar nombres de servicio internos
@@ -81,7 +81,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3001:3001"
+      - "80:3001"
     depends_on:
       - backend
     volumes:

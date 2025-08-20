@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Plus, X, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -150,9 +151,11 @@ export function IconManager({
                 className="flex items-center space-x-2 p-2 border rounded-lg bg-gray-50"
               >
                 <div className="flex-shrink-0">
-                  <img
+                  <Image
                     src={icon}
                     alt={`Icono ${index + 1}`}
+                    width={24}
+                    height={24}
                     className="w-6 h-6 object-contain"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;

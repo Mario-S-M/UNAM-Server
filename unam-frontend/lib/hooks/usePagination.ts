@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import type { PaginationInfo } from '@/types';
 
 interface UsePaginationOptions {
@@ -106,7 +106,7 @@ export function usePagination({
     }
 
     return rangeWithDots;
-  }, [currentPage, paginationData.totalPages]);
+  }, [currentPage, paginationData]);
 
   return {
     currentPage,

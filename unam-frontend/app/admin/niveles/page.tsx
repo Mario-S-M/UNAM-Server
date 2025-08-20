@@ -134,7 +134,7 @@ const DELETE_LEVEL = `
   }
 `;
 
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3002/graphql";
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 type GraphQLInputValue = string | number | boolean | null | undefined | string[] | LevelFormData | {
   [key: string]: string | number | boolean | null | undefined | string[];
@@ -325,7 +325,7 @@ export default function NivelesPage() {
     const validationResult = validateLevelForm(formData, !!editingLevel);
     
     if (!validationResult.success) {
-      const errors = validationResult.error.issues.map((err: any) => err.message).join(', ');
+      const errors = validationResult.error.issues.map((err) => err.message).join(', ');
       showToast(`Errores de validación: ${errors}`, 'error');
       return;
     }
@@ -451,7 +451,7 @@ export default function NivelesPage() {
       });
       
       return formatter.format(localTime);
-    } catch (error) {
+    } catch {
       return 'Error en fecha';
     }
   };

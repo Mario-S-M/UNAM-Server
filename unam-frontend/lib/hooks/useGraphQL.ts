@@ -4,15 +4,15 @@ import type { GraphQLVariables } from '@/types';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-interface UseGraphQLOptions {
-  onSuccess?: (data: any) => void;
+interface UseGraphQLOptions<T = unknown> {
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
   showSuccessToast?: boolean;
   showErrorToast?: boolean;
   successMessage?: string;
 }
 
-export function useGraphQL() {
+export function useGraphQL<T = unknown>() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -20,8 +20,8 @@ export function useGraphQL() {
     query: string,
     variables?: GraphQLVariables,
     token?: string,
-    options: UseGraphQLOptions = {}
-  ) => {
+    options: UseGraphQLOptions<T> = {}
+  ): Promise<T> => {
     const {
       onSuccess,
       onError,

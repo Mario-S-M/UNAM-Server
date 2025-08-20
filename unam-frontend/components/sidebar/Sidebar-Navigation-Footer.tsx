@@ -1,6 +1,6 @@
 import { User2, ChevronUp } from "lucide-react";
 import {
-  SidebarFooter,
+  // SidebarFooter,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Upload, Image as ImageIcon, X, Loader2 } from 'lucide-react';
@@ -26,7 +27,7 @@ export function ImageUpload({
   label,
   value,
   onChange,
-  placeholder = 'Seleccionar imagen...',
+  // placeholder = 'Seleccionar imagen...',
   required = false,
   disabled = false,
   error,
@@ -132,9 +133,11 @@ export function ImageUpload({
         {/* Preview */}
         {value && (
           <div className="relative inline-block">
-            <img
+            <Image
               src={value}
               alt="Preview"
+              width={128}
+              height={128}
               className="w-32 h-32 object-cover rounded-lg border border-gray-200"
             />
             <Button

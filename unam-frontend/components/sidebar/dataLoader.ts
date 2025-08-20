@@ -2,17 +2,17 @@ import {
   getActiveLanguages,
   getActiveSkills,
   getLevelsByLanguage,
-  getContentsByLevel,
-  getContentsBySkill,
-  getContentsByLevelAndSkill,
+  // getContentsByLevel,
+  // getContentsBySkill,
+  // getContentsByLevelAndSkill,
 } from "@/content/actions";
 import {
   Language,
-  Skill,
+  // Skill,
   Level,
-  Content,
+  // Content,
 } from "@/content/schemas";
-import { SidebarLanguage, SidebarLevel, SidebarSkill, SidebarContent } from "./types";
+import { SidebarLanguage, SidebarLevel, SidebarSkill /*, SidebarContent*/ } from "./types";
 // GraphQL query para obtener skills por nivel
 const GET_SKILLS_BY_LEVEL_QUERY = `
   query GetSkillsByLevel($levelId: ID!) {
@@ -30,7 +30,7 @@ const GET_SKILLS_BY_LEVEL_QUERY = `
 `;
 
 // Función para hacer consultas GraphQL usando fetch
-async function queryGraphQL(query: string, variables: any = {}) {
+async function queryGraphQL(query: string, variables: Record<string, unknown> = {}) {
   const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql', {
     method: 'POST',
     headers: {
@@ -55,16 +55,16 @@ async function queryGraphQL(query: string, variables: any = {}) {
   return result.data;
 }
 
-function getContentType(name: string, description: string): "video" | "article" | "exercise" {
-  const text = `${name} ${description}`.toLowerCase();
-  if (text.includes("video") || text.includes("vídeo")) return "video";
-  if (text.includes("ejercicio") || text.includes("exercise") || text.includes("práctica")) return "exercise";
-  return "article";
-}
+// function getContentType(name: string, description: string): "video" | "article" | "exercise" {
+//   const text = `${name} ${description}`.toLowerCase();
+//   if (text.includes("video") || text.includes("vídeo")) return "video";
+//   if (text.includes("ejercicio") || text.includes("exercise") || text.includes("práctica")) return "exercise";
+//   return "article";
+// }
 
 export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
   try {
-    const [languagesData, skillsData] = await Promise.all([
+    const [languagesData /*, skillsData*/] = await Promise.all([
       getActiveLanguages(),
       getActiveSkills(),
     ]);
@@ -97,7 +97,7 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
                 console.log(`DataLoader: Found ${skillsData.length} skills for level ${level.name}`);
                 
                 // Convertir skills a formato SidebarSkill
-                const sidebarSkills: SidebarSkill[] = skillsData.map((skill: any) => ({
+                const sidebarSkills: SidebarSkill[] = skillsData.map((skill: { id: string; name: string }) => ({
                   id: skill.id,
                   name: skill.name,
                   contents: [], // Por ahora vacío, se puede llenar después si es necesario

@@ -47,21 +47,32 @@ services:
     env_file:
       - .env
     ports:
-      - "50001:3000" # Backend en puerto 50001 como está configurado en el servidor
+      - "3000:3000" # Backend en puerto 3000
     volumes:
       - ./Markdown:/Markdown
+      - ./logs/backend:/app/logs/backend
+      - ./logs/pm2/backend:/root/.pm2/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "nc", "-z", "localhost", "3000"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 60s
     networks:
       - unam-net
     restart: unless-stopped
 
   frontend:
     build:
-      context: ./UNAM-escuela-frontend
+      context: ./unam-frontend
       dockerfile: Dockerfile
       args:
-        # Para build time, usar URLs externas
-        NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:50001
-        NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:50001/graphql
+        # Para build time, usar URLs locales
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
+        NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://localhost:3000/graphql
     environment:
       NODE_ENV: production
       # Para runtime, usar nombres de servicio internos
@@ -70,11 +81,15 @@ services:
     env_file:
       - .env
     ports:
-      - "80:3000"
+      - "3001:3001"
     depends_on:
       - backend
+    volumes:
+      - ./logs/frontend:/app/logs/frontend
+      - ./logs/pm2/frontend:/root/.pm2/logs
     networks:
       - unam-net
+    restart: unless-stopped
 
 networks:
   unam-net:

@@ -1,35 +1,36 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useQuery, gql } from '@apollo/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, BookOpen, Target, Users, Clock, Star, Award, Calendar, Globe, Palette, Image } from 'lucide-react';
+import { Loader2, BookOpen, Target, /*Users,*/ Clock, Star, Award, Calendar, Globe, /*Palette, Image*/ } from 'lucide-react';
 
-interface Language {
-  id: string;
-  name: string;
-  eslogan_atractivo: string;
-  descripcion_corta?: string;
-  descripcion_completa?: string;
-  nivel?: string;
-  duracion_total_horas?: number;
-  color_tema?: string;
-  icono_curso?: string;
-  imagen_hero?: string;
-  badge_destacado?: string;
-
-  idioma_origen?: string;
-  idioma_destino?: string;
-  certificado_digital: boolean;
-  puntuacion_promedio: number;
-  featured: boolean;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
-  icons: string[];
-  isActive: boolean;
-}
+// interface Language {
+//   id: string;
+//   name: string;
+//   eslogan_atractivo: string;
+//   descripcion_corta?: string;
+//   descripcion_completa?: string;
+//   nivel?: string;
+//   duracion_total_horas?: number;
+//   color_tema?: string;
+//   icono_curso?: string;
+//   imagen_hero?: string;
+//   badge_destacado?: string;
+//
+//   idioma_origen?: string;
+//   idioma_destino?: string;
+//   certificado_digital: boolean;
+//   puntuacion_promedio: number;
+//   featured: boolean;
+//   fecha_creacion: string;
+//   fecha_actualizacion: string;
+//   icons: string[];
+//   isActive: boolean;
+// }
 
 const GET_LANGUAGE_BY_ID = gql`
   query GetLanguageById($id: ID!) {
@@ -124,9 +125,11 @@ export default function LanguageDetailPage() {
         {/* Background Image or Gradient */}
         {language.imagen_hero ? (
           <>
-            <img 
+            <Image 
               src={language.imagen_hero} 
               alt={language.name}
+              width={800}
+              height={320}
               className="w-full h-full object-cover"
               onError={(e) => {
                  e.currentTarget.style.display = 'none';
@@ -339,7 +342,7 @@ export default function LanguageDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              {language.icons.map((icon: string, index: number) => (
+              {language.icons.map((icon, index) => (
                 <div key={index} className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
                   <span className="text-2xl">{icon}</span>
                 </div>

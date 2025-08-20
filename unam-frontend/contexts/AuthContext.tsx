@@ -45,10 +45,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Función para redireccionar basado en el rol del usuario
   const redirectBasedOnRole = (user: User) => {
-    if (user.roles.includes('admin') || user.roles.includes('superUser')) {
+    // Determinar el rol más alto del usuario
+    const roleHierarchy = {
+      superUser: 5,
+      admin: 4,
+      docente: 3,
+      alumno: 2,
+      mortal: 1,
+    };
+
+    let highestRole = 'mortal';
+    let highestLevel = 0;
+
+    for (const role of user.roles) {
+      const level = roleHierarchy[role as keyof typeof roleHierarchy] || 0;
+      if (level > highestLevel) {
+        highestLevel = level;
+        highestRole = role;
+      }
+    }
+
+    // Redireccionar basado en el rol más alto
+    if (highestRole === 'superUser' || highestRole === 'admin' || highestRole === 'docente') {
       router.push('/admin');
     } else {
-      // Para usuarios regulares, redirigir al dashboard
+      // Para usuarios regulares (alumno, mortal), redirigir al dashboard
       router.push('/dashboard');
     }
   };

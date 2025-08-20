@@ -52,10 +52,10 @@ export function LanguageItem({
     }
   };
 
-  const handleToggleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggle(language.id);
-  };
+  // const handleToggleClick = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   onToggle(language.id);
+  // };
 
   const toggleLevel = (levelId: string) => {
     setExpandedLevels(prev => {

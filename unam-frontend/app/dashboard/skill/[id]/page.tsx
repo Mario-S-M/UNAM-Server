@@ -4,36 +4,36 @@ import { useParams } from 'next/navigation';
 import { useQuery } from '@apollo/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, Target, Clock, BookOpen, CheckCircle, Users, Award, Calendar, Globe } from 'lucide-react';
+// import { Progress } from '@/components/ui/progress';
+import { Loader2, ArrowLeft, Target, Clock, BookOpen, CheckCircle, /*Users,*/ Award, Calendar, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { GET_SKILL_BY_ID } from '@/lib/graphql/queries';
 
-interface Skill {
-  id: string;
-  name: string;
-  description: string;
-  color: string;
-  imageUrl?: string;
-  icon?: string;
-  objectives?: string;
-  prerequisites?: string;
-  difficulty: string;
-  estimatedHours?: number;
-  tags: string[];
-  order: number;
-  isActive: boolean;
-  levelId: string;
-  level?: {
-    id: string;
-    name: string;
-    description: string;
-    difficulty: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-}
+// interface Skill {
+//   id: string;
+//   name: string;
+//   description: string;
+//   color: string;
+//   imageUrl?: string;
+//   icon?: string;
+//   objectives?: string;
+//   prerequisites?: string;
+//   difficulty: string;
+//   estimatedHours?: number;
+//   tags: string[];
+//   order: number;
+//   isActive: boolean;
+//   levelId: string;
+//   level?: {
+//     id: string;
+//     name: string;
+//     description: string;
+//     difficulty: string;
+//   };
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Target, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight, Target /*, FileText*/ } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ContentItem } from "./ContentItem";

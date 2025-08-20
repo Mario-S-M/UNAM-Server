@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, /* CardDescription, */ CardHeader, CardTitle } from '@/components/ui/card';
 import { Languages, Users, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 

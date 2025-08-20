@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
 
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3002/graphql";
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:50001/graphql";
 
 type GraphQLInputValue = string | number | boolean | null | undefined | string[] | {
   [key: string]: string | number | boolean | null | undefined | string[];

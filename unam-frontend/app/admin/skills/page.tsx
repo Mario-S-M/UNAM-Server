@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -48,7 +49,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Zap, Search, Settings, ChevronLeft, ChevronRight, X, Upload, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Zap, Search, Settings, ChevronLeft, ChevronRight, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 // GraphQL Queries and Mutations
@@ -545,23 +546,23 @@ export default function SkillsAdminPage() {
     }
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (file) {
+  //     setSelectedImageFile(file);
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       setImagePreview(e.target?.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
-  const clearImage = () => {
-    setSelectedImageFile(null);
-    setImagePreview(null);
-    setFormData({ ...formData, imageUrl: '' });
-  };
+  // const clearImage = () => {
+  //   setSelectedImageFile(null);
+  //   setImagePreview(null);
+  //   setFormData({ ...formData, imageUrl: '' });
+  // };
 
   const resetForm = () => {
     setEditingSkill(null);
@@ -837,15 +838,17 @@ export default function SkillsAdminPage() {
                                    size="sm"
                                    onClick={() => window.open(formData.imageUrl, '_blank')}
                                  >
-                                   <Image className="h-4 w-4 mr-2" />Ver
+                                   <ImageIcon className="h-4 w-4 mr-2" />Ver
                                  </Button>
                                )}
                             </div>
                             {(imagePreview || formData.imageUrl) && (
                               <div className="relative">
-                                <img
-                                  src={imagePreview || formData.imageUrl}
-                                  alt="Preview"
+                                <Image
+                                  src={imagePreview || formData.imageUrl || ''}
+                                  alt="Skill preview image"
+                                  width={300}
+                                  height={128}
                                   className="w-full h-32 object-cover rounded-md border"
                                 />
                                 <Button
@@ -1306,7 +1309,7 @@ export default function SkillsAdminPage() {
                                   <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Esta acción no se puede deshacer. Esto eliminará permanentemente el skill
-                                    "{skill.name}" de la base de datos.
+                                    &quot;{skill.name}&quot; de la base de datos.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

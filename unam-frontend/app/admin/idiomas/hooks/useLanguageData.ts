@@ -48,7 +48,7 @@ const GET_LANGUAGES_PAGINATED = `
 `;
 
 const fetchGraphQL = async (query: string, variables: Record<string, any>, token: string) => {
-  const response = await fetch('http://localhost:3000/graphql', {
+  const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

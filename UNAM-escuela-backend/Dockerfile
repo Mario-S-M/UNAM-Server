@@ -3,29 +3,27 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 
 FROM node:22-alpine
 WORKDIR /app
 
-# Install build tools needed for bcrypt
-RUN apk add --no-cache make gcc g++ python3
+# Install PM2 globally and required tools
+RUN apk add --no-cache postgresql-client wget python3 make g++ && \
+    npm install -g pm2
 
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
+# Install production dependencies and rebuild native modules
+RUN npm ci --only=production --legacy-peer-deps
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/ecosystem.config.js ./
 
-# Install production dependencies and rebuild bcrypt
-RUN npm ci --only=production
-RUN npm rebuild bcrypt
-
-# Install postgresql-client
-RUN apk add --no-cache postgresql-client && \
-    apk del make gcc g++ python3
+# Create logs directory
+RUN mkdir -p /app/logs/backend
 
 EXPOSE 3000
 
-# Command without additional scripts
-CMD npm run start:prod
+# Use PM2 to start the application
+CMD ["pm2-runtime", "start", "ecosystem.config.js"]

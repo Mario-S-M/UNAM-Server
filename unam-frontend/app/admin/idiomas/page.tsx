@@ -1176,7 +1176,7 @@ export default function IdiomasPage() {
                                   <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Esta acción no se puede deshacer. Esto eliminará permanentemente el idioma
-                                    &quot;{language.name}&quot; de la base de datos.
+                                    "{language.name}" de la base de datos.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

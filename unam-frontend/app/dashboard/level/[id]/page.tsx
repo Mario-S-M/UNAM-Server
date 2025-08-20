@@ -1,33 +1,51 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+// import { useEffect, useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, BookOpen, Target, Users, Clock, Star, Award, Calendar, Globe, CheckCircle, Zap } from 'lucide-react';
+import { Loader2, BookOpen, Target, /* Users, */ Clock, Star, Award, Calendar, Globe, CheckCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GET_SKILLS_BY_LEVEL, GET_SKILL_BY_ID } from '@/lib/graphql/queries';
+import { GET_SKILLS_BY_LEVEL /* GET_SKILL_BY_ID */ } from '@/lib/graphql/queries';
 import { useRouter } from 'next/navigation';
 
-interface Level {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: string;
-  isCompleted: boolean;
-  percentaje: number;
-  qualification: number;
-  createdAt: string;
-  updatedAt: string;
-  isActive: boolean;
-  lenguageId: string;
-  lenguage?: {
-    id: string;
-    name: string;
-  };
-}
+// interface Level {
+//   id: string;
+//   name: string;
+//   description: string;
+//   difficulty: string;
+//   isCompleted: boolean;
+//   percentaje: number;
+//   qualification: number;
+//   createdAt: string;
+//   updatedAt: string;
+//   isActive: boolean;
+//   lenguageId: string;
+//   lenguage?: {
+//     id: string;
+//     name: string;
+//   };
+// }
+
+// interface LevelData {
+//   id: string;
+//   name: string;
+//   description: string;
+//   difficulty: string;
+//   isCompleted: boolean;
+//   percentaje: number;
+//   qualification: number;
+//   createdAt: string;
+//   updatedAt: string;
+//   isActive: boolean;
+//   lenguageId: string;
+//   lenguage?: {
+//     id: string;
+//     name: string;
+//   };
+// }
 
 interface Skill {
   id: string;
@@ -151,7 +169,7 @@ export default function LevelDetailPage() {
         month: 'long',
         day: 'numeric'
       });
-    } catch (error) {
+    } catch {
       return 'Sin fecha';
     }
   };

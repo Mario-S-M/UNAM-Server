@@ -42,7 +42,7 @@ export class ValidationMiddleware {
           errors
         };
       }
-    } catch (error) {
+    } catch {
       const errorMessage = 'Error inesperado durante la validación';
       
       if (showToast) {

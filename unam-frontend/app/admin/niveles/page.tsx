@@ -321,21 +321,28 @@ export default function NivelesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar datos del formulario con Zod
-    const validationResult = validateLevelForm(formData, !!editingLevel);
-    
-    if (!validationResult.success) {
-      const errors = validationResult.error.issues.map((err) => err.message).join(', ');
-      showToast(`Errores de validación: ${errors}`, 'error');
-      return;
-    }
-    
     try {
       if (editingLevel) {
-        const updateData = {
-          id: editingLevel.id,
-          ...validationResult.data
+        // Para actualización, solo enviar campos que han cambiado y no están vacíos
+        const updateData: any = {
+          id: editingLevel.id
         };
+        
+        if (formData.name.trim() !== editingLevel.name) {
+          updateData.name = formData.name.trim();
+        }
+        if (formData.description.trim() !== editingLevel.description) {
+          updateData.description = formData.description.trim();
+        }
+        if (formData.difficulty !== editingLevel.difficulty) {
+          updateData.difficulty = formData.difficulty;
+        }
+        if (formData.lenguageId !== editingLevel.lenguageId) {
+          updateData.lenguageId = formData.lenguageId;
+        }
+        if (formData.isActive !== editingLevel.isActive) {
+          updateData.isActive = formData.isActive;
+        }
         
         await fetchGraphQL(
           UPDATE_LEVEL,
@@ -346,12 +353,19 @@ export default function NivelesPage() {
         );
         showToast('Nivel actualizado exitosamente');
       } else {
-        const createData = validationResult.data;
+        // Para creación, validar todos los campos
+        const validationResult = validateLevelForm(formData, false);
+        
+        if (!validationResult.success) {
+          const errors = validationResult.error.issues.map((err) => err.message).join(', ');
+          showToast(`Errores de validación: ${errors}`, 'error');
+          return;
+        }
         
         await fetchGraphQL(
           CREATE_LEVEL,
           {
-            createLevelInput: createData,
+            createLevelInput: validationResult.data,
           },
           token || undefined
         );
@@ -381,7 +395,7 @@ export default function NivelesPage() {
     setFormData({
       name: '',
       description: '',
-      difficulty: '',
+      difficulty: 'Básico',
       lenguageId: '',
       isActive: true,
     });

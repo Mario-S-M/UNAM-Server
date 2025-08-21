@@ -128,4 +128,16 @@ export class UsersResolver {
     );
     return this.usersService.assignAdminLanguageToTeacher(teacherId, adminUser);
   }
+
+  @Mutation(() => User, { name: 'deleteUser' })
+  deleteUser(
+    @Args('id', { type: () => ID }, ParseUUIDPipe) id: string,
+    @CurrentUser([ValidRoles.superUser])
+    superUser: User,
+  ): Promise<User> {
+    this.logger.log(
+      `SuperUser ${superUser.fullName} attempting to delete user with ID: ${id}`,
+    );
+    return this.usersService.deleteUser(id, superUser);
+  }
 }

@@ -692,6 +692,53 @@ export class UsersService {
     return true;
   }
 
+  async deleteUser(id: string, superUser: User): Promise<User> {
+    try {
+      this.logger.log(`SuperUser ${superUser.email} attempting to delete user with ID: ${id}`);
+      
+      // Verificar que el usuario que ejecuta la acción sea superUser
+      if (!superUser.roles.includes(ValidRoles.superUser)) {
+        throw new BadRequestException('Solo los superUsuarios pueden eliminar usuarios');
+      }
+
+      // Buscar el usuario a eliminar
+      const userToDelete = await this.usersRepository.findOne({
+        where: { id, isActive: true },
+        relations: ['assignedLanguage', 'assignedLanguages']
+      });
+
+      if (!userToDelete) {
+        throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+      }
+
+      // Verificar que no se esté intentando eliminar a sí mismo
+      if (userToDelete.id === superUser.id) {
+        throw new BadRequestException('No puedes eliminarte a ti mismo');
+      }
+
+      // Verificar que no se esté intentando eliminar a otro superUser
+      if (userToDelete.roles.includes(ValidRoles.superUser)) {
+        throw new BadRequestException('No se puede eliminar a otro superUsuario');
+      }
+
+      // Guardar una copia del usuario antes de eliminarlo
+      const deletedUserData = { ...userToDelete };
+      
+      // Eliminar el usuario de la base de datos
+      await this.usersRepository.remove(userToDelete);
+      
+      this.logger.log(`Usuario ${deletedUserData.email} (ID: ${id}) eliminado exitosamente por ${superUser.email}`);
+      
+      return deletedUserData;
+    } catch (error) {
+      this.logger.error(`Error eliminando usuario con ID: ${id} - ${error.message}`);
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+      this.handleDBError(error);
+    }
+  }
+
   private getHighestRole(roles: string[]): ValidRoles {
     const roleHierarchy = {
       superUser: 5,

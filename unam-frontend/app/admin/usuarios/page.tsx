@@ -125,6 +125,16 @@ const UPDATE_USER_ROLES = `
   }
 `;
 
+const DELETE_USER = `
+  mutation DeleteUser($id: ID!) {
+    deleteUser(id: $id) {
+      id
+      fullName
+      email
+    }
+  }
+`;
+
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 type GraphQLInputValue = string | number | boolean | null | undefined | string[] | {
@@ -204,6 +214,9 @@ export default function UsuariosPage() {
     isActive: true,
     actions: true,
   });
+
+  // Delete user state
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
 
 
@@ -334,6 +347,21 @@ export default function UsuariosPage() {
       mortal: 'Usuario'
     };
     return roleNames[role] || role;
+  };
+
+  // Handle delete user
+  const handleDeleteUser = async (userToDelete: User) => {
+    if (!token) return;
+    
+    try {
+      await fetchGraphQL(DELETE_USER, { id: userToDelete.id }, token);
+      showToast(`Usuario ${userToDelete.fullName} eliminado exitosamente`, 'success');
+      setUserToDelete(null);
+      loadUsers(); // Reload the user list
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showToast('Error al eliminar usuario', 'error');
+    }
   };
 
 
@@ -482,24 +510,24 @@ export default function UsuariosPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
-                    <TableRow key={user.id}>
+                  users.map((tableUser) => (
+                    <TableRow key={tableUser.id}>
                       {columnVisibility.fullName && (
                         <TableCell className="font-medium">
-                          {user.fullName}
+                          {tableUser.fullName}
                         </TableCell>
                       )}
                       {columnVisibility.email && (
-                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{tableUser.email}</TableCell>
                       )}
                       {columnVisibility.roles && (
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {user.roles.map((role, index) => (
+                            {tableUser.roles.map((role, index) => (
                               <Badge
                                 key={index}
                                 variant="secondary"
-                                className={getRoleBadgeColor(user.roles)}
+                                className={getRoleBadgeColor(tableUser.roles)}
                               >
                                 {getRoleDisplayName(role)}
                               </Badge>
@@ -509,9 +537,9 @@ export default function UsuariosPage() {
                       )}
                       {columnVisibility.assignedLanguage && (
                         <TableCell>
-                          {user.assignedLanguage ? (
+                          {tableUser.assignedLanguage ? (
                             <Badge variant="outline">
-                              {user.assignedLanguage.name}
+                              {tableUser.assignedLanguage.name}
                             </Badge>
                           ) : (
                             <span className="text-muted-foreground">Sin asignar</span>
@@ -521,10 +549,10 @@ export default function UsuariosPage() {
                       {columnVisibility.isActive && (
                         <TableCell>
                           <Badge
-                            variant={user.isActive ? "default" : "secondary"}
-                            className={user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                            variant={tableUser.isActive ? "default" : "secondary"}
+                            className={tableUser.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
                           >
-                            {user.isActive ? 'Activo' : 'Inactivo'}
+                            {tableUser.isActive ? 'Activo' : 'Inactivo'}
                           </Badge>
                         </TableCell>
                       )}
@@ -534,10 +562,44 @@ export default function UsuariosPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleEditUser(user)}
+                              onClick={() => handleEditUser(tableUser)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
+                            {user?.roles?.includes('superUser') && tableUser.id !== user?.id && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => setUserToDelete(tableUser)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta acción no se puede deshacer. Esto eliminará permanentemente al usuario
+                                      <strong> {tableUser.fullName}</strong> y todos sus datos asociados.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel onClick={() => setUserToDelete(null)}>
+                                      Cancelar
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteUser(tableUser)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Eliminar
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </div>
                         </TableCell>
                       )}

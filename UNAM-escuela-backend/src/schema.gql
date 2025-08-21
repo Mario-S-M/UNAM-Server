@@ -258,6 +258,7 @@ type Mutation {
   assignLanguageToUser(assignLanguageInput: AssignLanguageInput!): User!
   assignMultipleLanguagesToUser(assignMultipleLanguagesInput: AssignMultipleLanguagesInput!): User!
   assignAdminLanguageToTeacher(teacherId: ID!): User!
+  deleteUser(id: ID!): User!
   signin(signUpInput: SignupInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
   createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!

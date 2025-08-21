@@ -393,7 +393,7 @@ export class UsersService {
     updateUserInput: UpdateUserInput,
     adminUser: User,
   ): Promise<User> {
-    const { id, fullName, password } = updateUserInput;
+    const { id, fullName, email, password } = updateUserInput;
 
     this.logger.log(
       `Actualizando usuario ${id} por admin ${adminUser.fullName}`,
@@ -406,6 +406,26 @@ export class UsersService {
       throw new BadRequestException(
         'No tienes permisos para editar este usuario',
       );
+    }
+
+    // Validar email único si se proporciona
+    if (email && email.trim()) {
+      const emailToCheck = email.trim().toLowerCase();
+      
+      // Solo validar si el email es diferente al actual
+      if (emailToCheck !== userToUpdate.email.toLowerCase()) {
+        const existingUser = await this.usersRepository.findOne({
+          where: { email: emailToCheck },
+        });
+        
+        if (existingUser) {
+          throw new BadRequestException(
+            'Ya existe un usuario con este email',
+          );
+        }
+        
+        userToUpdate.email = emailToCheck;
+      }
     }
 
     // Actualizar nombre si se proporciona

@@ -35,19 +35,22 @@ export const CreateLanguageFormSchema = z.object({
     .string()
     .max(200, "El eslogan no puede exceder 200 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   descripcion_corta: z
     .string()
     .max(100, "La descripción corta no puede exceder 100 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   descripcion_completa: z
     .string()
     .max(1000, "La descripción completa no puede exceder 1000 caracteres")
     .trim()
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   
   nivel: z
     .enum(NIVEL_OPTIONS, {
@@ -64,18 +67,24 @@ export const CreateLanguageFormSchema = z.object({
   
   color_tema: z
     .string()
-    .regex(/^#[0-9A-Fa-f]{6}$/, "Debe ser un código de color hexadecimal válido")
-    .optional(),
+    .optional()
+    .refine((val) => !val || val === '' || /^#[0-9A-Fa-f]{6}$/.test(val), {
+      message: "Debe ser un código de color hexadecimal válido o estar vacío"
+    }),
   
   icono_curso: z
     .string()
-    .url("Debe ser una URL válida")
-    .optional(),
-  
+    .optional()
+    .refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+      message: "Debe ser una URL válida o estar vacío"
+    }),
+
   imagen_hero: z
     .string()
-    .url("Debe ser una URL válida")
-    .optional(),
+    .optional()
+    .refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+      message: "Debe ser una URL válida o estar vacío"
+    }),
   
   badge_destacado: z
     .enum(BADGE_OPTIONS, {
@@ -85,17 +94,17 @@ export const CreateLanguageFormSchema = z.object({
   
   idioma_origen: z
     .string()
-    .min(2, "El idioma origen debe tener al menos 2 caracteres")
     .max(50, "El idioma origen no puede exceder 50 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   idioma_destino: z
     .string()
-    .min(2, "El idioma destino debe tener al menos 2 caracteres")
     .max(50, "El idioma destino no puede exceder 50 caracteres")
     .trim()
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   
   certificado_digital: z
     .boolean()
@@ -143,7 +152,7 @@ export const UpdateLanguageFormSchema = z.object({
   
   name: z
     .string()
-    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .min(1, "El nombre es requerido")
     .max(100, "El nombre no puede exceder 100 caracteres")
     .trim()
     .optional(),
@@ -152,19 +161,22 @@ export const UpdateLanguageFormSchema = z.object({
     .string()
     .max(200, "El eslogan no puede exceder 200 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   descripcion_corta: z
     .string()
     .max(100, "La descripción corta no puede exceder 100 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   descripcion_completa: z
     .string()
     .max(1000, "La descripción completa no puede exceder 1000 caracteres")
     .trim()
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   
   nivel: z
     .enum(NIVEL_OPTIONS, {
@@ -181,18 +193,24 @@ export const UpdateLanguageFormSchema = z.object({
   
   color_tema: z
     .string()
-    .regex(/^#[0-9A-Fa-f]{6}$/, "Debe ser un código de color hexadecimal válido")
-    .optional(),
+    .optional()
+    .refine((val) => !val || val === '' || /^#[0-9A-Fa-f]{6}$/.test(val), {
+      message: "Debe ser un código de color hexadecimal válido o estar vacío"
+    }),
   
   icono_curso: z
     .string()
-    .url("Debe ser una URL válida")
-    .optional(),
-  
+    .optional()
+    .refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+      message: "Debe ser una URL válida o estar vacío"
+    }),
+
   imagen_hero: z
     .string()
-    .url("Debe ser una URL válida")
-    .optional(),
+    .optional()
+    .refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+      message: "Debe ser una URL válida o estar vacío"
+    }),
   
   badge_destacado: z
     .enum(BADGE_OPTIONS, {
@@ -202,17 +220,17 @@ export const UpdateLanguageFormSchema = z.object({
   
   idioma_origen: z
     .string()
-    .min(2, "El idioma origen debe tener al menos 2 caracteres")
     .max(50, "El idioma origen no puede exceder 50 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   idioma_destino: z
     .string()
-    .min(2, "El idioma destino debe tener al menos 2 caracteres")
     .max(50, "El idioma destino no puede exceder 50 caracteres")
     .trim()
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   
   certificado_digital: z
     .boolean()

@@ -58,7 +58,7 @@ export const LevelSchema = z.object({
 export const LanguageSchema = z.object({
   id: z.string(),
   name: z.string(),
-  icons: z.array(z.string()),
+  icons: z.array(z.string()).nullable().default([]),
   createdAt: z.string(),
   updatedAt: z.string(),
   isActive: z.boolean(),

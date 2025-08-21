@@ -10,7 +10,8 @@ import {
   IsBoolean,
   MaxLength,
   IsHexColor,
-  IsNumber
+  IsNumber,
+  ValidateIf
 } from 'class-validator';
 import { CreateLenguageInput } from './create-lenguage.input';
 import { InputType, Field, Int, PartialType, ID, Float } from '@nestjs/graphql';
@@ -24,23 +25,27 @@ export class UpdateLenguageInput extends PartialType(CreateLenguageInput) {
   id: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.name !== undefined && o.name !== null)
+  @IsString({ message: 'El nombre debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   name?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.eslogan_atractivo !== undefined && o.eslogan_atractivo !== null)
+  @IsString({ message: 'El eslogan atractivo debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   eslogan_atractivo?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.descripcion_corta !== undefined && o.descripcion_corta !== null)
+  @IsString({ message: 'La descripción corta debe ser un texto válido' })
   @MaxLength(100, { message: 'La descripción corta no puede exceder 100 caracteres' })
   @Field(() => String, { nullable: true })
   descripcion_corta?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.descripcion_completa !== undefined && o.descripcion_completa !== null)
+  @IsString({ message: 'La descripción completa debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   descripcion_completa?: string;
 
@@ -56,18 +61,20 @@ export class UpdateLenguageInput extends PartialType(CreateLenguageInput) {
   duracion_total_horas?: number;
 
   @IsOptional()
-  @IsString()
-  @IsHexColor({ message: 'El color debe ser un código hexadecimal válido' })
+  @ValidateIf((o) => o.color_tema !== undefined && o.color_tema !== null)
+  @IsString({ message: 'El color tema debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   color_tema?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.icono_curso !== undefined && o.icono_curso !== null)
+  @IsString({ message: 'El icono del curso debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   icono_curso?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.imagen_hero !== undefined && o.imagen_hero !== null)
+  @IsString({ message: 'La imagen hero debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   imagen_hero?: string;
 
@@ -84,12 +91,14 @@ export class UpdateLenguageInput extends PartialType(CreateLenguageInput) {
   dificultad?: number;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.idioma_origen !== undefined && o.idioma_origen !== null)
+  @IsString({ message: 'El idioma origen debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   idioma_origen?: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => o.idioma_destino !== undefined && o.idioma_destino !== null)
+  @IsString({ message: 'El idioma destino debe ser un texto válido' })
   @Field(() => String, { nullable: true })
   idioma_destino?: string;
 

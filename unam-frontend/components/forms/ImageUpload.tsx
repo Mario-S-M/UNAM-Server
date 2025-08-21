@@ -6,6 +6,19 @@ import { Upload, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+interface EntityData {
+  languageId?: string;
+  languageName?: string;
+  levelId?: string;
+  levelName?: string;
+  skillId?: string;
+  skillName?: string;
+  contentId?: string;
+  contentName?: string;
+  activityId?: string;
+  activityName?: string;
+}
+
 interface ImageUploadProps {
   id: string;
   label: string;
@@ -19,6 +32,8 @@ interface ImageUploadProps {
   className?: string;
   maxSize?: number; // in MB
   acceptedTypes?: string[];
+  entityType?: 'language' | 'level' | 'skill' | 'content' | 'activity';
+  entityData?: EntityData;
   uploadEndpoint?: string;
 }
 
@@ -35,7 +50,9 @@ export function ImageUpload({
   className,
   maxSize = 5,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-  uploadEndpoint = 'http://localhost:3000/uploads/image/public'
+  entityType,
+  entityData,
+  uploadEndpoint
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +74,17 @@ export function ImageUpload({
     return true;
   };
 
+  // Función para obtener el endpoint correcto según el tipo de entidad
+  const getUploadEndpoint = (): string => {
+    if (uploadEndpoint) return uploadEndpoint;
+    
+    if (!entityType) {
+      return 'http://localhost:3000/uploads/image/public';
+    }
+    
+    return `http://localhost:3000/uploads/${entityType}-image`;
+  };
+
   const handleFileSelect = async (file: File) => {
     if (!validateFile(file)) return;
 
@@ -65,9 +93,27 @@ export function ImageUpload({
 
       const formData = new FormData();
       formData.append('image', file);
+      
+      // Agregar datos de la entidad si están disponibles
+      if (entityData) {
+        Object.entries(entityData).forEach(([key, value]) => {
+          if (value) {
+            formData.append(key, value);
+          }
+        });
+      }
 
-      const response = await fetch(uploadEndpoint, {
+      const endpoint = getUploadEndpoint();
+      const token = localStorage.getItem('token');
+      
+      const headers: HeadersInit = {};
+      if (token && entityType) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
+        headers,
         body: formData,
       });
 
@@ -109,12 +155,60 @@ export function ImageUpload({
     fileInputRef.current?.click();
   };
 
-  const removeImage = () => {
-    onChange('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const removeImage = async () => {
+    if (!value) return;
+    
+    try {
+      // Si tenemos información de la entidad, intentar eliminar del servidor
+      if (entityType && entityData && value.includes('localhost:3000/images/')) {
+        const token = localStorage.getItem('token');
+        
+        if (token) {
+          // Extraer el filename de la URL
+          const urlParts = value.split('/');
+          const filename = urlParts[urlParts.length - 1];
+          
+          // Construir la URL de eliminación según el tipo de entidad
+          let deleteUrl = '';
+          
+          switch (entityType) {
+            case 'language':
+              deleteUrl = `http://localhost:3000/uploads/language-image/${entityData.languageName || entityData.languageId}/${filename}`;
+              break;
+            case 'level':
+              deleteUrl = `http://localhost:3000/uploads/level-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${filename}`;
+              break;
+            case 'skill':
+              deleteUrl = `http://localhost:3000/uploads/skill-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${filename}`;
+              break;
+            case 'content':
+              deleteUrl = `http://localhost:3000/uploads/content-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${entityData.contentName || entityData.contentId}/${filename}`;
+              break;
+            case 'activity':
+              deleteUrl = `http://localhost:3000/uploads/activity-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${entityData.contentName || entityData.contentId}/${entityData.activityName || entityData.activityId}/${filename}`;
+              break;
+          }
+          
+          if (deleteUrl) {
+            await fetch(deleteUrl, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting image from server:', error);
+      // Continuar con la eliminación local aunque falle la del servidor
     }
-  };
+    
+    onChange('');
+     if (fileInputRef.current) {
+       fileInputRef.current.value = '';
+     }
+   };
 
   return (
     <div className={cn('space-y-2', className)}>

@@ -108,6 +108,10 @@ export function LanguageForm({
             description="Imagen de la bandera del país/región"
             maxSize={2}
             acceptedTypes={['image/png', 'image/svg+xml', 'image/jpeg']}
+            entityType="language"
+            entityData={{
+              languageName: formData.name
+            }}
           />
 
           {/* Iconos */}

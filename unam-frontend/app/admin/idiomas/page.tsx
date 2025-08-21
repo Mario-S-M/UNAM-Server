@@ -69,9 +69,9 @@ const GET_LANGUAGES_PAGINATED = `
         nivel
         duracion_total_horas
         color_tema
+        icono_curso
         imagen_hero
         badge_destacado
-
         idioma_origen
         idioma_destino
         certificado_digital
@@ -107,9 +107,9 @@ const CREATE_LANGUAGE = `
       nivel
       duracion_total_horas
       color_tema
+      icono_curso
       imagen_hero
       badge_destacado
-
       idioma_origen
       idioma_destino
       certificado_digital
@@ -138,9 +138,9 @@ const UPDATE_LANGUAGE = `
       nivel
       duracion_total_horas
       color_tema
+      icono_curso
       imagen_hero
       badge_destacado
-
       idioma_origen
       idioma_destino
       certificado_digital
@@ -193,6 +193,7 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
+  console.log('🌐 fetchGraphQL iniciado con:', { query: query.substring(0, 50) + '...', variables });
   try {
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
@@ -206,12 +207,17 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
       }),
     });
 
+    console.log('📡 Response status:', response.status);
     const result = await response.json();
+    console.log('📋 Response result:', result);
+    
     if (result.errors) {
+      console.log('❌ GraphQL errors encontrados:', result.errors);
       throw new Error(result.errors[0].message);
     }
     return result.data;
   } catch (error) {
+    console.log('🚨 Error en fetchGraphQL:', error);
     console.error('GraphQL Error:', error);
     throw error;
   }
@@ -220,18 +226,17 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
 interface Language {
   id: string;
   name: string;
-  eslogan_atractivo: string;
-  descripcion_corta: string;
-  descripcion_completa: string;
-  nivel: string;
-  duracion_total_horas: number;
-  color_tema: string;
-
-  imagen_hero: string;
-  badge_destacado?: string;
-
-  idioma_origen: string;
-  idioma_destino: string;
+  eslogan_atractivo: string | null;
+  descripcion_corta: string | null;
+  descripcion_completa: string | null;
+  nivel: string | null;
+  duracion_total_horas: number | null;
+  color_tema: string | null;
+  icono_curso: string | null;
+  imagen_hero: string | null;
+  badge_destacado?: string | null;
+  idioma_origen: string | null;
+  idioma_destino: string | null;
   certificado_digital: boolean;
   puntuacion_promedio: number;
   total_estudiantes_inscritos: number;
@@ -263,9 +268,9 @@ interface LanguageFormData {
   nivel: string;
   duracion_total_horas: number;
   color_tema: string;
+  icono_curso: string;
   imagen_hero: string;
   badge_destacado?: string;
-
   idioma_origen: string;
   idioma_destino: string;
   certificado_digital: boolean;
@@ -313,10 +318,9 @@ export default function IdiomasPage() {
     nivel: 'Básico',
     duracion_total_horas: 1,
     color_tema: '#000000',
-    
+    icono_curso: '',
     imagen_hero: '',
     badge_destacado: undefined,
-
     idioma_origen: '',
     idioma_destino: '',
     certificado_digital: false,
@@ -351,13 +355,29 @@ export default function IdiomasPage() {
       setUploadingImage(fieldName);
       
       // Crear FormData para enviar el archivo
-      const formData = new FormData();
-      formData.append('image', file);
+      const formDataToSend = new FormData();
+      formDataToSend.append('image', file);
+      
+      // Agregar datos de la entidad si están disponibles
+      if (formData.name) {
+        formDataToSend.append('languageName', formData.name);
+      }
+      
+      // Usar el endpoint específico de languages si tenemos el nombre
+      const endpoint = formData.name 
+        ? 'http://localhost:3000/uploads/language-image'
+        : 'http://localhost:3000/uploads/image/public';
+      
+      const headers: HeadersInit = {};
+      if (token && formData.name) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       
       // Subir archivo al backend
-      const uploadResponse = await fetch('http://localhost:3000/uploads/image/public', {
+      const uploadResponse = await fetch(endpoint, {
         method: 'POST',
-        body: formData,
+        headers,
+        body: formDataToSend,
       });
       
       if (!uploadResponse.ok) {
@@ -422,49 +442,122 @@ export default function IdiomasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 handleSubmit iniciado');
     
     // Validar datos del formulario con Zod
-    const validationResult = validateLanguageForm(formData, !!editingLanguage);
+    const dataToValidate = editingLanguage 
+      ? { ...formData, id: editingLanguage.id }
+      : formData;
+    const validationResult = validateLanguageForm(dataToValidate, !!editingLanguage);
+    console.log('📋 Resultado de validación:', validationResult);
+    console.log('📋 Datos validados:', dataToValidate);
     
     if (!validationResult.success) {
       const errors = validationResult.error.issues.map((err: any) => err.message).join(', ');
+      console.log('❌ Errores de validación:', errors);
       showToast(`Errores de validación: ${errors}`, 'error');
       return;
     }
     
+    let updateData: any = undefined;
+    let createData: any = undefined;
+
     try {
+      console.log('🔄 Entrando al bloque try');
       if (editingLanguage) {
-        const updateData = {
-          id: editingLanguage.id,
-          ...validationResult.data
+        // Filtrar campos vacíos para evitar errores de validación en el backend
+        updateData = {
+          id: editingLanguage.id
         };
         
-        await fetchGraphQL(
+        // Solo incluir campos que no estén vacíos o que sean diferentes del valor original
+        const data = validationResult.data;
+        
+        if (data.name && data.name.trim() !== '') updateData.name = data.name;
+        if (data.eslogan_atractivo && data.eslogan_atractivo.trim() !== '') updateData.eslogan_atractivo = data.eslogan_atractivo;
+        if (data.descripcion_corta && data.descripcion_corta.trim() !== '') updateData.descripcion_corta = data.descripcion_corta;
+        if (data.descripcion_completa && data.descripcion_completa.trim() !== '') updateData.descripcion_completa = data.descripcion_completa;
+        if (data.nivel) updateData.nivel = data.nivel;
+        if (data.duracion_total_horas !== undefined) updateData.duracion_total_horas = data.duracion_total_horas;
+        if (data.color_tema && data.color_tema.trim() !== '' && /^#[0-9A-Fa-f]{6}$/.test(data.color_tema)) updateData.color_tema = data.color_tema;
+        if (data.icono_curso && data.icono_curso.trim() !== '') updateData.icono_curso = data.icono_curso;
+        if (data.imagen_hero && data.imagen_hero.trim() !== '') updateData.imagen_hero = data.imagen_hero;
+        if (data.badge_destacado) updateData.badge_destacado = data.badge_destacado;
+        if (data.idioma_origen && data.idioma_origen.trim() !== '') updateData.idioma_origen = data.idioma_origen;
+        if (data.idioma_destino && data.idioma_destino.trim() !== '') updateData.idioma_destino = data.idioma_destino;
+        if (data.certificado_digital !== undefined) updateData.certificado_digital = data.certificado_digital;
+        if (data.puntuacion_promedio !== undefined) updateData.puntuacion_promedio = data.puntuacion_promedio;
+        if (data.total_estudiantes_inscritos !== undefined) updateData.total_estudiantes_inscritos = data.total_estudiantes_inscritos;
+        if (data.estado) updateData.estado = data.estado;
+        if (data.featured !== undefined) updateData.featured = data.featured;
+        if (data.icons && data.icons.length > 0) updateData.icons = data.icons;
+        if (data.isActive !== undefined) updateData.isActive = data.isActive;
+        
+        console.log('📤 Enviando updateData:', updateData);
+        const result = await fetchGraphQL(
           UPDATE_LANGUAGE,
           {
             updateLenguageInput: updateData,
           },
           token || undefined
          );
+        console.log('✅ Resultado de actualización:', result);
         showToast('Idioma actualizado exitosamente');
       } else {
-        const createData = validationResult.data;
+        // Filtrar campos vacíos para la creación también
+        const data = validationResult.data;
+        createData = {
+          name: data.name
+        };
         
-        await fetchGraphQL(
+        // Solo incluir campos que no estén vacíos
+        if (data.eslogan_atractivo && data.eslogan_atractivo.trim() !== '') createData.eslogan_atractivo = data.eslogan_atractivo;
+        if (data.descripcion_corta && data.descripcion_corta.trim() !== '') createData.descripcion_corta = data.descripcion_corta;
+        if (data.descripcion_completa && data.descripcion_completa.trim() !== '') createData.descripcion_completa = data.descripcion_completa;
+        if (data.nivel) createData.nivel = data.nivel;
+        if (data.duracion_total_horas !== undefined) createData.duracion_total_horas = data.duracion_total_horas;
+        if (data.color_tema && data.color_tema.trim() !== '' && /^#[0-9A-Fa-f]{6}$/.test(data.color_tema)) createData.color_tema = data.color_tema;
+        if (data.icono_curso && data.icono_curso.trim() !== '') createData.icono_curso = data.icono_curso;
+        if (data.imagen_hero && data.imagen_hero.trim() !== '') createData.imagen_hero = data.imagen_hero;
+        if (data.badge_destacado) createData.badge_destacado = data.badge_destacado;
+        if (data.idioma_origen && data.idioma_origen.trim() !== '') createData.idioma_origen = data.idioma_origen;
+        if (data.idioma_destino && data.idioma_destino.trim() !== '') createData.idioma_destino = data.idioma_destino;
+        if (data.certificado_digital !== undefined) createData.certificado_digital = data.certificado_digital;
+        if (data.puntuacion_promedio !== undefined) createData.puntuacion_promedio = data.puntuacion_promedio;
+        if (data.total_estudiantes_inscritos !== undefined) createData.total_estudiantes_inscritos = data.total_estudiantes_inscritos;
+        if (data.estado) createData.estado = data.estado;
+        if (data.featured !== undefined) createData.featured = data.featured;
+        if (data.icons && data.icons.length > 0) createData.icons = data.icons;
+        if (data.isActive !== undefined) createData.isActive = data.isActive;
+        
+        console.log('📤 Enviando createData:', createData);
+        const result = await fetchGraphQL(
           CREATE_LANGUAGE,
           {
             createLenguageInput: createData,
           },
           token || undefined
          );
+        console.log('✅ Resultado de creación:', result);
         showToast('Idioma creado exitosamente');
       }
       setIsDialogOpen(false);
       resetForm();
       fetchLanguages();
     } catch (error) {
-      console.error('Error saving language:', error);
-      showToast('Error al guardar el idioma', 'error');
+      console.log('🚨 ENTRANDO AL CATCH BLOCK');
+      console.error('❌ Error saving language:', error);
+      console.error('📊 Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        updateData: editingLanguage ? updateData : undefined,
+        createData: !editingLanguage ? createData : undefined,
+        formData: formData,
+        editingLanguage: editingLanguage
+      });
+      const errorMessage = error instanceof Error ? error.message : 'Error al guardar el idioma';
+      console.log('📢 Mostrando toast con mensaje:', errorMessage);
+      showToast(`Errores de Validación: ${errorMessage}`, 'error');
     }
   };
 
@@ -488,9 +581,9 @@ export default function IdiomasPage() {
       nivel: 'Básico',
       duracion_total_horas: 1,
       color_tema: '#000000',
+      icono_curso: '',
       imagen_hero: '',
       badge_destacado: undefined,
-
       idioma_origen: '',
       idioma_destino: '',
       certificado_digital: false,
@@ -506,18 +599,17 @@ export default function IdiomasPage() {
     setEditingLanguage(language);
     setFormData({
       name: language.name,
-      eslogan_atractivo: language.eslogan_atractivo,
-      descripcion_corta: language.descripcion_corta,
-      descripcion_completa: language.descripcion_completa,
-      nivel: language.nivel,
-      duracion_total_horas: language.duracion_total_horas,
-      color_tema: language.color_tema,
-      
-      imagen_hero: language.imagen_hero,
-      badge_destacado: language.badge_destacado,
-
-      idioma_origen: language.idioma_origen,
-      idioma_destino: language.idioma_destino,
+      eslogan_atractivo: language.eslogan_atractivo || '',
+      descripcion_corta: language.descripcion_corta || '',
+      descripcion_completa: language.descripcion_completa || '',
+      nivel: language.nivel || 'Básico',
+      duracion_total_horas: language.duracion_total_horas || 1,
+      color_tema: language.color_tema || '#000000',
+      icono_curso: language.icono_curso || '',
+      imagen_hero: language.imagen_hero || '',
+      badge_destacado: language.badge_destacado || undefined,
+      idioma_origen: language.idioma_origen || '',
+      idioma_destino: language.idioma_destino || '',
       certificado_digital: language.certificado_digital,
       estado: language.estado,
       featured: language.featured,

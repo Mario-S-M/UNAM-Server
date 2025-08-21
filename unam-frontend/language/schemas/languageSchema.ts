@@ -22,7 +22,7 @@ export const LenguageSchema = z.object({
   featured: z.boolean().optional(),
   fecha_creacion: z.string().optional(),
   fecha_actualizacion: z.string().optional(),
-  icons: z.array(z.string()),
+  icons: z.array(z.string()).nullable().default([]),
   isActive: z.boolean(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),

@@ -12,7 +12,9 @@ export const CreateSkillFormSchema = z.object({
   
   color: z.string({
     message: 'El color debe ser un texto válido'
-  }).regex(/^#[0-9A-Fa-f]{6}$/, 'El color debe ser un código hexadecimal válido (ej: #FF0000)').optional(),
+  }).optional().refine((val) => !val || val === '' || /^#[0-9A-Fa-f]{6}$/.test(val), {
+    message: 'El color debe ser un código hexadecimal válido (ej: #FF0000) o estar vacío'
+  }),
 
   imageUrl: z.string({
     message: 'La URL de la imagen debe ser un texto válido'
@@ -20,7 +22,7 @@ export const CreateSkillFormSchema = z.object({
 
   icon: z.string({
     message: 'El icono debe ser un texto válido'
-  }).max(50, 'El nombre del icono no puede exceder 50 caracteres').optional(),
+  }).max(50, 'El nombre del icono no puede exceder 50 caracteres').optional().or(z.literal('')),
 
   objectives: z.array(z.string().min(1, 'Los objetivos no pueden estar vacíos')).optional(),
 
@@ -49,15 +51,17 @@ export const UpdateSkillFormSchema = z.object({
   
   name: z.string({
     message: 'El nombre debe ser un texto'
-  }).min(1, 'El nombre no puede estar vacío').max(100, 'El nombre no puede exceder 100 caracteres').optional(),
+  }).max(100, 'El nombre no puede exceder 100 caracteres').optional().or(z.literal('')),
   
   description: z.string({
     message: 'La descripción debe ser un texto'
-  }).min(1, 'La descripción no puede estar vacía').max(500, 'La descripción no puede exceder 500 caracteres').optional(),
+  }).max(500, 'La descripción no puede exceder 500 caracteres').optional().or(z.literal('')),
   
   color: z.string({
     message: 'El color debe ser un texto válido'
-  }).regex(/^#[0-9A-Fa-f]{6}$/, 'El color debe ser un código hexadecimal válido (ej: #FF0000)').optional(),
+  }).optional().refine((val) => !val || val === '' || /^#[0-9A-Fa-f]{6}$/.test(val), {
+    message: 'El color debe ser un código hexadecimal válido (ej: #FF0000) o estar vacío'
+  }),
 
   imageUrl: z.string({
     message: 'La URL de la imagen debe ser un texto válido'

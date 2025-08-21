@@ -10,5 +10,8 @@ export class UpdateUserInput extends PartialType(CreateUserInput) {
   fullName?: string;
 
   @Field({ nullable: true })
+  email?: string;
+
+  @Field({ nullable: true })
   password?: string;
 }

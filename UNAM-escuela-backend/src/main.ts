@@ -1,13 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   try {
     logger.log('Starting NestJS application...');
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    
+    // Configurar archivos estáticos para las imágenes
+    app.useStaticAssets(join(__dirname, '..', '..', 'Imagenes'), {
+      prefix: '/images/',
+    });
+    
+    // Mantener compatibilidad con uploads existentes
+    app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+      prefix: '/uploads/',
+    });
     logger.log('Configuring CORS...');
     app.enableCors({
       origin: [

@@ -50,17 +50,18 @@ export const UpdateLevelFormSchema = z.object({
   
   name: z
     .string()
-    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .min(1, "El nombre es requerido")
     .max(100, "El nombre no puede exceder 100 caracteres")
     .trim()
-    .optional(),
-  
+    .optional()
+    .or(z.literal('')),
+
   description: z
     .string()
-    .min(10, "La descripción debe tener al menos 10 caracteres")
     .max(500, "La descripción no puede exceder 500 caracteres")
     .trim()
-    .optional(),
+    .optional()
+    .or(z.literal('')),
   
   difficulty: z
     .enum(DIFFICULTY_OPTIONS, {

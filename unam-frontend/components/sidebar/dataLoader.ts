@@ -126,7 +126,7 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
           return {
             id: language.id,
             name: language.name,
-            icons: language.icons,
+            icons: language.icons || [],
             levels: structuredLevels,
           };
         } catch (error) {
@@ -134,7 +134,7 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
           return {
             id: language.id,
             name: language.name,
-            icons: language.icons,
+            icons: language.icons || [],
             levels: [],
           };
         }

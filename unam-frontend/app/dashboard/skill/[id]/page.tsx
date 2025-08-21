@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, Target, Clock, BookOpen, CheckCircle, /*Users,*/ Award, Calendar, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { GET_SKILL_BY_ID } from '@/lib/graphql/queries';
+import { GET_SKILL_BY_ID_AUTH } from '@/lib/graphql/queries';
 
 // interface Skill {
 //   id: string;
@@ -63,7 +63,7 @@ function formatDate(dateString: string): string {
 
 export default function SkillDetailPage() {
   const params = useParams();
-  const { data, loading, error } = useQuery(GET_SKILL_BY_ID, {
+  const { data, loading, error } = useQuery(GET_SKILL_BY_ID_AUTH, {
     variables: { id: params.id },
     skip: !params.id,
   });

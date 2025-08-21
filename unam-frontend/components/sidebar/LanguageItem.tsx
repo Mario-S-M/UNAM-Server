@@ -5,6 +5,7 @@ import { BookOpen, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
+import { useDashboard } from "@/contexts/DashboardContext";
 
 interface SidebarSkill {
   id: string;
@@ -34,12 +35,63 @@ interface LanguageItemProps {
 
 
 
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
+
+const GET_SKILL_BY_ID_PUBLIC = `
+  query GetSkillByIdPublic($id: ID!) {
+    skillPublic(id: $id) {
+      id
+      name
+      description
+      color
+      imageUrl
+      icon
+      objectives
+      prerequisites
+      difficulty
+      estimatedHours
+      tags
+      isActive
+      level {
+        id
+        name
+        description
+        difficulty
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+const fetchGraphQLPublic = async (query: string, variables: any = {}) => {
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
+
+  const result = await response.json();
+  
+  if (result.errors) {
+    throw new Error(result.errors[0]?.message || 'Error en la consulta GraphQL');
+  }
+  
+  return result.data;
+};
+
 export function LanguageItem({
   language,
   isExpanded,
   onToggle,
 }: LanguageItemProps) {
   const router = useRouter();
+  const { setSelectedSkill, setIsLoadingSkill } = useDashboard();
   const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set());
 
   const handleLanguageClick = (e: React.MouseEvent) => {
@@ -178,9 +230,21 @@ export function LanguageItem({
                       <div key={skill.id} className="border-b border-gray-100 last:border-b-0">
                         <Button
                           variant="ghost"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            router.push(`/dashboard/skill/${skill.id}`);
+                            try {
+                              setIsLoadingSkill(true);
+                              const data = await fetchGraphQLPublic(GET_SKILL_BY_ID_PUBLIC, { id: skill.id });
+                              setSelectedSkill(data.skillPublic);
+                              // Navegar al dashboard principal para mostrar los detalles
+                              router.push('/dashboard');
+                            } catch (error) {
+                              console.error('Error loading skill:', error);
+                              // Fallback: navegar a la página individual si hay error
+                              router.push(`/dashboard/skill/${skill.id}`);
+                            } finally {
+                              setIsLoadingSkill(false);
+                            }
                           }}
                           className="w-full justify-start p-3 pl-12 h-auto hover:bg-purple-50/50"
                         >

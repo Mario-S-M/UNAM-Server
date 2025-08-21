@@ -210,6 +210,39 @@ export const GET_SKILL_BY_ID = gql`
   }
 `;
 
+export const GET_SKILL_BY_ID_AUTH = gql`
+  query GetSkillByIdAuth($id: ID!) {
+    skill(id: $id) {
+      id
+      name
+      description
+      color
+      imageUrl
+      icon
+      objectives
+      prerequisites
+      difficulty
+      estimatedHours
+      tags
+      isActive
+      levelId
+      lenguageId
+      level {
+        id
+        name
+        description
+        difficulty
+      }
+      lenguage {
+        id
+        name
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 // Content Queries
 export const GET_CONTENTS = gql`
   query GetContents($search: String, $levelId: String, $skillId: String, $validationStatus: String, $page: Int = 1, $limit: Int = 10) {

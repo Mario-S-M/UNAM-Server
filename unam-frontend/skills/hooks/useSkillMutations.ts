@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { SkillFormData, GraphQLVariables } from '../types';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -79,11 +80,10 @@ const DELETE_SKILL = `
   }
 `;
 
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Implementación simple de toast - puede ser reemplazada por una librería
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // Aquí podrías integrar con react-hot-toast, sonner, etc.
-};
+// Función helper para manejar errores
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string';
+}
 
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
   const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -156,11 +156,11 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
         { createSkillInput: submitData },
         token || undefined
       );
-      showToast('Habilidad creada exitosamente');
+      toast.success('Habilidad creada exitosamente');
       if (refreshCallback) refreshCallback();
     } catch (error) {
       console.error('Error creating skill:', error);
-      showToast('Error al crear la habilidad', 'error');
+      toast.error('Error al crear la habilidad');
       throw error;
     }
   }, [token]);
@@ -215,11 +215,11 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
         { updateSkillInput: submitData },
         token || undefined
       );
-      showToast('Habilidad actualizada exitosamente');
+      toast.warning('Habilidad actualizada exitosamente');
       if (refreshCallback) refreshCallback();
     } catch (error) {
       console.error('Error updating skill:', error);
-      showToast('Error al actualizar la habilidad', 'error');
+      toast.error('Error al actualizar la habilidad');
       throw error;
     }
   }, [token]);
@@ -227,11 +227,11 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
   const deleteSkill = useCallback(async (id: string) => {
     try {
       await fetchGraphQL(DELETE_SKILL, { id }, token || undefined);
-      showToast('Habilidad eliminada exitosamente');
+      toast.error('Habilidad eliminada exitosamente');
       if (refreshCallback) refreshCallback();
     } catch (error) {
       console.error('Error deleting skill:', error);
-      showToast('Error al eliminar la habilidad', 'error');
+      toast.error('Error al eliminar la habilidad');
       throw error;
     }
   }, [token]);
@@ -241,13 +241,13 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
     
     // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
-      showToast('Por favor selecciona un archivo de imagen válido', 'error');
+      toast.error('Por favor selecciona un archivo de imagen válido');
       throw new Error('Tipo de archivo inválido');
     }
     
     // Validar tamaño (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showToast('El archivo es demasiado grande. Máximo 5MB permitido', 'error');
+      toast.error('El archivo es demasiado grande. Máximo 5MB permitido');
       throw new Error('Archivo demasiado grande');
     }
     
@@ -299,11 +299,11 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       }
       
       const uploadResult = await uploadResponse.json();
-      showToast('Imagen subida exitosamente', 'success');
+      toast.success('Imagen subida exitosamente');
       return uploadResult.url;
     } catch (error) {
       console.error('Error uploading image:', error);
-      showToast('Error al subir la imagen', 'error');
+      toast.error('Error al subir la imagen');
       throw error;
     }
   }, [token]);

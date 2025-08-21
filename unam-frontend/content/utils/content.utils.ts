@@ -1,11 +1,11 @@
+import { toast } from 'sonner';
 import { GraphQLVariables } from '../../types';
 
 export const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Implementación simple de toast - puedes reemplazar con tu librería de toast preferida
   if (type === 'error') {
-    console.error(message);
+    toast.error(message);
   } else {
-    console.log(message);
+    toast.success(message);
   }
 };
 

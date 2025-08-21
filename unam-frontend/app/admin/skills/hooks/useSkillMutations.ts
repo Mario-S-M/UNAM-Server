@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { GraphQLVariables } from '@/types';
 
@@ -122,11 +123,10 @@ const skillSchema = z.object({
 
 export type SkillFormData = z.infer<typeof skillSchema>;
 
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Implementación simple de toast - puede ser reemplazada por una librería
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // TODO: Integrar con sistema de notificaciones
-};
+// Función helper para manejar errores
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string';
+}
 
 export interface UseSkillMutationsProps {
   onSuccess?: () => void;
@@ -183,7 +183,7 @@ export function useSkillMutations({
         token
       );
       
-      showToast('Skill creado exitosamente');
+      toast.success('Skill creado exitosamente');
       onSuccess?.();
     } catch (err) {
       console.error('Error creating skill:', err);
@@ -197,7 +197,7 @@ export function useSkillMutations({
       
       setError(errorMessage);
       onError?.(errorMessage);
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }
@@ -233,7 +233,7 @@ export function useSkillMutations({
         token
       );
       
-      showToast('Skill actualizado exitosamente');
+      toast.warning('Skill actualizado exitosamente');
       onSuccess?.();
     } catch (err) {
       console.error('Error updating skill:', err);
@@ -247,7 +247,7 @@ export function useSkillMutations({
       
       setError(errorMessage);
       onError?.(errorMessage);
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
     } finally {
       setIsUpdating(false);
     }
@@ -271,7 +271,7 @@ export function useSkillMutations({
         token
       );
       
-      showToast('Skill eliminado exitosamente');
+      toast.error('Skill eliminado exitosamente');
       onSuccess?.();
     } catch (err) {
       console.error('Error deleting skill:', err);
@@ -279,7 +279,7 @@ export function useSkillMutations({
       
       setError(errorMessage);
       onError?.(errorMessage);
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
     } finally {
       setIsDeleting(false);
     }

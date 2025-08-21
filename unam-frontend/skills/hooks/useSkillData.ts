@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { PaginatedSkills, Language, Level, GraphQLVariables } from '../types';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -65,11 +66,10 @@ const GET_LEVELS_BY_LANGUAGE = `
   }
 `;
 
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Implementación simple de toast - puede ser reemplazada por una librería
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // Aquí podrías integrar con react-hot-toast, sonner, etc.
-};
+// Función helper para manejar errores
+function isErrorWithMessage(error: unknown): error is { message: string } {
+  return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string';
+}
 
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
   const response = await fetch(GRAPHQL_ENDPOINT, {
@@ -123,7 +123,7 @@ export const useSkillData = (token?: string) => {
       setSkills(data.skillsPaginated);
     } catch (error) {
       console.error('Error fetching skills:', error);
-      showToast('Error al cargar las habilidades', 'error');
+      toast.error('Error al cargar las habilidades');
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,7 @@ export const useSkillData = (token?: string) => {
       setLanguages(data.lenguagesActivate);
     } catch (error) {
       console.error('Error fetching languages:', error);
-      showToast('Error al cargar los idiomas', 'error');
+      toast.error('Error al cargar los idiomas');
     }
   }, [token]);
 
@@ -153,7 +153,7 @@ export const useSkillData = (token?: string) => {
       setLevels(data.levelsByLenguage);
     } catch (error) {
       console.error('Error fetching levels:', error);
-      showToast('Error al cargar los niveles', 'error');
+      toast.error('Error al cargar los niveles');
     }
   }, [token]);
 

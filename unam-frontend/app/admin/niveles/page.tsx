@@ -144,18 +144,7 @@ interface GraphQLVariables {
   [key: string]: GraphQLInputValue;
 }
 
-// Toast notification function
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  const toast = document.createElement('div');
-  toast.className = `fixed top-4 right-4 p-4 rounded-md text-white z-50 ${
-    type === 'success' ? 'bg-green-500' : 'bg-red-500'
-  }`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    document.body.removeChild(toast);
-  }, 3000);
-};
+import { toast } from 'sonner';
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
@@ -282,7 +271,7 @@ export default function NivelesPage() {
       setLanguages(data.lenguagesActivate || []);
     } catch (error) {
       console.error('Error fetching languages:', error);
-      showToast('Error al cargar los idiomas', 'error');
+      toast.error('Error al cargar los idiomas');
     }
   };
 
@@ -304,7 +293,7 @@ export default function NivelesPage() {
       setLevels(data.levelsPaginated);
     } catch (error) {
       console.error('Error fetching levels:', error);
-      showToast('Error al cargar los niveles', 'error');
+      toast.error('Error al cargar los niveles');
     } finally {
       setLoading(false);
     }
@@ -351,14 +340,14 @@ export default function NivelesPage() {
           },
           token || undefined
         );
-        showToast('Nivel actualizado exitosamente');
+        toast.success('Nivel actualizado exitosamente');
       } else {
         // Para creación, validar todos los campos
         const validationResult = validateLevelForm(formData, false);
         
         if (!validationResult.success) {
           const errors = validationResult.error.issues.map((err) => err.message).join(', ');
-          showToast(`Errores de validación: ${errors}`, 'error');
+          toast.error(`Errores de validación: ${errors}`);
           return;
         }
         
@@ -369,25 +358,25 @@ export default function NivelesPage() {
           },
           token || undefined
         );
-        showToast('Nivel creado exitosamente');
+        toast.success('Nivel creado exitosamente');
       }
       setIsDialogOpen(false);
       resetForm();
       fetchLevels();
     } catch (error) {
       console.error('Error saving level:', error);
-      showToast('Error al guardar el nivel', 'error');
+      toast.error('Error al guardar el nivel');
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await fetchGraphQL(DELETE_LEVEL, { id }, token || undefined);
-      showToast('Nivel eliminado exitosamente');
+      toast.success('Nivel eliminado exitosamente');
       fetchLevels();
     } catch (error) {
       console.error('Error deleting level:', error);
-      showToast('Error al eliminar el nivel', 'error');
+      toast.error('Error al eliminar el nivel');
     }
   };
 

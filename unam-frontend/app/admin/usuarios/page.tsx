@@ -134,20 +134,7 @@ interface GraphQLVariables {
   [key: string]: GraphQLInputValue;
 }
 
-// Toast notification function
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Create a simple toast notification
-  const toast = document.createElement('div');
-  toast.className = `fixed top-4 right-4 p-4 rounded-md text-white z-50 ${
-    type === 'success' ? 'bg-green-500' : 'bg-red-500'
-  }`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    document.body.removeChild(toast);
-  }, 3000);
-};
+import { toast } from 'sonner';
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
@@ -218,7 +205,7 @@ export default function UsuariosPage() {
       setLanguages(data.lenguagesActivate || []);
     } catch (error) {
       console.error('Error loading languages:', error);
-      showToast('Error al cargar idiomas', 'error');
+      toast.error('Error al cargar idiomas');
     }
   }, [token]);
 
@@ -246,7 +233,7 @@ export default function UsuariosPage() {
       setHasPreviousPage(paginatedData.hasPreviousPage);
     } catch (error) {
       console.error('Error loading users:', error);
-      showToast('Error al cargar usuarios', 'error');
+      toast.error('Error al cargar usuarios');
     } finally {
       setLoading(false);
     }
@@ -273,7 +260,6 @@ export default function UsuariosPage() {
     setEditFormData
   } = useEditUser({ 
      onUserUpdated: loadUsers,
-     showToast,
      fetchGraphQL,
      token: token || undefined,
      UPDATE_USER,
@@ -344,12 +330,12 @@ export default function UsuariosPage() {
     
     try {
       await fetchGraphQL(DELETE_USER, { id: userToDelete.id }, token);
-      showToast(`Usuario ${userToDelete.fullName} eliminado exitosamente`, 'success');
+      toast.error(`Usuario ${userToDelete.fullName} eliminado exitosamente`);
       setUserToDelete(null);
       loadUsers(); // Reload the user list
     } catch (error) {
       console.error('Error deleting user:', error);
-      showToast('Error al eliminar usuario', 'error');
+      toast.error('Error al eliminar usuario');
     }
   };
 

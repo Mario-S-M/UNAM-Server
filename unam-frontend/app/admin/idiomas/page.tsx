@@ -177,19 +177,7 @@ interface GraphQLVariables {
   [key: string]: GraphQLInputValue;
 }
 
-// Toast notification function
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Simple toast implementation - you can replace with a proper toast library
-  const toast = document.createElement('div');
-  toast.className = `fixed top-4 right-4 p-4 rounded-md text-white z-50 ${
-    type === 'success' ? 'bg-green-500' : 'bg-red-500'
-  }`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    document.body.removeChild(toast);
-  }, 3000);
-};
+import { toast } from 'sonner';
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
@@ -341,13 +329,13 @@ export default function IdiomasPage() {
     
     // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
-      showToast('Por favor selecciona un archivo de imagen válido', 'error');
+      toast.error('Por favor selecciona un archivo de imagen válido');
       return;
     }
     
     // Validar tamaño (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showToast('El archivo es demasiado grande. Máximo 5MB permitido', 'error');
+      toast.error('El archivo es demasiado grande. Máximo 5MB permitido');
       return;
     }
     
@@ -389,10 +377,10 @@ export default function IdiomasPage() {
       // Actualizar el formulario con la URL de la imagen
       setFormData(prev => ({ ...prev, [fieldName]: uploadResult.url }));
       
-      showToast('Imagen subida exitosamente', 'success');
+      toast.success('Imagen subida exitosamente');
     } catch (error) {
       console.error('Error uploading image:', error);
-      showToast('Error al subir la imagen', 'error');
+      toast.error('Error al subir la imagen');
     } finally {
       setUploadingImage(null);
     }
@@ -502,7 +490,7 @@ export default function IdiomasPage() {
           token || undefined
          );
         console.log('✅ Resultado de actualización:', result);
-        showToast('Idioma actualizado exitosamente');
+        toast.warning('Idioma actualizado exitosamente');
       } else {
         // Filtrar campos vacíos para la creación también
         const data = validationResult.data;
@@ -539,7 +527,7 @@ export default function IdiomasPage() {
           token || undefined
          );
         console.log('✅ Resultado de creación:', result);
-        showToast('Idioma creado exitosamente');
+        toast.success('Idioma creado exitosamente');
       }
       setIsDialogOpen(false);
       resetForm();
@@ -557,18 +545,18 @@ export default function IdiomasPage() {
       });
       const errorMessage = error instanceof Error ? error.message : 'Error al guardar el idioma';
       console.log('📢 Mostrando toast con mensaje:', errorMessage);
-      showToast(`Errores de Validación: ${errorMessage}`, 'error');
+      toast.error(`Errores de Validación: ${errorMessage}`);
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
       await fetchGraphQL(DELETE_LANGUAGE, { id }, token || undefined);
-      showToast('Idioma eliminado exitosamente');
+      toast.error('Idioma eliminado exitosamente');
       fetchLanguages();
     } catch (error) {
       console.error('Error deleting language:', error);
-      showToast('Error al eliminar el idioma', 'error');
+      toast.error('Error al eliminar el idioma');
     }
   };
 

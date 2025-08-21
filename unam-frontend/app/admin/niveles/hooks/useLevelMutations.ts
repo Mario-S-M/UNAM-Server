@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -14,14 +15,9 @@ interface GraphQLVariables {
   [key: string]: GraphQLInputValue;
 }
 
-// Toast notification function
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Simple console log for now - replace with actual toast implementation
-  if (type === 'error') {
-    console.error(message);
-  } else {
-    console.log(message);
-  }
+// Helper function for error handling
+const isErrorWithMessage = (error: unknown): error is { message: string } => {
+  return typeof error === 'object' && error !== null && 'message' in error;
 };
 
 // GraphQL fetch function
@@ -140,11 +136,11 @@ export function useLevelMutations(): UseLevelMutationsReturn {
         token || undefined
       );
       
-      showToast('Nivel creado exitosamente');
+      toast.success('Nivel creado exitosamente');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al crear el nivel';
       setError(errorMessage);
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -176,11 +172,11 @@ export function useLevelMutations(): UseLevelMutationsReturn {
         token || undefined
       );
       
-      showToast('Nivel actualizado exitosamente');
+      toast.success('Nivel actualizado exitosamente');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el nivel';
       setError(errorMessage);
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -198,11 +194,11 @@ export function useLevelMutations(): UseLevelMutationsReturn {
         token || undefined
       );
       
-      showToast('Nivel eliminado exitosamente');
+      toast.success('Nivel eliminado exitosamente');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al eliminar el nivel';
       setError(errorMessage);
-      showToast(errorMessage, 'error');
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);

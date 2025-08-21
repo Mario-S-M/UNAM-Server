@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import { Language, Level } from '@/types';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
@@ -13,16 +14,6 @@ type GraphQLInputValue = string | number | boolean | null | undefined | string[]
 interface GraphQLVariables {
   [key: string]: GraphQLInputValue;
 }
-
-// Toast notification function
-const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-  // Simple console log for now - replace with actual toast implementation
-  if (type === 'error') {
-    console.error(message);
-  } else {
-    console.log(message);
-  }
-};
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
@@ -153,7 +144,7 @@ export function useLevelData({
       setLevels(data.levelsPaginated);
     } catch (error) {
       console.error('Error fetching levels:', error);
-      showToast('Error al cargar los niveles', 'error');
+      toast.error('Error al cargar los niveles');
     } finally {
       setLoading(false);
     }
@@ -169,7 +160,7 @@ export function useLevelData({
       setLanguages(data.lenguagesActivate);
     } catch (error) {
       console.error('Error fetching languages:', error);
-      showToast('Error al cargar los idiomas', 'error');
+      toast.error('Error al cargar los idiomas');
     }
   };
 

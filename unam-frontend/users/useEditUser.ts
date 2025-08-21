@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { User, EditFormData } from './types';
 
 interface UseEditUserReturn {
@@ -16,7 +17,6 @@ interface UseEditUserReturn {
 
 interface UseEditUserProps {
   onUserUpdated: () => void;
-  showToast: (message: string, type?: 'success' | 'error') => void;
   fetchGraphQL: (query: string, variables?: any, token?: string) => Promise<any>;
   token?: string;
   UPDATE_USER: string;
@@ -25,7 +25,6 @@ interface UseEditUserProps {
 
 export function useEditUser({
   onUserUpdated,
-  showToast,
   fetchGraphQL,
   token,
   UPDATE_USER,
@@ -104,12 +103,12 @@ export function useEditUser({
         }
       }
 
-      showToast('Usuario actualizado exitosamente', 'success');
+      toast.warning('Usuario actualizado exitosamente');
       setEditDialogOpen(false);
       onUserUpdated();
     } catch (error: any) {
       console.error('Error updating user:', error);
-      showToast(error.message || 'Error al actualizar usuario', 'error');
+      toast.error(error.message || 'Error al actualizar usuario');
     } finally {
       setEditLoading(false);
     }

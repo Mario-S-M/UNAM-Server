@@ -418,7 +418,7 @@ export default function IdiomasPage() {
       setLanguages(data.lenguagesPaginated);
     } catch (error) {
       console.error('Error fetching languages:', error);
-      showToast('Error al cargar los idiomas', 'error');
+      toast.error('Error al cargar los idiomas');
     } finally {
       setLoading(false);
     }
@@ -443,7 +443,7 @@ export default function IdiomasPage() {
     if (!validationResult.success) {
       const errors = validationResult.error.issues.map((err: any) => err.message).join(', ');
       console.log('❌ Errores de validación:', errors);
-      showToast(`Errores de validación: ${errors}`, 'error');
+      toast.error(`Errores de validación: ${errors}`);
       return;
     }
     

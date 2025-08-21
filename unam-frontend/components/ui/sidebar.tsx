@@ -160,7 +160,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { state } = useSidebar()
+  const { state, openMobile, setOpenMobile } = useSidebar()
 
   if (collapsible === "none") {
     return (
@@ -176,10 +176,6 @@ function Sidebar({
       </div>
     )
   }
-
-
-
-  const { openMobile, setOpenMobile } = useSidebar()
 
   return (
     <>

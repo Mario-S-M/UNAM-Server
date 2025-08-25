@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth Token</title>
+</head>
+<body>
+    <h1>Debug Authentication Token</h1>
+    <div id="token-info"></div>
+    <button onclick="clearToken()">Clear Auth Token</button>
+    <button onclick="checkToken()">Check Token</button>
+    
+    <script>
+        // Utility functions for cookies
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') {
+                    c = c.substring(1, c.length);
+                }
+                if (c.indexOf(nameEQ) === 0) {
+                    return c.substring(nameEQ.length, c.length);
+                }
+            }
+            return null;
+        }
+
+        function removeCookie(name) {
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+
+        function checkToken() {
+            const token = getCookie('auth_token');
+            const tokenInfo = document.getElementById('token-info');
+            
+            if (token) {
+                try {
+                    // Decode JWT token (basic decode, no verification)
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const now = Math.floor(Date.now() / 1000);
+                    const isExpired = payload.exp && payload.exp < now;
+                    
+                    tokenInfo.innerHTML = `
+                        <h3>Token Found:</h3>
+                        <p><strong>Token:</strong> ${token.substring(0, 50)}...</p>
+                        <p><strong>Expires:</strong> ${new Date(payload.exp * 1000).toLocaleString()}</p>
+                        <p><strong>Is Expired:</strong> ${isExpired ? 'YES' : 'NO'}</p>
+                        <p><strong>User ID:</strong> ${payload.sub || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${payload.email || 'N/A'}</p>
+                    `;
+                } catch (e) {
+                    tokenInfo.innerHTML = `
+                        <h3>Invalid Token Format:</h3>
+                        <p>${token}</p>
+                        <p>Error: ${e.message}</p>
+                    `;
+                }
+            } else {
+                tokenInfo.innerHTML = '<h3>No token found in cookies</h3>';
+            }
+        }
+        
+        function clearToken() {
+            removeCookie('auth_token');
+            alert('Auth token cleared!');
+            checkToken();
+        }
+        
+        // Check token on page load
+        checkToken();
+    </script>
+</body>
+</html>

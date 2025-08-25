@@ -48,7 +48,7 @@ export default function AdminPage() {
           return (
             <Card 
               key={card.href} 
-              className="cursor-pointer hover:shadow-md transition-shadow p-2"
+              className="cursor-pointer border p-2"
               onClick={() => router.push(card.href)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">

@@ -121,7 +121,7 @@ export default function LanguageDetailPage() {
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Hero Section */}
-      <div className="relative h-80 rounded-2xl overflow-hidden shadow-xl">
+      <div className="relative h-80 rounded-2xl overflow-hidden border">
         {/* Background Image or Gradient */}
         {language.imagen_hero ? (
           <>
@@ -153,7 +153,7 @@ export default function LanguageDetailPage() {
         <div className="absolute inset-0 flex items-end">
           <div className="p-8 text-white w-full">
             <div className="flex items-center space-x-4 mb-4">
-              <div className="text-5xl drop-shadow-lg">
+              <div className="text-5xl">
                 {(language.icono_curso && language.icono_curso.trim()) || (language.icons && language.icons.length > 0 ? language.icons[0] : '🌍')}
               </div>
               {language.badge_destacado && (
@@ -166,7 +166,7 @@ export default function LanguageDetailPage() {
                 </Badge>
               )}
             </div>
-            <h1 className="text-5xl font-bold mb-3 drop-shadow-lg">{language.name}</h1>
+            <h1 className="text-5xl font-bold mb-3">{language.name}</h1>
             <p className="text-xl text-white/90 max-w-2xl leading-relaxed">{language.eslogan_atractivo}</p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function LanguageDetailPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="hover:shadow-lg transition-shadow duration-300">
+        <Card className="border">
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="p-3 bg-yellow-50 rounded-full">
@@ -190,7 +190,7 @@ export default function LanguageDetailPage() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-lg transition-shadow duration-300">
+        <Card className="border">
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="p-3 bg-blue-50 rounded-full">
@@ -206,7 +206,7 @@ export default function LanguageDetailPage() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-lg transition-shadow duration-300">
+        <Card className="border">
           <CardContent className="p-6">
             <div className="flex flex-col items-center text-center space-y-3">
               <div className="p-3 bg-green-50 rounded-full">

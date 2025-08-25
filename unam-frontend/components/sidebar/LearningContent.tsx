@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Zap } from 'lucide-react';
 import { loadLanguagesWithLevels } from './dataLoader';
 import { SidebarLanguage } from './types';
 import { LanguageItem } from './LanguageItem';
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { useRouter } from 'next/navigation';
 
 
 
 export default function LearningContent() {
+  const router = useRouter();
   console.log('LearningContent: Component mounted');
   const [languages, setLanguages] = useState<SidebarLanguage[]>([]);
   const [loading, setLoading] = useState(true);

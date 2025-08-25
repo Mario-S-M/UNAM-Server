@@ -18,6 +18,7 @@ import {
   ContentsBySkillResponseSchema,
   ContentsByLevelAndSkillResponseSchema,
 } from "../schemas";
+import { getCookie } from "@/lib/cookies";
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -25,7 +26,8 @@ interface GraphQLVariables {
   [key: string]: string | number | boolean | null | undefined | string[];
 }
 
-const fetchGraphQL = async (query: string, variables?: GraphQLVariables) => {
+// Función para consultas GraphQL públicas (sin autenticación)
+const fetchGraphQLPublic = async (query: string, variables?: GraphQLVariables) => {
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {
@@ -41,10 +43,37 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables) => {
   return response.json();
 };
 
+// Función para consultas GraphQL con autenticación
+const fetchGraphQL = async (query: string, variables?: GraphQLVariables) => {
+  // Get the authentication token from cookies if it exists
+  const token = typeof window !== 'undefined' ? getCookie('auth_token') : null;
+  
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  
+  // Add authorization header if token exists
+  if (token) {
+    headers.authorization = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ query, variables }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 // Languages Actions
 export const getActiveLanguages = async (): Promise<Language[]> => {
   try {
-    const data = await fetchGraphQL(GET_ACTIVE_LANGUAGES);
+    const data = await fetchGraphQLPublic(GET_ACTIVE_LANGUAGES);
     const parsed = LanguagesResponseSchema.safeParse(data);
     
     if (!parsed.success) {
@@ -62,7 +91,7 @@ export const getActiveLanguages = async (): Promise<Language[]> => {
 // Skills Actions
 export const getActiveSkills = async (): Promise<Skill[]> => {
   try {
-    const data = await fetchGraphQL(GET_ACTIVE_SKILLS);
+    const data = await fetchGraphQLPublic(GET_ACTIVE_SKILLS);
     const parsed = SkillsResponseSchema.safeParse(data);
     
     if (!parsed.success) {
@@ -80,7 +109,7 @@ export const getActiveSkills = async (): Promise<Skill[]> => {
 // Levels Actions
 export const getLevelsByLanguage = async (languageId: string): Promise<Level[]> => {
   try {
-    const data = await fetchGraphQL(GET_LEVELS_BY_LANGUAGE, { lenguageId: languageId });
+    const data = await fetchGraphQLPublic(GET_LEVELS_BY_LANGUAGE, { lenguageId: languageId });
     const parsed = LevelsResponseSchema.safeParse(data);
     
     if (!parsed.success) {

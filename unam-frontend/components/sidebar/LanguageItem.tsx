@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "@/contexts/DashboardContext";
+import { getCookie } from "@/lib/cookies";
 
 interface SidebarSkill {
   id: string;
@@ -65,11 +66,21 @@ const GET_SKILL_BY_ID_PUBLIC = `
 `;
 
 const fetchGraphQLPublic = async (query: string, variables: any = {}) => {
+  // Get the authentication token from cookies if it exists
+  const token = typeof window !== 'undefined' ? getCookie('auth_token') : null;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  // Add authorization header if token exists
+  if (token) {
+    headers.authorization = `Bearer ${token}`;
+  }
+  
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify({
       query,
       variables,
@@ -175,15 +186,15 @@ export function LanguageItem({
       <Button
         variant="ghost"
         onClick={handleLanguageClick}
-        className="w-full justify-start p-3 h-auto hover:bg-blue-50/50"
+        className="w-full justify-start p-3 h-auto"
       >
         <div className="flex items-center gap-3 w-full">
           <div className="text-2xl">
             {getLanguageFlag(language.name)}
           </div>
           <div className="flex-1 text-left">
-            <div className="font-semibold text-gray-800">{language.name}</div>
-            <div className="text-sm text-gray-500">
+            <div className="font-semibold">{language.name}</div>
+            <div className="text-sm">
               {language.levels.length} niveles disponibles
             </div>
           </div>
@@ -191,7 +202,7 @@ export function LanguageItem({
       </Button>
 
       {isExpanded && (
-        <div className="bg-blue-50/20">
+        <div>
           {language.levels.map((level: SidebarLevel) => (
             <div key={level.id} className="border-b border-gray-100 last:border-b-0">
               <Button
@@ -204,13 +215,13 @@ export function LanguageItem({
                   }
                   router.push(`/dashboard/level/${level.id}`);
                 }}
-                className="w-full justify-start p-3 pl-6 h-auto hover:bg-green-50/50"
+                className="w-full justify-start p-3 pl-6 h-auto"
               >
                 <div className="flex items-center gap-3 w-full">
-                  <BookOpen className="w-4 h-4 text-green-600" />
+                  <BookOpen className="w-4 h-4" />
                   <div className="flex-1 text-left">
-                    <div className="font-medium text-sm text-gray-700">{level.name}</div>
-                    <div className="text-xs text-gray-500">{level.difficulty}</div>
+                    <div className="font-medium text-sm">{level.name}</div>
+                    <div className="text-xs">{level.difficulty}</div>
                   </div>
                   <Badge variant="secondary" className="text-xs">
                     {level.skills.length} skills
@@ -220,9 +231,9 @@ export function LanguageItem({
 
               {/* Skills del nivel */}
               {expandedLevels.has(level.id) && (
-                <div className="bg-green-50/20">
+                <div>
                   {level.skills.length === 0 ? (
-                    <div className="px-12 py-2 text-xs text-gray-500">
+                    <div className="px-12 py-2 text-xs">
                       No hay skills disponibles
                     </div>
                   ) : (
@@ -232,26 +243,15 @@ export function LanguageItem({
                           variant="ghost"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            try {
-                              setIsLoadingSkill(true);
-                              const data = await fetchGraphQLPublic(GET_SKILL_BY_ID_PUBLIC, { id: skill.id });
-                              setSelectedSkill(data.skillPublic);
-                              // Navegar al dashboard principal para mostrar los detalles
-                              router.push('/dashboard');
-                            } catch (error) {
-                              console.error('Error loading skill:', error);
-                              // Fallback: navegar a la página individual si hay error
-                              router.push(`/dashboard/skill/${skill.id}`);
-                            } finally {
-                              setIsLoadingSkill(false);
-                            }
+                            // Navegar directamente a la página de detalles de la skill
+                            router.push(`/dashboard/skills/${skill.id}`);
                           }}
-                          className="w-full justify-start p-3 pl-12 h-auto hover:bg-purple-50/50"
+                          className="w-full justify-start p-3 pl-12 h-auto"
                         >
                           <div className="flex items-center gap-3 w-full">
-                            <Target className="w-4 h-4 text-purple-600" />
+                            <Target className="w-4 h-4" />
                             <div className="flex-1 text-left">
-                              <div className="font-medium text-sm text-gray-700">{skill.name}</div>
+                              <div className="font-medium text-sm">{skill.name}</div>
                             </div>
                           </div>
                         </Button>

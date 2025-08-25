@@ -5,10 +5,8 @@ import { useQuery } from '@apollo/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 // import { Progress } from '@/components/ui/progress';
-import { Loader2, ArrowLeft, Target, Clock, BookOpen, CheckCircle, /*Users,*/ Award, Calendar, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { GET_SKILL_BY_ID_AUTH } from '@/lib/graphql/queries';
+import { Loader2, Target, Clock, BookOpen, CheckCircle, /*Users,*/ Award, Calendar, Globe } from 'lucide-react';
+import { GET_SKILL_BY_ID } from '@/lib/graphql/queries';
 
 // interface Skill {
 //   id: string;
@@ -63,12 +61,12 @@ function formatDate(dateString: string): string {
 
 export default function SkillDetailPage() {
   const params = useParams();
-  const { data, loading, error } = useQuery(GET_SKILL_BY_ID_AUTH, {
+  const { data, loading, error } = useQuery(GET_SKILL_BY_ID, {
     variables: { id: params.id },
     skip: !params.id,
   });
 
-  const skill = data?.skill;
+  const skill = data?.skillPublic;
 
   if (loading) {
     return (
@@ -104,16 +102,6 @@ export default function SkillDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
-      {/* Navegación de regreso */}
-      <div className="mb-6">
-        <Link href={skill.level ? `/dashboard/level/${skill.level.id}` : '/dashboard'}>
-          <Button variant="ghost" className="flex items-center gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Volver al nivel
-          </Button>
-        </Link>
-      </div>
-
       {/* Header de la skill */}
       <div className="mb-6">
         <div className="flex items-start justify-between mb-4">

@@ -292,7 +292,7 @@ export default function LevelDetailPage() {
               {skills.map((skill: Skill) => (
                 <Card 
                   key={skill.id} 
-                  className="cursor-pointer border-0 shadow-md bg-gradient-to-br from-white to-gray-50/50"
+                  className="cursor-pointer border"
                   onClick={() => {
                     router.push(`/dashboard/skill/${skill.id}`);
                   }}

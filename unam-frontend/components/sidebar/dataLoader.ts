@@ -13,6 +13,7 @@ import {
   // Content,
 } from "@/content/schemas";
 import { SidebarLanguage, SidebarLevel, SidebarSkill /*, SidebarContent*/ } from "./types";
+import { getCookie } from "@/lib/cookies";
 // GraphQL query para obtener skills por nivel
 const GET_SKILLS_BY_LEVEL_QUERY = `
   query GetSkillsByLevel($levelId: ID!) {
@@ -29,13 +30,49 @@ const GET_SKILLS_BY_LEVEL_QUERY = `
   }
 `;
 
-// Función para hacer consultas GraphQL usando fetch
-async function queryGraphQL(query: string, variables: Record<string, unknown> = {}) {
+// Función para hacer consultas GraphQL públicas (sin autenticación)
+async function queryGraphQLPublic(query: string, variables: Record<string, unknown> = {}) {
   const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`GraphQL request failed: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  
+  if (result.errors) {
+    throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
+  }
+  
+  return result.data;
+}
+
+// Función para hacer consultas GraphQL con autenticación
+async function queryGraphQL(query: string, variables: Record<string, unknown> = {}) {
+  // Get the authentication token from cookies if it exists
+  const token = typeof window !== 'undefined' ? getCookie('auth_token') : null;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  // Add authorization header if token exists
+  if (token) {
+    headers.authorization = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql', {
+    method: 'POST',
+    headers,
     body: JSON.stringify({
       query,
       variables,
@@ -89,7 +126,7 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
               console.log(`DataLoader: Loading skills for level: ${level.name}`);
               
               try {
-                const data = await queryGraphQL(GET_SKILLS_BY_LEVEL_QUERY, {
+                const data = await queryGraphQLPublic(GET_SKILLS_BY_LEVEL_QUERY, {
                   levelId: level.id,
                 });
                 

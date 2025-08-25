@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCookie, setCookie, removeCookie } from '@/lib/cookies';
 
 interface User {
   id: string;
@@ -76,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for stored token on mount
-    const storedToken = localStorage.getItem('auth_token');
+    const storedToken = getCookie('auth_token');
     if (storedToken) {
       setToken(storedToken);
       // Validate token with revalidate query
@@ -121,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = data.data.revalidate.user;
       setUser(userData);
       setToken(data.data.revalidate.token);
-      localStorage.setItem('auth_token', data.data.revalidate.token);
+      setCookie('auth_token', data.data.revalidate.token, 7);
       
       // Redireccionar automáticamente basado en el rol cuando se revalida el token
       redirectBasedOnRole(userData);
@@ -179,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userData = data.data.login.user;
       setUser(userData);
       setToken(data.data.login.token);
-      localStorage.setItem('auth_token', data.data.login.token);
+      setCookie('auth_token', data.data.login.token, 7);
       
       // Redireccionar automáticamente basado en el rol
       redirectBasedOnRole(userData);
@@ -240,7 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setUser(data.data.signin.user);
       setToken(data.data.signin.token);
-      localStorage.setItem('auth_token', data.data.signin.token);
+      setCookie('auth_token', data.data.signin.token, 7);
       return { success: true };
     } catch (error: unknown) {
       console.error('Signup failed:', error);
@@ -253,7 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('auth_token');
+    removeCookie('auth_token');
     setIsLoading(false);
     router.push('/dashboard');
   };

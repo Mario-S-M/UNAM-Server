@@ -10,7 +10,9 @@ export const showToast = (message: string, type: 'success' | 'error' = 'success'
 };
 
 export const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
-  const response = await fetch('/api/graphql', {
+  const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql';
+  
+  const response = await fetch(GRAPHQL_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -14,9 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, LogIn, UserPlus, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AppSidebar() {
   const { user, logout, isLoading } = useAuth();
+  const router = useRouter();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
@@ -29,11 +31,14 @@ export default function AppSidebar() {
     <>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-4 py-2">
+          <div 
+            className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg"
+            onClick={() => router.push('/dashboard')}
+          >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <span className="text-sm font-bold">U</span>
+              <span className="text-sm font-bold">É</span>
             </div>
-            <span className="font-semibold">UNAM Escuela</span>
+            <span className="font-semibold">Éskani</span>
           </div>
         </SidebarHeader>
         <SidebarContent>

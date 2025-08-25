@@ -17,10 +17,10 @@ export default function DashboardPage() {
               Bienvenido
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Sistema de Gestión Educativa
+              Bienvenido a Éskani
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-               Bienvenido a tu plataforma de gestión educativa. Aquí podrás aprender diferentes idiomas de manera eficiente.
+               Tu página para el aprendizaje de idiomas de manera eficiente y divertida.
              </p>
           </div>
           

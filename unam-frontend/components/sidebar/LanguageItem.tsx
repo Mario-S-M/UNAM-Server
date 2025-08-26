@@ -65,7 +65,18 @@ const GET_SKILL_BY_ID_PUBLIC = `
   }
 `;
 
-const fetchGraphQLPublic = async (query: string, variables: any = {}) => {
+// Interface para variables de GraphQL
+interface GraphQLVariables {
+  [key: string]: unknown;
+}
+
+// Interface para respuesta de GraphQL
+interface GraphQLResponse<T = unknown> {
+  data?: T;
+  errors?: Array<{ message: string }>;
+}
+
+const fetchGraphQLPublic = async (query: string, variables: GraphQLVariables = {}): Promise<unknown> => {
   // Get the authentication token from cookies if it exists
   const token = typeof window !== 'undefined' ? getCookie('auth_token') : null;
   

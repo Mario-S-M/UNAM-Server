@@ -2,7 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FormField, ImageUpload, IconManager } from '@/components/forms';
-import { LanguageFormData } from '@/types';
+import { CreateLanguageFormData as LanguageFormData } from '@/schemas/language-forms';
 import { Loader2 } from 'lucide-react';
 
 interface LanguageFormProps {
@@ -44,9 +44,7 @@ export function LanguageForm({
 
   const isFormValid = () => {
     return (
-      formData.name.trim() !== '' &&
-      formData.code.trim() !== '' &&
-      formData.nativeName.trim() !== ''
+      formData.name.trim() !== ''
     );
   };
 
@@ -74,38 +72,36 @@ export function LanguageForm({
             />
 
             <FormField
-              id="code"
-              label="Código"
+              id="eslogan_atractivo"
+              label="Eslogan Atractivo"
               type="text"
-              value={formData.code}
-              onChange={handleStringFieldChange('code')}
-              placeholder="es"
-              required
+              value={formData.eslogan_atractivo || ''}
+              onChange={handleStringFieldChange('eslogan_atractivo')}
+              placeholder="Aprende el idioma más hablado del mundo"
               disabled={loading}
-              description="Código ISO 639-1 del idioma"
+              description="Eslogan promocional del curso"
             />
           </div>
 
           <FormField
-            id="nativeName"
-            label="Nombre Nativo"
+            id="descripcion_corta"
+            label="Descripción Corta"
             type="text"
-            value={formData.nativeName}
-            onChange={handleStringFieldChange('nativeName')}
-            placeholder="Español"
-            required
+            value={formData.descripcion_corta || ''}
+            onChange={handleStringFieldChange('descripcion_corta')}
+            placeholder="Curso básico de idioma"
             disabled={loading}
-            description="Nombre del idioma en su forma nativa"
+            description="Descripción breve del curso"
           />
 
-          {/* Bandera */}
+          {/* Imagen Hero */}
           <ImageUpload
-            id="flag"
-            label="Bandera"
-            value={formData.flag}
-            onChange={(value) => onFormDataChange({ flag: value })}
+            id="imagen_hero"
+            label="Imagen Hero"
+            value={formData.imagen_hero || ''}
+            onChange={(value) => onFormDataChange({ imagen_hero: value })}
             disabled={loading || uploadingImage}
-            description="Imagen de la bandera del país/región"
+            description="Imagen principal del curso"
             maxSize={2}
             acceptedTypes={['image/png', 'image/svg+xml', 'image/jpeg']}
             entityType="language"

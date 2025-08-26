@@ -169,7 +169,7 @@ const DELETE_LANGUAGE = `
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-type GraphQLInputValue = string | number | boolean | null | undefined | string[] | LanguageFormData | {
+type GraphQLInputValue = string | number | boolean | null | undefined | string[] | CreateLanguageFormData | {
   [key: string]: string | number | boolean | null | undefined | string[];
 };
 
@@ -217,18 +217,18 @@ interface Language {
   eslogan_atractivo: string | null;
   descripcion_corta: string | null;
   descripcion_completa: string | null;
-  nivel: string | null;
+  nivel: 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado' | null;
   duracion_total_horas: number | null;
   color_tema: string | null;
   icono_curso: string | null;
   imagen_hero: string | null;
-  badge_destacado?: string | null;
+  badge_destacado?: 'Más Popular' | 'Nuevo' | 'Recomendado' | null;
   idioma_origen: string | null;
   idioma_destino: string | null;
   certificado_digital: boolean;
   puntuacion_promedio: number;
   total_estudiantes_inscritos: number;
-  estado: string;
+  estado: 'Activo' | 'Inactivo' | 'En Desarrollo' | 'Pausado';
   featured: boolean;
   fecha_creacion: string;
   fecha_actualizacion: string;
@@ -248,24 +248,8 @@ interface PaginatedLanguages {
   hasPreviousPage: boolean;
 }
 
-interface LanguageFormData {
-  name: string;
-  eslogan_atractivo: string;
-  descripcion_corta: string;
-  descripcion_completa: string;
-  nivel: string;
-  duracion_total_horas: number;
-  color_tema: string;
-  icono_curso: string;
-  imagen_hero: string;
-  badge_destacado?: string;
-  idioma_origen: string;
-  idioma_destino: string;
-  certificado_digital: boolean;
-  estado: string;
-  featured: boolean;
-  icons?: string[];
-}
+// Using Zod-derived types from language-forms.ts
+type LanguageFormData = CreateLanguageFormData;
 
 interface ColumnVisibility {
   name: boolean;
@@ -312,9 +296,12 @@ export default function IdiomasPage() {
     idioma_origen: '',
     idioma_destino: '',
     certificado_digital: false,
+    puntuacion_promedio: 0,
+    total_estudiantes_inscritos: 0,
     estado: 'Activo',
     featured: false,
     icons: [],
+    isActive: true,
   });
   const [iconInput, setIconInput] = useState('');
   const [search, setSearch] = useState('');
@@ -575,9 +562,12 @@ export default function IdiomasPage() {
       idioma_origen: '',
       idioma_destino: '',
       certificado_digital: false,
+      puntuacion_promedio: 0,
+      total_estudiantes_inscritos: 0,
       estado: 'Activo',
       featured: false,
       icons: [],
+      isActive: true,
     });
     setIconInput('');
     setEditingLanguage(null);
@@ -599,9 +589,12 @@ export default function IdiomasPage() {
       idioma_origen: language.idioma_origen || '',
       idioma_destino: language.idioma_destino || '',
       certificado_digital: language.certificado_digital,
+      puntuacion_promedio: language.puntuacion_promedio,
+      total_estudiantes_inscritos: language.total_estudiantes_inscritos,
       estado: language.estado,
       featured: language.featured,
       icons: language.icons || [],
+      isActive: language.isActive,
     });
     setIconInput((language.icons || []).join(', '));
     setIsDialogOpen(true);
@@ -734,7 +727,7 @@ export default function IdiomasPage() {
                           placeholder="Descripción breve del curso"
                           maxLength={100}
                         />
-                        <p className="text-xs text-muted-foreground">{formData.descripcion_corta.length}/100 caracteres</p>
+                        <p className="text-xs text-muted-foreground">{(formData.descripcion_corta || '').length}/100 caracteres</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="descripcion_completa">Descripción Completa</Label>
@@ -762,7 +755,7 @@ export default function IdiomasPage() {
                                   checked={formData.nivel === nivel}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
-                                      setFormData(prev => ({ ...prev, nivel }));
+                                      setFormData(prev => ({ ...prev, nivel: nivel as 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado' }));
                                     }
                                   }}
                                 />
@@ -840,7 +833,7 @@ export default function IdiomasPage() {
                                   checked={formData.badge_destacado === badge.value}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
-                                      setFormData(prev => ({ ...prev, badge_destacado: badge.value }));
+                                      setFormData(prev => ({ ...prev, badge_destacado: badge.value as 'Más Popular' | 'Nuevo' | 'Recomendado' | undefined }));
                                     }
                                   }}
                                 />
@@ -913,7 +906,7 @@ export default function IdiomasPage() {
                                   checked={formData.estado === estado}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
-                                      setFormData(prev => ({ ...prev, estado }));
+                                      setFormData(prev => ({ ...prev, estado: estado as 'Activo' | 'Inactivo' | 'En Desarrollo' | 'Pausado' }));
                                     }
                                   }}
                                 />
@@ -1182,7 +1175,7 @@ export default function IdiomasPage() {
                       )}
                       {columnVisibility.badge_destacado && (
                         <TableCell>
-                          {language.badge_destacado && language.badge_destacado !== 'none' ? (
+                          {language.badge_destacado ? (
                             <Badge variant="default">{language.badge_destacado}</Badge>
                           ) : (
                             <span className="text-muted-foreground">Sin badge</span>

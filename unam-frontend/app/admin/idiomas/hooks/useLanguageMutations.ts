@@ -1,8 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { LanguageFormData, LanguageEntity } from '@/types';
+import { LanguageEntity } from '@/types';
 import { toast } from 'sonner';
-import { z } from 'zod';
+import { 
+  validateLanguageForm,
+  type CreateLanguageFormData,
+  type UpdateLanguageFormData 
+} from '@/schemas/language-forms';
 
 interface UseLanguageMutationsProps {
   onSuccess?: () => void;
@@ -10,8 +14,8 @@ interface UseLanguageMutationsProps {
 }
 
 interface UseLanguageMutationsReturn {
-  createLanguage: (data: LanguageFormData) => Promise<boolean>;
-  updateLanguage: (id: string, data: LanguageFormData) => Promise<boolean>;
+  createLanguage: (data: CreateLanguageFormData) => Promise<boolean>;
+  updateLanguage: (id: string, data: UpdateLanguageFormData) => Promise<boolean>;
   deleteLanguage: (id: string) => Promise<boolean>;
   loading: boolean;
 }
@@ -57,14 +61,7 @@ const DELETE_LANGUAGE = `
   }
 `;
 
-const languageSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido').max(100, 'El nombre es demasiado largo'),
-  code: z.string().min(2, 'El código debe tener al menos 2 caracteres').max(10, 'El código es demasiado largo'),
-  nativeName: z.string().min(1, 'El nombre nativo es requerido').max(100, 'El nombre nativo es demasiado largo'),
-  flag: z.string().default(''),
-  icons: z.array(z.string().url('Cada icono debe ser una URL válida')).default([]),
-  isActive: z.boolean().default(true)
-});
+
 
 const fetchGraphQL = async (query: string, variables: Record<string, any>, token: string) => {
   const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql', {
@@ -96,19 +93,9 @@ export function useLanguageMutations({
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const validateData = (data: LanguageFormData): LanguageFormData => {
-    try {
-      return languageSchema.parse(data);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const firstError = error.issues[0];
-        throw new Error(firstError.message);
-      }
-      throw error;
-    }
-  };
 
-  const createLanguage = useCallback(async (data: LanguageFormData): Promise<boolean> => {
+
+  const createLanguage = useCallback(async (data: CreateLanguageFormData): Promise<boolean> => {
     if (!token) {
       const error = 'Token de autenticación no disponible';
       toast.error(error);
@@ -119,17 +106,18 @@ export function useLanguageMutations({
     try {
       setLoading(true);
       
-      const validatedData = validateData(data);
+      const validationResult = validateLanguageForm(data, false);
+      
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues.map(issue => issue.message).join(', ');
+        const errorMessage = errors || 'Error de validación';
+        toast.error(errorMessage);
+        onError?.(errorMessage);
+        return false;
+      }
       
       const variables = {
-        input: {
-          name: validatedData.name,
-          code: validatedData.code,
-          nativeName: validatedData.nativeName,
-          flag: validatedData.flag || '',
-          icons: validatedData.icons,
-          isActive: validatedData.isActive
-        }
+        input: validationResult.data
       };
 
       await fetchGraphQL(CREATE_LANGUAGE, variables, token);
@@ -148,7 +136,7 @@ export function useLanguageMutations({
     }
   }, [token, onSuccess, onError]);
 
-  const updateLanguage = useCallback(async (id: string, data: LanguageFormData): Promise<boolean> => {
+  const updateLanguage = useCallback(async (id: string, data: UpdateLanguageFormData): Promise<boolean> => {
     if (!token) {
       const error = 'Token de autenticación no disponible';
       toast.error(error);
@@ -159,18 +147,19 @@ export function useLanguageMutations({
     try {
       setLoading(true);
       
-      const validatedData = validateData(data);
+      const validationResult = validateLanguageForm(data, true);
+      
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues.map(issue => issue.message).join(', ');
+        const errorMessage = errors || 'Error de validación';
+        toast.error(errorMessage);
+        onError?.(errorMessage);
+        return false;
+      }
       
       const variables = {
         id,
-        input: {
-          name: validatedData.name,
-          code: validatedData.code,
-          nativeName: validatedData.nativeName,
-          flag: validatedData.flag || '',
-          icons: validatedData.icons,
-          isActive: validatedData.isActive
-        }
+        input: validationResult.data
       };
 
       await fetchGraphQL(UPDATE_LANGUAGE, variables, token);

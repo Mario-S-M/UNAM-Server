@@ -41,20 +41,7 @@ export interface PaginatedSkills {
   hasPreviousPage: boolean;
 }
 
-export interface SkillFormData {
-  name: string;
-  description: string;
-  color: string;
-  imageUrl: string;
-  icon: string;
-  objectives: string[];
-  prerequisites: string[];
-  difficulty: string;
-  estimatedHours: number;
-  tags: string[];
-  levelId: string;
-  lenguageId: string;
-}
+// SkillFormData types are now exported from schemas/skill-forms.ts
 
 export interface ColumnVisibility {
   name: boolean;
@@ -73,7 +60,7 @@ export interface ColumnVisibility {
   actions: boolean;
 }
 
-export type GraphQLInputValue = string | number | boolean | null | undefined | string[] | SkillFormData | {
+export type GraphQLInputValue = string | number | boolean | null | undefined | string[] | Record<string, any> | {
   [key: string]: string | number | boolean | null | undefined | string[];
 };
 

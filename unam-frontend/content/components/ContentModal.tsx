@@ -1,5 +1,6 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Content, CreateContentFormData as ContentFormData, Level, Skill, Teacher } from '../../types';
+import { Content, Level, Skill, Teacher } from '../../types';
+import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
 import { ContentForm } from './ContentForm';
 
 interface ContentModalProps {

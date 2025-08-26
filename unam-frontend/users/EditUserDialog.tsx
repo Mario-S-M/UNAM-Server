@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { EditUserForm } from './EditUserForm';
-import { User, EditFormData } from './types';
+import { User } from './types';
+import { UpdateUserRolesFormData as EditFormData } from '@/schemas/user-forms';
 
 interface EditUserDialogProps {
   open: boolean;

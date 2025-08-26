@@ -8,7 +8,8 @@ import {
   type CreateContentFormData,
   type UpdateContentFormData 
 } from '@/schemas/content-forms';
-import { Content, CreateContentFormData as ContentFormData } from '../../types';
+import { Content } from '../../types';
+import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
 
 interface GraphQLError {
   message: string;

@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
-import { Skill, SkillFormData, Language, Level } from '../types';
+import { Skill, Language, Level } from '../types';
+import { CreateSkillFormData as SkillFormData } from '@/schemas/skill-forms';
 
 interface SkillFormProps {
   formData: SkillFormData;
@@ -81,7 +82,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
     if (newObjective.trim()) {
       setFormData(prev => ({
         ...prev,
-        objectives: [...prev.objectives, newObjective.trim()]
+        objectives: [...(prev.objectives || []), newObjective.trim()]
       }));
       setNewObjective('');
     }
@@ -90,7 +91,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
   const removeObjective = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      objectives: prev.objectives.filter((_, i) => i !== index)
+      objectives: (prev.objectives || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -98,7 +99,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
     if (newPrerequisite.trim()) {
       setFormData(prev => ({
         ...prev,
-        prerequisites: [...prev.prerequisites, newPrerequisite.trim()]
+        prerequisites: [...(prev.prerequisites || []), newPrerequisite.trim()]
       }));
       setNewPrerequisite('');
     }
@@ -107,7 +108,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
   const removePrerequisite = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      prerequisites: prev.prerequisites.filter((_, i) => i !== index)
+      prerequisites: (prev.prerequisites || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -132,7 +133,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
               <Label htmlFor="difficulty">Dificultad</Label>
               <Select
                 value={formData.difficulty}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value as 'Básico' | 'Intermedio' | 'Avanzado' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar dificultad" />
@@ -279,7 +280,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
                 {(imagePreview || formData.imageUrl) && (
                   <div className="relative w-full h-32 border rounded-lg overflow-hidden">
                     <Image
-                      src={imagePreview || formData.imageUrl}
+                      src={imagePreview || formData.imageUrl || ''}
                       alt="Preview"
                       fill
                       className="object-cover"
@@ -316,7 +317,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
               </Button>
             </div>
             <div className="space-y-2 max-h-32 overflow-y-auto">
-              {formData.objectives.map((objective, index) => (
+              {(formData.objectives || []).map((objective, index) => (
                 <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                   <span className="flex-1 text-sm">{objective}</span>
                   <Button
@@ -349,7 +350,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
               </Button>
             </div>
             <div className="space-y-2 max-h-32 overflow-y-auto">
-              {formData.prerequisites.map((prerequisite, index) => (
+              {(formData.prerequisites || []).map((prerequisite, index) => (
                 <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
                   <span className="flex-1 text-sm">{prerequisite}</span>
                   <Button

@@ -40,7 +40,13 @@ export const CreateSkillFormSchema = z.object({
 
   levelId: z.string({
     message: 'El nivel debe ser un texto válido'
-  }).uuid('El ID del nivel debe ser un UUID válido').optional()
+  }).uuid('El ID del nivel debe ser un UUID válido').optional(),
+
+  lenguageId: z.string({
+    message: 'El idioma debe ser un texto válido'
+  }).uuid('El ID del idioma debe ser un UUID válido').optional(),
+
+  tags: z.array(z.string().min(1, 'Los tags no pueden estar vacíos')).optional()
 });
 
 // Esquema para actualizar skill
@@ -87,7 +93,13 @@ export const UpdateSkillFormSchema = z.object({
 
   levelId: z.string({
     message: 'El nivel debe ser un texto válido'
-  }).uuid('El ID del nivel debe ser un UUID válido').optional()
+  }).uuid('El ID del nivel debe ser un UUID válido').optional(),
+
+  lenguageId: z.string({
+    message: 'El idioma debe ser un texto válido'
+  }).uuid('El ID del idioma debe ser un UUID válido').optional(),
+
+  tags: z.array(z.string().min(1, 'Los tags no pueden estar vacíos')).optional()
 });
 
 // Esquema para filtros de skills

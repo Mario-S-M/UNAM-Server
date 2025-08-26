@@ -16,7 +16,13 @@ export type {
   GraphQLVariables
 } from '../../types';
 
+// Importar funciones de validación y limpieza desde schemas
+export {
+  validateContentForm,
+  cleanContentFormData
+} from '../../schemas/content-forms';
+
 // Mantener compatibilidad temporal
 export type { Content as ContentType } from '../../types';
-export type { CreateContentFormData } from '../../types';
-export type { UpdateContentFormData } from '../../types';
+export type { CreateContentFormData } from '../../schemas/content-forms';
+export type { UpdateContentFormData } from '../../schemas/content-forms';

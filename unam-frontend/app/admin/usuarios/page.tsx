@@ -126,18 +126,22 @@ const DELETE_USER = `
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-type GraphQLInputValue = string | number | boolean | null | undefined | string[] | {
-  [key: string]: string | number | boolean | null | undefined | string[];
-};
 
-interface GraphQLVariables {
-  [key: string]: GraphQLInputValue;
-}
 
 import { toast } from 'sonner';
 
+// Interfaces para tipado estricto
+interface GraphQLResponse<T = unknown> {
+  data?: T;
+  errors?: Array<{ message: string }>;
+}
+
+interface GraphQLVariables {
+  [key: string]: unknown;
+}
+
 // GraphQL fetch function
-const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
+const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string): Promise<GraphQLResponse> => {
   try {
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
@@ -157,7 +161,7 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
       throw new Error(result.errors[0]?.message || 'GraphQL error');
     }
 
-    return result.data;
+    return result;
   } catch (error) {
     console.error('GraphQL Error:', error);
     throw error;
@@ -201,8 +205,8 @@ export default function UsuariosPage() {
     if (!token) return;
     
     try {
-      const data = await fetchGraphQL(GET_LANGUAGES, {}, token);
-      setLanguages(data.lenguagesActivate || []);
+      const response = await fetchGraphQL(GET_LANGUAGES, {}, token);
+      setLanguages((response.data as any)?.lenguagesActivate || []);
     } catch (error) {
       console.error('Error loading languages:', error);
       toast.error('Error al cargar idiomas');
@@ -223,8 +227,8 @@ export default function UsuariosPage() {
         assignedLanguageId: selectedLanguage !== 'all' ? selectedLanguage : undefined,
       };
 
-      const data = await fetchGraphQL(GET_USERS_PAGINATED, variables, token);
-      const paginatedData = data.usersPaginated as PaginatedUsers;
+      const response = await fetchGraphQL(GET_USERS_PAGINATED, variables, token);
+      const paginatedData = (response.data as any)?.usersPaginated as PaginatedUsers;
       
       setUsers(paginatedData.users);
       setTotalPages(paginatedData.totalPages);

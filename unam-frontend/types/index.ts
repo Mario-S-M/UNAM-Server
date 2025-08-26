@@ -89,15 +89,7 @@ export interface LanguageEntity {
   updatedAt: string;
 }
 
-// Tipos para formularios de idiomas
-export interface LanguageFormData {
-  name: string;
-  code: string;
-  nativeName: string;
-  flag: string;
-  isActive: boolean;
-  icons: string[];
-}
+// LanguageFormData types are now exported from schemas/language-forms.ts
 
 // Tipos para respuestas paginadas de idiomas
 export interface PaginatedLanguages {

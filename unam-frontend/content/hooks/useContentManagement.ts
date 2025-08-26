@@ -2,8 +2,33 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { toast } from 'sonner';
 import { GET_CONTENTS, CREATE_CONTENT, UPDATE_CONTENT, DELETE_CONTENT, GET_LEVELS, GET_SKILLS, GET_TEACHERS } from '@/lib/graphql/queries';
-import { Content, CreateContentFormData as ContentFormData, Level, Skill, Teacher } from '../../types';
-import { PaginatedContents as ContentsData } from '../../types';
+import { Content, Level, Skill, Teacher, PaginatedContents } from '../../types';
+import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
+
+// Tipo para la respuesta de GraphQL
+interface ContentsQueryResponse {
+  contentsPaginated: PaginatedContents;
+}
+
+interface SkillsQueryResponse {
+  skillsPaginated: {
+    skills: Skill[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+interface LevelsQueryResponse {
+  levels: Level[];
+}
+
+interface TeachersQueryResponse {
+  users: Teacher[];
+}
 import { 
   validateContentForm,
   cleanContentFormData,
@@ -55,21 +80,21 @@ export function useContentManagement() {
   const [formData, setFormData] = useState<ContentFormData>(initialFormData);
 
   // Queries
-  const { data: contentsData, loading: contentsLoading, refetch: refetchContents } = useQuery<ContentsData>(GET_CONTENTS, {
+  const { data: contentsData, loading: contentsLoading, refetch: refetchContents } = useQuery<ContentsQueryResponse>(GET_CONTENTS, {
     variables: {
       page: currentPage,
       limit: pageSize
     }
   });
   
-  const { data: levelsData } = useQuery(GET_LEVELS);
-  const { data: skillsData } = useQuery(GET_SKILLS, {
+  const { data: levelsData } = useQuery<LevelsQueryResponse>(GET_LEVELS);
+  const { data: skillsData } = useQuery<SkillsQueryResponse>(GET_SKILLS, {
     variables: {
       page: 1,
       limit: 100
     }
   });
-  const { data: teachersData } = useQuery(GET_TEACHERS);
+  const { data: teachersData } = useQuery<TeachersQueryResponse>(GET_TEACHERS);
   
   // Mutations
   const [createContent, { loading: createLoading }] = useMutation(CREATE_CONTENT);
@@ -77,13 +102,13 @@ export function useContentManagement() {
   const [deleteContent, { loading: deleteLoading }] = useMutation(DELETE_CONTENT);
 
   // Derived data
-  const contents: Content[] = contentsData?.contents || [];
+  const contents: Content[] = contentsData?.contentsPaginated?.contents || [];
   const levels: Level[] = levelsData?.levels || [];
-  const skills: Skill[] = skillsData?.skills || [];
-  const teachers: Teacher[] = teachersData?.teachers || [];
-  const totalPages = Math.ceil((contentsData?.total || 0) / pageSize);
-  const totalItems = contentsData?.total || 0;
-  const meta = contentsData;
+  const skills: Skill[] = skillsData?.skillsPaginated?.skills || [];
+  const teachers: Teacher[] = teachersData?.users || [];
+  const totalPages = Math.ceil((contentsData?.contentsPaginated?.total || 0) / pageSize);
+  const totalItems = contentsData?.contentsPaginated?.total || 0;
+  const meta = contentsData?.contentsPaginated;
 
   const filteredContents = contents.filter(content => {
     // Buscar el skill por ID para obtener el nombre

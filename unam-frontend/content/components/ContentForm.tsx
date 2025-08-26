@@ -2,7 +2,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CreateContentFormData as ContentFormData, Level, Skill, Teacher } from '../../types';
+import { Level, Skill, Teacher } from '../../types';
+import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
 import { VALIDATION_STATUS_OPTIONS } from '../constants';
 
 interface ContentFormProps {

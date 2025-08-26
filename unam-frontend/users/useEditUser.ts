@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { User, EditFormData } from './types';
+import { User } from './types';
+import { UpdateUserRolesFormData as EditFormData } from '@/schemas/user-forms';
+import { 
+  validateUpdateUserForm, 
+  validateUpdateUserRolesForm,
+  type UpdateUserFormData,
+  type UpdateUserRolesFormData,
+  type ValidRoles 
+} from '@/schemas/user-forms';
 
 interface UseEditUserReturn {
   editingUser: User | null;
@@ -15,9 +23,26 @@ interface UseEditUserReturn {
   handleSaveUser: () => Promise<void>;
 }
 
+// Interfaces para tipado estricto
+interface GraphQLResponse<T = unknown> {
+  data?: T;
+  errors?: Array<{ message: string }>;
+}
+
+interface GraphQLVariables {
+  [key: string]: unknown;
+}
+
+interface UpdateUserInput {
+  id: string;
+  fullName?: string;
+  email?: string;
+  password?: string;
+}
+
 interface UseEditUserProps {
   onUserUpdated: () => void;
-  fetchGraphQL: (query: string, variables?: any, token?: string) => Promise<any>;
+  fetchGraphQL: (query: string, variables?: GraphQLVariables, token?: string) => Promise<GraphQLResponse>;
   token?: string;
   UPDATE_USER: string;
   UPDATE_USER_ROLES: string;
@@ -34,19 +59,15 @@ export function useEditUser({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editFormData, setEditFormData] = useState<EditFormData>({
-    fullName: '',
-    email: '',
-    password: '',
+    id: '',
     roles: [],
   });
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
     setEditFormData({
-      fullName: user.fullName,
-      email: user.email,
-      password: '',
-      roles: user.roles,
+      id: user.id,
+      roles: user.roles as ValidRoles[],
     });
     setEditDialogOpen(true);
   };
@@ -56,59 +77,39 @@ export function useEditUser({
 
     setEditLoading(true);
     try {
-      // Preparar datos para actualización básica
-      const updateData: any = { id: editingUser.id };
-      
-      if (editFormData.fullName.trim() && editFormData.fullName !== editingUser.fullName) {
-        updateData.fullName = editFormData.fullName.trim();
-      }
-      
-      if (editFormData.email.trim() && editFormData.email !== editingUser.email) {
-        updateData.email = editFormData.email.trim();
-      }
-      
-      if (editFormData.password.trim()) {
-        updateData.password = editFormData.password;
-      }
+      // Actualizar roles
+      const rolesData: UpdateUserRolesFormData = {
+        id: editingUser.id,
+        roles: editFormData.roles as ValidRoles[]
+      };
 
-      // Actualizar datos básicos si hay cambios
-      if (Object.keys(updateData).length > 1) {
-        const updateResult = await fetchGraphQL(
-          UPDATE_USER,
-          { updateUserInput: updateData },
-          token
-        );
-
-        if (updateResult.errors) {
-          throw new Error(updateResult.errors[0].message);
-        }
+      // Validar con Zod
+      const rolesValidationResult = validateUpdateUserRolesForm(rolesData);
+      if (!rolesValidationResult.success) {
+        const errors = rolesValidationResult.error.issues.map(issue => issue.message).join(', ');
+        toast.error(`Errores de validación de roles: ${errors}`);
+        return;
       }
 
-      // Actualizar roles si han cambiado
-      const rolesChanged = JSON.stringify(editFormData.roles.sort()) !== JSON.stringify(editingUser.roles.sort());
-      if (rolesChanged) {
-        const rolesResult = await fetchGraphQL(
-          UPDATE_USER_ROLES,
-          {
-            updateUserRolesInput: {
-              id: editingUser.id,
-              roles: editFormData.roles,
-            },
-          },
-          token
-        );
+      const rolesResult = await fetchGraphQL(
+        UPDATE_USER_ROLES,
+        {
+          updateUserRolesInput: rolesValidationResult.data
+        },
+        token
+      );
 
-        if (rolesResult.errors) {
-          throw new Error(rolesResult.errors[0].message);
-        }
+      if (rolesResult.errors) {
+        throw new Error(rolesResult.errors[0].message);
       }
 
-      toast.warning('Usuario actualizado exitosamente');
+      toast.success('Roles de usuario actualizados exitosamente');
       setEditDialogOpen(false);
       onUserUpdated();
-    } catch (error: any) {
-      console.error('Error updating user:', error);
-      toast.error(error.message || 'Error al actualizar usuario');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('Error updating user roles:', error);
+      toast.error(errorMessage);
     } finally {
       setEditLoading(false);
     }

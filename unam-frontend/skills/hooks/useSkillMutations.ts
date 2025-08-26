@@ -1,7 +1,34 @@
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { SkillFormData, GraphQLVariables } from '../types';
+import { GraphQLVariables, Language, Level } from '../types';
+import { CreateSkillFormData as SkillFormData } from '@/schemas/skill-forms';
+
+// Interfaces para tipado estricto
+interface CreateSkillInput {
+  [key: string]: string | number | boolean | string[] | null | undefined;
+  name: string;
+  description?: string;
+  color?: string;
+  imageUrl?: string;
+  icon?: string;
+  objectives?: string;
+  prerequisites?: string;
+  difficulty?: string;
+  estimatedHours?: number;
+  tags?: string[];
+  levelId?: string;
+  lenguageId?: string;
+}
+
+interface UpdateSkillInput extends CreateSkillInput {
+  id: string;
+}
+
+interface UploadResult {
+  imageUrl?: string;
+  url?: string;
+}
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -134,7 +161,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       }
       
       // Filtrar campos vacíos para evitar errores de validación en el backend
-      const submitData: any = {
+      const submitData: CreateSkillInput = {
         name: formData.name
       };
       
@@ -146,7 +173,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       if (formData.objectives && formData.objectives.length > 0) submitData.objectives = formData.objectives.join('\n');
       if (formData.prerequisites && formData.prerequisites.length > 0) submitData.prerequisites = formData.prerequisites.join('\n');
       if (formData.difficulty) submitData.difficulty = formData.difficulty;
-      if (formData.estimatedHours > 0) submitData.estimatedHours = formData.estimatedHours;
+      if (formData.estimatedHours && formData.estimatedHours > 0) submitData.estimatedHours = formData.estimatedHours;
       if (formData.tags && formData.tags.length > 0) submitData.tags = formData.tags;
       if (formData.levelId && formData.levelId !== '') submitData.levelId = formData.levelId;
       if (formData.lenguageId && formData.lenguageId !== '') submitData.lenguageId = formData.lenguageId;
@@ -192,7 +219,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       }
       
       // Filtrar campos vacíos para evitar errores de validación en el backend
-      const submitData: any = {
+      const submitData: UpdateSkillInput = {
         id: skillId,
         name: formData.name
       };
@@ -205,7 +232,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       if (formData.objectives && formData.objectives.length > 0) submitData.objectives = formData.objectives.join('\n');
       if (formData.prerequisites && formData.prerequisites.length > 0) submitData.prerequisites = formData.prerequisites.join('\n');
       if (formData.difficulty) submitData.difficulty = formData.difficulty;
-      if (formData.estimatedHours > 0) submitData.estimatedHours = formData.estimatedHours;
+      if (formData.estimatedHours && formData.estimatedHours > 0) submitData.estimatedHours = formData.estimatedHours;
       if (formData.tags && formData.tags.length > 0) submitData.tags = formData.tags;
       if (formData.levelId && formData.levelId !== '') submitData.levelId = formData.levelId;
       if (formData.lenguageId && formData.lenguageId !== '') submitData.lenguageId = formData.lenguageId;
@@ -236,7 +263,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
     }
   }, [token]);
 
-  const handleImageUpload = useCallback(async (file: File, fieldName: 'imageUrl', formData: SkillFormData, languages: any[], levels: any[]) => {
+  const handleImageUpload = useCallback(async (file: File, fieldName: 'imageUrl', formData: SkillFormData, languages: Language[], levels: Level[]) => {
     if (!file) return '';
     
     // Validar tipo de archivo

@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { z } from 'zod';
+import { 
+  validateLevelForm,
+  type CreateLevelFormData,
+  type UpdateLevelFormData 
+} from '@/schemas/level-forms';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -86,26 +90,11 @@ const DELETE_LEVEL = `
   }
 `;
 
-// Validation schema
-const levelSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  description: z.string().min(1, 'La descripción es requerida'),
-  difficulty: z.string().min(1, 'La dificultad es requerida'),
-  lenguageId: z.string().min(1, 'El idioma es requerido'),
-  isActive: z.boolean(),
-});
 
-interface LevelFormData {
-  name: string;
-  description: string;
-  difficulty: string;
-  lenguageId: string;
-  isActive: boolean;
-}
 
 interface UseLevelMutationsReturn {
-  createLevel: (data: LevelFormData) => Promise<void>;
-  updateLevel: (id: string, data: LevelFormData) => Promise<void>;
+  createLevel: (data: CreateLevelFormData) => Promise<void>;
+  updateLevel: (id: string, data: UpdateLevelFormData) => Promise<void>;
   deleteLevel: (id: string) => Promise<void>;
   loading: boolean;
   error: string | null;
@@ -116,13 +105,13 @@ export function useLevelMutations(): UseLevelMutationsReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createLevel = async (data: LevelFormData) => {
+  const createLevel = async (data: CreateLevelFormData) => {
     try {
       setLoading(true);
       setError(null);
       
       // Validate data
-      const validationResult = levelSchema.safeParse(data);
+      const validationResult = validateLevelForm(data, false);
       if (!validationResult.success) {
         const errors = validationResult.error.issues.map(err => err.message).join(', ');
         throw new Error(`Errores de validación: ${errors}`);
@@ -147,13 +136,13 @@ export function useLevelMutations(): UseLevelMutationsReturn {
     }
   };
 
-  const updateLevel = async (id: string, data: LevelFormData) => {
+  const updateLevel = async (id: string, data: UpdateLevelFormData) => {
     try {
       setLoading(true);
       setError(null);
       
       // Validate data
-      const validationResult = levelSchema.safeParse(data);
+      const validationResult = validateLevelForm(data, true);
       if (!validationResult.success) {
         const errors = validationResult.error.issues.map(err => err.message).join(', ');
         throw new Error(`Errores de validación: ${errors}`);
@@ -214,4 +203,4 @@ export function useLevelMutations(): UseLevelMutationsReturn {
   };
 }
 
-export type { LevelFormData, UseLevelMutationsReturn };
+export type { UseLevelMutationsReturn };

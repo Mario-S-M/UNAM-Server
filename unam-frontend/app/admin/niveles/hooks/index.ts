@@ -11,7 +11,6 @@ export type {
 } from './useLevelData';
 
 export type {
-  LevelFormData,
   UseLevelMutationsReturn,
 } from './useLevelMutations';
 

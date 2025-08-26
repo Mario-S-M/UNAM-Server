@@ -136,7 +136,7 @@ const DELETE_LEVEL = `
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-type GraphQLInputValue = string | number | boolean | null | undefined | string[] | LevelFormData | {
+type GraphQLInputValue = string | number | boolean | null | undefined | string[] | CreateLevelFormData | {
   [key: string]: string | number | boolean | null | undefined | string[];
 };
 
@@ -199,13 +199,8 @@ interface PaginatedLevels {
   hasPreviousPage: boolean;
 }
 
-interface LevelFormData {
-  name: string;
-  description: string;
-  difficulty: string;
-  lenguageId: string;
-  isActive: boolean;
-}
+// Using Zod-derived types from level-forms.ts
+type LevelFormData = CreateLevelFormData;
 
 interface ColumnVisibility {
   name: boolean;
@@ -244,7 +239,7 @@ export default function NivelesPage() {
   const [formData, setFormData] = useState<LevelFormData>({
     name: '',
     description: '',
-    difficulty: '',
+    difficulty: 'Básico',
     lenguageId: '',
     isActive: true,
   });
@@ -396,7 +391,7 @@ export default function NivelesPage() {
     setFormData({
       name: level.name,
       description: level.description,
-      difficulty: level.difficulty,
+      difficulty: level.difficulty as 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado',
       lenguageId: level.lenguageId,
       isActive: level.isActive,
     });
@@ -540,7 +535,7 @@ export default function NivelesPage() {
                       </Label>
                       <Select
                         value={formData.difficulty}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value as 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado' }))}
                       >
                         <SelectTrigger className="col-span-3">
                           <SelectValue placeholder="Selecciona la dificultad" />

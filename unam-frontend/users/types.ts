@@ -15,12 +15,7 @@ export interface User {
   }[];
 }
 
-export interface EditFormData {
-  fullName: string;
-  email: string;
-  password: string;
-  roles: string[];
-}
+// EditFormData types are now exported from schemas/user-forms.ts
 
 export interface PaginatedUsers {
   users: User[];

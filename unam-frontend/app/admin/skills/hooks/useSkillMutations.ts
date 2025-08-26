@@ -3,8 +3,13 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { GraphQLVariables } from '@/types';
+import { 
+  validateSkillForm,
+  cleanSkillFormData,
+  type CreateSkillFormData,
+  type UpdateSkillFormData 
+} from '@/schemas/skill-forms';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -105,23 +110,7 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
   return result.data;
 };
 
-// Schema de validación para skills
-const skillSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  description: z.string().min(1, 'La descripción es requerida'),
-  color: z.string().min(1, 'El color es requerido'),
-  imageUrl: z.string().optional(),
-  icon: z.string().optional(),
-  objectives: z.array(z.string()).default([]),
-  prerequisites: z.array(z.string()).default([]),
-  difficulty: z.string().min(1, 'La dificultad es requerida'),
-  estimatedHours: z.number().min(0, 'Las horas estimadas deben ser positivas').optional(),
-  tags: z.array(z.string()).default([]),
-  levelId: z.string().min(1, 'El nivel es requerido'),
-  lenguageId: z.string().min(1, 'El idioma es requerido'),
-});
 
-export type SkillFormData = z.infer<typeof skillSchema>;
 
 // Función helper para manejar errores
 function isErrorWithMessage(error: unknown): error is { message: string } {
@@ -134,8 +123,8 @@ export interface UseSkillMutationsProps {
 }
 
 export interface UseSkillMutationsReturn {
-  createSkill: (data: SkillFormData) => Promise<void>;
-  updateSkill: (id: string, data: SkillFormData) => Promise<void>;
+  createSkill: (data: CreateSkillFormData) => Promise<void>;
+  updateSkill: (id: string, data: UpdateSkillFormData) => Promise<void>;
   deleteSkill: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
@@ -154,7 +143,7 @@ export function useSkillMutations({
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createSkill = async (data: SkillFormData) => {
+  const createSkill = async (data: CreateSkillFormData) => {
     if (!token) {
       const errorMsg = 'No hay token de autenticación';
       setError(errorMsg);
@@ -166,20 +155,22 @@ export function useSkillMutations({
       setIsCreating(true);
       setError(null);
       
-      // Validar datos
-      const validatedData = skillSchema.parse(data);
+      // Limpiar y validar datos
+      const cleanedData = cleanSkillFormData(data);
+      const validationResult = validateSkillForm(cleanedData, false);
       
-      // Preparar datos para GraphQL
-      const submitData = {
-        ...validatedData,
-        objectives: validatedData.objectives.join('\n'),
-        prerequisites: validatedData.prerequisites.join('\n'),
-        estimatedHours: validatedData.estimatedHours || 0,
-      };
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues.map(issue => issue.message).join(', ');
+        const errorMessage = errors || 'Error de validación';
+        setError(errorMessage);
+        onError?.(errorMessage);
+        toast.error(errorMessage);
+        return;
+      }
       
       await fetchGraphQL(
         CREATE_SKILL,
-        { createSkillInput: submitData },
+        { createSkillInput: validationResult.data },
         token
       );
       
@@ -187,13 +178,7 @@ export function useSkillMutations({
       onSuccess?.();
     } catch (err) {
       console.error('Error creating skill:', err);
-      let errorMessage = 'Error al crear el skill';
-      
-      if (err instanceof z.ZodError) {
-        errorMessage = err.issues[0]?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
+      const errorMessage = err instanceof Error ? err.message : 'Error al crear el skill';
       
       setError(errorMessage);
       onError?.(errorMessage);
@@ -203,7 +188,7 @@ export function useSkillMutations({
     }
   };
 
-  const updateSkill = async (id: string, data: SkillFormData) => {
+  const updateSkill = async (id: string, data: UpdateSkillFormData) => {
     if (!token) {
       const errorMsg = 'No hay token de autenticación';
       setError(errorMsg);
@@ -215,16 +200,22 @@ export function useSkillMutations({
       setIsUpdating(true);
       setError(null);
       
-      // Validar datos
-      const validatedData = skillSchema.parse(data);
+      // Limpiar y validar datos
+      const cleanedData = cleanSkillFormData(data);
+      const validationResult = validateSkillForm(cleanedData, true);
       
-      // Preparar datos para GraphQL
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues.map(issue => issue.message).join(', ');
+        const errorMessage = errors || 'Error de validación';
+        setError(errorMessage);
+        onError?.(errorMessage);
+        toast.error(errorMessage);
+        return;
+      }
+      
       const submitData = {
         id,
-        ...validatedData,
-        objectives: validatedData.objectives.join('\n'),
-        prerequisites: validatedData.prerequisites.join('\n'),
-        estimatedHours: validatedData.estimatedHours || 0,
+        ...validationResult.data
       };
       
       await fetchGraphQL(
@@ -233,17 +224,11 @@ export function useSkillMutations({
         token
       );
       
-      toast.warning('Skill actualizado exitosamente');
+      toast.success('Skill actualizado exitosamente');
       onSuccess?.();
     } catch (err) {
       console.error('Error updating skill:', err);
-      let errorMessage = 'Error al actualizar el skill';
-      
-      if (err instanceof z.ZodError) {
-        errorMessage = err.issues[0]?.message || errorMessage;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
+      const errorMessage = err instanceof Error ? err.message : 'Error al actualizar el skill';
       
       setError(errorMessage);
       onError?.(errorMessage);

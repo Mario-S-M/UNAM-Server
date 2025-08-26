@@ -21,14 +21,7 @@ export interface Content {
   }[];
 }
 
-export interface ContentFormData {
-  name: string;
-  description: string;
-  levelId: string;
-  skillId: string;
-  teacherIds: string[];
-  validationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
-}
+// ContentFormData types are now exported from schemas/content-forms.ts
 
 export interface ContentsData {
   contentsPaginated: {

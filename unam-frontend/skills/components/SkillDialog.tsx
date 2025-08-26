@@ -8,7 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Skill, SkillFormData, Language, Level } from '../types';
+import { Skill, Language, Level } from '../types';
+import { CreateSkillFormData as SkillFormData } from '@/schemas/skill-forms';
 import { SkillForm } from './SkillForm';
 import { useSkillMutations } from '../hooks/useSkillMutations';
 
@@ -43,11 +44,9 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
     icon: '',
     objectives: [],
     prerequisites: [],
-    difficulty: 'Básico',
+    difficulty: 'Básico' as const,
     estimatedHours: 0,
-    tags: [],
     levelId: '',
-    lenguageId: '',
   });
   
   const [newObjective, setNewObjective] = useState('');
@@ -80,11 +79,9 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
           icon: editingSkill.icon || '',
           objectives: editingSkill.objectives ? editingSkill.objectives.split('\n').filter(obj => obj.trim()) : [],
           prerequisites: editingSkill.prerequisites ? editingSkill.prerequisites.split('\n').filter(pre => pre.trim()) : [],
-          difficulty: editingSkill.difficulty,
+          difficulty: editingSkill.difficulty as 'Básico' | 'Intermedio' | 'Avanzado',
           estimatedHours: editingSkill.estimatedHours || 0,
-          tags: editingSkill.tags || [],
           levelId: editingSkill.levelId || '',
-          lenguageId: languageId,
         });
         
         if (languageId) {
@@ -109,11 +106,9 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
       icon: '',
       objectives: [],
       prerequisites: [],
-      difficulty: 'Básico',
+      difficulty: 'Básico' as const,
       estimatedHours: 0,
-      tags: [],
       levelId: '',
-      lenguageId: '',
     });
     setNewObjective('');
     setNewPrerequisite('');

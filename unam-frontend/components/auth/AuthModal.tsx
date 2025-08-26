@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { 
+  validateSignupForm, 
+  validateLoginForm,
+  type SignupFormData,
+  type LoginFormData 
+} from '@/schemas/user-forms';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,11 +27,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
+
+    // Validar con Zod
+    let validationResult;
+    if (mode === 'login') {
+      const loginData: LoginFormData = {
+        email: formData.email,
+        password: formData.password
+      };
+      validationResult = validateLoginForm(loginData);
+    } else {
+      const signupData: SignupFormData = {
+        email: formData.email,
+        fullName: formData.fullName,
+        password: formData.password
+      };
+      validationResult = validateSignupForm(signupData);
+    }
+
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      validationResult.error.issues.forEach((issue) => {
+        const field = issue.path[0] as string;
+        fieldErrors[field] = issue.message;
+      });
+      setErrors(fieldErrors);
+      toast.error('Por favor corrige los errores en el formulario');
+      return;
+    }
 
     let result;
     if (mode === 'login') {
@@ -36,8 +71,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
     if (result.success) {
       onClose();
       setFormData({ fullName: '', email: '', password: '' });
+      setErrors({});
+      toast.success(mode === 'login' ? 'Sesión iniciada exitosamente' : 'Cuenta creada exitosamente');
     } else {
-      setError(result.error || 'Ocurrió un error');
+      toast.error(result.error || 'Ocurrió un error');
     }
   };
 
@@ -68,7 +105,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
+                className={errors.fullName ? 'border-red-500' : ''}
               />
+              {errors.fullName && (
+                <p className="text-sm text-red-500">{errors.fullName}</p>
+              )}
             </div>
           )}
           <div className="space-y-2">
@@ -81,7 +122,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
               onChange={handleInputChange}
               required
               disabled={isLoading}
+              className={errors.email ? 'border-red-500' : ''}
             />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email}</p>
+            )}
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Contraseña</label>
@@ -93,11 +138,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
               onChange={handleInputChange}
               required
               disabled={isLoading}
+              className={errors.password ? 'border-red-500' : ''}
             />
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password}</p>
+            )}
           </div>
-          {error && (
-            <div className="text-red-500 text-sm">{error}</div>
-          )}
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>

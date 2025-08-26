@@ -171,3 +171,39 @@ export const GET_CONTENTS_BY_LEVEL_AND_SKILL = `
     }
   }
 `;
+
+// Consulta para contenidos asignados al docente
+export const GET_MY_ASSIGNED_CONTENTS = `
+  query MyAssignedContents {
+    myAssignedContents {
+      id
+      name
+      description
+      isCompleted
+      createdAt
+      updatedAt
+      levelId
+      userId
+      markdownPath
+      assignedTeachers {
+        id
+        fullName
+        email
+        roles
+        isActive
+      }
+      validationStatus
+      publishedAt
+      skill {
+        id
+        name
+        description
+        color
+        isActive
+        createdAt
+        updatedAt
+      }
+      skillId
+    }
+  }
+`;

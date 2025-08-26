@@ -33,11 +33,11 @@ export const UpdateContentFormSchema = z.object({
   
   name: z.string({
     message: 'El nombre debe ser un texto'
-  }).max(200, 'El nombre no puede exceder 200 caracteres').optional().or(z.literal('')),
+  }).min(1, 'El nombre no puede estar vacío').max(200, 'El nombre no puede exceder 200 caracteres').optional(),
   
   description: z.string({
     message: 'La descripción debe ser un texto'
-  }).max(1000, 'La descripción no puede exceder 1000 caracteres').optional().or(z.literal('')),
+  }).min(1, 'La descripción no puede estar vacía').max(1000, 'La descripción no puede exceder 1000 caracteres').optional(),
   
   levelId: z.string({
     message: 'El ID del nivel debe ser un texto'

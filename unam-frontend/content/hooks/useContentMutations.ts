@@ -9,7 +9,9 @@ import {
   type UpdateContentFormData 
 } from '@/schemas/content-forms';
 import { Content } from '../../types';
-import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
+
+// Tipo unión para manejar tanto creación como actualización
+type ContentFormData = CreateContentFormData | UpdateContentFormData;
 
 interface GraphQLError {
   message: string;
@@ -81,8 +83,14 @@ export function useContentMutations({
 
   const handleUpdate = async (id: string, formData: ContentFormData) => {
     try {
+      // Preparar datos para actualización incluyendo el ID
+      const updateData: UpdateContentFormData = {
+        id,
+        ...formData
+      };
+      
       // Limpiar y validar datos del formulario con Zod
-      const cleanedData = cleanContentFormData(formData);
+      const cleanedData = cleanContentFormData(updateData);
       const validationResult = validateContentForm(cleanedData, true);
       
       if (!validationResult.success) {
@@ -95,10 +103,7 @@ export function useContentMutations({
       
       await updateContent({
         variables: {
-          updateContentInput: {
-            id,
-            ...validationResult.data
-          }
+          updateContentInput: validationResult.data
         }
       });
       

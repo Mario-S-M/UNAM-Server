@@ -702,7 +702,7 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     }
 
     await this.contentsRepository.update(contentId, {
-      validationStatus: 'validado',
+      validationStatus: 'APPROVED',
       updatedAt: new Date().toISOString(),
     });
 
@@ -721,7 +721,7 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     }
 
     await this.contentsRepository.update(contentId, {
-      validationStatus: 'sin validar',
+      validationStatus: 'PENDING',
       updatedAt: new Date().toISOString(),
     });
 
@@ -733,7 +733,7 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     return this.contentsRepository.find({
       where: {
         levelId,
-        validationStatus: 'validado',
+        validationStatus: 'APPROVED',
       },
       relations: ['assignedTeachers', 'skill'],
       order: {
@@ -747,7 +747,7 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     return this.contentsRepository.find({
       where: {
         skillId,
-        validationStatus: 'validado',
+        validationStatus: 'APPROVED',
       },
       relations: ['assignedTeachers', 'skill'],
       order: {
@@ -765,13 +765,30 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
       where: {
         levelId,
         skillId,
-        validationStatus: 'validado',
+        validationStatus: 'APPROVED',
       },
       relations: ['assignedTeachers', 'skill'],
       order: {
         createdAt: 'DESC',
       },
     });
+  }
+
+  // Get single validated content for public access
+  async findOnePublic(id: string): Promise<Content> {
+    const content = await this.contentsRepository.findOne({
+      where: {
+        id,
+        validationStatus: 'APPROVED',
+      },
+      relations: ['assignedTeachers', 'skill'],
+    });
+
+    if (!content) {
+      throw new NotFoundException('Contenido no encontrado o no está validado');
+    }
+
+    return content;
   }
 
   // TEMPORARY: Public access methods that return ALL content (not just validated)
@@ -824,9 +841,9 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     updatedCount: number;
   }> {
     const result = await this.contentsRepository.update(
-      { validationStatus: 'sin validar' },
+      { validationStatus: 'PENDING' },
       {
-        validationStatus: 'validado',
+        validationStatus: 'APPROVED',
         updatedAt: new Date().toISOString(),
       },
     );
@@ -843,7 +860,7 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     const content = await this.contentsRepository.findOne({
       where: {
         id: contentId,
-        validationStatus: 'validado', // Solo contenido validado es público
+        validationStatus: 'APPROVED', // Solo contenido validado es público
       },
     });
 

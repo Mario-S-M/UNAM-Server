@@ -105,7 +105,11 @@ export interface PaginatedLanguages {
 // Tipos específicos para componentes UI
 export interface SidebarContent {
   id: string;
-  title: string;
+  name: string;
+  description: string;
+  isCompleted: boolean;
+  validationStatus: string;
+  publishedAt?: string;
   type: "video" | "article" | "exercise";
 }
 

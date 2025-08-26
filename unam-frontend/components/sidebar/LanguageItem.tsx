@@ -1,32 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, Target } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { getCookie } from "@/lib/cookies";
-
-interface SidebarSkill {
-  id: string;
-  name: string;
-}
-
-interface SidebarLevel {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: string; // Básico, Básico-Intermedio, Intermedio, Intermedio-Avanzado, Avanzado
-  skills: SidebarSkill[];
-}
-
-interface SidebarLanguage {
-  id: string;
-  name: string;
-  icons: string[];
-  levels: SidebarLevel[];
-}
+import { SidebarLanguage, SidebarLevel } from "./types";
+import { SkillItem } from "./SkillItem";
 
 interface LanguageItemProps {
   language: SidebarLanguage;
@@ -115,6 +97,7 @@ export function LanguageItem({
   const router = useRouter();
   const { setSelectedSkill, setIsLoadingSkill } = useDashboard();
   const [expandedLevels, setExpandedLevels] = useState<Set<string>>(new Set());
+  const [expandedSkills, setExpandedSkills] = useState<Set<string>>(new Set());
 
   const handleLanguageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -138,6 +121,18 @@ export function LanguageItem({
         newSet.delete(levelId);
       } else {
         newSet.add(levelId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSkill = (skillId: string) => {
+    setExpandedSkills(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(skillId)) {
+        newSet.delete(skillId);
+      } else {
+        newSet.add(skillId);
       }
       return newSet;
     });
@@ -248,25 +243,13 @@ export function LanguageItem({
                       No hay skills disponibles
                     </div>
                   ) : (
-                    level.skills.map((skill: SidebarSkill) => (
-                      <div key={skill.id} className="border-b border-gray-100 last:border-b-0">
-                        <Button
-                          variant="ghost"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            // Navegar directamente a la página de detalles de la skill
-                            router.push(`/dashboard/skills/${skill.id}`);
-                          }}
-                          className="w-full justify-start p-3 pl-12 h-auto"
-                        >
-                          <div className="flex items-center gap-3 w-full">
-                            <Target className="w-4 h-4" />
-                            <div className="flex-1 text-left">
-                              <div className="font-medium text-sm">{skill.name}</div>
-                            </div>
-                          </div>
-                        </Button>
-                      </div>
+                    level.skills.map((skill) => (
+                      <SkillItem
+                        key={skill.id}
+                        skill={skill}
+                        isExpanded={expandedSkills.has(skill.id)}
+                        onToggle={toggleSkill}
+                      />
                     ))
                   )}
                 </div>

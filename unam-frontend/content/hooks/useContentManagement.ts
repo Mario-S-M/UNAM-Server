@@ -3,7 +3,12 @@ import { useQuery, useMutation } from '@apollo/client';
 import { toast } from 'sonner';
 import { GET_CONTENTS, CREATE_CONTENT, UPDATE_CONTENT, DELETE_CONTENT, GET_LEVELS, GET_SKILLS, GET_TEACHERS } from '@/lib/graphql/queries';
 import { Content, Level, Skill, Teacher, PaginatedContents } from '../../types';
-import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
+import { 
+  validateContentForm,
+  cleanContentFormData,
+  type CreateContentFormData,
+  type UpdateContentFormData 
+} from '@/schemas/content-forms';
 
 // Tipo para la respuesta de GraphQL
 interface ContentsQueryResponse {
@@ -29,12 +34,9 @@ interface LevelsQueryResponse {
 interface TeachersQueryResponse {
   users: Teacher[];
 }
-import { 
-  validateContentForm,
-  cleanContentFormData,
-  type CreateContentFormData,
-  type UpdateContentFormData 
-} from '@/schemas/content-forms';
+
+// Tipo unión para manejar tanto creación como actualización
+type ContentFormData = CreateContentFormData | (UpdateContentFormData & { id?: string });
 
 interface GraphQLError {
   message: string;
@@ -50,7 +52,7 @@ function isErrorWithMessage(error: unknown): error is { message: string } {
 
 import { ContentColumnVisibility as ColumnVisibility } from '../../types';
 
-const initialFormData: ContentFormData = {
+const initialFormData: CreateContentFormData = {
   name: '',
   description: '',
   levelId: '',
@@ -161,8 +163,14 @@ export function useContentManagement() {
     if (!editingContent) return;
     
     try {
+      // Preparar datos para actualización incluyendo el ID
+      const updateData: UpdateContentFormData = {
+        id: editingContent.id,
+        ...formData
+      };
+      
       // Limpiar y validar datos del formulario con Zod
-      const cleanedData = cleanContentFormData(formData);
+      const cleanedData = cleanContentFormData(updateData);
       const validationResult = validateContentForm(cleanedData, true);
       
       if (!validationResult.success) {
@@ -173,10 +181,7 @@ export function useContentManagement() {
       
       await updateContent({
         variables: {
-          updateContentInput: {
-            id: editingContent.id,
-            ...validationResult.data
-          }
+          updateContentInput: validationResult.data
         }
       });
       toast.success('Contenido actualizado exitosamente');

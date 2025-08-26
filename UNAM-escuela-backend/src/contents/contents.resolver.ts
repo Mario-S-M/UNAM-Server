@@ -38,6 +38,14 @@ export class ContentsResolver {
     return this.contentsService.findValidatedByLevelAndSkill(levelId, skillId);
   }
 
+  // Public endpoint for single validated content - no authentication required
+  @Query(() => Content, { name: 'contentPublic' })
+  findOnePublic(
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<Content> {
+    return this.contentsService.findOnePublic(id);
+  }
+
   // Public endpoint for validated content markdown - no authentication required
   @Query(() => String, { name: 'contentMarkdownPublic' })
   getContentMarkdownPublic(

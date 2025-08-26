@@ -181,6 +181,7 @@ type Query {
   contentsByLevelPublic(levelId: ID!): [Content!]!
   contentsBySkillPublic(skillId: ID!): [Content!]!
   contentsByLevelAndSkillPublic(levelId: ID!, skillId: ID!): [Content!]!
+  contentPublic(id: ID!): Content!
   contentMarkdownPublic(contentId: ID!): String!
   contents: [Content!]!
   contentsPaginated(search: String, levelId: String, skillId: String, validationStatus: String, page: Int! = 1, limit: Int! = 5): PaginatedContents!
@@ -287,18 +288,32 @@ input CreateContentInput {
   name: String!
   description: String!
   levelId: ID!
-  teacherIds: [ID!]
-  validationStatus: String
-  skillId: ID
+  skillId: ID!
+  teacherIds: [ID!]!
+  validationStatus: String!
+  languageId: ID
+  objectives: String
+  prerequisites: String
+  estimatedHours: Int
+  tags: [String!]
+  difficulty: String
+  isActive: Boolean
 }
 
 input UpdateContentInput {
   name: String
   description: String
   levelId: ID
+  skillId: ID
   teacherIds: [ID!]
   validationStatus: String
-  skillId: ID
+  languageId: ID
+  objectives: String
+  prerequisites: String
+  estimatedHours: Int
+  tags: [String!]
+  difficulty: String
+  isActive: Boolean
   id: ID!
 }
 

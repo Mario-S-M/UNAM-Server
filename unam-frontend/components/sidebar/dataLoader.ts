@@ -12,7 +12,8 @@ import {
   Level,
   // Content,
 } from "@/content/schemas";
-import { SidebarLanguage, SidebarLevel, SidebarSkill /*, SidebarContent*/ } from "./types";
+import { SidebarLanguage, SidebarLevel, SidebarSkill, SidebarContent } from "./types";
+import { GET_CONTENTS_BY_SKILL } from "@/lib/graphql/contentGraphqlSchema";
 import { getCookie } from "@/lib/cookies";
 // GraphQL query para obtener skills por nivel
 const GET_SKILLS_BY_LEVEL_QUERY = `
@@ -92,12 +93,12 @@ async function queryGraphQL(query: string, variables: Record<string, unknown> = 
   return result.data;
 }
 
-// function getContentType(name: string, description: string): "video" | "article" | "exercise" {
-//   const text = `${name} ${description}`.toLowerCase();
-//   if (text.includes("video") || text.includes("vídeo")) return "video";
-//   if (text.includes("ejercicio") || text.includes("exercise") || text.includes("práctica")) return "exercise";
-//   return "article";
-// }
+function getContentType(name: string, description: string): "video" | "article" | "exercise" {
+  const text = `${name} ${description}`.toLowerCase();
+  if (text.includes("video") || text.includes("vídeo")) return "video";
+  if (text.includes("ejercicio") || text.includes("exercise") || text.includes("práctica")) return "exercise";
+  return "article";
+}
 
 export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
   try {
@@ -133,12 +134,45 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
                 const skillsData = data.skillsByLevelPublic || [];
                 console.log(`DataLoader: Found ${skillsData.length} skills for level ${level.name}`);
                 
-                // Convertir skills a formato SidebarSkill
-                const sidebarSkills: SidebarSkill[] = skillsData.map((skill: { id: string; name: string }) => ({
-                  id: skill.id,
-                  name: skill.name,
-                  contents: [], // Por ahora vacío, se puede llenar después si es necesario
-                }));
+                // Convertir skills a formato SidebarSkill y cargar contenidos
+                const sidebarSkills: SidebarSkill[] = await Promise.all(
+                  skillsData.map(async (skill: { id: string; name: string }) => {
+                    try {
+                      // Cargar contenidos para este skill
+                      const contentsData = await queryGraphQLPublic(GET_CONTENTS_BY_SKILL, {
+                        skillId: skill.id,
+                      });
+                      
+                      const skillContents = contentsData.contentsBySkillPublic || [];
+                      
+                      // Convertir contenidos a formato SidebarContent
+                      const sidebarContents: SidebarContent[] = skillContents
+                        .filter((content: any) => content.validationStatus === 'APPROVED')
+                        .map((content: any) => ({
+                          id: content.id,
+                          name: content.name,
+                          description: content.description,
+                          isCompleted: content.isCompleted,
+                          validationStatus: content.validationStatus,
+                          publishedAt: content.publishedAt,
+                          type: getContentType(content.name, content.description),
+                        }));
+                      
+                      return {
+                        id: skill.id,
+                        name: skill.name,
+                        contents: sidebarContents,
+                      };
+                    } catch (error) {
+                      console.error(`DataLoader: Error loading contents for skill ${skill.name}:`, error);
+                      return {
+                        id: skill.id,
+                        name: skill.name,
+                        contents: [],
+                      };
+                    }
+                  })
+                );
                 
                 return {
                   id: level.id,

@@ -289,6 +289,8 @@ export const CREATE_CONTENT = gql`
         id
         fullName
         email
+        roles
+        isActive
       }
     }
   }
@@ -318,6 +320,40 @@ export const UPDATE_CONTENT = gql`
 export const DELETE_CONTENT = gql`
   mutation DeleteContent($id: ID!) {
     removeContent(id: $id)
+  }
+`;
+
+// Public Content Query
+export const GET_CONTENT_BY_ID_PUBLIC = gql`
+  query GetContentByIdPublic($id: ID!) {
+    contentPublic(id: $id) {
+      id
+      name
+      description
+      isCompleted
+      createdAt
+      updatedAt
+      levelId
+      userId
+      markdownPath
+      validationStatus
+      publishedAt
+      skill {
+        id
+        name
+        description
+        color
+        isActive
+        createdAt
+        updatedAt
+      }
+      skillId
+      assignedTeachers {
+        id
+        fullName
+        email
+      }
+    }
   }
 `;
 

@@ -12,3 +12,4 @@ Quiero que uses sonner para las notificaciones, checa la que ya tiene y replica 
 Quiero que todo el proyecto use el backend en graphql, checa la que ya tiene y replica la misma, prohibido usar el backend de Next.js
 # El puertos
 el front siempre debe estar en el puerto 3001, y el backend en el 3000. prohibido usar otro puerto.
+# No hagas documentación en markdown

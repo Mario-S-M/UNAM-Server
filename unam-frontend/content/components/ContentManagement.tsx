@@ -17,6 +17,9 @@ export function ContentManagement() {
     search,
     pageSize,
     activeFilter,
+    selectedLanguageId,
+    selectedSkillId,
+    selectedLevelId,
     columnVisibility,
     isCreateModalOpen,
     editingContent,
@@ -28,6 +31,7 @@ export function ContentManagement() {
     levels,
     skills,
     teachers,
+    languages,
     meta,
     
     // Loading states
@@ -42,6 +46,9 @@ export function ContentManagement() {
     setActiveFilter,
     toggleColumnVisibility,
     handleSearchChange,
+    handleLanguageFilterChange,
+    handleSkillFilterChange,
+    handleLevelFilterChange,
     formatDate,
     setIsCreateModalOpen,
     setFormData,
@@ -56,47 +63,77 @@ export function ContentManagement() {
     <div className="container mx-auto p-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-6 w-6" />
-                Gestión de Contenido
-              </CardTitle>
-              <CardDescription>
-                Administra el contenido educativo de la plataforma
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Gestión de Contenidos
+          </CardTitle>
+          <CardDescription>
+            Administra y organiza todos los contenidos educativos del sistema
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ContentHeader
-            search={search}
-            pageSize={pageSize}
-            activeFilter={activeFilter}
-            columnVisibility={columnVisibility}
-            onSearchChange={handleSearchChange}
-            onPageSizeChange={setPageSize}
-            onActiveFilterChange={setActiveFilter}
-            onToggleColumnVisibility={toggleColumnVisibility}
-            onCreateClick={() => setIsCreateModalOpen(true)}
-          />
-          
-          <ContentTable
-            contents={contents}
-            columnVisibility={columnVisibility}
-            contentsLoading={contentsLoading}
-            deleteLoading={deleteLoading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            formatDate={formatDate}
-          />
-          
-          <ContentPagination
-            meta={meta}
-            contentsCount={contents.length}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-          />
+        search={search}
+        onSearchChange={handleSearchChange}
+        statusFilter={activeFilter}
+        onStatusFilterChange={(value) => {
+          if (value === 'all' || value === 'PENDING' || value === 'APPROVED' || value === 'REJECTED') {
+            setActiveFilter(value);
+          }
+        }}
+        pageSize={pageSize}
+        onPageSizeChange={setPageSize}
+        columnVisibility={{
+          title: columnVisibility.name,
+          description: columnVisibility.description,
+          status: columnVisibility.status,
+          createdAt: columnVisibility.createdAt,
+          updatedAt: columnVisibility.updatedAt,
+          actions: columnVisibility.actions
+        }}
+        onColumnVisibilityChange={(column, visible) => {
+          const columnMap: { [key: string]: keyof typeof columnVisibility } = {
+            'title': 'name',
+            'description': 'description',
+            'status': 'status',
+            'createdAt': 'createdAt',
+            'updatedAt': 'updatedAt',
+            'actions': 'actions'
+          };
+          const mappedColumn = columnMap[column];
+          if (mappedColumn) {
+            toggleColumnVisibility(mappedColumn);
+          }
+        }}
+        onCreateClick={() => setIsCreateModalOpen(true)}
+        selectedLanguageId={selectedLanguageId}
+        onLanguageFilterChange={handleLanguageFilterChange}
+        selectedSkillId={selectedSkillId}
+        onSkillFilterChange={handleSkillFilterChange}
+        selectedLevelId={selectedLevelId}
+        onLevelFilterChange={handleLevelFilterChange}
+        languages={languages}
+        skills={skills}
+        levels={levels}
+      >
+        <ContentTable
+          contents={contents}
+          columnVisibility={columnVisibility}
+          contentsLoading={contentsLoading}
+          deleteLoading={deleteLoading}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          formatDate={formatDate}
+        />
+      </ContentHeader>
+      
+      {/* Pagination */}
+      <ContentPagination
+        meta={meta}
+        contentsCount={contents.length}
+        currentPage={currentPage}
+        onPageChange={handlePageChange}
+      />
         </CardContent>
       </Card>
       

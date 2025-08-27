@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { toast } from 'sonner';
-import { GET_CONTENTS, CREATE_CONTENT, UPDATE_CONTENT, DELETE_CONTENT, GET_LEVELS, GET_SKILLS, GET_TEACHERS } from '@/lib/graphql/queries';
+import { GET_CONTENTS, CREATE_CONTENT, UPDATE_CONTENT, DELETE_CONTENT, GET_LEVELS, GET_SKILLS, GET_TEACHERS, GET_ACTIVE_LANGUAGES } from '@/lib/graphql/queries';
 import { Content, Level, Skill, Teacher, PaginatedContents } from '../../types';
 import { 
   validateContentForm,
@@ -35,6 +35,10 @@ interface TeachersQueryResponse {
   users: Teacher[];
 }
 
+interface LanguagesQueryResponse {
+  lenguagesActivate: { id: string; name: string }[];
+}
+
 // Tipo unión para manejar tanto creación como actualización
 type ContentFormData = CreateContentFormData | (UpdateContentFormData & { id?: string });
 
@@ -66,8 +70,11 @@ export function useContentManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(2);
   const [activeFilter, setActiveFilter] = useState<'all' | 'PENDING' | 'APPROVED' | 'REJECTED'>('all');
+  const [selectedLanguageId, setSelectedLanguageId] = useState<string>('all');
+  const [selectedSkillId, setSelectedSkillId] = useState<string>('all');
+  const [selectedLevelId, setSelectedLevelId] = useState<string>('all');
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
     description: true,
@@ -97,6 +104,7 @@ export function useContentManagement() {
     }
   });
   const { data: teachersData } = useQuery<TeachersQueryResponse>(GET_TEACHERS);
+  const { data: languagesData } = useQuery<LanguagesQueryResponse>(GET_ACTIVE_LANGUAGES);
   
   // Mutations
   const [createContent, { loading: createLoading }] = useMutation(CREATE_CONTENT);
@@ -108,9 +116,17 @@ export function useContentManagement() {
   const levels: Level[] = levelsData?.levels || [];
   const skills: Skill[] = skillsData?.skillsPaginated?.skills || [];
   const teachers: Teacher[] = teachersData?.users || [];
+  const languages: { id: string; name: string }[] = languagesData?.lenguagesActivate || [];
   const totalPages = Math.ceil((contentsData?.contentsPaginated?.total || 0) / pageSize);
   const totalItems = contentsData?.contentsPaginated?.total || 0;
-  const meta = contentsData?.contentsPaginated;
+  const meta = contentsData?.contentsPaginated ? {
+    total: contentsData.contentsPaginated.total,
+    page: contentsData.contentsPaginated.page,
+    limit: contentsData.contentsPaginated.limit,
+    totalPages: contentsData.contentsPaginated.totalPages,
+    hasNextPage: contentsData.contentsPaginated.hasNextPage,
+    hasPreviousPage: contentsData.contentsPaginated.hasPreviousPage
+  } : undefined;
 
   const filteredContents = contents.filter(content => {
     // Buscar el skill por ID para obtener el nombre
@@ -249,6 +265,21 @@ export function useContentManagement() {
     setCurrentPage(1);
   };
 
+  const handleLanguageFilterChange = (value: string) => {
+    setSelectedLanguageId(value);
+    setCurrentPage(1);
+  };
+
+  const handleSkillFilterChange = (value: string) => {
+    setSelectedSkillId(value);
+    setCurrentPage(1);
+  };
+
+  const handleLevelFilterChange = (value: string) => {
+    setSelectedLevelId(value);
+    setCurrentPage(1);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -262,6 +293,9 @@ export function useContentManagement() {
     search,
     pageSize,
     activeFilter,
+    selectedLanguageId,
+    selectedSkillId,
+    selectedLevelId,
     columnVisibility,
     isCreateModalOpen,
     editingContent,
@@ -273,6 +307,7 @@ export function useContentManagement() {
     levels,
     skills,
     teachers,
+    languages,
     meta,
     totalPages,
     totalItems,
@@ -289,6 +324,9 @@ export function useContentManagement() {
     setActiveFilter,
     toggleColumnVisibility,
     handleSearchChange,
+    handleLanguageFilterChange,
+    handleSkillFilterChange,
+    handleLevelFilterChange,
     formatDate,
     setIsCreateModalOpen,
     setFormData,

@@ -1,156 +1,198 @@
+import React from 'react';
+import { Search, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, Plus, Settings } from 'lucide-react';
-
-interface ColumnVisibility {
-  name: boolean;
-  level: boolean;
-  skill: boolean;
-  status: boolean;
-  teachers: boolean;
-  createdAt: boolean;
-  updatedAt: boolean;
-  actions: boolean;
-}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ContentFilters } from './ContentFilters';
 
 interface ContentHeaderProps {
   search: string;
-  pageSize: number;
-  activeFilter: 'all' | 'PENDING' | 'APPROVED' | 'REJECTED';
-  columnVisibility: ColumnVisibility;
   onSearchChange: (value: string) => void;
+  statusFilter: string;
+  onStatusFilterChange: (value: string) => void;
+  pageSize: number;
   onPageSizeChange: (value: number) => void;
-  onActiveFilterChange: (value: 'all' | 'PENDING' | 'APPROVED' | 'REJECTED') => void;
-  onToggleColumnVisibility: (column: keyof ColumnVisibility) => void;
+  columnVisibility: {
+    title: boolean;
+    description: boolean;
+    status: boolean;
+    createdAt: boolean;
+    updatedAt: boolean;
+    actions: boolean;
+  };
+  onColumnVisibilityChange: (column: string, visible: boolean) => void;
   onCreateClick: () => void;
+  children?: React.ReactNode;
+  // Nuevos filtros
+  selectedLanguageId: string;
+  onLanguageFilterChange: (value: string) => void;
+  selectedSkillId: string;
+  onSkillFilterChange: (value: string) => void;
+  selectedLevelId: string;
+  onLevelFilterChange: (value: string) => void;
+  languages: { id: string; name: string }[];
+  skills: { id: string; name: string }[];
+  levels: { id: string; name: string }[];
 }
 
-export function ContentHeader({ 
-  search, 
-  pageSize, 
-  activeFilter, 
-  columnVisibility,
-  onSearchChange, 
+export function ContentHeader({
+  search,
+  onSearchChange,
+  statusFilter,
+  onStatusFilterChange,
+  pageSize,
   onPageSizeChange,
-  onActiveFilterChange,
-  onToggleColumnVisibility,
-  onCreateClick 
+  columnVisibility,
+  onColumnVisibilityChange,
+  onCreateClick,
+  children,
+  selectedLanguageId,
+  onLanguageFilterChange,
+  selectedSkillId,
+  onSkillFilterChange,
+  selectedLevelId,
+  onLevelFilterChange,
+  languages,
+  skills,
+  levels,
 }: ContentHeaderProps) {
   return (
-    <>
-      {/* Filtros avanzados */}
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Estado:</label>
-          <Select value={activeFilter} onValueChange={onActiveFilterChange}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="PENDING">Pendiente</SelectItem>
-              <SelectItem value="APPROVED">Aprobado</SelectItem>
-              <SelectItem value="REJECTED">Rechazado</SelectItem>
-            </SelectContent>
-          </Select>
+    <Card className="max-w-none">
+      <CardHeader className="px-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              Gestión de Contenido
+            </CardTitle>
+            <CardDescription>
+              Administra el contenido de la plataforma
+            </CardDescription>
+          </div>
+          <Button onClick={onCreateClick}>
+            <Plus className="h-4 w-4 mr-2" />
+            Crear Contenido
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-6 pb-6">
+        <div className="flex flex-col gap-4">
+          {/* Filtros y búsqueda */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-1">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Buscar contenido..."
+                  value={search}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="DRAFT">Borrador</SelectItem>
+                  <SelectItem value="PUBLISHED">Publicado</SelectItem>
+                  <SelectItem value="ARCHIVED">Archivado</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <ContentFilters
+                selectedLanguageId={selectedLanguageId}
+                onLanguageFilterChange={onLanguageFilterChange}
+                selectedSkillId={selectedSkillId}
+                onSkillFilterChange={onSkillFilterChange}
+                selectedLevelId={selectedLevelId}
+                onLevelFilterChange={onLevelFilterChange}
+                languages={languages}
+                skills={skills}
+                levels={levels}
+              />
+              
+              <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(Number(value))}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 por página</SelectItem>
+                  <SelectItem value="10">10 por página</SelectItem>
+                  <SelectItem value="20">20 por página</SelectItem>
+                  <SelectItem value="50">50 por página</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Columnas
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.title}
+                  onCheckedChange={(checked) => onColumnVisibilityChange('title', checked)}
+                >
+                  Título
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.description}
+                  onCheckedChange={(checked) => onColumnVisibilityChange('description', checked)}
+                >
+                  Descripción
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.status}
+                  onCheckedChange={(checked) => onColumnVisibilityChange('status', checked)}
+                >
+                  Estado
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.createdAt}
+                  onCheckedChange={(checked) => onColumnVisibilityChange('createdAt', checked)}
+                >
+                  Fecha de Creación
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.updatedAt}
+                  onCheckedChange={(checked) => onColumnVisibilityChange('updatedAt', checked)}
+                >
+                  Fecha de Actualización
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.actions}
+                  onCheckedChange={(checked) => onColumnVisibilityChange('actions', checked)}
+                >
+                  Acciones
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Mostrar:</label>
-          <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(Number(value))}>
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Contenido de la tabla */}
+        <div className="mt-6">
+          {children}
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Columnas
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.name}
-              onCheckedChange={() => onToggleColumnVisibility('name')}
-            >
-              Nombre
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.level}
-              onCheckedChange={() => onToggleColumnVisibility('level')}
-            >
-              Nivel
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.skill}
-              onCheckedChange={() => onToggleColumnVisibility('skill')}
-            >
-              Skill
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.status}
-              onCheckedChange={() => onToggleColumnVisibility('status')}
-            >
-              Estado
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.teachers}
-              onCheckedChange={() => onToggleColumnVisibility('teachers')}
-            >
-              Profesores
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.createdAt}
-              onCheckedChange={() => onToggleColumnVisibility('createdAt')}
-            >
-              Fecha de Creación
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.updatedAt}
-              onCheckedChange={() => onToggleColumnVisibility('updatedAt')}
-            >
-              Última Actualización
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={columnVisibility.actions}
-              onCheckedChange={() => onToggleColumnVisibility('actions')}
-            >
-              Acciones
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {/* Búsqueda y botón crear */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Buscar contenido..."
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button
-          onClick={onCreateClick}
-          className="ml-4"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Crear Contenido
-        </Button>
-      </div>
-    </>
+      </CardContent>
+    </Card>
   );
 }

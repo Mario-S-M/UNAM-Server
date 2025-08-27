@@ -14,6 +14,15 @@ export const GET_LANGUAGES = gql`
   }
 `;
 
+export const GET_ACTIVE_LANGUAGES = gql`
+  query GetActiveLanguages {
+    lenguagesActivate {
+      id
+      name
+    }
+  }
+`;
+
 // Level Queries
 export const GET_LEVELS = gql`
   query GetLevels {

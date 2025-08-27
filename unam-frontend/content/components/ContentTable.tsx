@@ -27,7 +27,7 @@ export function ContentTable({
   const colSpan = visibleColumns.length;
 
   return (
-    <div className="border rounded-lg overflow-hidden mx-auto" style={{width: '100%'}}>
+    <div className="rounded-md border w-full">
       <Table className="w-full">
         <TableHeader>
           <TableRow>

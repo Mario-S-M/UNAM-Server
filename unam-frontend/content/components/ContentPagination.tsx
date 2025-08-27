@@ -17,7 +17,7 @@ interface ContentPaginationProps {
 }
 
 export function ContentPagination({ meta, contentsCount, currentPage, onPageChange }: ContentPaginationProps) {
-  if (!meta || meta.totalPages <= 1) {
+  if (!meta) {
     return null;
   }
 
@@ -34,7 +34,7 @@ export function ContentPagination({ meta, contentsCount, currentPage, onPageChan
           variant={current === 1 ? "default" : "outline"}
           size="sm"
           onClick={() => onPageChange(1)}
-          className="min-w-[40px]"
+          className="h-8 w-8 p-0"
         >
           1
         </Button>
@@ -62,7 +62,7 @@ export function ContentPagination({ meta, contentsCount, currentPage, onPageChan
             variant={current === i ? "default" : "outline"}
             size="sm"
             onClick={() => onPageChange(i)}
-            className="min-w-[40px]"
+            className="h-8 w-8 p-0"
           >
             {i}
           </Button>
@@ -87,7 +87,7 @@ export function ContentPagination({ meta, contentsCount, currentPage, onPageChan
           variant={current === totalPages ? "default" : "outline"}
           size="sm"
           onClick={() => onPageChange(totalPages)}
-          className="min-w-[40px]"
+          className="h-8 w-8 p-0"
         >
           {totalPages}
         </Button>
@@ -98,16 +98,17 @@ export function ContentPagination({ meta, contentsCount, currentPage, onPageChan
   };
 
   return (
-    <div className="flex items-center justify-between mt-6">
-      <div className="text-sm text-gray-600">
+    <div className="flex items-center justify-between py-4">
+      <div className="text-sm text-muted-foreground">
         Mostrando {contentsCount} de {meta.total} contenidos
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          className="h-8 px-3"
         >
           Anterior
         </Button>
@@ -117,6 +118,7 @@ export function ContentPagination({ meta, contentsCount, currentPage, onPageChan
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === meta.totalPages}
+          className="h-8 px-3"
         >
           Siguiente
         </Button>

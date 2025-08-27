@@ -47,28 +47,28 @@ export const SkillTable: React.FC<SkillTableProps> = ({
     <Table>
       <TableHeader>
         <TableRow>
-          {columnVisibility.name && <TableHead>Nombre</TableHead>}
-          {columnVisibility.description && <TableHead>Descripción</TableHead>}
-          {columnVisibility.difficulty && <TableHead>Dificultad</TableHead>}
-          {columnVisibility.level && <TableHead>Nivel</TableHead>}
-          {columnVisibility.color && <TableHead>Color</TableHead>}
-          {columnVisibility.imageUrl && <TableHead>Imagen</TableHead>}
-          {columnVisibility.icon && <TableHead>Icono</TableHead>}
-          {columnVisibility.objectives && <TableHead>Objetivos</TableHead>}
-          {columnVisibility.prerequisites && <TableHead>Prerrequisitos</TableHead>}
-          {columnVisibility.estimatedHours && <TableHead>Duración (h)</TableHead>}
-          {columnVisibility.isActive && <TableHead>Estado</TableHead>}
-          {columnVisibility.createdAt && <TableHead>Creado</TableHead>}
-          {columnVisibility.updatedAt && <TableHead>Actualizado</TableHead>}
-          {columnVisibility.actions && <TableHead>Acciones</TableHead>}
+          {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
+          {columnVisibility.description && <TableHead className="text-center">Descripción</TableHead>}
+          {columnVisibility.difficulty && <TableHead className="text-center">Dificultad</TableHead>}
+          {columnVisibility.level && <TableHead className="text-center">Nivel</TableHead>}
+          {columnVisibility.color && <TableHead className="text-center">Color</TableHead>}
+          {columnVisibility.imageUrl && <TableHead className="text-center">Imagen</TableHead>}
+          {columnVisibility.icon && <TableHead className="text-center">Icono</TableHead>}
+          {columnVisibility.objectives && <TableHead className="text-center">Objetivos</TableHead>}
+          {columnVisibility.prerequisites && <TableHead className="text-center">Prerrequisitos</TableHead>}
+          {columnVisibility.estimatedHours && <TableHead className="text-center">Duración (h)</TableHead>}
+          {columnVisibility.isActive && <TableHead className="text-center">Estado</TableHead>}
+          {columnVisibility.createdAt && <TableHead className="text-center">Creado</TableHead>}
+          {columnVisibility.updatedAt && <TableHead className="text-center">Actualizado</TableHead>}
+          {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
         {skills.map((skill) => (
           <TableRow key={skill.id}>
             {columnVisibility.name && (
-              <TableCell className="font-medium">
-                <div className="flex items-center gap-2">
+              <TableCell className="font-medium text-center">
+                <div className="flex items-center gap-2 justify-center">
                   {skill.color && (
                     <div
                       className="w-4 h-4 rounded-full border"
@@ -80,21 +80,21 @@ export const SkillTable: React.FC<SkillTableProps> = ({
               </TableCell>
             )}
             {columnVisibility.description && (
-              <TableCell className="max-w-xs">
+              <TableCell className="max-w-xs text-center">
                 <div className="truncate" title={skill.description}>
                   {skill.description}
                 </div>
               </TableCell>
             )}
             {columnVisibility.difficulty && (
-              <TableCell>
+              <TableCell className="text-center">
                 <Badge variant={skill.difficulty === 'Avanzado' ? 'destructive' : skill.difficulty === 'Intermedio' ? 'default' : 'secondary'}>
                   {skill.difficulty}
                 </Badge>
               </TableCell>
             )}
             {columnVisibility.level && (
-              <TableCell>
+              <TableCell className="text-center">
                 {skill.level ? (
                   <div>
                     <div className="font-medium">{skill.level.name}</div>
@@ -106,9 +106,9 @@ export const SkillTable: React.FC<SkillTableProps> = ({
               </TableCell>
             )}
             {columnVisibility.color && (
-              <TableCell>
+              <TableCell className="text-center">
                 {skill.color && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 justify-center">
                     <div
                       className="w-6 h-6 rounded border"
                       style={{ backgroundColor: skill.color }}
@@ -119,9 +119,9 @@ export const SkillTable: React.FC<SkillTableProps> = ({
               </TableCell>
             )}
             {columnVisibility.imageUrl && (
-              <TableCell>
+              <TableCell className="text-center">
                 {skill.imageUrl ? (
-                  <div className="relative w-12 h-12 rounded overflow-hidden">
+                  <div className="relative w-12 h-12 rounded overflow-hidden mx-auto">
                     <Image
                       src={skill.imageUrl}
                       alt={skill.name}
@@ -192,7 +192,7 @@ export const SkillTable: React.FC<SkillTableProps> = ({
               </TableCell>
             )}
             {columnVisibility.createdAt && (
-              <TableCell className="text-sm text-gray-500">
+              <TableCell className="text-sm text-gray-500 text-center">
                 {formatDate ? formatDate(skill.createdAt) : new Date(skill.createdAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'short',
@@ -201,7 +201,7 @@ export const SkillTable: React.FC<SkillTableProps> = ({
               </TableCell>
             )}
             {columnVisibility.updatedAt && (
-              <TableCell className="text-sm text-gray-500">
+              <TableCell className="text-sm text-gray-500 text-center">
                 {formatDate ? formatDate(skill.updatedAt) : new Date(skill.updatedAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'short',
@@ -210,8 +210,8 @@ export const SkillTable: React.FC<SkillTableProps> = ({
               </TableCell>
             )}
             {columnVisibility.actions && (
-              <TableCell>
-                <div className="flex items-center gap-2">
+              <TableCell className="text-center">
+                <div className="flex items-center gap-2 justify-center">
                   <Button
                     variant="outline"
                     size="sm"

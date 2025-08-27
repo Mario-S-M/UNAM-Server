@@ -255,8 +255,8 @@ export default function NivelesPage() {
     difficulty: true,
     language: true,
     isActive: true,
-    createdAt: true,
-    updatedAt: true,
+    createdAt: false,
+    updatedAt: false,
     actions: true,
   });
 
@@ -748,14 +748,14 @@ export default function NivelesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {columnVisibility.name && <TableHead>Nombre</TableHead>}
-                  {columnVisibility.description && <TableHead>Descripción</TableHead>}
-                  {columnVisibility.difficulty && <TableHead>Dificultad</TableHead>}
-                  {columnVisibility.language && <TableHead>Idioma</TableHead>}
-                  {columnVisibility.isActive && <TableHead>Estado</TableHead>}
-                  {columnVisibility.createdAt && <TableHead>Fecha de Creación</TableHead>}
-                  {columnVisibility.updatedAt && <TableHead>Última Actualización</TableHead>}
-                  {columnVisibility.actions && <TableHead className="text-right">Acciones</TableHead>}
+                  {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
+                  {columnVisibility.description && <TableHead className="text-center">Descripción</TableHead>}
+                  {columnVisibility.difficulty && <TableHead className="text-center">Dificultad</TableHead>}
+                  {columnVisibility.language && <TableHead className="text-center">Idioma</TableHead>}
+                  {columnVisibility.isActive && <TableHead className="text-center">Estado</TableHead>}
+                  {columnVisibility.createdAt && <TableHead className="text-center">Fecha de Creación</TableHead>}
+                  {columnVisibility.updatedAt && <TableHead className="text-center">Última Actualización</TableHead>}
+                  {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -775,36 +775,36 @@ export default function NivelesPage() {
                   levels.levels.map((level) => (
                     <TableRow key={level.id}>
                       {columnVisibility.name && (
-                        <TableCell className="font-medium">{level.name}</TableCell>
+                        <TableCell className="font-medium text-center">{level.name}</TableCell>
                       )}
                       {columnVisibility.description && (
-                        <TableCell className="max-w-xs truncate">{level.description}</TableCell>
+                        <TableCell className="max-w-xs truncate text-center">{level.description}</TableCell>
                       )}
                       {columnVisibility.difficulty && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge className={getDifficultyColor(level.difficulty)}>
                             {getDifficultyLabel(level.difficulty)}
                           </Badge>
                         </TableCell>
                       )}
                       {columnVisibility.language && (
-                        <TableCell>{level.lenguage?.name || 'Sin idioma'}</TableCell>
+                        <TableCell className="text-center">{level.lenguage?.name || 'Sin idioma'}</TableCell>
                       )}
                       {columnVisibility.isActive && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge variant={level.isActive ? 'default' : 'secondary'}>
                             {level.isActive ? 'Activo' : 'Inactivo'}
                           </Badge>
                         </TableCell>
                       )}
                       {columnVisibility.createdAt && (
-                        <TableCell>{formatDate(level.createdAt)}</TableCell>
+                        <TableCell className="text-center">{formatDate(level.createdAt)}</TableCell>
                       )}
                       {columnVisibility.updatedAt && (
-                        <TableCell>{formatDate(level.updatedAt)}</TableCell>
+                        <TableCell className="text-center">{formatDate(level.updatedAt)}</TableCell>
                       )}
                       {columnVisibility.actions && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           <div className="flex justify-end gap-2">
                             <Button
                               variant="outline"

@@ -449,22 +449,22 @@ export default function UsuariosPage() {
               <TableHeader>
                 <TableRow>
                   {columnVisibility.fullName && (
-                    <TableHead>Nombre Completo</TableHead>
+                    <TableHead className="text-center">Nombre Completo</TableHead>
                   )}
                   {columnVisibility.email && (
-                    <TableHead>Email</TableHead>
+                    <TableHead className="text-center">Email</TableHead>
                   )}
                   {columnVisibility.roles && (
-                    <TableHead>Roles</TableHead>
+                    <TableHead className="text-center">Roles</TableHead>
                   )}
                   {columnVisibility.assignedLanguage && (
-                    <TableHead>Idioma Asignado</TableHead>
+                    <TableHead className="text-center">Idioma Asignado</TableHead>
                   )}
                   {columnVisibility.isActive && (
-                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-center">Estado</TableHead>
                   )}
                   {columnVisibility.actions && (
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="text-center">Acciones</TableHead>
                   )}
                 </TableRow>
               </TableHeader>
@@ -492,16 +492,16 @@ export default function UsuariosPage() {
                   users.map((tableUser) => (
                     <TableRow key={tableUser.id}>
                       {columnVisibility.fullName && (
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium text-center">
                           {tableUser.fullName}
                         </TableCell>
                       )}
                       {columnVisibility.email && (
-                        <TableCell>{tableUser.email}</TableCell>
+                        <TableCell className="text-center">{tableUser.email}</TableCell>
                       )}
                       {columnVisibility.roles && (
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
+                        <TableCell className="text-center">
+                          <div className="flex flex-wrap gap-1 justify-center">
                             {tableUser.roles.map((role, index) => (
                               <Badge
                                 key={index}
@@ -515,7 +515,7 @@ export default function UsuariosPage() {
                         </TableCell>
                       )}
                       {columnVisibility.assignedLanguage && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           {tableUser.assignedLanguage ? (
                             <Badge variant="outline">
                               {tableUser.assignedLanguage.name}
@@ -526,7 +526,7 @@ export default function UsuariosPage() {
                         </TableCell>
                       )}
                       {columnVisibility.isActive && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge
                             variant={tableUser.isActive ? "default" : "secondary"}
                             className={tableUser.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
@@ -536,8 +536,8 @@ export default function UsuariosPage() {
                         </TableCell>
                       )}
                       {columnVisibility.actions && (
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"

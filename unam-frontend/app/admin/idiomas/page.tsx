@@ -1120,20 +1120,20 @@ export default function IdiomasPage() {
             <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  {columnVisibility.name && <TableHead>Nombre</TableHead>}
-                  {columnVisibility.eslogan_atractivo && <TableHead>Eslogan Atractivo</TableHead>}
-                  {columnVisibility.nivel && <TableHead>Nivel</TableHead>}
-                  {columnVisibility.duracion_total_horas && <TableHead>Duración (Horas)</TableHead>}
-                  {columnVisibility.estado && <TableHead>Estado del Curso</TableHead>}
-                  {columnVisibility.badge_destacado && <TableHead>Badge Destacado</TableHead>}
-                  {columnVisibility.puntuacion_promedio && <TableHead>Puntuación Promedio</TableHead>}
-                  {columnVisibility.total_estudiantes_inscritos && <TableHead>Estudiantes Inscritos</TableHead>}
-                  {columnVisibility.featured && <TableHead>Destacado</TableHead>}
-                  {columnVisibility.icons && <TableHead>Iconos</TableHead>}
-                  {columnVisibility.isActive && <TableHead>Activo/Inactivo</TableHead>}
-                  {columnVisibility.createdAt && <TableHead>Fecha de Creación</TableHead>}
-                  {columnVisibility.updatedAt && <TableHead>Última Actualización</TableHead>}
-                  {columnVisibility.actions && <TableHead className="text-right">Acciones</TableHead>}
+                  {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
+                  {columnVisibility.eslogan_atractivo && <TableHead className="text-center">Eslogan Atractivo</TableHead>}
+                  {columnVisibility.nivel && <TableHead className="text-center">Nivel</TableHead>}
+                  {columnVisibility.duracion_total_horas && <TableHead className="text-center">Duración (Horas)</TableHead>}
+                  {columnVisibility.estado && <TableHead className="text-center">Estado del Curso</TableHead>}
+                  {columnVisibility.badge_destacado && <TableHead className="text-center">Badge Destacado</TableHead>}
+                  {columnVisibility.puntuacion_promedio && <TableHead className="text-center">Puntuación Promedio</TableHead>}
+                  {columnVisibility.total_estudiantes_inscritos && <TableHead className="text-center">Estudiantes Inscritos</TableHead>}
+                  {columnVisibility.featured && <TableHead className="text-center">Destacado</TableHead>}
+                  {columnVisibility.icons && <TableHead className="text-center">Iconos</TableHead>}
+                  {columnVisibility.isActive && <TableHead className="text-center">Activo/Inactivo</TableHead>}
+                  {columnVisibility.createdAt && <TableHead className="text-center">Fecha de Creación</TableHead>}
+                  {columnVisibility.updatedAt && <TableHead className="text-center">Última Actualización</TableHead>}
+                  {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1153,28 +1153,28 @@ export default function IdiomasPage() {
                   languages.lenguages.map((language) => (
                     <TableRow key={language.id}>
                       {columnVisibility.name && (
-                        <TableCell className="font-medium">{language.name}</TableCell>
+                        <TableCell className="font-medium text-center">{language.name}</TableCell>
                       )}
                       {columnVisibility.eslogan_atractivo && (
-                        <TableCell className="max-w-xs truncate">{language.eslogan_atractivo}</TableCell>
+                        <TableCell className="max-w-xs truncate text-center">{language.eslogan_atractivo}</TableCell>
                       )}
                       {columnVisibility.nivel && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge variant="outline">{language.nivel}</Badge>
                         </TableCell>
                       )}
                       {columnVisibility.duracion_total_horas && (
-                        <TableCell>{language.duracion_total_horas}h</TableCell>
+                        <TableCell className="text-center">{language.duracion_total_horas}h</TableCell>
                       )}
                       {columnVisibility.estado && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge variant={language.estado === 'Activo' ? 'default' : language.estado === 'En Desarrollo' ? 'secondary' : 'destructive'}>
                             {language.estado}
                           </Badge>
                         </TableCell>
                       )}
                       {columnVisibility.badge_destacado && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           {language.badge_destacado ? (
                             <Badge variant="default">{language.badge_destacado}</Badge>
                           ) : (
@@ -1183,26 +1183,26 @@ export default function IdiomasPage() {
                         </TableCell>
                       )}
                       {columnVisibility.puntuacion_promedio && (
-                        <TableCell>
-                          <div className="flex items-center gap-1">
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
                             <span>{language.puntuacion_promedio.toFixed(1)}</span>
                             <span className="text-yellow-500">★</span>
                           </div>
                         </TableCell>
                       )}
                       {columnVisibility.total_estudiantes_inscritos && (
-                        <TableCell>{language.total_estudiantes_inscritos.toLocaleString()}</TableCell>
+                        <TableCell className="text-center">{language.total_estudiantes_inscritos.toLocaleString()}</TableCell>
                       )}
                       {columnVisibility.featured && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge variant={language.featured ? 'default' : 'secondary'}>
                             {language.featured ? 'Sí' : 'No'}
                           </Badge>
                         </TableCell>
                       )}
                       {columnVisibility.icons && (
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
+                        <TableCell className="text-center">
+                          <div className="flex flex-wrap justify-center gap-1">
                             {(language.icons && language.icons.length > 0) ? (
                               language.icons.map((icon, index) => (
                                 <div key={index} className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg text-lg">
@@ -1216,20 +1216,20 @@ export default function IdiomasPage() {
                         </TableCell>
                       )}
                       {columnVisibility.isActive && (
-                        <TableCell>
+                        <TableCell className="text-center">
                           <Badge variant={language.isActive ? 'default' : 'secondary'}>
                             {language.isActive ? 'Activo' : 'Inactivo'}
                           </Badge>
                         </TableCell>
                       )}
                       {columnVisibility.createdAt && (
-                        <TableCell>{formatDate(language.createdAt)}</TableCell>
+                        <TableCell className="text-center">{formatDate(language.createdAt)}</TableCell>
                       )}
                       {columnVisibility.updatedAt && (
-                        <TableCell>{formatDate(language.updatedAt)}</TableCell>
+                        <TableCell className="text-center">{formatDate(language.updatedAt)}</TableCell>
                       )}
                       {columnVisibility.actions && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           <div className="flex justify-end gap-2">
                             <Button
                               variant="outline"

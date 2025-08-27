@@ -1,11 +1,11 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@apollo/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, User, Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
+import { FileText, User, Calendar, CheckCircle, Clock, XCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { GET_CONTENT_BY_ID_PUBLIC } from "@/lib/graphql/queries";
@@ -84,6 +84,7 @@ function getValidationStatusVariant(status: string): "default" | "secondary" | "
 
 export default function ContentDetail() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
 
   const { data, loading, error } = useQuery<{ contentPublic: Content }>(

@@ -3,8 +3,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Level, Skill, Teacher } from '../../types';
-import { CreateContentFormData as ContentFormData } from '@/schemas/content-forms';
+import { CreateContentFormData, UpdateContentFormData } from '@/schemas/content-forms';
 import { VALIDATION_STATUS_OPTIONS } from '../constants';
+
+type ContentFormData = CreateContentFormData | (UpdateContentFormData & { id?: string });
 
 interface ContentFormProps {
   formData: ContentFormData;
@@ -26,7 +28,7 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
           <Label htmlFor="name">Nombre</Label>
           <Input
             id="name"
-            value={formData.name}
+            value={formData.name || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ name: e.target.value })}
             placeholder="Nombre del contenido"
           />
@@ -34,7 +36,7 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
         <div className="space-y-2">
           <Label htmlFor="validationStatus">Estado de Validación</Label>
           <Select
-            value={formData.validationStatus}
+            value={formData.validationStatus || 'PENDING'}
             onValueChange={(value: 'PENDING' | 'APPROVED' | 'REJECTED') => updateFormData({ validationStatus: value })}
           >
             <SelectTrigger>
@@ -61,7 +63,7 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
         <Label htmlFor="description">Descripción</Label>
         <Textarea
           id="description"
-          value={formData.description}
+          value={formData.description || ''}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData({ description: e.target.value })}
           placeholder="Descripción del contenido"
           rows={3}
@@ -72,7 +74,7 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
         <div className="space-y-2">
           <Label htmlFor="level">Nivel</Label>
           <Select
-            value={formData.levelId}
+            value={formData.levelId || ''}
             onValueChange={(value: string) => updateFormData({ levelId: value })}
           >
             <SelectTrigger>
@@ -91,7 +93,7 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
         <div className="space-y-2">
           <Label htmlFor="skill">Skill</Label>
           <Select
-            value={formData.skillId}
+            value={formData.skillId || ''}
             onValueChange={(value: string) => updateFormData({ skillId: value })}
           >
             <SelectTrigger>
@@ -125,15 +127,16 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
                 <label key={teacher.id} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={formData.teacherIds.includes(teacher.id)}
+                    checked={(formData.teacherIds || []).includes(teacher.id)}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const currentTeacherIds = formData.teacherIds || [];
                       if (e.target.checked) {
                         updateFormData({
-                          teacherIds: [...formData.teacherIds, teacher.id]
+                          teacherIds: [...currentTeacherIds, teacher.id]
                         });
                       } else {
                         updateFormData({
-                          teacherIds: formData.teacherIds.filter(id => id !== teacher.id)
+                          teacherIds: currentTeacherIds.filter(id => id !== teacher.id)
                         });
                       }
                     }}

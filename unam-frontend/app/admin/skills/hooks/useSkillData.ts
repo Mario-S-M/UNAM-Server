@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Skill, Language, Level, PaginatedResponse } from '@/types';
+import { Language, Level, PaginatedResponse } from '@/types';
+import { Skill } from '@/skills/types';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 const GET_SKILLS_PAGINATED = `
-  query GetSkillsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean) {
-    skillsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive) {
+  query GetSkillsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean, $levelId: ID, $lenguageId: ID) {
+    skillsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive, levelId: $levelId, lenguageId: $lenguageId) {
       skills {
         id
         name
@@ -98,6 +99,8 @@ export interface UseSkillDataProps {
   page?: number;
   limit?: number;
   isActive?: boolean;
+  levelId?: string;
+  lenguageId?: string;
 }
 
 export interface UseSkillDataReturn {
@@ -106,17 +109,18 @@ export interface UseSkillDataReturn {
   levels: Level[];
   loading: boolean;
   error: string | null;
-  refetch: () => Promise<void>;
+  selectedLanguageId: string | undefined;
+  selectedLevelId: string | undefined;
+  setSelectedLanguageId: (languageId: string | undefined) => void;
+  setSelectedLevelId: (levelId: string | undefined) => void;
+  fetchSkills: (search?: string, page?: number, limit?: number, isActive?: boolean, levelId?: string, lenguageId?: string) => Promise<void>;
+  fetchLanguages: () => Promise<void>;
   fetchLevelsByLanguage: (languageId: string) => Promise<void>;
 }
 
-export function useSkillData({
-  search = '',
-  page = 1,
-  limit = 5,
-  isActive
-}: UseSkillDataProps = {}): UseSkillDataReturn {
+export function useSkillData(authToken?: string): UseSkillDataReturn {
   const { token } = useAuth();
+  const finalToken = authToken || token;
   
   const [skills, setSkills] = useState<PaginatedResponse<Skill>>({
     data: [],
@@ -132,9 +136,18 @@ export function useSkillData({
   const [levels, setLevels] = useState<Level[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedLanguageId, setSelectedLanguageId] = useState<string | undefined>(undefined);
+  const [selectedLevelId, setSelectedLevelId] = useState<string | undefined>(undefined);
 
-  const fetchSkills = useCallback(async () => {
-    if (!token) return;
+  const fetchSkills = useCallback(async (
+    search?: string,
+    page: number = 1,
+    limit: number = 5,
+    isActive?: boolean,
+    levelId?: string,
+    lenguageId?: string
+  ) => {
+    if (!finalToken) return;
     
     try {
       setLoading(true);
@@ -146,9 +159,11 @@ export function useSkillData({
           search: search || undefined,
           page,
           limit,
-          isActive
+          isActive,
+          levelId: levelId || undefined,
+          lenguageId: lenguageId || undefined
         },
-        token
+        finalToken
       );
       
       const skillsData = data.skillsPaginated;
@@ -167,21 +182,21 @@ export function useSkillData({
     } finally {
       setLoading(false);
     }
-  }, [token, search, page, limit, isActive]);
+  }, [finalToken]);
 
   const fetchLanguages = useCallback(async () => {
-    if (!token) return;
+    if (!finalToken) return;
     
     try {
-      const data = await fetchGraphQL(GET_LANGUAGES, {}, token);
+      const data = await fetchGraphQL(GET_LANGUAGES, {}, finalToken);
       setLanguages(data.lenguagesActivate || []);
     } catch (err) {
       console.error('Error fetching languages:', err);
     }
-  }, [token]);
+  }, [finalToken]);
 
   const fetchLevelsByLanguage = useCallback(async (languageId: string) => {
-    if (!token || !languageId) {
+    if (!finalToken || !languageId) {
       setLevels([]);
       return;
     }
@@ -190,25 +205,14 @@ export function useSkillData({
       const data = await fetchGraphQL(
         GET_LEVELS_BY_LANGUAGE,
         { lenguageId: languageId },
-        token
+        finalToken
       );
       setLevels(data.levelsByLenguage || []);
     } catch (err) {
       console.error('Error fetching levels:', err);
       setLevels([]);
     }
-  }, [token]);
-
-  const refetch = useCallback(async () => {
-    await Promise.all([
-      fetchSkills(),
-      fetchLanguages()
-    ]);
-  }, [fetchSkills, fetchLanguages]);
-
-  useEffect(() => {
-    fetchSkills();
-  }, [fetchSkills]);
+  }, [finalToken]);
 
   useEffect(() => {
     fetchLanguages();
@@ -220,7 +224,12 @@ export function useSkillData({
     levels,
     loading,
     error,
-    refetch,
+    selectedLanguageId,
+    selectedLevelId,
+    setSelectedLanguageId,
+    setSelectedLevelId,
+    fetchSkills,
+    fetchLanguages,
     fetchLevelsByLanguage
   };
 }

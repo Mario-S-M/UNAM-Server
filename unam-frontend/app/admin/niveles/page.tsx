@@ -48,7 +48,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, GraduationCap, Search, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, GraduationCap, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   CreateLevelFormSchema, 
@@ -601,6 +601,13 @@ export default function NivelesPage() {
 
                   </div>
                   <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
                     <Button type="submit">
                       {editingLevel ? 'Actualizar' : 'Crear'}
                     </Button>
@@ -623,51 +630,74 @@ export default function NivelesPage() {
                   className="pl-8"
                 />
               </div>
-              <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
-                setActiveFilter(value === 'all' ? undefined : value === 'true');
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="true">Activos</SelectItem>
-                  <SelectItem value="false">Inactivos</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={languageFilter} onValueChange={(value) => {
-                setLanguageFilter(value === 'all' ? '' : value);
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Idioma" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los idiomas</SelectItem>
-                  {languages.map((language) => (
-                    <SelectItem key={language.id} value={language.id}>
-                      {language.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={difficultyFilter} onValueChange={(value) => {
-                setDifficultyFilter(value === 'all' ? '' : value);
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Dificultad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {DIFFICULTY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <div className="p-2">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Estado</div>
+                        <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
+                          setActiveFilter(value === 'all' ? undefined : value === 'true');
+                          setCurrentPage(1);
+                        }}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Estado" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="true">Activos</SelectItem>
+                            <SelectItem value="false">Inactivos</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Idioma</div>
+                        <Select value={languageFilter} onValueChange={(value) => {
+                          setLanguageFilter(value === 'all' ? '' : value);
+                          setCurrentPage(1);
+                        }}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Idioma" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos los idiomas</SelectItem>
+                            {languages.map((language) => (
+                              <SelectItem key={language.id} value={language.id}>
+                                {language.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Dificultad</div>
+                        <Select value={difficultyFilter} onValueChange={(value) => {
+                          setDifficultyFilter(value === 'all' ? '' : value);
+                          setCurrentPage(1);
+                        }}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Dificultad" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas</SelectItem>
+                            {DIFFICULTY_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Select value={pageSize.toString()} onValueChange={(value) => {
                 setPageSize(parseInt(value));
                 setCurrentPage(1);

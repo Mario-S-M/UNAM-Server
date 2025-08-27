@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditUserDialog, useEditUser, User, PaginatedUsers, Language, UserColumnVisibility } from '@/users';
 
@@ -179,7 +179,7 @@ export default function UsuariosPage() {
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -379,32 +379,50 @@ export default function UsuariosPage() {
                   className="pl-8"
                 />
               </div>
-              <Select value={selectedRole} onValueChange={handleRoleFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Todos los roles" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los roles</SelectItem>
-                  <SelectItem value="superUser">Super Usuario</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="docente">Docente</SelectItem>
-                  <SelectItem value="alumno">Alumno</SelectItem>
-                  <SelectItem value="mortal">Usuario</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={selectedLanguage} onValueChange={handleLanguageFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Todos los idiomas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los idiomas</SelectItem>
-                  {languages.map((language) => (
-                    <SelectItem key={language.id} value={language.id}>
-                      {language.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="p-2">
+                    <div className="mb-3">
+                      <label className="text-sm font-medium mb-1 block">Rol</label>
+                      <Select value={selectedRole} onValueChange={handleRoleFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Todos los roles" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los roles</SelectItem>
+                          <SelectItem value="superUser">Super Usuario</SelectItem>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                          <SelectItem value="docente">Docente</SelectItem>
+                          <SelectItem value="alumno">Alumno</SelectItem>
+                          <SelectItem value="mortal">Usuario</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Idioma</label>
+                      <Select value={selectedLanguage} onValueChange={handleLanguageFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Todos los idiomas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los idiomas</SelectItem>
+                          {languages.map((language) => (
+                            <SelectItem key={language.id} value={language.id}>
+                              {language.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
                 <SelectTrigger className="w-[70px]">
                   <SelectValue />

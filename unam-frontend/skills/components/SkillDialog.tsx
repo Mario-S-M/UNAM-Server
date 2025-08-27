@@ -182,6 +182,7 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
           uploadingImage={uploadingImage}
           onImageUpload={handleImageUploadWrapper}
           onSubmit={handleSubmit}
+          onCancel={onClose}
           editingSkill={editingSkill || null}
         />
       </DialogContent>

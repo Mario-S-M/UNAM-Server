@@ -36,6 +36,7 @@ interface SkillFormProps {
   uploadingImage: string | null;
   onImageUpload: (file: File, fieldName: 'imageUrl') => Promise<void>;
   onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
   editingSkill: Skill | null;
 }
 
@@ -58,6 +59,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
   uploadingImage,
   onImageUpload,
   onSubmit,
+  onCancel,
   editingSkill
 }) => {
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -369,6 +371,13 @@ export const SkillForm: React.FC<SkillFormProps> = ({
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+        >
+          Cancelar
+        </Button>
         <Button type="submit">
           {editingSkill ? 'Actualizar Skill' : 'Crear Skill'}
         </Button>

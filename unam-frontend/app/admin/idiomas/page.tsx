@@ -47,7 +47,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Languages, Search, Settings, ChevronLeft, ChevronRight, Upload, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Languages, Search, Settings, ChevronLeft, ChevronRight, Upload, Image, Filter } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -969,6 +969,13 @@ export default function IdiomasPage() {
                     </div>
                   </div>
                   <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
                     <Button type="submit">
                       {editingLanguage ? 'Actualizar' : 'Crear'}
                     </Button>
@@ -991,19 +998,34 @@ export default function IdiomasPage() {
                   className="pl-8"
                 />
               </div>
-              <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
-                setActiveFilter(value === 'all' ? undefined : value === 'true');
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="true">Activos</SelectItem>
-                  <SelectItem value="false">Inactivos</SelectItem>
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <div className="p-2">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Estado</div>
+                      <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
+                        setActiveFilter(value === 'all' ? undefined : value === 'true');
+                        setCurrentPage(1);
+                      }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="true">Activos</SelectItem>
+                          <SelectItem value="false">Inactivos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Select value={pageSize.toString()} onValueChange={(value) => {
                 setPageSize(parseInt(value));
                 setCurrentPage(1);

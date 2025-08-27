@@ -17,18 +17,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Import from the new modular structure
 import {
   SkillDialog,
   SkillTable,
-  useSkillData,
   useSkillMutations,
   type Skill,
   type ColumnVisibility
 } from '@/skills';
+import { useSkillData } from './hooks/useSkillData';
 
 export default function SkillsAdminPage() {
   const { token } = useAuth();
@@ -36,8 +36,10 @@ export default function SkillsAdminPage() {
   // State management
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5);
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
+  const [selectedLanguageId, setSelectedLanguageId] = useState<string | undefined>(undefined);
+  const [selectedLevelId, setSelectedLevelId] = useState<string | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
@@ -63,25 +65,27 @@ export default function SkillsAdminPage() {
     languages,
     levels,
     loading,
-    selectedLanguageId,
-    setSelectedLanguageId,
     fetchSkills,
     fetchLanguages,
     fetchLevelsByLanguage
   } = useSkillData(token || undefined);
 
+  const refreshSkills = () => {
+    fetchSkills(search, currentPage, pageSize, activeFilter, selectedLevelId, selectedLanguageId);
+  };
+
   const {
     handleCreate,
     handleUpdate,
     handleDelete
-  } = useSkillMutations(() => fetchSkills(search, currentPage, pageSize, activeFilter));
+  } = useSkillMutations(refreshSkills);
 
   // Effects
   useEffect(() => {
     if (token) {
-      fetchSkills(search, currentPage, pageSize, activeFilter);
+      refreshSkills();
     }
-  }, [search, currentPage, pageSize, activeFilter, fetchSkills, token]);
+  }, [search, currentPage, pageSize, activeFilter, selectedLevelId, selectedLanguageId, token]);
 
   useEffect(() => {
     fetchLanguages();
@@ -159,7 +163,11 @@ export default function SkillsAdminPage() {
             editingSkill={editingSkill}
             languages={languages}
             levels={levels}
-            onLanguageChange={setSelectedLanguageId}
+            onLanguageChange={(langId) => {
+              if (langId) {
+                fetchLevelsByLanguage(langId);
+              }
+            }}
           />
         </CardHeader>
         <CardContent>
@@ -174,22 +182,81 @@ export default function SkillsAdminPage() {
                   className="pl-8 w-[300px]"
                 />
               </div>
-              <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
-                if (value === 'all') {
-                  setActiveFilter(undefined);
-                } else {
-                  setActiveFilter(value === 'true');
-                }
-              }}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="true">Activos</SelectItem>
-                  <SelectItem value="false">Inactivos</SelectItem>
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="p-2">
+                    <div className="mb-3">
+                      <label className="text-sm font-medium mb-1 block">Idioma</label>
+                      <Select value={selectedLanguageId || "all"} onValueChange={(value) => {
+                        const languageId = value === "all" ? undefined : value;
+                        setSelectedLanguageId(languageId);
+                        if (languageId) {
+                          fetchLevelsByLanguage(languageId);
+                        } else {
+                          setSelectedLevelId(undefined);
+                        }
+                      }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Idioma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los idiomas</SelectItem>
+                          {languages.map((language) => (
+                            <SelectItem key={language.id} value={language.id}>
+                              {language.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="text-sm font-medium mb-1 block">Nivel</label>
+                      <Select 
+                        value={selectedLevelId || "all"} 
+                        onValueChange={(value) => setSelectedLevelId(value === "all" ? undefined : value)}
+                        disabled={!selectedLanguageId}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Nivel" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los niveles</SelectItem>
+                          {levels.map((level) => (
+                            <SelectItem key={level.id} value={level.id}>
+                              {level.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Estado</label>
+                      <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
+                        if (value === 'all') {
+                          setActiveFilter(undefined);
+                        } else {
+                          setActiveFilter(value === 'true');
+                        }
+                      }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="true">Activos</SelectItem>
+                          <SelectItem value="false">Inactivos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
                 <SelectTrigger className="w-[70px]">
                   <SelectValue />
@@ -299,7 +366,7 @@ export default function SkillsAdminPage() {
           </div>
 
           <SkillTable
-            skills={skills.skills}
+            skills={skills.data}
             loading={loading}
             columnVisibility={columnVisibility}
             onEdit={handleEdit}

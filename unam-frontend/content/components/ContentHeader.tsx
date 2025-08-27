@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus, Settings } from 'lucide-react';
+import { Search, Plus, Settings, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,9 +14,10 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ContentFilters } from './ContentFilters';
 
 interface ContentHeaderProps {
   search: string;
@@ -102,29 +103,85 @@ export function ContentHeader({
                 />
               </div>
               
-              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="DRAFT">Borrador</SelectItem>
-                  <SelectItem value="PUBLISHED">Publicado</SelectItem>
-                  <SelectItem value="ARCHIVED">Archivado</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <ContentFilters
-                selectedLanguageId={selectedLanguageId}
-                onLanguageFilterChange={onLanguageFilterChange}
-                selectedSkillId={selectedSkillId}
-                onSkillFilterChange={onSkillFilterChange}
-                selectedLevelId={selectedLevelId}
-                onLevelFilterChange={onLevelFilterChange}
-                languages={languages}
-                skills={skills}
-                levels={levels}
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <div className="p-2">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Estado</div>
+                        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Estado" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos los estados</SelectItem>
+                            <SelectItem value="DRAFT">Borrador</SelectItem>
+                            <SelectItem value="PUBLISHED">Publicado</SelectItem>
+                            <SelectItem value="ARCHIVED">Archivado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Idioma</div>
+                        <Select value={selectedLanguageId} onValueChange={onLanguageFilterChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Idioma" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos los idiomas</SelectItem>
+                            {languages.map((language) => (
+                              <SelectItem key={language.id} value={language.id}>
+                                {language.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Habilidad</div>
+                        <Select value={selectedSkillId} onValueChange={onSkillFilterChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Habilidad" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas las habilidades</SelectItem>
+                            {skills.map((skill) => (
+                              <SelectItem key={skill.id} value={skill.id}>
+                                {skill.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Nivel</div>
+                        <Select value={selectedLevelId} onValueChange={onLevelFilterChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Nivel" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos los niveles</SelectItem>
+                            {levels.map((level) => (
+                              <SelectItem key={level.id} value={level.id}>
+                                {level.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
               <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(Number(value))}>
                 <SelectTrigger className="w-[120px]">

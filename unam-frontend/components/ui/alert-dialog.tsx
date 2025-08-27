@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -49,15 +50,16 @@ const AlertDialogAction = React.forwardRef<
 AlertDialogAction.displayName = "AlertDialogAction"
 
 const AlertDialogCancel = React.forwardRef<
-  React.ElementRef<typeof Button>,
-  React.ComponentPropsWithoutRef<typeof Button>
+  React.ElementRef<typeof DialogClose>,
+  React.ComponentPropsWithoutRef<typeof DialogClose>
 >(({ className, ...props }, ref) => (
-  <Button
-    ref={ref}
-    variant="outline"
-    className={cn(className)}
-    {...props}
-  />
+  <DialogClose ref={ref} asChild>
+    <Button
+      variant="outline"
+      className={cn(className)}
+      {...props}
+    />
+  </DialogClose>
 ))
 AlertDialogCancel.displayName = "AlertDialogCancel"
 

@@ -210,7 +210,7 @@ type Query {
   homeworks: [Homework!]!
   homework(id: Int!): Homework!
   users(roles: [ValidRoles!] = []): [User!]!
-  usersPaginated(roles: [ValidRoles!] = [], search: String, page: Int = 1, limit: Int = 10, assignedLanguageId: ID): PaginatedUsers!
+  usersPaginated(roles: [ValidRoles!] = [], search: String, page: Int = 1, limit: Int = 10, assignedLanguageId: ID, isActive: Boolean): PaginatedUsers!
   user(id: ID!): User!
   revalidate: AuthResponse!
   lenguages: [Lenguage!]!

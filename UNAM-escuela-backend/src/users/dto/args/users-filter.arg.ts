@@ -1,5 +1,5 @@
 import { ArgsType, Field, Int, ID } from '@nestjs/graphql';
-import { IsOptional, IsString, IsInt, Min, Max, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, IsUUID, IsBoolean } from 'class-validator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
 
 @ArgsType()
@@ -30,4 +30,9 @@ export class UsersFilterArgs {
   @IsOptional()
   @IsUUID()
   assignedLanguageId?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

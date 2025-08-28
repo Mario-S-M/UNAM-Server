@@ -49,6 +49,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -130,9 +132,11 @@ interface UserColumnVisibility {
 }
 
 const ROLES = [
-  { value: 'alumno', label: 'Estudiante' },
-  { value: 'docente', label: 'Profesor' },
+  { value: 'superUser', label: 'Super Usuario' },
   { value: 'admin', label: 'Administrador' },
+  { value: 'docente', label: 'Profesor' },
+  { value: 'alumno', label: 'Estudiante' },
+  { value: 'mortal', label: 'Usuario' },
 ];
 
 export default function UsersPage() {
@@ -153,13 +157,14 @@ export default function UsersPage() {
     email: '',
     fullName: '',
     password: '',
-    roles: ['alumno'],
+    roles: ['mortal'],
     isActive: true,
   });
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [columnVisibility, setColumnVisibility] = useState<UserColumnVisibility>({
     email: true,
     fullName: true,
@@ -175,8 +180,8 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const query = `
-        query GetUsersPaginated($search: String, $page: Int, $limit: Int, $roles: [ValidRoles!]) {
-          usersPaginated(search: $search, page: $page, limit: $limit, roles: $roles) {
+        query GetUsersPaginated($search: String, $page: Int, $limit: Int, $roles: [ValidRoles!], $isActive: Boolean) {
+          usersPaginated(search: $search, page: $page, limit: $limit, roles: $roles, isActive: $isActive) {
             users {
               id
               email
@@ -200,6 +205,7 @@ export default function UsersPage() {
         page: currentPage,
         limit: pageSize,
         roles: roleFilter ? [roleFilter] : undefined,
+        isActive: statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
       };
       
       const response = await fetchGraphQL(query, variables, token);
@@ -218,7 +224,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, search, currentPage, pageSize, roleFilter]);
+  }, [token, search, currentPage, pageSize, roleFilter, statusFilter]);
 
   useEffect(() => {
     fetchUsers();
@@ -287,27 +293,69 @@ export default function UsersPage() {
     if (!token || !editingUser) return;
     
     try {
-      const mutation = `
-        mutation UpdateUser($updateUserInput: UpdateUserInput!) {
-          updateUser(updateUserInput: $updateUserInput) {
-            id
-            email
-            fullName
-            roles
-            isActive
+      // 1. Actualizar campos básicos (email, fullName)
+      if (formData.email !== editingUser.email || formData.fullName !== editingUser.fullName) {
+        const updateUserMutation = `
+          mutation UpdateUser($updateUserInput: UpdateUserInput!) {
+            updateUser(updateUserInput: $updateUserInput) {
+              id
+              email
+              fullName
+              roles
+              isActive
+            }
           }
-        }
-      `;
-      
-      await fetchGraphQL(mutation, {
-        updateUserInput: {
+        `;
+        
+        await fetchGraphQL(updateUserMutation, {
+          updateUserInput: {
+            id: editingUser.id,
+            email: formData.email,
+            fullName: formData.fullName,
+          }
+        }, token);
+      }
+
+      // 2. Actualizar roles si han cambiado
+      if (JSON.stringify(formData.roles) !== JSON.stringify(editingUser.roles)) {
+        const updateRolesMutation = `
+          mutation UpdateUserRoles($updateUserRolesInput: UpdateUserRolesInput!) {
+            updateUserRoles(updateUserRolesInput: $updateUserRolesInput) {
+              id
+              email
+              fullName
+              roles
+              isActive
+            }
+          }
+        `;
+        
+        await fetchGraphQL(updateRolesMutation, {
+          updateUserRolesInput: {
+            id: editingUser.id,
+            roles: formData.roles,
+          }
+        }, token);
+      }
+
+      // 3. Actualizar estado activo si ha cambiado
+      if (formData.isActive !== editingUser.isActive) {
+        const blockUserMutation = `
+          mutation BlockUser($id: ID!) {
+            blockUser(id: $id) {
+              id
+              email
+              fullName
+              roles
+              isActive
+            }
+          }
+        `;
+        
+        await fetchGraphQL(blockUserMutation, {
           id: editingUser.id,
-          email: formData.email,
-          fullName: formData.fullName,
-          roles: formData.roles,
-          isActive: formData.isActive,
-        }
-      }, token);
+        }, token);
+      }
       
       toast.success('Usuario actualizado exitosamente');
       setIsDialogOpen(false);
@@ -349,7 +397,7 @@ export default function UsersPage() {
     setFormData({
       email: user.email,
       fullName: user.fullName,
-      roles: user.roles,
+      roles: user.roles.length > 0 ? user.roles : ['mortal'],
       isActive: user.isActive,
     });
     setIsDialogOpen(true);
@@ -357,6 +405,22 @@ export default function UsersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.email || !formData.fullName) {
+      toast.error('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    // Asegurar que siempre haya un rol seleccionado, por defecto 'mortal'
+    if (formData.roles.length === 0) {
+      setFormData(prev => ({ ...prev, roles: ['mortal'] }));
+    }
+
+    if (!editingUser && !formData.password) {
+      toast.error('La contraseña es requerida para nuevos usuarios');
+      return;
+    }
+    
     if (editingUser) {
       handleUpdateUser();
     } else {
@@ -436,36 +500,44 @@ export default function UsersPage() {
                         />
                       </div>
                     )}
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="roles" className="text-right">
+                    <div className="grid grid-cols-4 items-start gap-4">
+                      <Label className="text-right pt-2">
                         Rol
                       </Label>
-                      <Select
-                        value={formData.roles[0] || 'alumno'}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, roles: [value] }))}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Selecciona un rol" />
-                        </SelectTrigger>
-                        <SelectContent>
+                      <div className="col-span-3">
+                        <RadioGroup
+                          value={formData.roles[0] || 'mortal'}
+                          onValueChange={(value) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              roles: [value]
+                            }));
+                          }}
+                        >
                           {ROLES.map((role) => (
-                            <SelectItem key={role.value} value={role.value}>
-                              {role.label}
-                            </SelectItem>
+                            <div key={role.value} className="flex items-center space-x-2">
+                              <RadioGroupItem value={role.value} id={`role-${role.value}`} />
+                              <Label htmlFor={`role-${role.value}`} className="text-sm">
+                                {role.label}
+                              </Label>
+                            </div>
                           ))}
-                        </SelectContent>
-                      </Select>
+                        </RadioGroup>
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="isActive" className="text-right">
-                        Activo
+                        Estado
                       </Label>
-                      <div className="col-span-3">
-                        <Checkbox
+                      <div className="col-span-3 flex items-center space-x-2">
+                        <Switch
                           id="isActive"
                           checked={formData.isActive}
-                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !!checked }))}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
                         />
+                        <Label htmlFor="isActive" className="text-sm">
+                          {formData.isActive ? 'Activo' : 'Inactivo'}
+                        </Label>
                       </div>
                     </div>
                   </div>
@@ -480,29 +552,70 @@ export default function UsersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
+          <div className="flex items-center justify-between gap-4 mb-6 pt-6">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar usuarios..."
                   value={search}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-8 w-[300px]"
+                  className="pl-8"
                 />
               </div>
-              <Select value={roleFilter || 'all'} onValueChange={(value) => setRoleFilter(value === 'all' ? undefined : value)}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filtrar por rol" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <div className="p-2">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Rol</div>
+                      <Select value={roleFilter || 'all'} onValueChange={(value) => setRoleFilter(value === 'all' ? undefined : value)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Rol" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los roles</SelectItem>
+                          {ROLES.map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              {role.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="text-sm font-medium">Estado</div>
+                      <Select value={statusFilter || 'all'} onValueChange={(value) => setStatusFilter(value === 'all' ? undefined : value)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los estados</SelectItem>
+                          <SelectItem value="active">Activos</SelectItem>
+                          <SelectItem value="inactive">Inactivos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Select value={pageSize.toString()} onValueChange={(value) => {
+                setPageSize(parseInt(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los roles</SelectItem>
-                  {ROLES.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
                 </SelectContent>
               </Select>
             </div>

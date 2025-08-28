@@ -133,6 +133,7 @@ export class UsersService {
       page = 1,
       limit = 10,
       assignedLanguageId,
+      isActive,
     } = filters;
 
     let query = this.usersRepository
@@ -144,7 +145,7 @@ export class UsersService {
     // Filtrar por roles si se especifican
     if (roles.length > 0) {
       query = query
-        .andWhere('ARRAY[user.roles] && ARRAY[:...roles]')
+        .andWhere('user.roles && ARRAY[:...roles]')
         .setParameter('roles', roles);
     }
 
@@ -153,6 +154,11 @@ export class UsersService {
       query = query.andWhere('user.assignedLanguageId = :assignedLanguageId', {
         assignedLanguageId,
       });
+    }
+
+    // Filtrar por estado activo si se especifica
+    if (typeof isActive === 'boolean') {
+      query = query.andWhere('user.isActive = :isActive', { isActive });
     }
 
     // Si el usuario que hace la petición es admin con idioma asignado, filtrar profesores

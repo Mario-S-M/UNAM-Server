@@ -95,7 +95,7 @@ export function ContentTableRow({ content, columnVisibility, formatDate, onEdit,
         <TableCell className="w-[120px] text-center">
           <div className="flex justify-center space-x-1">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => onEdit(content)}
             >
@@ -103,7 +103,7 @@ export function ContentTableRow({ content, columnVisibility, formatDate, onEdit,
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="destructive" size="sm">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>

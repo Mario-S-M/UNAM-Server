@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,85 +47,14 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, GraduationCap, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  CreateLevelFormSchema, 
-  UpdateLevelFormSchema, 
-  validateLevelForm,
-  type CreateLevelFormData,
-  type UpdateLevelFormData 
-} from '@/schemas/level-forms';
-import { 
-  LEVEL_LIST_FRAGMENT, 
-  LEVEL_MUTATION_RESPONSE_FRAGMENT,
-  LEVEL_DELETE_RESPONSE_FRAGMENT,
-  LANGUAGE_SELECT_FRAGMENT 
-} from '@/lib/graphql/fragments';
-
-// GraphQL Queries and Mutations
-const GET_LEVELS_PAGINATED = `
-  ${LEVEL_LIST_FRAGMENT}
-  
-  query GetLevelsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean, $lenguageId: ID, $difficulty: String) {
-    levelsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive, lenguageId: $lenguageId, difficulty: $difficulty) {
-      levels {
-        ...LevelListFields
-      }
-      total
-      page
-      limit
-      totalPages
-      hasNextPage
-      hasPreviousPage
-    }
-  }
-`;
-
-const GET_LANGUAGES = `
-  ${LANGUAGE_SELECT_FRAGMENT}
-  
-  query GetLanguages {
-    lenguagesActivate {
-      ...LanguageSelectFields
-    }
-  }
-`;
-
-const CREATE_LEVEL = `
-  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
-  
-  mutation CreateLevel($createLevelInput: CreateLevelInput!) {
-    createLevel(createLevelInput: $createLevelInput) {
-      ...LevelMutationResponseFields
-    }
-  }
-`;
-
-const UPDATE_LEVEL = `
-  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
-  
-  mutation UpdateLevel($updateLevelInput: UpdateLevelInput!) {
-    updateLevel(updateLevelInput: $updateLevelInput) {
-      ...LevelMutationResponseFields
-    }
-  }
-`;
-
-const DELETE_LEVEL = `
-  ${LEVEL_DELETE_RESPONSE_FRAGMENT}
-  
-  mutation DeleteLevel($id: ID!) {
-    removeLevel(id: $id) {
-      ...LevelDeleteResponseFields
-    }
-  }
-`;
+import { toast } from 'sonner';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-type GraphQLInputValue = string | number | boolean | null | undefined | string[] | CreateLevelFormData | {
+type GraphQLInputValue = string | number | boolean | null | undefined | string[] | {
   [key: string]: string | number | boolean | null | undefined | string[];
 };
 
@@ -133,16 +62,13 @@ interface GraphQLVariables {
   [key: string]: GraphQLInputValue;
 }
 
-import { toast } from 'sonner';
-
-// GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
   try {
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
       body: JSON.stringify({
         query,
@@ -150,13 +76,19 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
       }),
     });
 
-    const result = await response.json();
-    if (result.errors) {
-      throw new Error(result.errors[0].message);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return result.data;
+
+    const result = await response.json();
+    
+    if (result.errors) {
+      throw new Error(result.errors[0]?.message || 'GraphQL error');
+    }
+
+    return result;
   } catch (error) {
-    console.error('GraphQL Error:', error);
+    console.error('GraphQL fetch error:', error);
     throw error;
   }
 };
@@ -188,8 +120,13 @@ interface PaginatedLevels {
   hasPreviousPage: boolean;
 }
 
-// Using Zod-derived types from level-forms.ts
-type LevelFormData = CreateLevelFormData;
+type LevelFormData = {
+  name: string;
+  description: string;
+  difficulty: string;
+  lenguageId: string;
+  isActive: boolean;
+};
 
 interface ColumnVisibility {
   name: boolean;
@@ -211,7 +148,7 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 export default function NivelesPage() {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [levels, setLevels] = useState<PaginatedLevels>({
     levels: [],
     total: 0,
@@ -236,11 +173,11 @@ export default function NivelesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
-  const [languageFilter, setLanguageFilter] = useState<string>('');
-  const [difficultyFilter, setDifficultyFilter] = useState<string>('');
+  const [difficultyFilter, setDifficultyFilter] = useState<string | undefined>(undefined);
+  const [languageFilter, setLanguageFilter] = useState<string | undefined>(undefined);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
-    description: false,
+    description: true,
     difficulty: true,
     language: true,
     isActive: true,
@@ -249,147 +186,93 @@ export default function NivelesPage() {
     actions: true,
   });
 
-  const fetchLanguages = async () => {
+  const fetchLanguages = useCallback(async () => {
+    if (!token) return;
+    
     try {
-      const data = await fetchGraphQL(GET_LANGUAGES, {}, token || undefined);
-      setLanguages(data.lenguagesActivate || []);
+      const query = `
+        query GetLanguages {
+          lenguagesActivate {
+            id
+            name
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, {}, token);
+      setLanguages(response.data?.lenguagesActivate || []);
     } catch (error) {
       console.error('Error fetching languages:', error);
-      toast.error('Error al cargar los idiomas');
+      toast.error('Error al cargar idiomas');
     }
-  };
+  }, [token]);
 
-  const fetchLevels = async () => {
+  const fetchLevels = useCallback(async () => {
+    if (!token) return;
+    
+    setLoading(true);
     try {
-      setLoading(true);
-      const data = await fetchGraphQL(
-        GET_LEVELS_PAGINATED,
-        {
-          search: search || undefined,
-          page: currentPage,
-          limit: pageSize,
-          isActive: activeFilter,
-          lenguageId: languageFilter || undefined,
-          difficulty: difficultyFilter || undefined,
-        },
-        token || undefined
-      );
-      setLevels(data.levelsPaginated);
+      const query = `
+        query GetLevelsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean, $lenguageId: ID, $difficulty: String) {
+          levelsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive, lenguageId: $lenguageId, difficulty: $difficulty) {
+            levels {
+              id
+              name
+              description
+              difficulty
+              isActive
+              lenguageId
+              lenguage {
+                id
+                name
+              }
+              createdAt
+              updatedAt
+            }
+            total
+            page
+            limit
+            totalPages
+            hasNextPage
+            hasPreviousPage
+          }
+        }
+      `;
+      
+      const variables = {
+        search: search || undefined,
+        page: currentPage,
+        limit: pageSize,
+        isActive: activeFilter,
+        lenguageId: languageFilter || undefined,
+        difficulty: difficultyFilter || undefined,
+      };
+      
+      const response = await fetchGraphQL(query, variables, token);
+      setLevels(response.data?.levelsPaginated || {
+        levels: [],
+        total: 0,
+        page: 1,
+        limit: 5,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
     } catch (error) {
       console.error('Error fetching levels:', error);
-      toast.error('Error al cargar los niveles');
+      toast.error('Error al cargar niveles');
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, search, currentPage, pageSize, activeFilter, languageFilter, difficultyFilter]);
 
   useEffect(() => {
     fetchLanguages();
-  }, []);
+  }, [fetchLanguages]);
 
   useEffect(() => {
     fetchLevels();
-  }, [currentPage, pageSize, search, activeFilter, languageFilter, difficultyFilter]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      if (editingLevel) {
-        // Para actualización, solo enviar campos que han cambiado y no están vacíos
-        const updateData: any = {
-          id: editingLevel.id
-        };
-        
-        if (formData.name.trim() !== editingLevel.name) {
-          updateData.name = formData.name.trim();
-        }
-        if (formData.description.trim() !== editingLevel.description) {
-          updateData.description = formData.description.trim();
-        }
-        if (formData.difficulty !== editingLevel.difficulty) {
-          updateData.difficulty = formData.difficulty;
-        }
-        if (formData.lenguageId !== editingLevel.lenguageId) {
-          updateData.lenguageId = formData.lenguageId;
-        }
-        if (formData.isActive !== editingLevel.isActive) {
-          updateData.isActive = formData.isActive;
-        }
-        
-        await fetchGraphQL(
-          UPDATE_LEVEL,
-          {
-            updateLevelInput: updateData,
-          },
-          token || undefined
-        );
-        toast.success('Nivel actualizado exitosamente');
-      } else {
-        // Para creación, validar todos los campos
-        const validationResult = validateLevelForm(formData, false);
-        
-        if (!validationResult.success) {
-          const errors = validationResult.error.issues.map((err) => err.message).join(', ');
-          toast.error(`Errores de validación: ${errors}`);
-          return;
-        }
-        
-        await fetchGraphQL(
-          CREATE_LEVEL,
-          {
-            createLevelInput: validationResult.data,
-          },
-          token || undefined
-        );
-        toast.success('Nivel creado exitosamente');
-      }
-      setIsDialogOpen(false);
-      resetForm();
-      fetchLevels();
-    } catch (error) {
-      console.error('Error saving level:', error);
-      toast.error('Error al guardar el nivel');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await fetchGraphQL(DELETE_LEVEL, { id }, token || undefined);
-      toast.success('Nivel eliminado exitosamente');
-      fetchLevels();
-    } catch (error) {
-      console.error('Error deleting level:', error);
-      toast.error('Error al eliminar el nivel');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      difficulty: 'Básico',
-      lenguageId: '',
-      isActive: true,
-    });
-    setEditingLevel(null);
-  };
-
-  const handleEdit = (level: Level) => {
-    setEditingLevel(level);
-    setFormData({
-      name: level.name,
-      description: level.description,
-      difficulty: level.difficulty as 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado',
-      lenguageId: level.lenguageId,
-      isActive: level.isActive,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  }, [fetchLevels]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -403,66 +286,125 @@ export default function NivelesPage() {
     }));
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) {
-      return 'No disponible';
-    }
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      difficulty: 'Básico',
+      lenguageId: '',
+      isActive: true,
+    });
+    setEditingLevel(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
     try {
-      // Convertir timestamp a número
-      const timestamp = Number(dateString);
-      
-      if (isNaN(timestamp)) {
-        return 'Fecha inválida';
+      if (editingLevel) {
+        const mutation = `
+          mutation UpdateLevel($updateLevelInput: UpdateLevelInput!) {
+            updateLevel(updateLevelInput: $updateLevelInput) {
+              success
+              message
+            }
+          }
+        `;
+        
+        await fetchGraphQL(mutation, {
+          updateLevelInput: {
+            id: editingLevel.id,
+            ...formData
+          }
+        }, token);
+        
+        toast.success('Nivel actualizado exitosamente');
+      } else {
+        const mutation = `
+          mutation CreateLevel($createLevelInput: CreateLevelInput!) {
+            createLevel(createLevelInput: $createLevelInput) {
+              success
+              message
+            }
+          }
+        `;
+        
+        await fetchGraphQL(mutation, {
+          createLevelInput: formData
+        }, token);
+        
+        toast.success('Nivel creado exitosamente');
       }
       
-      // Crear fecha UTC desde el timestamp
-      const utcDate = new Date(timestamp);
+      setIsDialogOpen(false);
+      resetForm();
+      fetchLevels();
+    } catch (error) {
+      console.error('Error saving level:', error);
+      toast.error(editingLevel ? 'Error al actualizar nivel' : 'Error al crear nivel');
+    }
+  };
+
+  const handleEdit = (level: Level) => {
+    setEditingLevel(level);
+    setFormData({
+      name: level.name,
+      description: level.description,
+      difficulty: level.difficulty,
+      lenguageId: level.lenguageId,
+      isActive: level.isActive,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (level: Level) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
+    try {
+      const mutation = `
+        mutation DeleteLevel($id: ID!) {
+          removeLevel(id: $id) {
+            success
+            message
+          }
+        }
+      `;
       
-      if (isNaN(utcDate.getTime())) {
-        return 'Fecha inválida';
-      }
-      
-      // Convertir manualmente a hora de México (UTC-6)
-      const mexicoOffset = -6 * 60; // -6 horas en minutos
-      const localTime = new Date(utcDate.getTime() + (mexicoOffset * 60 * 1000));
-      
-      // Formatear la fecha
-      const formatter = new Intl.DateTimeFormat('es-MX', {
+      await fetchGraphQL(mutation, { id: level.id }, token);
+      toast.success('Nivel eliminado exitosamente');
+      fetchLevels();
+    } catch (error) {
+      console.error('Error deleting level:', error);
+      toast.error('Error al eliminar nivel');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
+        minute: '2-digit'
       });
-      
-      return formatter.format(localTime);
-    } catch {
+    } catch (error) {
       return 'Error en fecha';
     }
   };
 
-  const getDifficultyLabel = (difficulty: string) => {
-    const option = DIFFICULTY_OPTIONS.find(opt => opt.value === difficulty);
-    return option ? option.label : difficulty;
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Básico': return 'bg-green-100 text-green-800';
-      case 'Básico-Intermedio': return 'bg-blue-100 text-blue-800';
-      case 'Intermedio': return 'bg-yellow-100 text-yellow-800';
-      case 'Intermedio-Avanzado': return 'bg-orange-100 text-orange-800';
-      case 'Avanzado': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="container mx-auto p-6">
-      <Card>
-        <CardHeader>
+    <div className="px-6 py-6">
+      <Card className="max-w-none">
+        <CardHeader className="px-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
@@ -470,7 +412,7 @@ export default function NivelesPage() {
                 Gestión de Niveles
               </CardTitle>
               <CardDescription>
-                Administra los niveles de dificultad para cada idioma
+                Administra los niveles disponibles en la plataforma
               </CardDescription>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -480,7 +422,7 @@ export default function NivelesPage() {
                   Nuevo Nivel
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
+              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
                     {editingLevel ? 'Editar Nivel' : 'Crear Nuevo Nivel'}
@@ -492,102 +434,99 @@ export default function NivelesPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        Nombre
-                      </Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        className="col-span-3"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-start gap-4">
-                      <Label htmlFor="description" className="text-right pt-2">
-                        Descripción
-                      </Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        className="col-span-3"
-                        rows={3}
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="difficulty" className="text-right">
-                        Dificultad
-                      </Label>
-                      <Select
-                        value={formData.difficulty}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value as 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado' }))}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Selecciona la dificultad" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DIFFICULTY_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="language" className="text-right">
-                        Idioma
-                      </Label>
-                      <Select
-                        value={formData.lenguageId}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, lenguageId: value }))}
-                      >
-                        <SelectTrigger className="col-span-3">
-                          <SelectValue placeholder="Selecciona el idioma" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {languages.map((language) => (
-                            <SelectItem key={language.id} value={language.id}>
-                              {language.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {editingLevel && (
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="isActive" className="text-right">
-                          Estado
-                        </Label>
-                        <Select
-                          value={formData.isActive.toString()}
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, isActive: value === 'true' }))}
-                        >
-                          <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Selecciona el estado" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="true">Activo</SelectItem>
-                            <SelectItem value="false">Inactivo</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    {!editingLevel && (
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label className="text-right">
-                          Estado
-                        </Label>
-                        <div className="col-span-3 flex items-center">
-                          <Badge className="bg-green-100 text-green-800">Activo (automático)</Badge>
+                  <div className="grid gap-6 py-4">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Información Básica</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Nombre del Nivel *</Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Ej: Nivel Básico"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Descripción</Label>
+                          <textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="Descripción del nivel..."
+                            className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                          />
                         </div>
                       </div>
-                    )}
+                    </div>
 
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Configuración Académica</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="difficulty">Dificultad *</Label>
+                          <Select value={formData.difficulty} onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona la dificultad" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DIFFICULTY_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lenguageId">Idioma *</Label>
+                          <Select value={formData.lenguageId} onValueChange={(value) => setFormData(prev => ({ ...prev, lenguageId: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona el idioma" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {languages.map((language) => (
+                                <SelectItem key={language.id} value={language.id}>
+                                  {language.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Estado y Configuración</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label>Estado</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="active"
+                                checked={formData.isActive}
+                                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !!checked }))}
+                              />
+                              <Label htmlFor="active" className="text-sm font-normal">
+                                Activo
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="inactive"
+                                checked={!formData.isActive}
+                                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !checked }))}
+                              />
+                              <Label htmlFor="inactive" className="text-sm font-normal">
+                                Inactivo
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button
@@ -628,61 +567,59 @@ export default function NivelesPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
                   <div className="p-2">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium">Estado</div>
-                        <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
-                          setActiveFilter(value === 'all' ? undefined : value === 'true');
-                          setCurrentPage(1);
-                        }}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Estado" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="true">Activos</SelectItem>
-                            <SelectItem value="false">Inactivos</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium">Idioma</div>
-                        <Select value={languageFilter} onValueChange={(value) => {
-                          setLanguageFilter(value === 'all' ? '' : value);
-                          setCurrentPage(1);
-                        }}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Idioma" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todos los idiomas</SelectItem>
-                            {languages.map((language) => (
-                              <SelectItem key={language.id} value={language.id}>
-                                {language.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="text-sm font-medium">Dificultad</div>
-                        <Select value={difficultyFilter} onValueChange={(value) => {
-                          setDifficultyFilter(value === 'all' ? '' : value);
-                          setCurrentPage(1);
-                        }}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Dificultad" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Todas</SelectItem>
-                            {DIFFICULTY_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Estado</div>
+                      <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
+                        setActiveFilter(value === 'all' ? undefined : value === 'true');
+                        setCurrentPage(1);
+                      }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="true">Activos</SelectItem>
+                          <SelectItem value="false">Inactivos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="text-sm font-medium">Dificultad</div>
+                      <Select value={difficultyFilter || 'all'} onValueChange={(value) => {
+                        setDifficultyFilter(value === 'all' ? undefined : value);
+                        setCurrentPage(1);
+                      }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Dificultad" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          {DIFFICULTY_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="text-sm font-medium">Idioma</div>
+                      <Select value={languageFilter || 'all'} onValueChange={(value) => {
+                        setLanguageFilter(value === 'all' ? undefined : value);
+                        setCurrentPage(1);
+                      }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Idioma" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {languages.map((language) => (
+                            <SelectItem key={language.id} value={language.id}>
+                              {language.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </DropdownMenuContent>
@@ -763,8 +700,8 @@ export default function NivelesPage() {
           </div>
 
           {/* Table */}
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border w-full">
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
                   {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
@@ -780,13 +717,13 @@ export default function NivelesPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length} className="text-center py-8">
                       Cargando niveles...
                     </TableCell>
                   </TableRow>
                 ) : levels.levels.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length} className="text-center py-8">
                       No se encontraron niveles
                     </TableCell>
                   </TableRow>
@@ -794,20 +731,28 @@ export default function NivelesPage() {
                   levels.levels.map((level) => (
                     <TableRow key={level.id}>
                       {columnVisibility.name && (
-                        <TableCell className="font-medium text-center">{level.name}</TableCell>
+                        <TableCell className="text-center font-medium">
+                          {level.name}
+                        </TableCell>
                       )}
                       {columnVisibility.description && (
-                        <TableCell className="max-w-xs truncate text-center">{level.description}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="max-w-xs truncate">
+                            {level.description || 'Sin descripción'}
+                          </div>
+                        </TableCell>
                       )}
                       {columnVisibility.difficulty && (
                         <TableCell className="text-center">
-                          <Badge className={getDifficultyColor(level.difficulty)}>
-                            {getDifficultyLabel(level.difficulty)}
+                          <Badge variant="outline">
+                            {level.difficulty}
                           </Badge>
                         </TableCell>
                       )}
                       {columnVisibility.language && (
-                        <TableCell className="text-center">{level.lenguage?.name || 'Sin idioma'}</TableCell>
+                        <TableCell className="text-center">
+                          {level.lenguage?.name || 'Sin idioma'}
+                        </TableCell>
                       )}
                       {columnVisibility.isActive && (
                         <TableCell className="text-center">
@@ -817,16 +762,20 @@ export default function NivelesPage() {
                         </TableCell>
                       )}
                       {columnVisibility.createdAt && (
-                        <TableCell className="text-center">{formatDate(level.createdAt)}</TableCell>
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {formatDate(level.createdAt)}
+                        </TableCell>
                       )}
                       {columnVisibility.updatedAt && (
-                        <TableCell className="text-center">{formatDate(level.updatedAt)}</TableCell>
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {formatDate(level.updatedAt)}
+                        </TableCell>
                       )}
                       {columnVisibility.actions && (
                         <TableCell className="text-center">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex items-center justify-center gap-2">
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
                               onClick={() => handleEdit(level)}
                             >
@@ -834,7 +783,7 @@ export default function NivelesPage() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <Button variant="destructive" size="sm">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -843,12 +792,12 @@ export default function NivelesPage() {
                                   <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Esta acción no se puede deshacer. Esto eliminará permanentemente el nivel
-                                    &quot;{level.name}&quot; de la base de datos.
+                                    "{level.name}" de nuestros servidores.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(level.id)}>
+                                  <AlertDialogAction onClick={() => handleDelete(level)}>
                                     Eliminar
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -874,7 +823,7 @@ export default function NivelesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(levels.page - 1)}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={!levels.hasPreviousPage}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -894,7 +843,7 @@ export default function NivelesPage() {
                         <Button
                           variant={page === levels.page ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => handlePageChange(page)}
+                          onClick={() => setCurrentPage(page)}
                         >
                           {page}
                         </Button>
@@ -905,7 +854,7 @@ export default function NivelesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(levels.page + 1)}
+                onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={!levels.hasNextPage}
               >
                 Siguiente

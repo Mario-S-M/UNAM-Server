@@ -1,8 +1,43 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -10,96 +45,178 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Edit, Trash2, Target, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-// Import from the new modular structure
-import {
-  SkillDialog,
-  SkillTable,
-  useSkillMutations,
-  type Skill,
-  type ColumnVisibility
-} from '@/skills';
-import { useSkillData } from './hooks/useSkillData';
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-export default function SkillsAdminPage() {
+type GraphQLInputValue = string | number | boolean | null | undefined | string[] | {
+  [key: string]: string | number | boolean | null | undefined | string[];
+};
+
+interface GraphQLVariables {
+  [key: string]: GraphQLInputValue;
+}
+
+const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
+  try {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.errors) {
+      throw new Error(result.errors[0]?.message || 'GraphQL error');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('GraphQL fetch error:', error);
+    throw error;
+  }
+};
+
+interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PaginatedSkills {
+  skills: Skill[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+type SkillFormData = {
+  name: string;
+  description: string;
+  isActive: boolean;
+};
+
+interface ColumnVisibility {
+  name: boolean;
+  description: boolean;
+  isActive: boolean;
+  createdAt: boolean;
+  updatedAt: boolean;
+  actions: boolean;
+}
+
+export default function SkillsPage() {
   const { token } = useAuth();
-  
-  // State management
+  const [skills, setSkills] = useState<PaginatedSkills>({
+    skills: [],
+    total: 0,
+    page: 1,
+    limit: 5,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [formData, setFormData] = useState<SkillFormData>({
+    name: '',
+    description: '',
+    isActive: true,
+  });
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
-  const [selectedLanguageId, setSelectedLanguageId] = useState<string | undefined>(undefined);
-  const [selectedLevelId, setSelectedLevelId] = useState<string | undefined>(undefined);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
-    description: false,
-    difficulty: true,
-    level: true,
-    color: true,
-    imageUrl: false,
-    icon: false,
-    objectives: false,
-    prerequisites: false,
-    estimatedHours: false,
+    description: true,
     isActive: true,
     createdAt: false,
     updatedAt: false,
     actions: true,
   });
 
-  // Custom hooks
-  const {
-    skills,
-    languages,
-    levels,
-    loading,
-    fetchSkills,
-    fetchLanguages,
-    fetchLevelsByLanguage
-  } = useSkillData(token || undefined);
-
-  const refreshSkills = () => {
-    fetchSkills(search, currentPage, pageSize, activeFilter, selectedLevelId, selectedLanguageId);
-  };
-
-  const {
-    handleCreate,
-    handleUpdate,
-    handleDelete
-  } = useSkillMutations(refreshSkills);
-
-  // Effects
-  useEffect(() => {
-    if (token) {
-      refreshSkills();
+  const fetchSkills = useCallback(async () => {
+    if (!token) return;
+    
+    setLoading(true);
+    try {
+      const query = `
+        query GetSkillsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean) {
+          skillsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive) {
+            skills {
+              id
+              name
+              description
+              isActive
+              createdAt
+              updatedAt
+            }
+            total
+            page
+            limit
+            totalPages
+            hasNextPage
+            hasPreviousPage
+          }
+        }
+      `;
+      
+      const variables = {
+        search: search || undefined,
+        page: currentPage,
+        limit: pageSize,
+        isActive: activeFilter,
+      };
+      
+      const response = await fetchGraphQL(query, variables, token);
+      setSkills(response.data?.skillsPaginated || {
+        skills: [],
+        total: 0,
+        page: 1,
+        limit: 5,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
+    } catch (error) {
+      console.error('Error fetching skills:', error);
+      toast.error('Error al cargar habilidades');
+    } finally {
+      setLoading(false);
     }
-  }, [search, currentPage, pageSize, activeFilter, selectedLevelId, selectedLanguageId, token]);
+  }, [token, search, currentPage, pageSize, activeFilter]);
 
   useEffect(() => {
-    fetchLanguages();
-  }, [fetchLanguages]);
+    fetchSkills();
+  }, [fetchSkills]);
 
-  useEffect(() => {
-    if (selectedLanguageId) {
-      fetchLevelsByLanguage(selectedLanguageId);
-    }
-  }, [selectedLanguageId, fetchLevelsByLanguage]);
-
-  // Event handlers
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
   };
 
   const toggleColumnVisibility = (column: keyof ColumnVisibility) => {
@@ -109,77 +226,236 @@ export default function SkillsAdminPage() {
     }));
   };
 
-  const handleEdit = (skill: Skill) => {
-    setEditingSkill(skill);
-    setIsDialogOpen(true);
-  };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      isActive: true,
+    });
     setEditingSkill(null);
   };
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
     try {
       if (editingSkill) {
-        await handleUpdate(editingSkill.id, formData);
+        const mutation = `
+          mutation UpdateSkill($updateSkillInput: UpdateSkillInput!) {
+            updateSkill(updateSkillInput: $updateSkillInput) {
+              success
+              message
+            }
+          }
+        `;
+        
+        await fetchGraphQL(mutation, {
+          updateSkillInput: {
+            id: editingSkill.id,
+            ...formData
+          }
+        }, token);
+        
+        toast.success('Habilidad actualizada exitosamente');
       } else {
-        await handleCreate(formData);
+        const mutation = `
+          mutation CreateSkill($createSkillInput: CreateSkillInput!) {
+            createSkill(createSkillInput: $createSkillInput) {
+              success
+              message
+            }
+          }
+        `;
+        
+        await fetchGraphQL(mutation, {
+          createSkillInput: formData
+        }, token);
+        
+        toast.success('Habilidad creada exitosamente');
       }
-      handleCloseDialog();
+      
+      setIsDialogOpen(false);
+      resetForm();
+      fetchSkills();
     } catch (error) {
-      console.error('Error submitting skill:', error);
+      console.error('Error saving skill:', error);
+      toast.error(editingSkill ? 'Error al actualizar habilidad' : 'Error al crear habilidad');
     }
   };
 
-  const handleDeleteSkill = async (skillId: string) => {
+  const handleEdit = (skill: Skill) => {
+    setEditingSkill(skill);
+    setFormData({
+      name: skill.name,
+      description: skill.description,
+      isActive: skill.isActive,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (skill: Skill) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
     try {
-      await handleDelete(skillId);
+      const mutation = `
+        mutation DeleteSkill($id: ID!) {
+          removeSkill(id: $id) {
+            success
+            message
+          }
+        }
+      `;
+      
+      await fetchGraphQL(mutation, { id: skill.id }, token);
+      toast.success('Habilidad eliminada exitosamente');
+      fetchSkills();
     } catch (error) {
       console.error('Error deleting skill:', error);
+      toast.error('Error al eliminar habilidad');
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Error en fecha';
     }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader>
+    <div className="px-6 py-6">
+      <Card className="max-w-none">
+        <CardHeader className="px-6">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                Administración de Skills
+                <Target className="h-6 w-6" />
+                Gestión de Habilidades
               </CardTitle>
+              <CardDescription>
+                Administra las habilidades disponibles en la plataforma
+              </CardDescription>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Skill
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={resetForm}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nueva Habilidad
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingSkill ? 'Editar Habilidad' : 'Crear Nueva Habilidad'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingSkill
+                      ? 'Modifica los datos de la habilidad seleccionada.'
+                      : 'Completa los datos para crear una nueva habilidad.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                  <div className="grid gap-6 py-4">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Información Básica</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Nombre de la Habilidad *</Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Ej: Comprensión Lectora"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Descripción</Label>
+                          <textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="Descripción de la habilidad..."
+                            className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Estado y Configuración</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label>Estado</Label>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="active"
+                                checked={formData.isActive}
+                                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !!checked }))}
+                              />
+                              <Label htmlFor="active" className="text-sm font-normal">
+                                Activo
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="inactive"
+                                checked={!formData.isActive}
+                                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !checked }))}
+                              />
+                              <Label htmlFor="inactive" className="text-sm font-normal">
+                                Inactivo
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit">
+                      {editingSkill ? 'Actualizar' : 'Crear'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-          <SkillDialog
-            isOpen={isDialogOpen}
-            onClose={handleCloseDialog}
-            onSubmit={handleSubmit}
-            editingSkill={editingSkill}
-            languages={languages}
-            levels={levels}
-            onLanguageChange={(langId) => {
-              if (langId) {
-                fetchLevelsByLanguage(langId);
-              }
-            }}
-          />
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
+        <CardContent className="px-6 pb-6">
+          {/* Search and Filters */}
+          <div className="flex items-center justify-between gap-4 mb-6 pt-6">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar skills..."
+                  placeholder="Buscar habilidades..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 w-[300px]"
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-8"
                 />
               </div>
               <DropdownMenu>
@@ -189,60 +465,13 @@ export default function SkillsAdminPage() {
                     Filtros
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="start">
                   <div className="p-2">
-                    <div className="mb-3">
-                      <label className="text-sm font-medium mb-1 block">Idioma</label>
-                      <Select value={selectedLanguageId || "all"} onValueChange={(value) => {
-                        const languageId = value === "all" ? undefined : value;
-                        setSelectedLanguageId(languageId);
-                        if (languageId) {
-                          fetchLevelsByLanguage(languageId);
-                        } else {
-                          setSelectedLevelId(undefined);
-                        }
-                      }}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Idioma" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos los idiomas</SelectItem>
-                          {languages.map((language) => (
-                            <SelectItem key={language.id} value={language.id}>
-                              {language.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="mb-3">
-                      <label className="text-sm font-medium mb-1 block">Nivel</label>
-                      <Select 
-                        value={selectedLevelId || "all"} 
-                        onValueChange={(value) => setSelectedLevelId(value === "all" ? undefined : value)}
-                        disabled={!selectedLanguageId}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Nivel" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos los niveles</SelectItem>
-                          {levels.map((level) => (
-                            <SelectItem key={level.id} value={level.id}>
-                              {level.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Estado</label>
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Estado</div>
                       <Select value={activeFilter?.toString() || 'all'} onValueChange={(value) => {
-                        if (value === 'all') {
-                          setActiveFilter(undefined);
-                        } else {
-                          setActiveFilter(value === 'true');
-                        }
+                        setActiveFilter(value === 'all' ? undefined : value === 'true');
+                        setCurrentPage(1);
                       }}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Estado" />
@@ -257,8 +486,11 @@ export default function SkillsAdminPage() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
-                <SelectTrigger className="w-[70px]">
+              <Select value={pageSize.toString()} onValueChange={(value) => {
+                setPageSize(parseInt(value));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-[100px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -290,54 +522,6 @@ export default function SkillsAdminPage() {
                   Descripción
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.difficulty}
-                  onCheckedChange={() => toggleColumnVisibility('difficulty')}
-                >
-                  Dificultad
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.level}
-                  onCheckedChange={() => toggleColumnVisibility('level')}
-                >
-                  Nivel
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.color}
-                  onCheckedChange={() => toggleColumnVisibility('color')}
-                >
-                  Color
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.imageUrl}
-                  onCheckedChange={() => toggleColumnVisibility('imageUrl')}
-                >
-                  URL de Imagen
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.icon}
-                  onCheckedChange={() => toggleColumnVisibility('icon')}
-                >
-                  Icono
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.objectives}
-                  onCheckedChange={() => toggleColumnVisibility('objectives')}
-                >
-                  Objetivos
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.prerequisites}
-                  onCheckedChange={() => toggleColumnVisibility('prerequisites')}
-                >
-                  Prerequisitos
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.estimatedHours}
-                  onCheckedChange={() => toggleColumnVisibility('estimatedHours')}
-                >
-                  Horas Estimadas
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
                   checked={columnVisibility.isActive}
                   onCheckedChange={() => toggleColumnVisibility('isActive')}
                 >
@@ -365,25 +549,117 @@ export default function SkillsAdminPage() {
             </DropdownMenu>
           </div>
 
-          <SkillTable
-            skills={skills.data}
-            loading={loading}
-            columnVisibility={columnVisibility}
-            onEdit={handleEdit}
-            onDelete={handleDeleteSkill}
-          />
+          {/* Table */}
+          <div className="rounded-md border w-full">
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow>
+                  {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
+                  {columnVisibility.description && <TableHead className="text-center">Descripción</TableHead>}
+                  {columnVisibility.isActive && <TableHead className="text-center">Estado</TableHead>}
+                  {columnVisibility.createdAt && <TableHead className="text-center">Fecha de Creación</TableHead>}
+                  {columnVisibility.updatedAt && <TableHead className="text-center">Última Actualización</TableHead>}
+                  {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length} className="text-center py-8">
+                      Cargando habilidades...
+                    </TableCell>
+                  </TableRow>
+                ) : skills.skills.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={Object.values(columnVisibility).filter(Boolean).length} className="text-center py-8">
+                      No se encontraron habilidades
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  skills.skills.map((skill) => (
+                    <TableRow key={skill.id}>
+                      {columnVisibility.name && (
+                        <TableCell className="text-center font-medium">
+                          {skill.name}
+                        </TableCell>
+                      )}
+                      {columnVisibility.description && (
+                        <TableCell className="text-center">
+                          <div className="max-w-xs truncate">
+                            {skill.description || 'Sin descripción'}
+                          </div>
+                        </TableCell>
+                      )}
+                      {columnVisibility.isActive && (
+                        <TableCell className="text-center">
+                          <Badge variant={skill.isActive ? 'default' : 'secondary'}>
+                            {skill.isActive ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {columnVisibility.createdAt && (
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {formatDate(skill.createdAt)}
+                        </TableCell>
+                      )}
+                      {columnVisibility.updatedAt && (
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {formatDate(skill.updatedAt)}
+                        </TableCell>
+                      )}
+                      {columnVisibility.actions && (
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleEdit(skill)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Esto eliminará permanentemente la habilidad
+                                    "{skill.name}" de nuestros servidores.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(skill)}>
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           {/* Pagination */}
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
               Mostrando {((skills.page - 1) * skills.limit) + 1} a{' '}
-              {Math.min(skills.page * skills.limit, skills.total)} de {skills.total} skills
+              {Math.min(skills.page * skills.limit, skills.total)} de {skills.total} habilidades
             </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(skills.page - 1)}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={!skills.hasPreviousPage}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -403,7 +679,7 @@ export default function SkillsAdminPage() {
                         <Button
                           variant={page === skills.page ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => handlePageChange(page)}
+                          onClick={() => setCurrentPage(page)}
                         >
                           {page}
                         </Button>
@@ -414,7 +690,7 @@ export default function SkillsAdminPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(skills.page + 1)}
+                onClick={() => setCurrentPage(prev => prev + 1)}
                 disabled={!skills.hasNextPage}
               >
                 Siguiente

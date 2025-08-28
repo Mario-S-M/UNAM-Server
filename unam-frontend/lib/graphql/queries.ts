@@ -323,10 +323,18 @@ export const GET_TEACHERS = gql`
 
 // Public Content Query
 export const GET_CONTENT_BY_ID_PUBLIC = gql`
+  query GetContentByIdPublic($id: ID!) {
+    contentPublic(id: $id) {
       id
-      fullName
-      email
-      roles
+      name
+      description
+      isCompleted
+      validationStatus
+      publishedAt
+      skill {
+        id
+        name
+      }
     }
   }
 `;

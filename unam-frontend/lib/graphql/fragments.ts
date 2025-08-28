@@ -165,8 +165,6 @@ export const USER_LIST_FRAGMENT = `
       id
       name
     }
-    createdAt
-    updatedAt
   }
 `;
 
@@ -271,8 +269,6 @@ export const USER_MUTATION_RESPONSE_FRAGMENT = `
       id
       name
     }
-    createdAt
-    updatedAt
   }
 `;
 

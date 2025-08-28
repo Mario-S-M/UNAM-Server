@@ -40,6 +40,9 @@ export function ContentManagement() {
     updateLoading,
     deleteLoading,
     
+    // Computed values
+    visibleColumnsCount,
+    
     // Actions
     setSearch,
     setPageSize,
@@ -115,6 +118,7 @@ export function ContentManagement() {
         languages={languages}
         skills={skills}
         levels={levels}
+        visibleColumnsCount={visibleColumnsCount}
       >
         <ContentTable
           contents={contents}

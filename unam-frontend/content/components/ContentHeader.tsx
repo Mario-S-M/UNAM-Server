@@ -47,6 +47,7 @@ interface ContentHeaderProps {
   languages: { id: string; name: string }[];
   skills: { id: string; name: string }[];
   levels: { id: string; name: string }[];
+  visibleColumnsCount: number;
 }
 
 export function ContentHeader({
@@ -69,6 +70,7 @@ export function ContentHeader({
   languages,
   skills,
   levels,
+  visibleColumnsCount,
 }: ContentHeaderProps) {
   return (
     <Card className="max-w-none">
@@ -188,21 +190,21 @@ export function ContentHeader({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="5">5 por página</SelectItem>
-                  <SelectItem value="10">10 por página</SelectItem>
-                  <SelectItem value="20">20 por página</SelectItem>
-                  <SelectItem value="50">50 por página</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Columnas
-                </Button>
-              </DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Columnas
+                  </Button>
+                </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
                 <DropdownMenuCheckboxItem
                   checked={columnVisibility.title}

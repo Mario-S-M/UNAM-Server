@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -11,6 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,108 +45,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { EditUserDialog, useEditUser, User, PaginatedUsers, Language, UserColumnVisibility } from '@/users';
-import { 
-  USER_LIST_FRAGMENT, 
-  USER_MUTATION_RESPONSE_FRAGMENT,
-  USER_DELETE_RESPONSE_FRAGMENT,
-  LANGUAGE_SELECT_FRAGMENT 
-} from '@/lib/graphql/fragments';
-
-// GraphQL Queries and Mutations
-const GET_USERS_PAGINATED = `
-  ${USER_LIST_FRAGMENT}
-  
-  query GetUsersPaginated($search: String, $page: Int, $limit: Int, $roles: [ValidRoles!], $assignedLanguageId: ID) {
-    usersPaginated(search: $search, page: $page, limit: $limit, roles: $roles, assignedLanguageId: $assignedLanguageId) {
-      users {
-        ...UserListFields
-        assignedLanguageId
-        assignedLanguage {
-          id
-          name
-        }
-      }
-      total
-      page
-      limit
-      totalPages
-      hasNextPage
-      hasPreviousPage
-    }
-  }
-`;
-
-const GET_LANGUAGES = `
-  ${LANGUAGE_SELECT_FRAGMENT}
-  
-  query GetLanguages {
-    lenguagesActivate {
-      ...LanguageSelectFields
-    }
-  }
-`;
-
-const UPDATE_USER = `
-  ${USER_MUTATION_RESPONSE_FRAGMENT}
-  
-  mutation UpdateUser($updateUserInput: UpdateUserInput!) {
-    updateUser(updateUserInput: $updateUserInput) {
-      ...UserMutationResponseFields
-    }
-  }
-`;
-
-const UPDATE_USER_ROLES = `
-  ${USER_MUTATION_RESPONSE_FRAGMENT}
-  
-  mutation UpdateUserRoles($updateUserRolesInput: UpdateUserRolesInput!) {
-    updateUserRoles(updateUserRolesInput: $updateUserRolesInput) {
-      ...UserMutationResponseFields
-    }
-  }
-`;
-
-const DELETE_USER = `
-  ${USER_DELETE_RESPONSE_FRAGMENT}
-  
-  mutation DeleteUser($id: ID!) {
-    deleteUser(id: $id) {
-      ...UserDeleteResponseFields
-    }
-  }
-`;
+import { toast } from 'sonner';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
-
-
-import { toast } from 'sonner';
-
-// Interfaces para tipado estricto
-interface GraphQLResponse<T = unknown> {
-  data?: T;
-  errors?: Array<{ message: string }>;
-}
+type GraphQLInputValue = string | number | boolean | null | undefined | string[] | {
+  [key: string]: string | number | boolean | null | undefined | string[];
+};
 
 interface GraphQLVariables {
-  [key: string]: unknown;
+  [key: string]: GraphQLInputValue;
 }
 
-// GraphQL fetch function
-const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string): Promise<GraphQLResponse> => {
+const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
   try {
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...(token && { 'Authorization': `Bearer ${token}` }),
       },
-      body: JSON.stringify({ query, variables }),
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
     });
 
     if (!response.ok) {
@@ -144,149 +81,154 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
     }
 
     const result = await response.json();
+    
     if (result.errors) {
       throw new Error(result.errors[0]?.message || 'GraphQL error');
     }
 
     return result;
   } catch (error) {
-    console.error('GraphQL Error:', error);
+    console.error('GraphQL fetch error:', error);
     throw error;
   }
 };
 
-// Types are now imported from the users component
+interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  roles: string[];
+  isActive: boolean;
+  assignedLanguageId?: string;
+}
 
-export default function UsuariosPage() {
-  const { user, token } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [languages, setLanguages] = useState<Language[]>([]);
+interface PaginatedUsers {
+  users: User[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+type UserFormData = {
+  email: string;
+  fullName: string;
+  password?: string;
+  roles: string[];
+  isActive: boolean;
+};
+
+interface UserColumnVisibility {
+  email: boolean;
+  fullName: boolean;
+  roles: boolean;
+  isActive: boolean;
+  assignedLanguageId: boolean;
+  actions: boolean;
+}
+
+const ROLES = [
+  { value: 'alumno', label: 'Estudiante' },
+  { value: 'docente', label: 'Profesor' },
+  { value: 'admin', label: 'Administrador' },
+];
+
+export default function UsersPage() {
+  const { token } = useAuth();
+  const [users, setUsers] = useState<PaginatedUsers>({
+    users: [],
+    total: 0,
+    page: 1,
+    limit: 5,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState<string>('all');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [hasPreviousPage, setHasPreviousPage] = useState(false);
-
-  // Column visibility state
-  const [columnVisibility, setColumnVisibility] = useState<UserColumnVisibility>({
-    fullName: true,
-    email: true,
-    roles: true,
-    assignedLanguage: true,
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<UserFormData>({
+    email: '',
+    fullName: '',
+    password: '',
+    roles: ['alumno'],
     isActive: true,
+  });
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [roleFilter, setRoleFilter] = useState<string | undefined>(undefined);
+  const [columnVisibility, setColumnVisibility] = useState<UserColumnVisibility>({
+    email: true,
+    fullName: true,
+    roles: true,
+    isActive: true,
+    assignedLanguageId: false,
     actions: true,
   });
 
-  // Delete user state
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-
-
-
-  // Load languages
-  const loadLanguages = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      const response = await fetchGraphQL(GET_LANGUAGES, {}, token);
-      setLanguages((response.data as any)?.lenguagesActivate || []);
-    } catch (error) {
-      console.error('Error loading languages:', error);
-      toast.error('Error al cargar idiomas');
-    }
-  }, [token]);
-
-  // Load users
-  const loadUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async () => {
     if (!token) return;
     
     setLoading(true);
     try {
-      const variables: GraphQLVariables = {
-        search: searchTerm || undefined,
-        page: currentPage,
-        limit: itemsPerPage,
-        roles: selectedRole !== 'all' ? [selectedRole.toUpperCase()] : undefined,
-        assignedLanguageId: selectedLanguage !== 'all' ? selectedLanguage : undefined,
-      };
-
-      const response = await fetchGraphQL(GET_USERS_PAGINATED, variables, token);
-      const paginatedData = (response.data as any)?.usersPaginated as PaginatedUsers;
+      const query = `
+        query GetUsersPaginated($search: String, $page: Int, $limit: Int, $roles: [ValidRoles!]) {
+          usersPaginated(search: $search, page: $page, limit: $limit, roles: $roles) {
+            users {
+              id
+              email
+              fullName
+              roles
+              isActive
+              assignedLanguageId
+            }
+            total
+            page
+            limit
+            totalPages
+            hasNextPage
+            hasPreviousPage
+          }
+        }
+      `;
       
-      setUsers(paginatedData.users);
-      setTotalPages(paginatedData.totalPages);
-      setTotalItems(paginatedData.total);
-      setHasNextPage(paginatedData.hasNextPage);
-      setHasPreviousPage(paginatedData.hasPreviousPage);
+      const variables = {
+        search: search || undefined,
+        page: currentPage,
+        limit: pageSize,
+        roles: roleFilter ? [roleFilter] : undefined,
+      };
+      
+      const response = await fetchGraphQL(query, variables, token);
+      setUsers(response.data?.usersPaginated || {
+        users: [],
+        total: 0,
+        page: 1,
+        limit: 5,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('Error fetching users:', error);
       toast.error('Error al cargar usuarios');
     } finally {
       setLoading(false);
     }
-  }, [token, searchTerm, currentPage, itemsPerPage, selectedRole, selectedLanguage]);
-
-  // Effects
-  useEffect(() => {
-    loadLanguages();
-  }, [loadLanguages]);
+  }, [token, search, currentPage, pageSize, roleFilter]);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    fetchUsers();
+  }, [fetchUsers]);
 
-  // Edit user functionality
-  const {
-    editingUser,
-    editDialogOpen,
-    editFormData,
-    editLoading,
-    handleEditUser,
-    handleSaveUser,
-    setEditDialogOpen,
-    setEditFormData
-  } = useEditUser({ 
-     onUserUpdated: loadUsers,
-     fetchGraphQL,
-     token: token || undefined,
-     UPDATE_USER,
-     UPDATE_USER_ROLES
-   });
-
-  // Handle search
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
     setCurrentPage(1);
   };
 
-  // Handle role filter
-  const handleRoleFilter = (role: string) => {
-    setSelectedRole(role);
-    setCurrentPage(1);
-  };
-
-  // Handle language filter
-  const handleLanguageFilter = (languageId: string) => {
-    setSelectedLanguage(languageId);
-    setCurrentPage(1);
-  };
-
-  // Handle pagination
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Handle items per page change
-  const handleItemsPerPageChange = (value: string) => {
-    setItemsPerPage(parseInt(value));
-    setCurrentPage(1);
-  };
-
-  // Toggle column visibility
   const toggleColumnVisibility = (column: keyof UserColumnVisibility) => {
     setColumnVisibility(prev => ({
       ...prev,
@@ -294,123 +236,318 @@ export default function UsuariosPage() {
     }));
   };
 
-  // Get role badge color
-  const getRoleBadgeColor = (roles: string[]) => {
-    if (roles.includes('superUser')) return 'bg-purple-100 text-purple-800';
-    if (roles.includes('admin')) return 'bg-red-100 text-red-800';
-    if (roles.includes('docente')) return 'bg-blue-100 text-blue-800';
-    if (roles.includes('alumno')) return 'bg-green-100 text-green-800';
-    return 'bg-gray-100 text-gray-800';
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      fullName: '',
+      password: '',
+      roles: ['alumno'],
+      isActive: true,
+    });
+    setEditingUser(null);
   };
 
-  // Get role display name
-  const getRoleDisplayName = (role: string) => {
-    const roleNames: { [key: string]: string } = {
-      superUser: 'Super Usuario',
-      admin: 'Administrador',
-      docente: 'Docente',
-      alumno: 'Alumno',
-      mortal: 'Usuario'
-    };
-    return roleNames[role] || role;
-  };
-
-  // Handle delete user
-  const handleDeleteUser = async (userToDelete: User) => {
+  const handleCreateUser = async () => {
     if (!token) return;
     
     try {
-      await fetchGraphQL(DELETE_USER, { id: userToDelete.id }, token);
-      toast.error(`Usuario ${userToDelete.fullName} eliminado exitosamente`);
-      setUserToDelete(null);
-      loadUsers(); // Reload the user list
+      const mutation = `
+        mutation CreateUser($createUserInput: CreateUserInput!) {
+          createUser(createUserInput: $createUserInput) {
+            id
+            email
+            fullName
+            roles
+            isActive
+          }
+        }
+      `;
+      
+      await fetchGraphQL(mutation, {
+        createUserInput: {
+          email: formData.email,
+          fullName: formData.fullName,
+          password: formData.password,
+          roles: formData.roles,
+          isActive: formData.isActive,
+        }
+      }, token);
+      
+      toast.success('Usuario creado exitosamente');
+      setIsDialogOpen(false);
+      resetForm();
+      fetchUsers();
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error('Error al crear usuario');
+    }
+  };
+
+  const handleUpdateUser = async () => {
+    if (!token || !editingUser) return;
+    
+    try {
+      const mutation = `
+        mutation UpdateUser($updateUserInput: UpdateUserInput!) {
+          updateUser(updateUserInput: $updateUserInput) {
+            id
+            email
+            fullName
+            roles
+            isActive
+          }
+        }
+      `;
+      
+      await fetchGraphQL(mutation, {
+        updateUserInput: {
+          id: editingUser.id,
+          email: formData.email,
+          fullName: formData.fullName,
+          roles: formData.roles,
+          isActive: formData.isActive,
+        }
+      }, token);
+      
+      toast.success('Usuario actualizado exitosamente');
+      setIsDialogOpen(false);
+      resetForm();
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Error al actualizar usuario');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!token) return;
+    
+    try {
+      const mutation = `
+        mutation RemoveUser($id: ID!) {
+          removeUser(id: $id) {
+            id
+          }
+        }
+      `;
+      
+      await fetchGraphQL(mutation, { id: userId }, token);
+      toast.success('Usuario eliminado exitosamente');
+      fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error('Error al eliminar usuario');
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setFormData({
+      email: user.email,
+      fullName: user.fullName,
+      roles: user.roles,
+      isActive: user.isActive,
+    });
+    setIsDialogOpen(true);
+  };
 
-
-
-  if (!user || !['admin', 'superUser'].includes(user.roles[0])) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-500">No tienes permisos para acceder a esta página.</p>
-      </div>
-    );
-  }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      handleUpdateUser();
+    } else {
+      handleCreateUser();
+    }
+  };
 
   return (
     <div className="container mx-auto py-6">
       <Card>
         <CardHeader>
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Gestión de Usuarios
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="px-6 pb-6">
-          {/* Search and Filters */}
-          <div className="flex items-center justify-between gap-4 mb-6 pt-6">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre o email..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filtros
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="p-2">
-                    <div className="mb-3">
-                      <label className="text-sm font-medium mb-1 block">Rol</label>
-                      <Select value={selectedRole} onValueChange={handleRoleFilter}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Todos los roles" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos los roles</SelectItem>
-                          <SelectItem value="superUser">Super Usuario</SelectItem>
-                          <SelectItem value="admin">Administrador</SelectItem>
-                          <SelectItem value="docente">Docente</SelectItem>
-                          <SelectItem value="alumno">Alumno</SelectItem>
-                          <SelectItem value="mortal">Usuario</SelectItem>
-                        </SelectContent>
-                      </Select>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Gestión de Usuarios
+              </CardTitle>
+              <CardDescription>
+                Administra los usuarios del sistema
+              </CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Usuario
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingUser ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingUser ? 'Modifica los datos del usuario.' : 'Completa los datos para crear un nuevo usuario.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="email" className="text-right">
+                        Email
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="col-span-3"
+                        required
+                      />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Idioma</label>
-                      <Select value={selectedLanguage} onValueChange={handleLanguageFilter}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Todos los idiomas" />
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="fullName" className="text-right">
+                        Nombre Completo
+                      </Label>
+                      <Input
+                        id="fullName"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                        className="col-span-3"
+                        required
+                      />
+                    </div>
+                    {!editingUser && (
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="password" className="text-right">
+                          Contraseña
+                        </Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={formData.password || ''}
+                          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                          className="col-span-3"
+                          required
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="roles" className="text-right">
+                        Rol
+                      </Label>
+                      <Select
+                        value={formData.roles[0] || 'alumno'}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, roles: [value] }))}
+                      >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="Selecciona un rol" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">Todos los idiomas</SelectItem>
-                          {languages.map((language) => (
-                            <SelectItem key={language.id} value={language.id}>
-                              {language.name}
+                          {ROLES.map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              {role.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="isActive" className="text-right">
+                        Activo
+                      </Label>
+                      <div className="col-span-3">
+                        <Checkbox
+                          id="isActive"
+                          checked={formData.isActive}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: !!checked }))}
+                        />
+                      </div>
+                    </div>
                   </div>
+                  <DialogFooter>
+                    <Button type="submit">
+                      {editingUser ? 'Actualizar' : 'Crear'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar usuarios..."
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-8 w-[300px]"
+                />
+              </div>
+              <Select value={roleFilter || 'all'} onValueChange={(value) => setRoleFilter(value === 'all' ? undefined : value)}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrar por rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los roles</SelectItem>
+                  {ROLES.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Columnas
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.email}
+                    onCheckedChange={() => toggleColumnVisibility('email')}
+                  >
+                    Email
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.fullName}
+                    onCheckedChange={() => toggleColumnVisibility('fullName')}
+                  >
+                    Nombre Completo
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.roles}
+                    onCheckedChange={() => toggleColumnVisibility('roles')}
+                  >
+                    Roles
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.isActive}
+                    onCheckedChange={() => toggleColumnVisibility('isActive')}
+                  >
+                    Estado
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={columnVisibility.assignedLanguageId}
+                    onCheckedChange={() => toggleColumnVisibility('assignedLanguageId')}
+                  >
+                    Idioma Asignado
+                  </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
                 <SelectTrigger className="w-[70px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -422,168 +559,90 @@ export default function UsuariosPage() {
                 </SelectContent>
               </Select>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Columnas
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {Object.entries(columnVisibility).map(([key, value]) => (
-                  <DropdownMenuCheckboxItem
-                    key={key}
-                    checked={value}
-                    onCheckedChange={() => toggleColumnVisibility(key as keyof UserColumnVisibility)}
-                  >
-                    {key === 'fullName' && 'Nombre Completo'}
-                    {key === 'email' && 'Email'}
-                    {key === 'roles' && 'Roles'}
-                    {key === 'assignedLanguage' && 'Idioma Asignado'}
-                    {key === 'isActive' && 'Estado'}
-                    {key === 'actions' && 'Acciones'}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
-          {/* Users Table */}
-          <div className="overflow-x-auto">
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  {columnVisibility.fullName && (
-                    <TableHead className="text-center">Nombre Completo</TableHead>
-                  )}
-                  {columnVisibility.email && (
-                    <TableHead className="text-center">Email</TableHead>
-                  )}
-                  {columnVisibility.roles && (
-                    <TableHead className="text-center">Roles</TableHead>
-                  )}
-                  {columnVisibility.assignedLanguage && (
-                    <TableHead className="text-center">Idioma Asignado</TableHead>
-                  )}
-                  {columnVisibility.isActive && (
-                    <TableHead className="text-center">Estado</TableHead>
-                  )}
-                  {columnVisibility.actions && (
-                    <TableHead className="text-center">Acciones</TableHead>
-                  )}
+                  {columnVisibility.email && <TableHead className="text-center">Email</TableHead>}
+                  {columnVisibility.fullName && <TableHead className="text-center">Nombre Completo</TableHead>}
+                  {columnVisibility.roles && <TableHead className="text-center">Roles</TableHead>}
+                  {columnVisibility.isActive && <TableHead className="text-center">Estado</TableHead>}
+                  {columnVisibility.assignedLanguageId && <TableHead className="text-center">Idioma Asignado</TableHead>}
+                  {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                        <span className="ml-2">Cargando usuarios...</span>
-                      </div>
+                    <TableCell colSpan={6} className="text-center py-4">
+                      Cargando usuarios...
                     </TableCell>
                   </TableRow>
-                ) : users.length === 0 ? (
+                ) : users.users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <div className="text-muted-foreground">
-                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No se encontraron usuarios</p>
-                        <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
-                      </div>
+                    <TableCell colSpan={6} className="text-center py-4">
+                      No se encontraron usuarios
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((tableUser) => (
-                    <TableRow key={tableUser.id}>
-                      {columnVisibility.fullName && (
-                        <TableCell className="font-medium text-center">
-                          {tableUser.fullName}
-                        </TableCell>
-                      )}
-                      {columnVisibility.email && (
-                        <TableCell className="text-center">{tableUser.email}</TableCell>
-                      )}
+                  users.users.map((user) => (
+                    <TableRow key={user.id}>
+                      {columnVisibility.email && <TableCell className="text-center">{user.email}</TableCell>}
+                      {columnVisibility.fullName && <TableCell className="text-center">{user.fullName}</TableCell>}
                       {columnVisibility.roles && (
                         <TableCell className="text-center">
-                          <div className="flex flex-wrap gap-1 justify-center">
-                            {tableUser.roles.map((role, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className={getRoleBadgeColor(tableUser.roles)}
-                              >
-                                {getRoleDisplayName(role)}
+                          <div className="flex gap-1 justify-center">
+                            {user.roles.map((role, index) => (
+                              <Badge key={index} variant="secondary">
+                                {ROLES.find(r => r.value === role)?.label || role}
                               </Badge>
                             ))}
                           </div>
                         </TableCell>
                       )}
-                      {columnVisibility.assignedLanguage && (
-                        <TableCell className="text-center">
-                          {tableUser.assignedLanguage ? (
-                            <Badge variant="outline">
-                              {tableUser.assignedLanguage.name}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">Sin asignar</span>
-                          )}
-                        </TableCell>
-                      )}
                       {columnVisibility.isActive && (
                         <TableCell className="text-center">
-                          <Badge
-                            variant={tableUser.isActive ? "default" : "secondary"}
-                            className={tableUser.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
-                          >
-                            {tableUser.isActive ? 'Activo' : 'Inactivo'}
+                          <Badge variant={user.isActive ? "default" : "secondary"}>
+                            {user.isActive ? 'Activo' : 'Inactivo'}
                           </Badge>
                         </TableCell>
+                      )}
+                      {columnVisibility.assignedLanguageId && (
+                        <TableCell className="text-center">{user.assignedLanguageId || 'N/A'}</TableCell>
                       )}
                       {columnVisibility.actions && (
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
-                              onClick={() => handleEditUser(tableUser)}
+                              onClick={() => handleEditUser(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            {user?.roles?.includes('superUser') && tableUser.id !== user?.id && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    onClick={() => setUserToDelete(tableUser)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Esta acción no se puede deshacer. Esto eliminará permanentemente al usuario
-                                      <strong> {tableUser.fullName}</strong> y todos sus datos asociados.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel onClick={() => setUserToDelete(null)}>
-                                      Cancelar
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteUser(tableUser)}
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      Eliminar
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el usuario.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>
+                                    Eliminar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       )}
@@ -595,71 +654,56 @@ export default function UsuariosPage() {
           </div>
 
           {/* Pagination */}
-          {totalItems > 0 && (
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-sm text-muted-foreground">
-                Mostrando {((currentPage - 1) * itemsPerPage) + 1} a{' '}
-                {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} usuarios
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                   variant="outline"
-                   size="sm"
-                   onClick={() => handlePageChange(currentPage - 1)}
-                   disabled={!hasPreviousPage}
-                 >
-                   <ChevronLeft className="h-4 w-4" />
-                   Anterior
-                 </Button>
-                 
-                 {/* Page numbers */}
-                 <div className="flex items-center space-x-1">
-                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                     .filter(page => {
-                       return page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                     })
-                     .map((page, index, array) => {
-                       const showEllipsis = index > 0 && page - array[index - 1] > 1;
-                       return (
-                         <React.Fragment key={page}>
-                           {showEllipsis && <span className="px-2">...</span>}
-                           <Button
-                             variant={page === currentPage ? 'default' : 'outline'}
-                             size="sm"
-                             onClick={() => handlePageChange(page)}
-                           >
-                             {page}
-                           </Button>
-                         </React.Fragment>
-                       );
-                     })}
-                 </div>
-                 
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   onClick={() => handlePageChange(currentPage + 1)}
-                   disabled={!hasNextPage}
-                 >
-                   Siguiente
-                   <ChevronRight className="h-4 w-4" />
-                 </Button>
-              </div>
+          <div className="flex items-center justify-between space-x-2 py-4">
+            <div className="text-sm text-muted-foreground">
+              Mostrando {((users.page - 1) * users.limit) + 1} a{' '}
+              {Math.min(users.page * users.limit, users.total)} de {users.total} usuarios
             </div>
-          )}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(users.page - 1)}
+                disabled={!users.hasPreviousPage}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </Button>
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: users.totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    const current = users.page;
+                    return page === 1 || page === users.totalPages || (page >= current - 1 && page <= current + 1);
+                  })
+                  .map((page, index, array) => {
+                    const showEllipsis = index > 0 && page - array[index - 1] > 1;
+                    return (
+                      <React.Fragment key={page}>
+                        {showEllipsis && <span className="px-2">...</span>}
+                        <Button
+                          variant={page === users.page ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(users.page + 1)}
+                disabled={!users.hasNextPage}
+              >
+                Siguiente
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Edit User Dialog */}
-      <EditUserDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        user={editingUser}
-        editFormData={editFormData}
-        setEditFormData={setEditFormData}
-        onSave={handleSaveUser}
-        loading={editLoading}
-      />
     </div>
   );
 }

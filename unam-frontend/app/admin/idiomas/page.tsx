@@ -577,6 +577,9 @@ export default function IdiomasPage() {
     }));
   };
 
+  // Computed values
+  const visibleColumnsCount = Object.values(columnVisibility).filter(Boolean).length;
+
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) {
       return 'No disponible';
@@ -1197,7 +1200,7 @@ export default function IdiomasPage() {
                         <TableCell className="text-center">
                           <div className="flex justify-end gap-2">
                             <Button
-                              variant="outline"
+                              variant="secondary"
                               size="sm"
                               onClick={() => handleEdit(language)}
                             >
@@ -1205,7 +1208,7 @@ export default function IdiomasPage() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <Button variant="destructive" size="sm">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>

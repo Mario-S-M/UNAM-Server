@@ -67,32 +67,6 @@ type PaginatedLevels {
   hasPreviousPage: Boolean!
 }
 
-type Content {
-  id: ID!
-  name: String!
-  description: String!
-  isCompleted: Boolean!
-  createdAt: String!
-  updatedAt: String!
-  levelId: ID!
-  userId: Int!
-  markdownPath: String
-  assignedTeachers: [User!]
-  validationStatus: String!
-  publishedAt: String
-  skillId: ID
-}
-
-type PaginatedContents {
-  contents: [Content!]!
-  total: Int!
-  page: Int!
-  limit: Int!
-  totalPages: Int!
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-}
-
 type Skill {
   id: ID!
   name: String!
@@ -112,6 +86,33 @@ type Skill {
   lenguage: Lenguage
   createdAt: String!
   updatedAt: String!
+}
+
+type Content {
+  id: ID!
+  name: String!
+  description: String!
+  isCompleted: Boolean!
+  createdAt: String!
+  updatedAt: String!
+  levelId: ID!
+  userId: Int!
+  markdownPath: String
+  assignedTeachers: [User!]
+  validationStatus: String!
+  publishedAt: String
+  skillId: ID
+  skill: Skill
+}
+
+type PaginatedContents {
+  contents: [Content!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
 }
 
 type PaginatedSkills {

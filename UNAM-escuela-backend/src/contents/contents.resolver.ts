@@ -54,6 +54,8 @@ export class ContentsResolver {
     return this.contentsService.getMarkdownContentPublic(contentId);
   }
 
+
+
   // Protected endpoints below
   @UseGuards(JwtAuthGuard)
   @Mutation(() => Content)

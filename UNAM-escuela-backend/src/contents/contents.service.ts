@@ -177,6 +177,8 @@ export class ContentsService {
     };
   }
 
+
+
   async findByLevel(levelId: string, user?: User): Promise<Content[]> {
     // Validar que el admin solo pueda acceder a contenidos de su idioma asignado
     if (

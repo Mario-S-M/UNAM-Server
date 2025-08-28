@@ -288,6 +288,9 @@ export function useContentManagement() {
     });
   };
 
+  // Computed values
+  const visibleColumnsCount = Object.values(columnVisibility).filter(Boolean).length;
+
   return {
     // State
     search,
@@ -317,6 +320,9 @@ export function useContentManagement() {
     createLoading,
     updateLoading,
     deleteLoading,
+    
+    // Computed values
+    visibleColumnsCount,
     
     // Actions
     setSearch,

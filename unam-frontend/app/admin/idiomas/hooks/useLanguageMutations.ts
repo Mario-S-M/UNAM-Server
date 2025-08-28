@@ -7,6 +7,7 @@ import {
   type CreateLanguageFormData,
   type UpdateLanguageFormData 
 } from '@/schemas/language-forms';
+import { MUTATION_RESPONSE_FRAGMENT, DELETE_RESPONSE_FRAGMENT } from '@/lib/graphql/fragments';
 
 interface UseLanguageMutationsProps {
   onSuccess?: () => void;
@@ -21,42 +22,28 @@ interface UseLanguageMutationsReturn {
 }
 
 const CREATE_LANGUAGE = `
+  ${MUTATION_RESPONSE_FRAGMENT}
   mutation CreateLanguage($input: CreateLanguageInput!) {
     createLanguage(createLanguageInput: $input) {
-      id
-      name
-      code
-      nativeName
-      flag
-      icons
-      isActive
-      createdAt
-      updatedAt
+      ...MutationResponseFields
     }
   }
 `;
 
 const UPDATE_LANGUAGE = `
+  ${MUTATION_RESPONSE_FRAGMENT}
   mutation UpdateLanguage($id: String!, $input: UpdateLanguageInput!) {
     updateLanguage(id: $id, updateLanguageInput: $input) {
-      id
-      name
-      code
-      nativeName
-      flag
-      icons
-      isActive
-      createdAt
-      updatedAt
+      ...MutationResponseFields
     }
   }
 `;
 
 const DELETE_LANGUAGE = `
+  ${DELETE_RESPONSE_FRAGMENT}
   mutation DeleteLanguage($id: String!) {
     deleteLanguage(id: $id) {
-      id
-      name
+      ...DeleteResponseFields
     }
   }
 `;

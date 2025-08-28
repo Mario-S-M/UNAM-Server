@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Language, Level } from '@/types';
+import { 
+  LEVEL_LIST_FRAGMENT, 
+  LANGUAGE_SELECT_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -43,21 +47,12 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
 
 // GraphQL Queries
 const GET_LEVELS_PAGINATED = `
+  ${LEVEL_LIST_FRAGMENT}
+  
   query GetLevelsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean, $lenguageId: ID, $difficulty: String) {
     levelsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive, lenguageId: $lenguageId, difficulty: $difficulty) {
       levels {
-        id
-        name
-        description
-        difficulty
-        isActive
-        lenguageId
-        lenguage {
-          id
-          name
-        }
-        createdAt
-        updatedAt
+        ...LevelListFields
       }
       total
       page
@@ -70,10 +65,11 @@ const GET_LEVELS_PAGINATED = `
 `;
 
 const GET_LANGUAGES = `
+  ${LANGUAGE_SELECT_FRAGMENT}
+  
   query GetLanguages {
     lenguagesActivate {
-      id
-      name
+      ...LanguageSelectFields
     }
   }
 `;

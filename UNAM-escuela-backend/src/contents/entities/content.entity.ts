@@ -73,11 +73,6 @@ export class Content {
   @Field(() => String, { nullable: true })
   publishedAt?: string;
 
-  // Relación con Skill
-  @ManyToOne(() => Skill, { nullable: true })
-  @JoinColumn({ name: 'skillId' })
-  @Field(() => Skill, { nullable: true })
-  skill?: Skill;
 
   @Column({ nullable: true })
   @Field(() => ID, { nullable: true })

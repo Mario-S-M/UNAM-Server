@@ -13,3 +13,5 @@ Quiero que todo el proyecto use el backend en graphql, checa la que ya tiene y r
 # El puertos
 el front siempre debe estar en el puerto 3001, y el backend en el 3000. prohibido usar otro puerto.
 # No hagas documentación en markdown
+# Unicamente pide los datos del schema que se usen no pidas datos que no se usen
+# Siempre haz un npm run build para ver que no haya nada de errores

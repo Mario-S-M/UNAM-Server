@@ -8,6 +8,10 @@ import {
   type CreateLevelFormData,
   type UpdateLevelFormData 
 } from '@/schemas/level-forms';
+import { 
+  LEVEL_MUTATION_RESPONSE_FRAGMENT,
+  LEVEL_DELETE_RESPONSE_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -52,40 +56,31 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
 
 // GraphQL Mutations
 const CREATE_LEVEL = `
+  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation CreateLevel($createLevelInput: CreateLevelInput!) {
     createLevel(createLevelInput: $createLevelInput) {
-      id
-      name
-      description
-      difficulty
-      isActive
-      lenguageId
-      createdAt
-      updatedAt
+      ...LevelMutationResponseFields
     }
   }
 `;
 
 const UPDATE_LEVEL = `
+  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation UpdateLevel($updateLevelInput: UpdateLevelInput!) {
     updateLevel(updateLevelInput: $updateLevelInput) {
-      id
-      name
-      description
-      difficulty
-      isActive
-      lenguageId
-      createdAt
-      updatedAt
+      ...LevelMutationResponseFields
     }
   }
 `;
 
 const DELETE_LEVEL = `
+  ${LEVEL_DELETE_RESPONSE_FRAGMENT}
+  
   mutation DeleteLevel($id: ID!) {
     removeLevel(id: $id) {
-      id
-      name
+      ...LevelDeleteResponseFields
     }
   }
 `;

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { CONTENT_MUTATION_RESPONSE_FRAGMENT, CONTENT_DELETE_RESPONSE_FRAGMENT } from './fragments';
 
 // Language Queries
 export const GET_LANGUAGES = gql`
@@ -283,93 +284,45 @@ export const GET_CONTENTS = gql`
 `;
 
 export const CREATE_CONTENT = gql`
+  ${CONTENT_MUTATION_RESPONSE_FRAGMENT}
   mutation CreateContent($createContentInput: CreateContentInput!) {
     createContent(createContentInput: $createContentInput) {
-      id
-      name
-      description
-      validationStatus
-      skill {
-        id
-        name
-        color
-      }
-      assignedTeachers {
-        id
-        fullName
-        email
-        roles
-        isActive
-      }
+      ...ContentMutationResponseFields
     }
   }
 `;
 
 export const UPDATE_CONTENT = gql`
+  ${CONTENT_MUTATION_RESPONSE_FRAGMENT}
   mutation UpdateContent($updateContentInput: UpdateContentInput!) {
     updateContent(updateContentInput: $updateContentInput) {
-      id
-      name
-      description
-      validationStatus
-      skill {
-        id
-        name
-        color
-      }
-      assignedTeachers {
-        id
-        fullName
-        email
-      }
+      ...ContentMutationResponseFields
     }
   }
 `;
 
 export const DELETE_CONTENT = gql`
+  ${CONTENT_DELETE_RESPONSE_FRAGMENT}
   mutation DeleteContent($id: ID!) {
-    removeContent(id: $id)
+    removeContent(id: $id) {
+      ...ContentDeleteResponseFields
+    }
+  }
+`;
+
+// Teachers Query
+export const GET_TEACHERS = gql`
+  query GetTeachers {
+    users(roles: [docente]) {
+      id
+      fullName
+      email
+    }
   }
 `;
 
 // Public Content Query
 export const GET_CONTENT_BY_ID_PUBLIC = gql`
-  query GetContentByIdPublic($id: ID!) {
-    contentPublic(id: $id) {
-      id
-      name
-      description
-      isCompleted
-      createdAt
-      updatedAt
-      levelId
-      userId
-      markdownPath
-      validationStatus
-      publishedAt
-      skill {
-        id
-        name
-        description
-        color
-        isActive
-        createdAt
-        updatedAt
-      }
-      skillId
-      assignedTeachers {
-        id
-        fullName
-        email
-      }
-    }
-  }
-`;
-
-// User Queries (for teachers in content)
-export const GET_TEACHERS = gql`
-  query GetTeachers {
-    users {
       id
       fullName
       email

@@ -57,24 +57,21 @@ import {
   type CreateLevelFormData,
   type UpdateLevelFormData 
 } from '@/schemas/level-forms';
+import { 
+  LEVEL_LIST_FRAGMENT, 
+  LEVEL_MUTATION_RESPONSE_FRAGMENT,
+  LEVEL_DELETE_RESPONSE_FRAGMENT,
+  LANGUAGE_SELECT_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 // GraphQL Queries and Mutations
 const GET_LEVELS_PAGINATED = `
+  ${LEVEL_LIST_FRAGMENT}
+  
   query GetLevelsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean, $lenguageId: ID, $difficulty: String) {
     levelsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive, lenguageId: $lenguageId, difficulty: $difficulty) {
       levels {
-        id
-        name
-        description
-        difficulty
-        isActive
-        lenguageId
-        lenguage {
-          id
-          name
-        }
-        createdAt
-        updatedAt
+        ...LevelListFields
       }
       total
       page
@@ -87,49 +84,41 @@ const GET_LEVELS_PAGINATED = `
 `;
 
 const GET_LANGUAGES = `
+  ${LANGUAGE_SELECT_FRAGMENT}
+  
   query GetLanguages {
     lenguagesActivate {
-      id
-      name
+      ...LanguageSelectFields
     }
   }
 `;
 
 const CREATE_LEVEL = `
+  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation CreateLevel($createLevelInput: CreateLevelInput!) {
     createLevel(createLevelInput: $createLevelInput) {
-      id
-      name
-      description
-      difficulty
-      isActive
-      lenguageId
-      createdAt
-      updatedAt
+      ...LevelMutationResponseFields
     }
   }
 `;
 
 const UPDATE_LEVEL = `
+  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation UpdateLevel($updateLevelInput: UpdateLevelInput!) {
     updateLevel(updateLevelInput: $updateLevelInput) {
-      id
-      name
-      description
-      difficulty
-      isActive
-      lenguageId
-      createdAt
-      updatedAt
+      ...LevelMutationResponseFields
     }
   }
 `;
 
 const DELETE_LEVEL = `
+  ${LEVEL_DELETE_RESPONSE_FRAGMENT}
+  
   mutation DeleteLevel($id: ID!) {
     removeLevel(id: $id) {
-      id
-      name
+      ...LevelDeleteResponseFields
     }
   }
 `;

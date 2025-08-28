@@ -55,36 +55,20 @@ import {
   type CreateLanguageFormData,
   type UpdateLanguageFormData 
 } from '@/schemas/language-forms';
+import { 
+  LANGUAGE_LIST_FRAGMENT, 
+  MUTATION_RESPONSE_FRAGMENT,
+  DELETE_RESPONSE_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 // GraphQL Queries and Mutations
 const GET_LANGUAGES_PAGINATED = `
+  ${LANGUAGE_LIST_FRAGMENT}
+  
   query GetLanguagesPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean) {
     lenguagesPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive) {
       lenguages {
-        id
-        name
-        eslogan_atractivo
-        descripcion_corta
-        descripcion_completa
-        nivel
-        duracion_total_horas
-        color_tema
-        icono_curso
-        imagen_hero
-        badge_destacado
-        idioma_origen
-        idioma_destino
-        certificado_digital
-        puntuacion_promedio
-        total_estudiantes_inscritos
-        estado
-        featured
-        fecha_creacion
-        fecha_actualizacion
-        icons
-        isActive
-        createdAt
-        updatedAt
+        ...LanguageListFields
       }
       total
       page
@@ -97,72 +81,31 @@ const GET_LANGUAGES_PAGINATED = `
 `;
 
 const CREATE_LANGUAGE = `
+  ${MUTATION_RESPONSE_FRAGMENT}
+  
   mutation CreateLanguage($createLenguageInput: CreateLenguageInput!) {
     createLenguage(createLenguageInput: $createLenguageInput) {
-      id
-      name
-      eslogan_atractivo
-      descripcion_corta
-      descripcion_completa
-      nivel
-      duracion_total_horas
-      color_tema
-      icono_curso
-      imagen_hero
-      badge_destacado
-      idioma_origen
-      idioma_destino
-      certificado_digital
-      puntuacion_promedio
-      total_estudiantes_inscritos
-      estado
-      featured
-      fecha_creacion
-      fecha_actualizacion
-      icons
-      isActive
-      createdAt
-      updatedAt
+      ...MutationResponseFields
     }
   }
 `;
 
 const UPDATE_LANGUAGE = `
+  ${MUTATION_RESPONSE_FRAGMENT}
+  
   mutation UpdateLanguage($updateLenguageInput: UpdateLenguageInput!) {
     updateLenguage(updateLenguageInput: $updateLenguageInput) {
-      id
-      name
-      eslogan_atractivo
-      descripcion_corta
-      descripcion_completa
-      nivel
-      duracion_total_horas
-      color_tema
-      icono_curso
-      imagen_hero
-      badge_destacado
-      idioma_origen
-      idioma_destino
-      certificado_digital
-      puntuacion_promedio
-      total_estudiantes_inscritos
-      estado
-      featured
-      fecha_creacion
-      fecha_actualizacion
-      icons
-      isActive
-      createdAt
-      updatedAt
+      ...MutationResponseFields
     }
   }
 `;
 
 const DELETE_LANGUAGE = `
+  ${DELETE_RESPONSE_FRAGMENT}
+  
   mutation DeleteLanguage($id: ID!) {
     removeLenguage(id: $id) {
-      id
-      name
+      ...DeleteResponseFields
     }
   }
 `;

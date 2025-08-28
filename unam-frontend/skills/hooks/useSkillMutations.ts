@@ -3,6 +3,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GraphQLVariables, Language, Level } from '../types';
 import { CreateSkillFormData as SkillFormData } from '@/schemas/skill-forms';
+import { 
+  SKILL_MUTATION_RESPONSE_FRAGMENT, 
+  SKILL_DELETE_RESPONSE_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 // Interfaces para tipado estricto
 interface CreateSkillInput {
@@ -33,76 +37,31 @@ interface UploadResult {
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 const CREATE_SKILL = `
+  ${SKILL_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation CreateSkill($createSkillInput: CreateSkillInput!) {
     createSkill(createSkillInput: $createSkillInput) {
-      id
-      name
-      description
-      color
-      imageUrl
-      icon
-      objectives
-      prerequisites
-      difficulty
-      estimatedHours
-      tags
-      isActive
-      levelId
-      lenguageId
-      level {
-        id
-        name
-        description
-        difficulty
-      }
-      lenguage {
-        id
-        name
-      }
-      createdAt
-      updatedAt
+      ...SkillMutationResponseFields
     }
   }
 `;
 
 const UPDATE_SKILL = `
+  ${SKILL_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation UpdateSkill($updateSkillInput: UpdateSkillInput!) {
     updateSkill(updateSkillInput: $updateSkillInput) {
-      id
-      name
-      description
-      color
-      imageUrl
-      icon
-      objectives
-      prerequisites
-      difficulty
-      estimatedHours
-      tags
-      isActive
-      levelId
-      lenguageId
-      level {
-        id
-        name
-        description
-        difficulty
-      }
-      lenguage {
-        id
-        name
-      }
-      createdAt
-      updatedAt
+      ...SkillMutationResponseFields
     }
   }
 `;
 
 const DELETE_SKILL = `
+  ${SKILL_DELETE_RESPONSE_FRAGMENT}
+  
   mutation DeleteSkill($id: ID!) {
     removeSkill(id: $id) {
-      id
-      name
+      ...SkillDeleteResponseFields
     }
   }
 `;

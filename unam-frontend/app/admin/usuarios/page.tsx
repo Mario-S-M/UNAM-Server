@@ -40,23 +40,23 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { EditUserDialog, useEditUser, User, PaginatedUsers, Language, UserColumnVisibility } from '@/users';
+import { 
+  USER_LIST_FRAGMENT, 
+  USER_MUTATION_RESPONSE_FRAGMENT,
+  USER_DELETE_RESPONSE_FRAGMENT,
+  LANGUAGE_SELECT_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 // GraphQL Queries and Mutations
 const GET_USERS_PAGINATED = `
+  ${USER_LIST_FRAGMENT}
+  
   query GetUsersPaginated($search: String, $page: Int, $limit: Int, $roles: [ValidRoles!], $assignedLanguageId: ID) {
     usersPaginated(search: $search, page: $page, limit: $limit, roles: $roles, assignedLanguageId: $assignedLanguageId) {
       users {
-        id
-        fullName
-        email
-        roles
-        isActive
+        ...UserListFields
         assignedLanguageId
         assignedLanguage {
-          id
-          name
-        }
-        assignedLanguages {
           id
           name
         }
@@ -72,54 +72,41 @@ const GET_USERS_PAGINATED = `
 `;
 
 const GET_LANGUAGES = `
+  ${LANGUAGE_SELECT_FRAGMENT}
+  
   query GetLanguages {
     lenguagesActivate {
-      id
-      name
+      ...LanguageSelectFields
     }
   }
 `;
 
 const UPDATE_USER = `
+  ${USER_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation UpdateUser($updateUserInput: UpdateUserInput!) {
     updateUser(updateUserInput: $updateUserInput) {
-      id
-      fullName
-      email
-      roles
-      isActive
-      assignedLanguageId
-      assignedLanguage {
-        id
-        name
-      }
+      ...UserMutationResponseFields
     }
   }
 `;
 
 const UPDATE_USER_ROLES = `
+  ${USER_MUTATION_RESPONSE_FRAGMENT}
+  
   mutation UpdateUserRoles($updateUserRolesInput: UpdateUserRolesInput!) {
     updateUserRoles(updateUserRolesInput: $updateUserRolesInput) {
-      id
-      fullName
-      email
-      roles
-      isActive
-      assignedLanguageId
-      assignedLanguage {
-        id
-        name
-      }
+      ...UserMutationResponseFields
     }
   }
 `;
 
 const DELETE_USER = `
+  ${USER_DELETE_RESPONSE_FRAGMENT}
+  
   mutation DeleteUser($id: ID!) {
     deleteUser(id: $id) {
-      id
-      fullName
-      email
+      ...UserDeleteResponseFields
     }
   }
 `;

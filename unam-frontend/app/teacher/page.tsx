@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
 interface Content {
   id: string;
   name: string;
@@ -46,21 +45,18 @@ const MY_ASSIGNED_CONTENTS_QUERY = gql`${GET_MY_ASSIGNED_CONTENTS}`;
 export default function TeacherDashboard() {
   const router = useRouter();
   
-  const { data, loading, error } = useQuery<{ myAssignedContents: Content[] }>(
-    MY_ASSIGNED_CONTENTS_QUERY,
-    {
-      errorPolicy: 'all',
-      onError: (error) => {
-        console.error('Error fetching assigned contents:', error);
-        toast.error('Error al cargar contenidos asignados');
-      }
+  const { data, loading, error } = useQuery(MY_ASSIGNED_CONTENTS_QUERY, {
+    errorPolicy: 'all',
+    onError: (error) => {
+      console.error('Error fetching assigned contents:', error);
+      toast.error('Error al cargar los contenidos asignados');
     }
-  );
-
+  });
+  
   const assignedContents = data?.myAssignedContents || [];
   
-  const validatedContents = assignedContents.filter(content => content.validationStatus === 'validado');
-  const unvalidatedContents = assignedContents.filter(content => content.validationStatus !== 'validado');
+  const validatedContents = assignedContents.filter((content: Content) => content.validationStatus === 'validado');
+  const unvalidatedContents = assignedContents.filter((content: Content) => content.validationStatus !== 'validado');
 
   const handleContentClick = (contentId: string) => {
     router.push(`/teacher/content/${contentId}`);
@@ -151,7 +147,7 @@ export default function TeacherDashboard() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {assignedContents.map((content) => (
+            {assignedContents.map((content: Content) => (
               <Card key={content.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleContentClick(content.id)}>
                 <CardHeader>
                   <div className="flex items-start justify-between">

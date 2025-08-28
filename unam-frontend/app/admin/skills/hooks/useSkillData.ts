@@ -4,39 +4,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Language, Level, PaginatedResponse } from '@/types';
 import { Skill } from '@/skills/types';
+import { 
+  SKILL_LIST_FRAGMENT, 
+  LANGUAGE_SELECT_FRAGMENT,
+  LEVEL_SELECT_FRAGMENT 
+} from '@/lib/graphql/fragments';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 const GET_SKILLS_PAGINATED = `
+  ${SKILL_LIST_FRAGMENT}
+  
   query GetSkillsPaginated($search: String, $page: Int, $limit: Int, $isActive: Boolean, $levelId: ID, $lenguageId: ID) {
     skillsPaginated(search: $search, page: $page, limit: $limit, isActive: $isActive, levelId: $levelId, lenguageId: $lenguageId) {
       skills {
-        id
-        name
-        description
-        color
-        imageUrl
-        icon
-        objectives
-        prerequisites
-        difficulty
-        estimatedHours
-        tags
-        isActive
-        levelId
-        lenguageId
-        level {
-          id
-          name
-          description
-          difficulty
-        }
-        lenguage {
-          id
-          name
-        }
-        createdAt
-        updatedAt
+        ...SkillListFields
       }
       total
       page
@@ -49,21 +31,21 @@ const GET_SKILLS_PAGINATED = `
 `;
 
 const GET_LANGUAGES = `
+  ${LANGUAGE_SELECT_FRAGMENT}
+  
   query GetLanguages {
     lenguagesActivate {
-      id
-      name
+      ...LanguageSelectFields
     }
   }
 `;
 
 const GET_LEVELS_BY_LANGUAGE = `
+  ${LEVEL_SELECT_FRAGMENT}
+  
   query GetLevelsByLanguage($lenguageId: ID!) {
     levelsByLenguage(lenguageId: $lenguageId) {
-      id
-      name
-      description
-      difficulty
+      ...LevelSelectFields
     }
   }
 `;

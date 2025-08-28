@@ -1,47 +1,23 @@
+import { LANGUAGE_LIST_FRAGMENT, SKILL_LIST_FRAGMENT, CONTENT_PUBLIC_FRAGMENT } from './fragments';
+
 // Consultas para Languages
 export const GET_ACTIVE_LANGUAGES = `
+  ${LANGUAGE_LIST_FRAGMENT}
+  
   query LenguagesActivate {
     lenguagesActivate {
-      id
-      name
-      eslogan_atractivo
-      descripcion_corta
-      descripcion_completa
-      nivel
-      duracion_total_horas
-      color_tema
-      icono_curso
-      imagen_hero
-      badge_destacado
-
-      idioma_origen
-      idioma_destino
-      certificado_digital
-      puntuacion_promedio
-      total_estudiantes_inscritos
-      estado
-      featured
-      fecha_creacion
-      fecha_actualizacion
-      icons
-      isActive
-      createdAt
-      updatedAt
+      ...LanguageListFields
     }
   }
 `;
 
 // Consultas para Skills
 export const GET_ACTIVE_SKILLS = `
+  ${SKILL_LIST_FRAGMENT}
+  
   query SkillsActivePublic {
     skillsActivePublic {
-      id
-      name
-      description
-      color
-      isActive
-      createdAt
-      updatedAt
+      ...SkillListFields
     }
   }
 `;
@@ -103,36 +79,11 @@ export const GET_CONTENTS_BY_LEVEL = `
 `;
 
 export const GET_CONTENTS_BY_SKILL = `
+  ${CONTENT_PUBLIC_FRAGMENT}
+  
   query ContentsBySkillPublic($skillId: ID!) {
     contentsBySkillPublic(skillId: $skillId) {
-      id
-      name
-      description
-      isCompleted
-      createdAt
-      updatedAt
-      levelId
-      userId
-      markdownPath
-      assignedTeachers {
-        id
-        fullName
-        email
-        roles
-        isActive
-      }
-      validationStatus
-      publishedAt
-      skill {
-        id
-        name
-        description
-        color
-        isActive
-        createdAt
-        updatedAt
-      }
-      skillId
+      ...ContentPublicFields
     }
   }
 `;

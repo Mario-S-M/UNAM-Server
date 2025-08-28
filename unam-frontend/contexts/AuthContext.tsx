@@ -67,10 +67,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Redireccionar basado en el rol más alto
-    if (highestRole === 'superUser' || highestRole === 'admin' || highestRole === 'docente') {
+    if (highestRole === 'superUser' || highestRole === 'admin') {
       router.push('/admin');
+    } else if (highestRole === 'docente') {
+      router.push('/teacher');
     } else {
-      // Para usuarios regulares (alumno, mortal), redirigir al dashboard
       router.push('/dashboard');
     }
   };
@@ -124,8 +125,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(data.data.revalidate.token);
       setCookie('auth_token', data.data.revalidate.token, 7);
       
-      // Redireccionar automáticamente basado en el rol cuando se revalida el token
-      redirectBasedOnRole(userData);
+      // Solo redireccionar si estamos en la página de dashboard (página inicial)
+      if (window.location.pathname === '/dashboard') {
+        redirectBasedOnRole(userData);
+      }
     } catch (error) {
       console.error('Token validation failed:', error);
       logout();

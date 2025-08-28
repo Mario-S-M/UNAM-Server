@@ -15,18 +15,14 @@ import {
 import { SidebarLanguage, SidebarLevel, SidebarSkill, SidebarContent } from "./types";
 import { GET_CONTENTS_BY_SKILL } from "@/lib/graphql/contentGraphqlSchema";
 import { getCookie } from "@/lib/cookies";
+import { SKILL_PUBLIC_FRAGMENT, CONTENT_PUBLIC_FRAGMENT } from "@/lib/graphql/fragments";
 // GraphQL query para obtener skills por nivel
 const GET_SKILLS_BY_LEVEL_QUERY = `
+  ${SKILL_PUBLIC_FRAGMENT}
+  
   query GetSkillsByLevel($levelId: ID!) {
     skillsByLevelPublic(levelId: $levelId) {
-      id
-      name
-      description
-      color
-      difficulty
-      estimatedHours
-      tags
-      isActive
+      ...SkillPublicFields
     }
   }
 `;

@@ -49,3 +49,4 @@ export class UpdateContentInput extends PartialType(CreateContentInput) {
   @IsUUID('4', { message: 'El ID del nivel debe ser un UUID válido' })
   @Field(() => ID, { nullable: true })
   levelId?: string;
+}

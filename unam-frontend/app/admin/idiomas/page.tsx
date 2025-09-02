@@ -972,20 +972,6 @@ export default function IdiomasPage() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Select value={pageSize.toString()} onValueChange={(value) => {
-                setPageSize(parseInt(value));
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-[100px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1081,6 +1067,20 @@ export default function IdiomasPage() {
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Select value={pageSize.toString()} onValueChange={(value) => {
+              setPageSize(parseInt(value));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Table */}

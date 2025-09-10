@@ -5,7 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Entity,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Form } from '../../forms/entities/form.entity';
 
 @Entity({ name: 'activities' })
 @ObjectType()
@@ -45,4 +48,13 @@ export class Activity {
   @Column({ default: -1 })
   @Field(() => Int)
   userId: number;
+
+  @Column({ nullable: true })
+  @Field(() => ID, { nullable: true })
+  formId?: string;
+
+  @OneToOne(() => Form, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'formId' })
+  @Field(() => Form, { nullable: true })
+  form?: Form;
 }

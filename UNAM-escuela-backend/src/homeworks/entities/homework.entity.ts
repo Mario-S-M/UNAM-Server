@@ -20,7 +20,7 @@ export class Homework {
 
   @Column()
   @Field(() => String)
-  exercise: string;
+  description: string;
 
   @Column()
   @Field(() => String)

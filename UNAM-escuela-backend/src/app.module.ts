@@ -15,6 +15,9 @@ import { AuthModule } from './auth/auth.module';
 import { formatError } from './graphql/format-errors';
 import { LenguagesModule } from './lenguages/lenguages.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { FormsModule } from './forms/forms.module';
+import { UserProgressModule } from './user-progress/user-progress.module';
+// ExercisesModule removed - using Activities instead
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -69,6 +72,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     AuthModule,
     LenguagesModule,
     UploadsModule,
+    FormsModule,
+    UserProgressModule,
+    // ExercisesModule removed - using Activities instead
   ],
   controllers: [],
   providers: [

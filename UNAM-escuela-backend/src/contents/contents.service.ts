@@ -72,6 +72,38 @@ export class ContentsService {
     });
   }
 
+  async findAllPublic(
+    languageId?: string,
+    levelId?: string,
+    skillId?: string,
+  ): Promise<Content[]> {
+    let queryBuilder = this.contentsRepository
+      .createQueryBuilder('content')
+      .leftJoinAndSelect('content.assignedTeachers', 'assignedTeachers')
+      .leftJoinAndSelect('content.skill', 'skill');
+
+    // Apply filters
+    if (levelId) {
+      queryBuilder = queryBuilder.andWhere('content.levelId = :levelId', { levelId });
+    }
+
+    if (skillId) {
+      queryBuilder = queryBuilder.andWhere('content.skillId = :skillId', { skillId });
+    }
+
+    // For language filtering, filter by skill's language
+    if (languageId) {
+      queryBuilder = queryBuilder
+        .leftJoin('content.skill', 'contentSkill')
+        .leftJoin('contentSkill.lenguage', 'skillLanguage')
+        .andWhere('skillLanguage.id = :languageId', { languageId });
+    }
+
+    return queryBuilder
+      .orderBy('content.createdAt', 'DESC')
+      .getMany();
+  }
+
   async findPaginated(
     filters: ContentsFilterArgs,
     user?: User,

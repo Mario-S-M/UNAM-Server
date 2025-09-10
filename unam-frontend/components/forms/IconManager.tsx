@@ -218,3 +218,4 @@ export function IconManager({
 }
 
 export default IconManager;
+export type { IconManagerProps };

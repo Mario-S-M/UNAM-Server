@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@apollo/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, User, Calendar, CheckCircle, Clock, XCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { GET_CONTENT_BY_ID_PUBLIC } from "@/lib/graphql/queries";
+import { GET_CONTENT_PUBLIC } from "@/lib/graphql/dashboardQueries";
+import { ExamView } from "@/components/ExamView";
+
 
 interface Content {
   id: string;
@@ -85,29 +88,39 @@ function getValidationStatusVariant(status: string): "default" | "secondary" | "
 export default function ContentDetail() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = Array.isArray(params.id) ? params.id[0] : params.id as string;
 
+  console.log('🔍 About to execute useQuery with:', { id, skip: !id });
+  console.log('🔍 GET_CONTENT_PUBLIC query:', GET_CONTENT_PUBLIC);
+  
   const { data, loading, error } = useQuery<{ contentPublic: Content }>(
-    GET_CONTENT_BY_ID_PUBLIC,
+    GET_CONTENT_PUBLIC,
     {
       variables: { id },
       skip: !id,
       errorPolicy: 'all',
+      fetchPolicy: 'no-cache', // Force network request
+      onCompleted: (data) => {
+        console.log('✅ ContentDetail: Query completed with data:', data);
+      },
       onError: (error) => {
-        console.error('Error fetching content:', error);
+        console.error('❌ Error fetching content:', error);
+        console.log('❌ ContentDetail: Query error:', error);
         toast.error('Error al cargar el contenido');
       }
     }
   );
-
+  
 
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Cargando contenido...</span>
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Cargando contenido...</span>
+          </div>
         </div>
       </div>
     );
@@ -325,6 +338,9 @@ export default function ContentDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Examen */}
+        <ExamView contentId={content.id} />
       </div>
     </div>
   );

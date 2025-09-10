@@ -89,10 +89,9 @@ async function queryGraphQL(query: string, variables: Record<string, unknown> = 
   return result.data;
 }
 
-function getContentType(name: string, description: string): "video" | "article" | "exercise" {
+function getContentType(name: string, description: string): "video" | "article" {
   const text = `${name} ${description}`.toLowerCase();
   if (text.includes("video") || text.includes("vídeo")) return "video";
-  if (text.includes("ejercicio") || text.includes("exercise") || text.includes("práctica")) return "exercise";
   return "article";
 }
 
@@ -104,31 +103,24 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
     ]);
     
     if (languagesData.length === 0) {
-      console.warn('DataLoader: No languages found!');
       return [];
     }
     
     // Cargar niveles para cada idioma
     const structuredLanguages: SidebarLanguage[] = await Promise.all(
       languagesData.map(async (language: Language) => {
-        console.log(`DataLoader: Loading levels for language: ${language.name}`);
-        
         try {
           const levelsData = await getLevelsByLanguage(language.id);
-          console.log(`DataLoader: Found ${levelsData.length} levels for ${language.name}`);
           
           // Cargar skills para cada nivel usando GraphQL
           const structuredLevels: SidebarLevel[] = await Promise.all(
             levelsData.map(async (level: Level) => {
-              console.log(`DataLoader: Loading skills for level: ${level.name}`);
-              
               try {
                 const data = await queryGraphQLPublic(GET_SKILLS_BY_LEVEL_QUERY, {
                   levelId: level.id,
                 });
                 
                 const skillsData = data.skillsByLevelPublic || [];
-                console.log(`DataLoader: Found ${skillsData.length} skills for level ${level.name}`);
                 
                 // Convertir skills a formato SidebarSkill y cargar contenidos
                 const sidebarSkills: SidebarSkill[] = await Promise.all(
@@ -160,7 +152,6 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
                         contents: sidebarContents,
                       };
                     } catch (error) {
-                      console.error(`DataLoader: Error loading contents for skill ${skill.name}:`, error);
                       return {
                         id: skill.id,
                         name: skill.name,
@@ -178,7 +169,6 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
                   skills: sidebarSkills,
                 };
               } catch (error) {
-                console.error(`DataLoader: Error loading skills for level ${level.name}:`, error);
                 return {
                   id: level.id,
                   name: level.name,
@@ -197,7 +187,6 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
             levels: structuredLevels,
           };
         } catch (error) {
-          console.error(`DataLoader: Error loading levels for language ${language.name}:`, error);
           return {
             id: language.id,
             name: language.name,
@@ -208,10 +197,8 @@ export async function loadLanguagesWithLevels(): Promise<SidebarLanguage[]> {
       })
     );
     
-    console.log('DataLoader: Final structured languages:', structuredLanguages.length);
     return structuredLanguages;
   } catch (error) {
-    console.error('DataLoader: Error loading languages with levels:', error);
     return [];
   }
 }

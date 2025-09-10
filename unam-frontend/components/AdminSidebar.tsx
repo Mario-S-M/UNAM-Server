@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Languages, Users, Settings, LogOut, User, GraduationCap, Zap, FileText } from "lucide-react";
+import { Building2, Languages, Users, Settings, LogOut, User, GraduationCap, Zap, FileText, BookOpen } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function AdminSidebar() {
@@ -41,6 +41,7 @@ export default function AdminSidebar() {
       icon: FileText,
       href: "/admin/contenido"
     },
+
     {
       title: "Usuarios",
       icon: Users,

@@ -125,6 +125,109 @@ type PaginatedSkills {
   hasPreviousPage: Boolean!
 }
 
+type FormQuestionOption {
+  id: ID!
+  optionText: String!
+  optionValue: String
+  orderIndex: Int!
+  imageUrl: String
+  color: String
+  isCorrect: Boolean!
+  questionId: ID!
+  question: FormQuestion!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type FormResponse {
+  id: ID!
+  respondentName: String
+  respondentEmail: String
+  isAnonymous: Boolean!
+  ipAddress: String
+  userAgent: String
+  status: String!
+  startedAt: Timestamp
+  completedAt: Timestamp
+  formId: ID!
+  form: Form!
+  userId: Int
+  user: User
+  answers: [FormAnswer!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+"""
+`Date` type as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
+"""
+scalar Timestamp
+
+type FormAnswer {
+  id: ID!
+  textAnswer: String
+  selectedOptionIds: [String!]
+  numericAnswer: String
+  booleanAnswer: Boolean
+  questionId: ID!
+  question: FormQuestion!
+  responseId: ID!
+  response: FormResponse!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type FormQuestion {
+  id: ID!
+  questionText: String!
+  questionType: String!
+  orderIndex: Int!
+  isRequired: Boolean!
+  description: String
+  placeholder: String
+  imageUrl: String
+  minValue: Int
+  maxValue: Int
+  minLabel: String
+  maxLabel: String
+  maxLength: Int
+  allowMultiline: Boolean!
+  correctAnswer: String
+  correctOptionIds: [String!]
+  explanation: String
+  incorrectFeedback: String
+  points: Float
+  formId: ID!
+  form: Form!
+  options: [FormQuestionOption!]!
+  answers: [FormAnswer!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Form {
+  id: ID!
+  title: String!
+  description: String
+  status: String!
+  allowAnonymous: Boolean!
+  allowMultipleResponses: Boolean!
+  successMessage: String
+  backgroundColor: String
+  textColor: String
+  fontFamily: String
+  publishedAt: Timestamp
+  closedAt: Timestamp
+  contentId: ID!
+  content: Content!
+  userId: Int
+  user: User
+  questions: [FormQuestion!]!
+  responses: [FormResponse!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
 type Activity {
   id: ID!
   name: String!
@@ -135,12 +238,14 @@ type Activity {
   createdAt: String!
   updatedAt: String!
   userId: Int!
+  formId: ID
+  form: Form
 }
 
 type Homework {
   id: ID!
   name: String!
-  exercise: String!
+  description: String!
   correctAnswer: String!
   activityId: ID!
   createdAt: String!
@@ -173,6 +278,55 @@ type PaginatedLenguages {
   hasPreviousPage: Boolean!
 }
 
+type UserProgress {
+  id: ID!
+  userId: ID!
+  contentId: ID!
+  progressPercentage: Float!
+  completedActivities: Int!
+  totalActivities: Int!
+  completedActivityIds: [String!]
+  formResponseIds: [String!]
+  isCompleted: Boolean!
+  lastActivityAt: Timestamp
+  completedAt: Timestamp
+  user: User!
+  content: Content!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type UserActivityHistory {
+  id: ID!
+  userId: ID!
+  contentId: ID!
+  activityId: ID!
+  formResponseId: ID
+  status: String!
+  score: Int
+  maxScore: Int
+  timeSpent: Int
+  attemptNumber: Int!
+  answeredQuestionIds: [String!]
+  correctAnswerIds: [String!]
+  startedAt: Timestamp
+  completedAt: Timestamp
+  user: User!
+  content: Content!
+  activity: Activity!
+  formResponse: FormResponse
+  createdAt: String!
+  updatedAt: String!
+}
+
+type OverallProgress {
+  totalContents: Int!
+  completedContents: Int!
+  overallPercentage: Float!
+  totalActivities: Int!
+  completedActivities: Int!
+}
+
 type Query {
   levels: [Level!]!
   levelsPaginated(search: String, page: Int = 1, limit: Int = 5, isActive: Boolean, lenguageId: ID, difficulty: String): PaginatedLevels!
@@ -183,6 +337,7 @@ type Query {
   contentsByLevelAndSkillPublic(levelId: ID!, skillId: ID!): [Content!]!
   contentPublic(id: ID!): Content!
   contentMarkdownPublic(contentId: ID!): String!
+  allContentsPublic(languageId: ID, levelId: ID, skillId: ID): [Content!]!
   contents: [Content!]!
   contentsPaginated(search: String, levelId: String, skillId: String, validationStatus: String, page: Int! = 1, limit: Int! = 5): PaginatedContents!
   contentsByLevel(levelId: ID!): [Content!]!
@@ -206,19 +361,30 @@ type Query {
   skillsPaginated(search: String, page: Int = 1, limit: Int = 10, isActive: Boolean, levelId: ID, lenguageId: ID): PaginatedSkills!
   activities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
+  exercisesByContent(contentId: ID!): [Activity!]!
   activity(id: ID!): Activity!
   homeworks: [Homework!]!
   homework(id: Int!): Homework!
   users(roles: [ValidRoles!] = []): [User!]!
   usersPaginated(roles: [ValidRoles!] = [], search: String, page: Int = 1, limit: Int = 10, assignedLanguageId: ID, isActive: Boolean): PaginatedUsers!
   user(id: ID!): User!
-  revalidate: AuthResponse!
+  revalidate(token: String): AuthResponse!
   lenguages: [Lenguage!]!
   lenguagesActivate: [Lenguage!]!
   lenguagesFeatured: [Lenguage!]!
   lenguagesByNivel(nivel: String!): [Lenguage!]!
   lenguagesPaginated(search: String, page: Int = 1, limit: Int = 5, isActive: Boolean): PaginatedLenguages!
   lenguage(id: ID!): Lenguage!
+  getForm(id: ID!): Form!
+  getFormsByContent(contentId: ID!, filters: FormFiltersInput): [Form!]!
+  getFormResponse(id: ID!): FormResponse!
+  getFormResponses(formId: ID!): [FormResponse!]!
+  myProgress(contentId: String): [UserProgress!]!
+  myActivityHistory(contentId: String, activityId: String): [UserActivityHistory!]!
+  myOverallProgress: OverallProgress!
+  userProgress(userId: String!, contentId: String): [UserProgress!]!
+  userActivityHistory(userId: String!, contentId: String, activityId: String): [UserActivityHistory!]!
+  userOverallProgress(userId: String!): OverallProgress!
 }
 
 enum ValidRoles {
@@ -227,6 +393,14 @@ enum ValidRoles {
   docente
   alumno
   mortal
+}
+
+input FormFiltersInput {
+  search: String
+  contentId: ID
+  status: String
+  page: Int
+  limit: Int
 }
 
 type Mutation {
@@ -265,6 +439,10 @@ type Mutation {
   createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!
   updateLenguage(updateLenguageInput: UpdateLenguageInput!): Lenguage!
   removeLenguage(id: ID!): Lenguage!
+  createForm(createFormInput: CreateFormInput!): Form!
+  updateForm(updateFormInput: UpdateFormInput!): Form!
+  deleteForm(id: ID!): Boolean!
+  submitFormResponse(createFormResponseInput: CreateFormResponseInput!): FormResponse!
 }
 
 input CreateLevelInput {
@@ -354,6 +532,39 @@ input CreateActivityInput {
   indication: String!
   example: String!
   contentId: ID!
+  formId: ID
+  questions: [CreateFormQuestionInput!]
+}
+
+input CreateFormQuestionInput {
+  questionText: String!
+  questionType: String!
+  orderIndex: Int!
+  isRequired: Boolean! = true
+  description: String
+  placeholder: String
+  imageUrl: String
+  minValue: Int
+  maxValue: Int
+  minLabel: String
+  maxLabel: String
+  maxLength: Int
+  allowMultiline: Boolean!
+  correctAnswer: String
+  correctOptionIds: [String!]
+  explanation: String
+  incorrectFeedback: String
+  points: Float
+  options: [CreateFormQuestionOptionInput!]
+}
+
+input CreateFormQuestionOptionInput {
+  optionText: String!
+  optionValue: String
+  orderIndex: Int!
+  imageUrl: String
+  color: String
+  isCorrect: Boolean! = false
 }
 
 input UpdateActivityInput {
@@ -362,6 +573,8 @@ input UpdateActivityInput {
   indication: String
   example: String
   contentId: ID
+  formId: ID
+  questions: [CreateFormQuestionInput!]
   id: ID!
 }
 
@@ -455,4 +668,80 @@ input UpdateLenguageInput {
   isActive: Boolean = true
   id: ID!
   dificultad: Int
+}
+
+input CreateFormInput {
+  title: String!
+  description: String
+  allowAnonymous: Boolean!
+  allowMultipleResponses: Boolean!
+  successMessage: String
+  backgroundColor: String
+  textColor: String
+  fontFamily: String
+  contentId: ID!
+  questions: [CreateFormQuestionInput!]
+}
+
+input UpdateFormInput {
+  id: ID!
+  title: String
+  description: String
+  status: String
+  allowAnonymous: Boolean
+  allowMultipleResponses: Boolean
+  successMessage: String
+  backgroundColor: String
+  textColor: String
+  fontFamily: String
+  questions: [UpdateFormQuestionInput!]
+}
+
+input UpdateFormQuestionInput {
+  id: ID
+  questionText: String
+  questionType: String
+  orderIndex: Int
+  isRequired: Boolean
+  description: String
+  placeholder: String
+  imageUrl: String
+  minValue: Int
+  maxValue: Int
+  minLabel: String
+  maxLabel: String
+  maxLength: Int
+  allowMultiline: Boolean
+  correctAnswer: String
+  correctOptionIds: [String!]
+  explanation: String
+  incorrectFeedback: String
+  points: Float
+  options: [UpdateFormQuestionOptionInput!]
+}
+
+input UpdateFormQuestionOptionInput {
+  id: ID
+  optionText: String
+  optionValue: String
+  orderIndex: Int
+  imageUrl: String
+  color: String
+  isCorrect: Boolean
+}
+
+input CreateFormResponseInput {
+  formId: ID!
+  respondentName: String
+  respondentEmail: String
+  isAnonymous: Boolean!
+  answers: [CreateFormAnswerInput!]!
+}
+
+input CreateFormAnswerInput {
+  questionId: ID!
+  textAnswer: String
+  selectedOptionIds: [String!]
+  numericAnswer: String
+  booleanAnswer: Boolean
 }

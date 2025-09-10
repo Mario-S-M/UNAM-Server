@@ -136,6 +136,12 @@ interface ColumnVisibility {
   actions: boolean;
 }
 
+interface Teacher {
+  id: string;
+  fullName: string;
+  email: string;
+}
+
 export default function ContenidoPage() {
   const { token } = useAuth();
   const [contents, setContents] = useState<PaginatedContents>({
@@ -148,6 +154,8 @@ export default function ContenidoPage() {
     hasPreviousPage: false,
   });
   const [loading, setLoading] = useState(true);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachersLoading, setTeachersLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [formData, setFormData] = useState<ContentFormData>({
@@ -173,6 +181,33 @@ export default function ContenidoPage() {
     updatedAt: false,
     actions: true,
   });
+
+  const fetchTeachers = useCallback(async () => {
+    if (!token) return;
+    
+    setTeachersLoading(true);
+    try {
+      const query = `
+        query GetTeachers {
+          users(roles: [docente]) {
+            id
+            fullName
+            email
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, {}, token);
+      if (response.data?.users) {
+        setTeachers(response.data.users);
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      toast.error('Error al cargar los profesores');
+    } finally {
+      setTeachersLoading(false);
+    }
+  }, [token]);
 
   const fetchContents = useCallback(async () => {
     if (!token) return;
@@ -272,8 +307,10 @@ export default function ContenidoPage() {
         const mutation = `
           mutation UpdateContent($updateContentInput: UpdateContentInput!) {
             updateContent(updateContentInput: $updateContentInput) {
-              success
-              message
+              id
+              name
+              description
+              validationStatus
             }
           }
         `;
@@ -281,7 +318,12 @@ export default function ContenidoPage() {
         await fetchGraphQL(mutation, {
           updateContentInput: {
             id: editingContent.id,
-            ...formData
+            name: formData.name,
+            description: formData.description,
+            levelId: formData.levelId,
+            skillId: formData.skillId,
+            teacherIds: formData.teacherIds,
+            validationStatus: formData.validationStatus
           }
         }, token);
         
@@ -290,14 +332,23 @@ export default function ContenidoPage() {
         const mutation = `
           mutation CreateContent($createContentInput: CreateContentInput!) {
             createContent(createContentInput: $createContentInput) {
-              success
-              message
+              id
+              name
+              description
+              validationStatus
             }
           }
         `;
         
         await fetchGraphQL(mutation, {
-          createContentInput: formData
+          createContentInput: {
+            name: formData.name,
+            description: formData.description,
+            levelId: formData.levelId,
+            skillId: formData.skillId,
+            teacherIds: formData.teacherIds,
+            validationStatus: formData.validationStatus
+          }
         }, token);
         
         toast.success('Contenido creado exitosamente');
@@ -312,6 +363,20 @@ export default function ContenidoPage() {
     }
   };
 
+  const handleCreate = () => {
+    setEditingContent(null);
+    setFormData({
+      name: '',
+      description: '',
+      levelId: '',
+      skillId: '',
+      teacherIds: [],
+      validationStatus: 'PENDING',
+    });
+    fetchTeachers();
+    setIsDialogOpen(true);
+  };
+
   const handleEdit = (content: Content) => {
     setEditingContent(content);
     setFormData({
@@ -322,6 +387,7 @@ export default function ContenidoPage() {
       teacherIds: content.assignedTeachers?.map(t => t.id) || [],
       validationStatus: content.validationStatus,
     });
+    fetchTeachers();
     setIsDialogOpen(true);
   };
 
@@ -333,10 +399,10 @@ export default function ContenidoPage() {
 
     try {
       const mutation = `
-        mutation DeleteContent($id: ID!) {
-          deleteContent(id: $id) {
-            success
-            message
+        mutation RemoveContent($id: ID!) {
+          removeContent(id: $id) {
+            id
+            name
           }
         }
       `;
@@ -380,7 +446,7 @@ export default function ContenidoPage() {
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm}>
+                <Button onClick={handleCreate}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nuevo Contenido
                 </Button>
@@ -447,6 +513,57 @@ export default function ContenidoPage() {
                               </div>
                             ))}
                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Asignación de Profesores</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label>Profesores Asignados</Label>
+                          {teachersLoading ? (
+                            <div className="text-sm text-muted-foreground">Cargando profesores...</div>
+                          ) : (
+                            <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-3">
+                              {teachers.length === 0 ? (
+                                <div className="text-sm text-muted-foreground">No hay profesores disponibles</div>
+                              ) : (
+                                teachers.map((teacher) => (
+                                  <div key={teacher.id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`teacher-${teacher.id}`}
+                                      checked={formData.teacherIds.includes(teacher.id)}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            teacherIds: [...prev.teacherIds, teacher.id]
+                                          }));
+                                        } else {
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            teacherIds: prev.teacherIds.filter(id => id !== teacher.id)
+                                          }));
+                                        }
+                                      }}
+                                    />
+                                    <Label htmlFor={`teacher-${teacher.id}`} className="text-sm font-normal flex-1">
+                                      <div>
+                                        <div className="font-medium">{teacher.fullName}</div>
+                                        <div className="text-xs text-muted-foreground">{teacher.email}</div>
+                                      </div>
+                                    </Label>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                          {formData.teacherIds.length > 0 && (
+                            <div className="text-sm text-muted-foreground">
+                              {formData.teacherIds.length} profesor(es) seleccionado(s)
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

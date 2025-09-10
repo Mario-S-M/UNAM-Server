@@ -233,3 +233,4 @@ export function FormField({
 }
 
 export default FormField;
+export type { FormFieldProps };

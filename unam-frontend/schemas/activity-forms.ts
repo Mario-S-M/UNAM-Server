@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FormQuestionSchema } from './form-forms';
 
 // Esquema para crear actividad
 export const CreateActivityFormSchema = z.object({
@@ -20,7 +21,11 @@ export const CreateActivityFormSchema = z.object({
   
   contentId: z.string({
     message: 'El ID del contenido es requerido y debe ser un texto'
-  }).uuid('El ID del contenido debe ser un UUID válido')
+  }).uuid('El ID del contenido debe ser un UUID válido'),
+  
+  formId: z.string().uuid('El ID del formulario debe ser un UUID válido').optional(),
+  
+  questions: z.array(FormQuestionSchema).optional()
 });
 
 // Esquema para actualizar actividad
@@ -43,7 +48,11 @@ export const UpdateActivityFormSchema = z.object({
   
   example: z.string({
     message: 'El ejemplo debe ser un texto'
-  }).min(1, 'El ejemplo no puede estar vacío').max(1000, 'El ejemplo no puede exceder 1000 caracteres').optional()
+  }).min(1, 'El ejemplo no puede estar vacío').max(1000, 'El ejemplo no puede exceder 1000 caracteres').optional(),
+  
+  formId: z.string().uuid('El ID del formulario debe ser un UUID válido').optional(),
+  
+  questions: z.array(FormQuestionSchema).optional()
 });
 
 // Esquema para filtros de actividades

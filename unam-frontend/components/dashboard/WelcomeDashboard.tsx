@@ -1,33 +1,82 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap } from "lucide-react";
+import { useState } from 'react';
+import { useDashboard } from '@/contexts/DashboardContext';
+import { SkillsOverview } from './SkillsOverview';
+import { ContentsBySkill } from './ContentsBySkill';
+import { ActivitiesByContent } from './ActivitiesByContent';
+
+interface Content {
+  id: string;
+  name: string;
+  description: string;
+  isCompleted: boolean;
+  validationStatus: string;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  levelId: string;
+  userId: string;
+  markdownPath: string;
+  skillId: string;
+  skill: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  assignedTeachers: {
+    id: string;
+    fullName: string;
+    email: string;
+  }[];
+}
 
 export function WelcomeDashboard() {
+  const { selectedSkill } = useDashboard();
+  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
+  const [currentView, setCurrentView] = useState<'skills' | 'contents' | 'activities'>('skills');
+
+  const handleContentSelect = (content: Content) => {
+    setSelectedContent(content);
+    setCurrentView('activities');
+  };
+
+  const handleBackToContents = () => {
+    setSelectedContent(null);
+    setCurrentView('contents');
+  };
+
+  const handleBackToSkills = () => {
+    setSelectedContent(null);
+    setCurrentView('skills');
+  };
+
+  // Determinar qué vista mostrar basado en el estado
+  const getViewToRender = () => {
+    if (selectedContent && currentView === 'activities') {
+      return (
+        <ActivitiesByContent 
+          selectedContent={selectedContent}
+          onBackToContents={handleBackToContents}
+        />
+      );
+    }
+    
+    if (selectedSkill && (currentView === 'contents' || currentView === 'activities')) {
+      return (
+        <ContentsBySkill 
+          onContentSelect={handleContentSelect}
+          onBackToSkills={handleBackToSkills}
+        />
+      );
+    }
+    
+    return <SkillsOverview />;
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <div className="max-w-3xl w-full space-y-8 p-4">
-        <Card className="w-full">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl">Bienvenido al Dashboard</CardTitle>
-                <CardDescription>
-                  Tu espacio de aprendizaje personalizado
-                </CardDescription>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <GraduationCap className="h-6 w-6" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              Bienvenido a tu dashboard de aprendizaje. Aquí podrás acceder a todas las herramientas y recursos necesarios para tu desarrollo académico.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="w-full max-w-7xl mx-auto p-6">
+      {getViewToRender()}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { ContentActivities } from "@/components/ContentActivities";
 interface Content {
   id: string;
   name: string;
@@ -163,13 +164,22 @@ export default function TeacherContentDetail() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Información básica del contenido sin skill ni fechas */}
-
-
+          {/* Información básica del contenido */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Habilidad</p>
+              <p className="text-sm">{content.skill?.name || 'Sin habilidad asignada'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Estado</p>
+              <p className="text-sm">{content.isCompleted ? 'Completado' : 'En progreso'}</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-
+      {/* Sección de Actividades */}
+      <ContentActivities contentId={contentId} />
     </div>
   );
 }

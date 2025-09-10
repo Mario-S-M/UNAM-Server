@@ -22,6 +22,11 @@ export class ActivitiesResolver {
     return this.activitiesService.findByContent(contentId);
   }
 
+  @Query(() => [Activity], { name: 'exercisesByContent' })
+  async findExercisesByContent(@Args('contentId', { type: () => ID }) contentId: string):Promise<Activity[]> {
+    return this.activitiesService.findExercisesByContent(contentId);
+  }
+
   @Query(() => Activity, { name: 'activity' })
   async findOne(@Args('id', { type: () => ID }) id: string):Promise<Activity> {
     return this.activitiesService.findOne(id);

@@ -9,10 +9,13 @@ interface ApolloProviderWrapperProps {
 }
 
 export default function ApolloProviderWrapper({ children }: ApolloProviderWrapperProps) {
+  console.log('🔧 ApolloProviderWrapper: Initializing with client:', client);
+  console.log('🔧 ApolloProviderWrapper: Client link:', client.link);
+  
   return (
     <ApolloProvider client={client}>
       {children}
-      <Toaster position="top-right" richColors />
+      <Toaster />
     </ApolloProvider>
   );
 }

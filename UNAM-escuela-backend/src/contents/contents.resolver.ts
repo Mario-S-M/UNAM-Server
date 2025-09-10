@@ -54,6 +54,16 @@ export class ContentsResolver {
     return this.contentsService.getMarkdownContentPublic(contentId);
   }
 
+  // Public endpoint for all contents with optional filters - no authentication required
+  @Query(() => [Content], { name: 'allContentsPublic' })
+  findAllPublic(
+    @Args('languageId', { type: () => ID, nullable: true }) languageId?: string,
+    @Args('levelId', { type: () => ID, nullable: true }) levelId?: string,
+    @Args('skillId', { type: () => ID, nullable: true }) skillId?: string,
+  ): Promise<Content[]> {
+    return this.contentsService.findAllPublic(languageId, levelId, skillId);
+  }
+
 
 
   // Protected endpoints below

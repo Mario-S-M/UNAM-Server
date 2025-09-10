@@ -1,6 +1,8 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsArray, ValidateNested } from 'class-validator';
 import { CreateActivityInput } from './create-activity.input';
 import { InputType, Field, Int, PartialType, ID } from '@nestjs/graphql';
+import { Type } from 'class-transformer';
+import { CreateFormQuestionInput } from '../../forms/dto/create-form.dto';
 
 @InputType()
 export class UpdateActivityInput extends PartialType(CreateActivityInput) {
@@ -29,4 +31,16 @@ export class UpdateActivityInput extends PartialType(CreateActivityInput) {
   @IsOptional()
   @Field(() => String, {nullable: true})
   example: string;
+
+  @IsOptional()
+  @IsString()
+  @Field(() => ID, { nullable: true })
+  formId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateFormQuestionInput)
+  @Field(() => [CreateFormQuestionInput], { nullable: true })
+  questions?: CreateFormQuestionInput[];
 }

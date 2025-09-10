@@ -24,6 +24,10 @@ export const GET_ACTIVE_LANGUAGES = gql`
   }
 `;
 
+
+
+
+
 // Level Queries
 export const GET_LEVELS = gql`
   query GetLevels {
@@ -317,24 +321,6 @@ export const GET_TEACHERS = gql`
       id
       fullName
       email
-    }
-  }
-`;
-
-// Public Content Query
-export const GET_CONTENT_BY_ID_PUBLIC = gql`
-  query GetContentByIdPublic($id: ID!) {
-    contentPublic(id: $id) {
-      id
-      name
-      description
-      isCompleted
-      validationStatus
-      publishedAt
-      skill {
-        id
-        name
-      }
     }
   }
 `;

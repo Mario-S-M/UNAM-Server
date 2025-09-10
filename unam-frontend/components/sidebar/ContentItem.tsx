@@ -16,8 +16,7 @@ function getContentIcon(type: string) {
       return "🎥";
     case "article":
       return "📄";
-    case "exercise":
-      return "✏️";
+
     default:
       return "📝";
   }

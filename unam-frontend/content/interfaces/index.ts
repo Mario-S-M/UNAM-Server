@@ -89,7 +89,7 @@ export interface PaginatedSkills {
 export interface SidebarContent {
   id: string;
   title: string;
-  type: "video" | "article" | "exercise";
+  type: "video" | "article";
 }
 
 export interface SidebarSkill {

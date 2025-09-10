@@ -93,11 +93,45 @@ export class AuthService {
     }
   }
 
-  revalidateToken(user: User): AuthResponse {
+  revalidateToken(user: User | null): AuthResponse {
+    if (!user) {
+      this.logger.log('Intento de revalidación sin usuario autenticado');
+      throw new UnauthorizedException('Usuario no autenticado, por favor inicie sesión');
+    }
+    
     this.logger.log(
       `Revalidando token para usuario: ${user.email} (ID: ${user.id})`,
     );
     const token = this.getJwtToken(user.id);
     return { token, user };
+  }
+
+  async revalidateTokenFromString(token?: string): Promise<AuthResponse> {
+    if (!token) {
+      this.logger.log('Intento de revalidación sin token');
+      throw new UnauthorizedException('Usuario no autenticado, por favor inicie sesión');
+    }
+
+    try {
+      // Remover 'Bearer ' si está presente
+      const cleanToken = token.replace('Bearer ', '');
+      
+      // Verificar y decodificar el token
+      const payload = this.jwtService.verify(cleanToken);
+      
+      // Obtener el usuario usando el ID del token
+      const user = await this.validateUser(payload.id);
+      
+      this.logger.log(
+        `Revalidando token para usuario: ${user.email} (ID: ${user.id})`,
+      );
+      
+      // Generar un nuevo token
+      const newToken = this.getJwtToken(user.id);
+      return { token: newToken, user };
+    } catch (error) {
+      this.logger.error(`Error revalidando token: ${error.message}`);
+      throw new UnauthorizedException('Token inválido o expirado, por favor inicie sesión nuevamente');
+    }
   }
 }

@@ -98,8 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
         body: JSON.stringify({
           query: `
-            query Revalidate {
-              revalidate {
+            query Revalidate($token: String) {
+              revalidate(token: $token) {
                 token
                 user {
                   id
@@ -111,6 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               }
             }
           `,
+          variables: {
+            token: authToken
+          }
         }),
       });
 

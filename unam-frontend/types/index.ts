@@ -65,6 +65,21 @@ export type {
   StudentAnswerData
 } from '../schemas/homework-forms';
 
+// Exercise types removed - using Activities instead
+
+export type {
+  QuestionType,
+  FormStatus,
+  FormQuestionOptionData,
+  FormQuestionData,
+  CreateFormFormData,
+  UpdateFormFormData,
+  FormFiltersData,
+  FormIdData,
+  FormAnswerData,
+  CreateFormResponseData
+} from '../schemas/form-forms';
+
 // Entity Types - Import from content schemas
 export type {
   Teacher,
@@ -110,7 +125,7 @@ export interface SidebarContent {
   isCompleted: boolean;
   validationStatus: string;
   publishedAt?: string;
-  type: "video" | "article" | "exercise";
+  type: "video" | "article";
 }
 
 export interface SidebarSkill {
@@ -295,7 +310,7 @@ export type ActivityStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export type HomeworkStatus = 'PENDING' | 'SUBMITTED' | 'GRADED' | 'RETURNED';
 
 // Tipos para tipos de contenido
-export type ContentType = 'video' | 'article' | 'exercise' | 'quiz' | 'assignment';
+export type ContentType = 'video' | 'article' | 'quiz' | 'assignment';
 
 // Exportar constantes útiles
 export const VALIDATION_STATUSES: ValidationStatus[] = ['PENDING', 'APPROVED', 'REJECTED'];
@@ -303,7 +318,7 @@ export const DIFFICULTY_LEVELS: DifficultyLevel[] = ['BEGINNER', 'INTERMEDIATE',
 export const USER_ROLES: UserRole[] = ['ADMIN', 'TEACHER', 'STUDENT'];
 export const ACTIVITY_STATUSES: ActivityStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
 export const HOMEWORK_STATUSES: HomeworkStatus[] = ['PENDING', 'SUBMITTED', 'GRADED', 'RETURNED'];
-export const CONTENT_TYPES: ContentType[] = ['video', 'article', 'exercise', 'quiz', 'assignment'];
+export const CONTENT_TYPES: ContentType[] = ['video', 'article', 'quiz', 'assignment'];
 
 // Tipos para configuración de la aplicación
 export interface AppConfig {

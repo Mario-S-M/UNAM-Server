@@ -296,7 +296,7 @@ export const SKILL_PUBLIC_FRAGMENT = `
   }
 `;
 
-// Fragment para contenidos públicos (sidebar)
+// Fragment público para contenidos (solo campos necesarios para vistas públicas)
 export const CONTENT_PUBLIC_FRAGMENT = `
   fragment ContentPublicFields on Content {
     id
@@ -305,9 +305,23 @@ export const CONTENT_PUBLIC_FRAGMENT = `
     isCompleted
     validationStatus
     publishedAt
+    createdAt
+    updatedAt
     skill {
       id
       name
+      description
+      color
+      isActive
+      createdAt
+      updatedAt
+    }
+    assignedTeachers {
+      id
+      fullName
+      email
+      roles
+      isActive
     }
   }
 `;

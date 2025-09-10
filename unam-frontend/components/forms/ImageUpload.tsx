@@ -326,3 +326,4 @@ export function ImageUpload({
 }
 
 export default ImageUpload;
+export type { ImageUploadProps };

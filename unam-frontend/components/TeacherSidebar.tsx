@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,11 +9,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, FileText, LogOut, User } from "lucide-react";
+import { GraduationCap, FileText, LogOut, User, BookOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client";
 import { gql } from "@apollo/client";
@@ -57,6 +61,7 @@ export default function TeacherSidebar() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isContentsOpen, setIsContentsOpen] = React.useState(false);
 
   const { data, loading, error } = useQuery<{ myAssignedContents: Content[] }>(
     MY_ASSIGNED_CONTENTS_QUERY,
@@ -99,59 +104,96 @@ export default function TeacherSidebar() {
       <SidebarContent>
         <div className="px-4 py-2">
           <h3 className="text-sm font-medium text-sidebar-foreground mb-3">
-            Contenidos Asignados
+            Navegación
           </h3>
           
-          {loading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="ml-2 text-xs text-muted-foreground">Cargando...</span>
-            </div>
-          ) : error ? (
-            <div className="text-xs text-red-500 py-2">
-              Error al cargar contenidos
-            </div>
-          ) : assignedContents.length === 0 ? (
-            <div className="text-xs text-muted-foreground py-2">
-              No tienes contenidos asignados
-            </div>
-          ) : (
-            <SidebarMenu>
-              {assignedContents.map((content) => {
-                const isActive = pathname === `/teacher/content/${content.id}`;
-                
-                return (
-                  <SidebarMenuItem key={content.id}>
-                    <SidebarMenuButton
-                      onClick={() => handleContentClick(content.id)}
-                      className={`w-full justify-start p-3 ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        <div 
-                          className="h-3 w-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: content.skill?.color || '#6B7280' }}
-                        />
-                        <div className="flex-1 text-left min-w-0">
-                          <div className="font-medium text-sm truncate">{content.name}</div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {content.skill?.name || 'Sin skill'}
-                          </div>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Badge 
-                              variant={content.validationStatus === 'validado' ? 'default' : 'secondary'}
-                              className="text-xs px-1 py-0"
-                            >
-                              {content.validationStatus === 'validado' ? 'Validado' : 'Sin validar'}
-                            </Badge>
-                          </div>
-                        </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => router.push('/teacher/activities')}
+                className={`w-full justify-start p-3 ${pathname === '/teacher/activities' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
+              >
+                <div className="flex items-center gap-3 w-full">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="font-medium text-sm">Actividades</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => setIsContentsOpen(!isContentsOpen)}
+                className="w-full justify-start p-3"
+              >
+                <div className="flex items-center gap-3 w-full">
+                  <FileText className="h-4 w-4" />
+                  <span className="font-medium text-sm">Contenidos</span>
+                  {isContentsOpen ? (
+                    <ChevronDown className="h-4 w-4 ml-auto" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 ml-auto" />
+                  )}
+                </div>
+              </SidebarMenuButton>
+              
+              {isContentsOpen && (
+                <SidebarMenuSub>
+                  {loading ? (
+                    <SidebarMenuSubItem>
+                      <div className="flex items-center justify-center py-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span className="ml-2 text-xs text-muted-foreground">Cargando...</span>
                       </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          )}
+                    </SidebarMenuSubItem>
+                  ) : error ? (
+                    <SidebarMenuSubItem>
+                      <div className="text-xs text-red-500 py-2 px-2">
+                        Error al cargar contenidos
+                      </div>
+                    </SidebarMenuSubItem>
+                  ) : assignedContents.length === 0 ? (
+                    <SidebarMenuSubItem>
+                      <div className="text-xs text-muted-foreground py-2 px-2">
+                        No tienes contenidos asignados
+                      </div>
+                    </SidebarMenuSubItem>
+                  ) : (
+                    assignedContents.map((content) => {
+                      const isActive = pathname === `/teacher/content/${content.id}`;
+                      
+                      return (
+                        <SidebarMenuSubItem key={content.id}>
+                          <SidebarMenuSubButton
+                            onClick={() => handleContentClick(content.id)}
+                            isActive={isActive}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <div 
+                                className="h-2 w-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: content.skill?.color || '#6B7280' }}
+                              />
+                              <div className="flex-1 text-left min-w-0">
+                                <div className="font-medium text-xs truncate">{content.name}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {content.skill?.name || 'Sin skill'}
+                                </div>
+                              </div>
+                              <Badge 
+                                variant={content.validationStatus === 'validado' ? 'default' : 'secondary'}
+                                className="text-xs px-1 py-0 ml-1"
+                              >
+                                {content.validationStatus === 'validado' ? 'V' : 'P'}
+                              </Badge>
+                            </div>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      );
+                    })
+                  )}
+                </SidebarMenuSub>
+              )}
+            </SidebarMenuItem>
+          </SidebarMenu>
         </div>
       </SidebarContent>
 

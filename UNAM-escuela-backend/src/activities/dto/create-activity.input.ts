@@ -1,5 +1,7 @@
 import { InputType, Int, Field, ID } from '@nestjs/graphql';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateFormQuestionInput } from '../../forms/dto/create-form.dto';
 
 @InputType()
 export class CreateActivityInput {
@@ -27,4 +29,16 @@ export class CreateActivityInput {
   @IsString()
   @Field(() => ID)
   contentId: string;
+
+  @IsOptional()
+  @IsString()
+  @Field(() => ID, { nullable: true })
+  formId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateFormQuestionInput)
+  @Field(() => [CreateFormQuestionInput], { nullable: true })
+  questions?: CreateFormQuestionInput[];
 }

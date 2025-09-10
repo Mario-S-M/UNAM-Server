@@ -6,9 +6,9 @@ export const CreateHomeworkFormSchema = z.object({
     message: 'El nombre es requerido y debe ser un texto'
   }).min(1, 'El nombre no puede estar vacío').max(255, 'El nombre no puede exceder 255 caracteres'),
   
-  exercise: z.string({
-    message: 'El ejercicio es requerido y debe ser un texto'
-  }).min(1, 'El ejercicio no puede estar vacío').max(2000, 'El ejercicio no puede exceder 2000 caracteres'),
+  description: z.string({
+    message: 'La descripción es requerida y debe ser un texto'
+  }).min(1, 'La descripción no puede estar vacía').max(2000, 'La descripción no puede exceder 2000 caracteres'),
   
   correctAnswer: z.string({
     message: 'La respuesta correcta es requerida y debe ser un texto'
@@ -29,9 +29,9 @@ export const UpdateHomeworkFormSchema = z.object({
     message: 'El nombre debe ser un texto'
   }).min(1, 'El nombre no puede estar vacío').max(255, 'El nombre no puede exceder 255 caracteres').optional(),
   
-  exercise: z.string({
-    message: 'El ejercicio debe ser un texto'
-  }).min(1, 'El ejercicio no puede estar vacío').max(2000, 'El ejercicio no puede exceder 2000 caracteres').optional(),
+  description: z.string({
+    message: 'La descripción debe ser un texto'
+  }).min(1, 'La descripción no puede estar vacía').max(2000, 'La descripción no puede exceder 2000 caracteres').optional(),
   
   correctAnswer: z.string({
     message: 'La respuesta correcta debe ser un texto'
@@ -107,7 +107,7 @@ export const getCleanHomeworkData = (data: CreateHomeworkFormData | UpdateHomewo
   if ('id' in data) {
     const cleanData: Partial<UpdateHomeworkFormData> = { id: data.id };
     if (data.name && data.name.trim()) cleanData.name = data.name.trim();
-    if (data.exercise && data.exercise.trim()) cleanData.exercise = data.exercise.trim();
+    if (data.description && data.description.trim()) cleanData.description = data.description.trim();
     if (data.correctAnswer && data.correctAnswer.trim()) cleanData.correctAnswer = data.correctAnswer.trim();
     return cleanData;
   }
@@ -115,7 +115,7 @@ export const getCleanHomeworkData = (data: CreateHomeworkFormData | UpdateHomewo
   // Para crear, todos los campos son requeridos
   return {
     name: data.name.trim(),
-    exercise: data.exercise.trim(),
+    description: data.description.trim(),
     correctAnswer: data.correctAnswer.trim(),
     activityId: data.activityId
   };

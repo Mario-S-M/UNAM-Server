@@ -6,3 +6,5 @@ export { ContentForm } from './ContentForm';
 export { ContentModal } from './ContentModal';
 export { ValidationStatusBadge } from './ValidationStatusBadge';
 export { ContentFilters } from './ContentFilters';
+
+// Exercise components removed - using Activities instead

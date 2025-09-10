@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 interface SidebarContent {
   id: string;
   title: string;
-  type: "video" | "article" | "exercise";
+  type: "video" | "article";
 }
 
 interface SidebarSkill {
@@ -38,8 +38,7 @@ function getContentIcon(type: string) {
       return "🎥";
     case "article":
       return "📄";
-    case "exercise":
-      return "✏️";
+
     default:
       return "📝";
   }

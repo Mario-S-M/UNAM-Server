@@ -10,6 +10,10 @@ export const CreateContentFormSchema = z.object({
     message: 'La descripción es requerida y debe ser un texto'
   }).min(1, 'La descripción no puede estar vacía').max(1000, 'La descripción no puede exceder 1000 caracteres'),
   
+  languageId: z.string({
+    message: 'El ID del idioma es requerido y debe ser un texto'
+  }).uuid('El ID del idioma debe ser un UUID válido'),
+  
   levelId: z.string({
     message: 'El ID del nivel es requerido y debe ser un texto'
   }).uuid('El ID del nivel debe ser un UUID válido'),
@@ -38,6 +42,10 @@ export const UpdateContentFormSchema = z.object({
   description: z.string({
     message: 'La descripción debe ser un texto'
   }).min(1, 'La descripción no puede estar vacía').max(1000, 'La descripción no puede exceder 1000 caracteres').optional(),
+  
+  languageId: z.string({
+    message: 'El ID del idioma debe ser un texto'
+  }).uuid('El ID del idioma debe ser un UUID válido').optional(),
   
   levelId: z.string({
     message: 'El ID del nivel debe ser un texto'

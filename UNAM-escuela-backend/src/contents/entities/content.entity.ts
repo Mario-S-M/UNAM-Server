@@ -12,6 +12,8 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Skill } from '../../skills/entities/skill.entity';
+import { Level } from '../../levels/entities/level.entity';
+import { Lenguage } from '../../lenguages/entities/lenguage.entity';
 
 @Entity({ name: 'contents' })
 @ObjectType()
@@ -40,9 +42,9 @@ export class Content {
   @Field(() => String)
   updatedAt: string;
 
-  @Column()
-  @Field(() => ID)
-  levelId: string;
+  @Column({ nullable: true })
+  @Field(() => ID, { nullable: true })
+  levelId?: string;
 
   @Column({ default: -1 })
   @Field(() => Int)
@@ -83,4 +85,18 @@ export class Content {
   @JoinColumn({ name: 'skillId' })
   @Field(() => Skill, { nullable: true })
   skill?: Skill;
+
+  @ManyToOne(() => Level, { nullable: true })
+  @JoinColumn({ name: 'levelId' })
+  @Field(() => Level, { nullable: true })
+  level?: Level;
+
+  @Column({ nullable: true, default: null })
+  @Field(() => ID, { nullable: true })
+  languageId?: string;
+
+  @ManyToOne(() => Lenguage, { nullable: true })
+  @JoinColumn({ name: 'languageId' })
+  @Field(() => Lenguage, { nullable: true })
+  language?: Lenguage;
 }

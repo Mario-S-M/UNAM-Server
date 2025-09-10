@@ -99,10 +99,23 @@ interface Content {
   description: string;
   levelId: string;
   skillId: string;
+  languageId?: string;
   validationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
   assignedTeachers: { id: string; fullName: string }[];
   createdAt: string;
   updatedAt: string;
+  level?: {
+    id: string;
+    name: string;
+  };
+  skill?: {
+    id: string;
+    name: string;
+  };
+  language?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface PaginatedContents {
@@ -118,6 +131,7 @@ interface PaginatedContents {
 type ContentFormData = {
   name: string;
   description: string;
+  languageId: string;
   levelId: string;
   skillId: string;
   teacherIds: string[];
@@ -127,6 +141,7 @@ type ContentFormData = {
 interface ColumnVisibility {
   name: boolean;
   description: boolean;
+  language: boolean;
   level: boolean;
   skill: boolean;
   status: boolean;
@@ -140,6 +155,29 @@ interface Teacher {
   id: string;
   fullName: string;
   email: string;
+}
+
+interface Language {
+  id: string;
+  name: string;
+  descripcion_corta?: string;
+}
+
+interface Level {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  lenguageId?: string;
+}
+
+interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  difficulty: string;
+  levelId?: string;
+  lenguageId?: string;
 }
 
 export default function ContenidoPage() {
@@ -156,11 +194,18 @@ export default function ContenidoPage() {
   const [loading, setLoading] = useState(true);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [teachersLoading, setTeachersLoading] = useState(false);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [languagesLoading, setLanguagesLoading] = useState(false);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [levelsLoading, setLevelsLoading] = useState(false);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [formData, setFormData] = useState<ContentFormData>({
     name: '',
     description: '',
+    languageId: '',
     levelId: '',
     skillId: '',
     teacherIds: [],
@@ -173,6 +218,7 @@ export default function ContenidoPage() {
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
     description: true,
+    language: true,
     level: true,
     skill: true,
     status: true,
@@ -181,6 +227,90 @@ export default function ContenidoPage() {
     updatedAt: false,
     actions: true,
   });
+
+  const fetchLanguages = useCallback(async () => {
+    if (!token) return;
+    
+    setLanguagesLoading(true);
+    try {
+      const query = `
+        query GetLanguages {
+          lenguagesActivate {
+            id
+            name
+            descripcion_corta
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, {}, token);
+      setLanguages(response.data.lenguagesActivate || []);
+    } catch (error) {
+      console.error('Error fetching languages:', error);
+      toast.error('Error al cargar los idiomas');
+    } finally {
+      setLanguagesLoading(false);
+    }
+  }, [token]);
+
+  const fetchLevels = useCallback(async (languageId?: string) => {
+    if (!token || !languageId) return;
+    
+    setLevelsLoading(true);
+    try {
+      const query = `
+        query GetLevelsByLenguage($lenguageId: ID!) {
+          levelsByLenguage(lenguageId: $lenguageId) {
+            id
+            name
+            description
+            difficulty
+            lenguageId
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, { lenguageId: languageId }, token);
+      const levels = response.data.levelsByLenguage || [];
+      
+      setLevels(levels);
+    } catch (error) {
+      console.error('Error fetching levels:', error);
+      toast.error('Error al cargar los niveles');
+    } finally {
+      setLevelsLoading(false);
+    }
+  }, [token]);
+
+  const fetchSkills = useCallback(async (levelId?: string, languageId?: string) => {
+    if (!token || !levelId) return;
+    
+    setSkillsLoading(true);
+    try {
+      const query = `
+        query GetSkillsByLevel($levelId: ID!) {
+          skillsByLevel(levelId: $levelId) {
+            id
+            name
+            description
+            difficulty
+            levelId
+            lenguageId
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, { levelId }, token);
+      const skills = response.data.skillsByLevel || [];
+      
+      setSkills(skills);
+    } catch (error) {
+      console.error('Error fetching skills:', error);
+      toast.error('Error al cargar las habilidades');
+    } finally {
+      setSkillsLoading(false);
+    }
+  }, [token]);
 
   const fetchTeachers = useCallback(async () => {
     if (!token) return;
@@ -230,6 +360,18 @@ export default function ContenidoPage() {
               }
               createdAt
               updatedAt
+              level {
+                id
+                name
+              }
+              skill {
+                id
+                name
+              }
+              language {
+                id
+                name
+              }
             }
             total
             page
@@ -270,6 +412,31 @@ export default function ContenidoPage() {
     fetchContents();
   }, [fetchContents]);
 
+  useEffect(() => {
+    if (token) {
+      fetchLanguages();
+      fetchTeachers();
+    }
+  }, [token, fetchLanguages, fetchTeachers]);
+
+  // Cargar niveles cuando cambia el idioma seleccionado
+  useEffect(() => {
+    if (formData.languageId) {
+      fetchLevels(formData.languageId);
+      // Limpiar nivel y skill cuando cambia el idioma
+      setFormData(prev => ({ ...prev, levelId: '', skillId: '' }));
+    }
+  }, [formData.languageId, fetchLevels]);
+
+  // Cargar skills cuando cambia el nivel seleccionado
+  useEffect(() => {
+    if (formData.levelId) {
+      fetchSkills(formData.levelId, formData.languageId);
+      // Limpiar skill cuando cambia el nivel
+      setFormData(prev => ({ ...prev, skillId: '' }));
+    }
+  }, [formData.levelId, formData.languageId, fetchSkills]);
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setCurrentPage(1);
@@ -286,6 +453,7 @@ export default function ContenidoPage() {
     setFormData({
       name: '',
       description: '',
+      languageId: '',
       levelId: '',
       skillId: '',
       teacherIds: [],
@@ -320,6 +488,7 @@ export default function ContenidoPage() {
             id: editingContent.id,
             name: formData.name,
             description: formData.description,
+            languageId: formData.languageId,
             levelId: formData.levelId,
             skillId: formData.skillId,
             teacherIds: formData.teacherIds,
@@ -344,6 +513,7 @@ export default function ContenidoPage() {
           createContentInput: {
             name: formData.name,
             description: formData.description,
+            languageId: formData.languageId,
             levelId: formData.levelId,
             skillId: formData.skillId,
             teacherIds: formData.teacherIds,
@@ -368,6 +538,7 @@ export default function ContenidoPage() {
     setFormData({
       name: '',
       description: '',
+      languageId: '',
       levelId: '',
       skillId: '',
       teacherIds: [],
@@ -382,12 +553,20 @@ export default function ContenidoPage() {
     setFormData({
       name: content.name,
       description: content.description,
+      languageId: content.languageId || '',
       levelId: content.levelId,
       skillId: content.skillId,
       teacherIds: content.assignedTeachers?.map(t => t.id) || [],
       validationStatus: content.validationStatus,
     });
     fetchTeachers();
+    // Load levels and skills for the selected language and level
+    if (content.languageId) {
+      fetchLevels(content.languageId);
+      if (content.levelId) {
+        fetchSkills(content.levelId, content.languageId);
+      }
+    }
     setIsDialogOpen(true);
   };
 
@@ -486,6 +665,69 @@ export default function ContenidoPage() {
                             placeholder="Descripción del contenido..."
                             className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Clasificación</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label>Idioma *</Label>
+                          <Select 
+                            value={formData.languageId} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, languageId: value }))}
+                            disabled={languagesLoading || editingContent !== null}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un idioma" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {languages.map((language) => (
+                                <SelectItem key={language.id} value={language.id}>
+                                  {language.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nivel *</Label>
+                          <Select 
+                            value={formData.levelId} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, levelId: value }))}
+                            disabled={levelsLoading || !formData.languageId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un nivel" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {levels.map((level) => (
+                                <SelectItem key={level.id} value={level.id}>
+                                  {level.name} - {level.difficulty}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Habilidad *</Label>
+                          <Select 
+                            value={formData.skillId} 
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, skillId: value }))}
+                            disabled={skillsLoading || !formData.levelId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona una habilidad" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {skills.map((skill) => (
+                                <SelectItem key={skill.id} value={skill.id}>
+                                  {skill.name} - {skill.difficulty}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
@@ -650,6 +892,12 @@ export default function ContenidoPage() {
                   Descripción
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
+                  checked={columnVisibility.language}
+                  onCheckedChange={() => toggleColumnVisibility('language')}
+                >
+                  Idioma
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
                   checked={columnVisibility.level}
                   onCheckedChange={() => toggleColumnVisibility('level')}
                 >
@@ -717,6 +965,7 @@ export default function ContenidoPage() {
                 <TableRow>
                   {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
                   {columnVisibility.description && <TableHead className="text-center">Descripción</TableHead>}
+                  {columnVisibility.language && <TableHead className="text-center">Idioma</TableHead>}
                   {columnVisibility.level && <TableHead className="text-center">Nivel</TableHead>}
                   {columnVisibility.skill && <TableHead className="text-center">Habilidad</TableHead>}
                   {columnVisibility.status && <TableHead className="text-center">Estado</TableHead>}
@@ -754,14 +1003,19 @@ export default function ContenidoPage() {
                           </div>
                         </TableCell>
                       )}
+                      {columnVisibility.language && (
+                        <TableCell className="text-center">
+                          {content.language?.name || 'Sin idioma'}
+                        </TableCell>
+                      )}
                       {columnVisibility.level && (
                         <TableCell className="text-center">
-                          {content.levelId || 'Sin nivel'}
+                          {content.level?.name || 'Sin nivel'}
                         </TableCell>
                       )}
                       {columnVisibility.skill && (
                         <TableCell className="text-center">
-                          {content.skillId || 'Sin habilidad'}
+                          {content.skill?.name || 'Sin habilidad'}
                         </TableCell>
                       )}
                       {columnVisibility.status && (
@@ -835,8 +1089,8 @@ export default function ContenidoPage() {
                           </div>
                         </TableCell>
                       )}
-                    </TableRow>
-                  ))
+                     </TableRow>
+                   ))
                 )}
               </TableBody>
             </Table>

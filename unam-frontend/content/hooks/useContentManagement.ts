@@ -59,6 +59,7 @@ import { ContentColumnVisibility as ColumnVisibility } from '../../types';
 const initialFormData: CreateContentFormData = {
   name: '',
   description: '',
+  languageId: '',
   levelId: '',
   skillId: '',
   teacherIds: [],
@@ -228,6 +229,7 @@ export function useContentManagement() {
     setFormData({
       name: content.name,
       description: content.description,
+      languageId: (content as any).languageId || '',
       levelId: content.levelId || '',
       skillId: content.skillId || '',
       teacherIds: content.assignedTeachers?.map(teacher => teacher.id) || [],

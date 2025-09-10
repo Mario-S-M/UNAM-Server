@@ -141,13 +141,13 @@ const CREATE_ACTIVITY = gql`
         title
         questions {
           id
-          text
-          type
-          required
+          questionText
+          questionType
+          isRequired
           options {
             id
-            text
-            value
+            optionText
+            optionValue
           }
         }
       }
@@ -172,13 +172,13 @@ const UPDATE_ACTIVITY = gql`
         title
         questions {
           id
-          text
-          type
-          required
+          questionText
+          questionType
+          isRequired
           options {
             id
-            text
-            value
+            optionText
+            optionValue
           }
         }
       }
@@ -300,13 +300,19 @@ export function useActivityManagement() {
     try {
       const validatedData = activityFormSchema.parse(data);
       
+      // Filtrar campos vacíos para evitar errores de UUID
+      const cleanedData = {
+        ...validatedData,
+        formId: validatedData.formId && validatedData.formId.trim() !== '' ? validatedData.formId : undefined
+      };
+      
       if (editingActivity) {
         return await handleUpdateActivity({
           id: editingActivity.id,
-          ...validatedData
+          ...cleanedData
         });
       } else {
-        return await handleCreateActivity(validatedData);
+        return await handleCreateActivity(cleanedData);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {

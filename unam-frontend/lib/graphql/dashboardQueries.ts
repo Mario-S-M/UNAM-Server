@@ -80,13 +80,13 @@ export const GET_ACTIVITIES_BY_CONTENT = gql`
         title
         questions {
           id
-          text
-          type
-          required
+          questionText
+          questionType
+          isRequired
           options {
             id
-            text
-            value
+            optionText
+            optionValue
           }
         }
       }

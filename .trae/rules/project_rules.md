@@ -16,3 +16,5 @@ el front siempre debe estar en el puerto 3001, y el backend en el 3000. prohibid
 # Si creas scripts borralos al dejarlos de usar para que no ensucies el proyecto
 # Unicamente pide los datos del schema que se usen no pidas datos que no se usen
 # Siempre haz un npm run build para el frontend, y un yarn build para el backend para ver que no haya nada de errores, y luego vuelve a levantar la aplicación del frontend npm run dev y el backend yarn start:dev
+
+# no instales nada en el proyecto raiz. y si lo isntalas borralo, por que solo quiero dos proyectos el frontend y el backed si ocupas otro crea uno de test proyecto apra las pruebas pero no en el raiz

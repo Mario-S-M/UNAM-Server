@@ -7,6 +7,7 @@ interface UseAutoSaveOptions<T> {
   delay?: number; // Delay en milisegundos para el debounce
   enabled?: boolean;
   onError?: (error: Error) => void;
+  minChangeThreshold?: number; // Mínimo número de caracteres que deben cambiar para activar guardado
 }
 
 /**
@@ -16,9 +17,10 @@ interface UseAutoSaveOptions<T> {
 export function useAutoSave<T>({
   data,
   onSave,
-  delay = 2000, // 2 segundos por defecto
+  delay = 5000, // 5 segundos por defecto para ser más discreto
   enabled = true,
-  onError
+  onError,
+  minChangeThreshold = 3 // Mínimo 3 caracteres de cambio para activar guardado
 }: UseAutoSaveOptions<T>) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedDataRef = useRef<string>('');
@@ -31,17 +33,13 @@ export function useAutoSave<T>({
       isSavingRef.current = true;
       await onSave(data);
       lastSavedDataRef.current = JSON.stringify(data);
-      toast.success('Progreso guardado automáticamente', {
-        duration: 2000,
-        position: 'bottom-right'
-      });
+      // Guardado silencioso - sin notificaciones toast para ser más discreto
     } catch (error) {
       console.error('Error en guardado automático:', error);
       if (onError) {
         onError(error as Error);
-      } else {
-        toast.error('Error al guardar automáticamente');
       }
+      // Solo mostrar error si es crítico, sin toast para mantener discreción
     } finally {
       isSavingRef.current = false;
     }
@@ -54,6 +52,13 @@ export function useAutoSave<T>({
     
     // No guardar si los datos no han cambiado
     if (currentDataString === lastSavedDataRef.current) {
+      return;
+    }
+
+    // Verificar si el cambio es significativo (más discreto)
+    const lastSaved = lastSavedDataRef.current;
+    if (lastSaved && Math.abs(currentDataString.length - lastSaved.length) < minChangeThreshold) {
+      // Si el cambio es muy pequeño, no guardar automáticamente
       return;
     }
 
@@ -103,7 +108,7 @@ export function useAutoSave<T>({
 export function useFormAutoSave<T extends Record<string, any>>({
   formData,
   onSave,
-  delay = 3000,
+  delay = 8000, // 8 segundos para formularios, más tiempo para evitar guardados frecuentes
   enabled = true
 }: {
   formData: T;
@@ -118,7 +123,7 @@ export function useFormAutoSave<T extends Record<string, any>>({
     enabled,
     onError: (error) => {
       console.error('Error en guardado automático del formulario:', error);
-      toast.error('Error al guardar el progreso del formulario');
+      // Sin toast para mantener la experiencia discreta
     }
   });
 }

@@ -3,6 +3,13 @@ export interface Content {
   name: string;
   description: string;
   validationStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  levelId: string;
+  skillId: string;
+  languageId?: string;
+  isCompleted?: boolean;
+  userId?: number;
+  markdownPath?: string;
+  publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;
   level?: {
@@ -14,10 +21,16 @@ export interface Content {
     name: string;
     color?: string;
   };
+  language?: {
+    id: string;
+    name: string;
+  };
   assignedTeachers?: {
     id: string;
     fullName: string;
     email: string;
+    roles?: string[];
+    isActive?: boolean;
   }[];
 }
 
@@ -51,6 +64,12 @@ export interface Teacher {
   id: string;
   name: string;
   email: string;
+}
+
+export interface Language {
+  id: string;
+  name: string;
+  code: string;
 }
 
 export interface ValidationStatusOption {

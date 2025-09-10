@@ -1,7 +1,7 @@
 import { InputType, Field, Int, ID } from '@nestjs/graphql';
 import { IsString, IsOptional, IsBoolean, IsArray, ValidateNested, IsUUID, IsInt, IsNumber, Min, Max, Validate } from 'class-validator';
 import { Type } from 'class-transformer';
-import { HasCorrectAnswerConstraint } from './create-form.dto';
+import { QuestionTypeValidatorConstraint } from '../validators/question-type.validator';
 
 @InputType()
 export class UpdateFormQuestionOptionInput {
@@ -155,7 +155,7 @@ export class UpdateFormQuestionInput {
   @Type(() => UpdateFormQuestionOptionInput)
   options?: UpdateFormQuestionOptionInput[];
 
-  @Validate(HasCorrectAnswerConstraint)
+  @Validate(QuestionTypeValidatorConstraint)
   get _validation() {
     return this;
   }

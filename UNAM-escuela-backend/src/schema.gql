@@ -95,7 +95,7 @@ type Content {
   isCompleted: Boolean!
   createdAt: String!
   updatedAt: String!
-  levelId: ID!
+  levelId: ID
   userId: Int!
   markdownPath: String
   assignedTeachers: [User!]
@@ -103,6 +103,9 @@ type Content {
   publishedAt: String
   skillId: ID
   skill: Skill
+  level: Level
+  languageId: ID
+  language: Lenguage
 }
 
 type PaginatedContents {

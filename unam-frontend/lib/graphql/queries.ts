@@ -266,10 +266,21 @@ export const GET_CONTENTS = gql`
         name
         description
         validationStatus
+        levelId
+        skillId
+        languageId
         skill {
           id
           name
           color
+        }
+        level {
+          id
+          name
+        }
+        language {
+          id
+          name
         }
         assignedTeachers {
           id

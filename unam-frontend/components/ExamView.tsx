@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -186,6 +187,7 @@ function UserProgressSection({ contentId }: { contentId: string }) {
 
 export function ExamView({ contentId }: ActivityViewProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<ActivityAnswer[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -222,6 +224,131 @@ export function ExamView({ contentId }: ActivityViewProps) {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  };
+
+  // Función para evaluar respuestas de texto de manera flexible
+  const evaluateTextAnswer = (userAnswer: string, correctAnswer: string): boolean => {
+    // Validación de entrada
+    if (!userAnswer || !correctAnswer) {
+      console.log('❌ evaluateTextAnswer: Respuesta vacía o nula');
+      return false;
+    }
+
+    const userText = userAnswer.toLowerCase().trim();
+    const correctText = correctAnswer.toLowerCase().trim();
+    
+    console.log('🔍 evaluateTextAnswer: Comparando:', {
+      userAnswer: userAnswer,
+      correctAnswer: correctAnswer,
+      userText: userText,
+      correctText: correctText
+    });
+
+    // 1. Coincidencia exacta
+    if (userText === correctText) {
+      console.log('✅ evaluateTextAnswer: Coincidencia exacta');
+      return true;
+    }
+
+    // 2. Normalización de caracteres especiales y acentos
+    const normalizeText = (text: string) => {
+      return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+        .replace(/[^a-z0-9\s]/gi, '') // Remover caracteres especiales
+        .trim();
+    };
+    
+    const normalizedUser = normalizeText(userText);
+    const normalizedCorrect = normalizeText(correctText);
+    
+    console.log('🔄 evaluateTextAnswer: Texto normalizado:', {
+      normalizedUser,
+      normalizedCorrect
+    });
+    
+    if (normalizedUser === normalizedCorrect) {
+      console.log('✅ evaluateTextAnswer: Coincidencia después de normalización');
+      return true;
+    }
+
+    // 3. Verificar si la respuesta del usuario está incluida en la respuesta correcta
+    if (normalizedCorrect.includes(normalizedUser) && normalizedUser.length > 0) {
+      console.log('✅ evaluateTextAnswer: Respuesta del usuario incluida en correcta');
+      return true;
+    }
+
+    // 4. Verificar si la respuesta correcta está incluida en la respuesta del usuario
+    if (normalizedUser.includes(normalizedCorrect) && normalizedCorrect.length > 0) {
+      console.log('✅ evaluateTextAnswer: Respuesta correcta incluida en usuario');
+      return true;
+    }
+
+    // 5. Coincidencia de palabras clave (al menos 70% de las palabras)
+    const userWords = normalizedUser.split(/\s+/).filter(word => word.length > 1);
+    const correctWords = normalizedCorrect.split(/\s+/).filter(word => word.length > 1);
+    
+    if (userWords.length > 0 && correctWords.length > 0) {
+      const matchingWords = userWords.filter(word => 
+        correctWords.some(correctWord => 
+          correctWord.includes(word) || word.includes(correctWord)
+        )
+      );
+      const matchPercentage = matchingWords.length / Math.max(userWords.length, correctWords.length);
+      console.log('📊 evaluateTextAnswer: Análisis de palabras:', {
+        userWords,
+        correctWords,
+        matchingWords,
+        matchPercentage
+      });
+      
+      if (matchPercentage >= 0.7) {
+        console.log('✅ evaluateTextAnswer: Coincidencia por palabras clave');
+        return true;
+      }
+    }
+
+    // 6. Verificación numérica especial
+    const userNumber = parseFloat(userText.replace(/[^0-9.-]/g, ''));
+    const correctNumber = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
+    
+    if (!isNaN(userNumber) && !isNaN(correctNumber)) {
+      const isEqual = userNumber === correctNumber;
+      console.log('🔢 evaluateTextAnswer: Comparación numérica:', {
+        userNumber,
+        correctNumber,
+        isEqual
+      });
+      if (isEqual) {
+        console.log('✅ evaluateTextAnswer: Coincidencia numérica');
+        return true;
+      }
+    }
+
+    // 7. Verificación de rangos numéricos en texto
+    if (correctText.includes('menor') || correctText.includes('mayor')) {
+      if (!isNaN(userNumber)) {
+        if (correctText.includes('menor de') || correctText.includes('menos de')) {
+          const threshold = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
+          if (!isNaN(threshold)) {
+            const result = userNumber < threshold;
+            console.log('📏 evaluateTextAnswer: Verificación menor que:', { userNumber, threshold, result });
+            return result;
+          }
+        }
+        if (correctText.includes('mayor de') || correctText.includes('más de')) {
+          const threshold = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
+          if (!isNaN(threshold)) {
+            const result = userNumber > threshold;
+            console.log('📏 evaluateTextAnswer: Verificación mayor que:', { userNumber, threshold, result });
+            return result;
+          }
+        }
+      }
+    }
+
+    console.log('❌ evaluateTextAnswer: No se encontró coincidencia');
+    return false;
   };
 
   console.log('ExamView: Starting with contentId:', contentId);
@@ -276,9 +403,12 @@ export function ExamView({ contentId }: ActivityViewProps) {
   }, [currentActivity?.form?.questions, currentActivityIndex]);
   
   // Usar preguntas aleatorizadas si están disponibles, sino las originales
+  // IMPORTANTE: Siempre usar originalQuestions si shuffledQuestions está vacío
   const currentActivityQuestions = shuffledQuestions.length > 0 ? shuffledQuestions : originalQuestions;
-  const currentQuestion = currentActivityQuestions[currentQuestionIndex];
-  const totalQuestions = currentActivityQuestions.length;
+  const displayQuestions = currentActivityQuestions; // Para mostrar las preguntas (aleatorizadas o no)
+  const currentQuestion = displayQuestions[currentQuestionIndex];
+  // CORREGIDO: Usar originalQuestions.length para totalQuestions para evitar mostrar "sin preguntas"
+  const totalQuestions = originalQuestions.length;
   const totalActivities = exercises.length;
   const allQuestions = exercises.flatMap(exercise => exercise.form?.questions || []);
   
@@ -287,8 +417,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
     console.log('🔄 useEffect triggered - randomizing questions for activity:', currentActivityIndex, 'questions:', originalQuestions.length);
     console.log('🔄 useEffect states:', { showFeedback, showActivityCompletion, examStarted });
     
-    // Solo aleatorizar si hay preguntas y el examen no ha empezado (para evitar interferir con el flujo)
-    if (originalQuestions.length > 0 && !examStarted) {
+    // Aleatorizar si hay preguntas (siempre que cambie la actividad o al inicio)
+    if (originalQuestions.length > 0) {
       console.log('🔄 Randomizing questions and options...');
       const randomizedQuestions = shuffleArray(originalQuestions);
       setShuffledQuestions(randomizedQuestions);
@@ -303,9 +433,12 @@ export function ExamView({ contentId }: ActivityViewProps) {
       setShuffledOptions(randomizedOptions);
       console.log('🔄 Questions and options randomized successfully');
     } else {
-      console.log('🔄 Skipping randomization - no questions or exam already started');
+      console.log('🔄 Skipping randomization - no questions available');
+      // Limpiar shuffledQuestions si no hay preguntas originales
+      setShuffledQuestions([]);
+      setShuffledOptions({});
     }
-  }, [currentActivityIndex, originalQuestions.length, examStarted]);
+  }, [currentActivityIndex, originalQuestions.length]);
   
   // Debug de variables calculadas
   console.log('🔍 === RENDER DEBUG ===');
@@ -313,7 +446,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
   console.log('Exercises calculated:', exercises.length);
   console.log('Current activity index:', currentActivityIndex);
   console.log('Current activity:', currentActivity);
-  console.log('Current activity questions:', currentActivityQuestions.length);
+  console.log('Current activity questions:', displayQuestions.length);
   console.log('Total questions:', totalQuestions);
   console.log('🔍 === END RENDER DEBUG ===');
   
@@ -328,7 +461,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
   console.log('All questions:', allQuestions);
 
   const goToQuestion = (index: number) => {
-    if (index >= 0 && index < totalQuestions) {
+    if (index >= 0 && index < displayQuestions.length) {
       setCurrentQuestionIndex(index);
     }
   };
@@ -336,6 +469,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const handleContinueToNextActivity = () => {
     console.log('🔄 handleContinueToNextActivity called');
     console.log('🔄 Current states before reset:', { showFeedback, showActivityCompletion, examStarted, currentActivityIndex });
+    
+    // Obtener la actividad actual para redirigir al formulario de edición
+    const currentActivity = exercises[currentActivityIndex];
+    if (currentActivity) {
+      console.log('🔄 Redirecting to activity edit form:', currentActivity.id);
+      toast.info('Redirigiendo al formulario de edición de la actividad...');
+      router.push(`/admin/actividades/${currentActivity.id}`);
+      return;
+    }
     
     if (currentActivityIndex < totalActivities - 1) {
       // Ir a la siguiente actividad
@@ -418,7 +560,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const handleSubmitExam = async () => {
     // Validar preguntas obligatorias
-    const requiredQuestions = currentActivityQuestions.filter(q => q.isRequired);
+    const requiredQuestions = displayQuestions.filter(q => q.isRequired);
     const answeredQuestionIds = answers.map(a => a.questionId);
     
     const unansweredRequired = requiredQuestions.filter(q => !answeredQuestionIds.includes(q.id));
@@ -519,6 +661,22 @@ export function ExamView({ contentId }: ActivityViewProps) {
           if (selectedOption?.isCorrect) {
             correctAnswers++;
           }
+        } else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
+          // Para preguntas de texto
+          const userText = userAnswer.textAnswer.toLowerCase().trim();
+          const correctText = question.correctAnswer.toLowerCase().trim();
+          if (userText === correctText) {
+            correctAnswers++;
+          }
+          console.log('🔍 CALCULATE SCORE DEBUG:', {
+            questionId: question.id,
+            questionType: question.questionType,
+            userAnswer: userAnswer.textAnswer,
+            correctAnswer: question.correctAnswer,
+            userText,
+            correctText,
+            isCorrect: userText === correctText
+          });
         }
       }
     });
@@ -603,7 +761,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
       const existingIndex = prev.findIndex(a => a.questionId === questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
-        updated[existingIndex] = { questionId, textAnswer: textValue };
+        // Preservar las propiedades existentes y solo actualizar textAnswer
+        updated[existingIndex] = { ...updated[existingIndex], textAnswer: textValue };
         console.log('Updated text answers:', updated);
         return updated;
       }
@@ -703,11 +862,22 @@ export function ExamView({ contentId }: ActivityViewProps) {
           }
         }
         // Para preguntas de texto, comparar con la respuesta correcta
-        else if (userAnswer.textAnswer && question.correctAnswer) {
+        else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
           // Comparación simple (se puede mejorar con lógica más sofisticada)
-          if (userAnswer.textAnswer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim()) {
+          const userText = userAnswer.textAnswer.toLowerCase().trim();
+          const correctText = question.correctAnswer.toLowerCase().trim();
+          if (userText === correctText) {
             correct++;
           }
+          console.log('🔍 CALCULATE RESULTS DEBUG:', {
+            questionId: question.id,
+            questionType: question.questionType,
+            userAnswer: userAnswer.textAnswer,
+            correctAnswer: question.correctAnswer,
+            userText,
+            correctText,
+            isCorrect: userText === correctText
+          });
         }
       }
     });
@@ -828,28 +998,144 @@ export function ExamView({ contentId }: ActivityViewProps) {
     const selectedOptions = userAnswer?.selectedOptionIds ? question.options.filter(opt => userAnswer.selectedOptionIds!.includes(opt.id)) : [];
     const correctOptions = question.options.filter(opt => opt.isCorrect);
     
+    console.log('🔍 getQuestionResult DEBUG - Inicio:', {
+      questionId: question.id,
+      questionType: question.questionType,
+      questionText: question.questionText,
+      userAnswer: userAnswer,
+      correctAnswer: question.correctAnswer,
+      hasOptions: question.options.length > 0,
+      correctOptions: correctOptions.map(opt => ({ id: opt.id, text: opt.optionText, isCorrect: opt.isCorrect }))
+    });
+    
     let isCorrect = false;
     if (userAnswer) {
-      // Para preguntas de selección múltiple
-      if (question.questionType === 'multiple_choice' && userAnswer.selectedOptionIds) {
+      // Para preguntas de selección múltiple con opciones
+      if (question.questionType === 'multiple_choice' && userAnswer.selectedOptionIds && question.options.length > 0) {
         const correctSelectedOptions = userAnswer.selectedOptionIds.filter(id => 
           question.options.find(opt => opt.id === id)?.isCorrect
         );
         // Respuesta correcta si seleccionó todas las correctas y ninguna incorrecta
         isCorrect = correctSelectedOptions.length === correctOptions.length && 
                    userAnswer.selectedOptionIds.length === correctOptions.length;
+        
+        console.log('🔍 MULTIPLE CHOICE DEBUG:', {
+          selectedOptionIds: userAnswer.selectedOptionIds,
+          correctSelectedOptions,
+          correctOptionsLength: correctOptions.length,
+          selectedLength: userAnswer.selectedOptionIds.length,
+          isCorrect
+        });
       }
-      // Para preguntas de selección única (single_choice)
-      else if (question.questionType === 'single_choice' && userAnswer.selectedOptionId) {
+      // Para preguntas de selección única con opciones
+      else if (question.questionType === 'single_choice' && userAnswer.selectedOptionId && question.options.length > 0) {
         isCorrect = selectedOption?.isCorrect || false;
+        
+        console.log('🔍 SINGLE CHOICE DEBUG:', {
+          selectedOptionId: userAnswer.selectedOptionId,
+          selectedOption: selectedOption,
+          selectedOptionIsCorrect: selectedOption?.isCorrect,
+          isCorrect
+        });
       }
-      // Para preguntas de texto
-      else if (userAnswer.textAnswer && question.correctAnswer) {
-        isCorrect = userAnswer.textAnswer.toLowerCase().trim() === question.correctAnswer.toLowerCase().trim();
+      // Para preguntas MULTIPLE_CHOICE (mayúsculas) con selección única
+      else if (question.questionType === 'MULTIPLE_CHOICE' && userAnswer.selectedOptionId && question.options.length > 0) {
+        isCorrect = selectedOption?.isCorrect || false;
+        
+        console.log('🔍 MULTIPLE_CHOICE (SINGLE SELECTION) DEBUG:', {
+          selectedOptionId: userAnswer.selectedOptionId,
+          selectedOption: selectedOption,
+          selectedOptionIsCorrect: selectedOption?.isCorrect,
+          isCorrect
+        });
       }
+      // Para preguntas de texto con respuesta correcta definida
+      else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
+        isCorrect = evaluateTextAnswer(userAnswer.textAnswer, question.correctAnswer);
+        console.log('🔍 TEXT ANSWER DEBUG:', {
+          questionId: question.id,
+          questionType: question.questionType,
+          userAnswer: userAnswer.textAnswer,
+          correctAnswer: question.correctAnswer,
+          isCorrect
+        });
+      }
+      // Para preguntas mal configuradas: MULTIPLE_CHOICE sin opciones pero con textAnswer y correctAnswer
+       else if ((question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
+                question.options.length === 0 && 
+                userAnswer.textAnswer && 
+                question.correctAnswer) {
+         isCorrect = evaluateTextAnswer(userAnswer.textAnswer, question.correctAnswer);
+         console.log('🔍 MULTIPLE_CHOICE AS TEXT DEBUG:', {
+           questionId: question.id,
+           questionType: question.questionType,
+           userAnswer: userAnswer.textAnswer,
+           correctAnswer: question.correctAnswer,
+           isCorrect,
+           note: 'Pregunta configurada como MULTIPLE_CHOICE pero funcionando como TEXT'
+         });
+       }
+       // Caso específico para MULTIPLE_CHOICE con correctAnswer vacío pero textAnswer presente
+       else if ((question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
+                question.options.length === 0 && 
+                userAnswer.textAnswer && 
+                (!question.correctAnswer || question.correctAnswer === '')) {
+         // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
+         isCorrect = true;
+         console.log('🔍 MULTIPLE_CHOICE WITHOUT CORRECT ANSWER DEBUG:', {
+           questionId: question.id,
+           questionType: question.questionType,
+           userAnswer: userAnswer.textAnswer,
+           correctAnswer: question.correctAnswer,
+           isCorrect: true,
+           note: 'MULTIPLE_CHOICE sin opciones y sin correctAnswer - marcando como correcto'
+         });
+       }
+      // Para preguntas de texto sin respuesta correcta definida
+      else if (question.options.length === 0 && userAnswer.textAnswer && !question.correctAnswer) {
+        // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
+        isCorrect = true;
+        console.log('🔍 TEXT WITHOUT CORRECT ANSWER DEBUG:', {
+          questionType: question.questionType,
+          userAnswer: userAnswer.textAnswer,
+          isCorrect: true
+        });
+      }
+      else {
+        console.log('🔍 UNHANDLED QUESTION TYPE DEBUG:', {
+          questionType: question.questionType,
+          hasSelectedOptionId: !!userAnswer.selectedOptionId,
+          hasSelectedOptionIds: !!userAnswer.selectedOptionIds,
+          hasTextAnswer: !!userAnswer.textAnswer,
+          textAnswerValue: userAnswer.textAnswer,
+          hasCorrectAnswer: !!question.correctAnswer,
+          correctAnswerValue: question.correctAnswer,
+          correctAnswerType: typeof question.correctAnswer,
+          correctAnswerLength: question.correctAnswer?.length,
+          optionsLength: question.options.length,
+          conditionChecks: {
+            isMultipleChoice: (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice'),
+            hasNoOptions: question.options.length === 0,
+            hasTextAnswer: !!userAnswer.textAnswer,
+            hasCorrectAnswer: !!question.correctAnswer,
+            correctAnswerNotEmpty: question.correctAnswer !== '',
+            allConditionsForMCAsText: (
+              (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
+              question.options.length === 0 && 
+              userAnswer.textAnswer && 
+              question.correctAnswer
+            )
+          }
+        });
+      }
+    } else {
+      console.log('🔍 NO USER ANSWER DEBUG:', {
+        questionId: question.id,
+        questionType: question.questionType
+      });
     }
     
-    return {
+    const result = {
       userAnswer,
       selectedOption,
       selectedOptions,
@@ -858,6 +1144,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
       wasAnswered: !!userAnswer,
       textAnswer: userAnswer?.textAnswer
     };
+    
+    console.log('🔍 getQuestionResult DEBUG - Resultado final:', result);
+    
+    return result;
   };
 
   // Debug de estados de renderizado
@@ -943,6 +1233,17 @@ export function ExamView({ contentId }: ActivityViewProps) {
             {/* Solo mostrar preguntas de la actividad actual completada */}
             {(exercises[currentActivityIndex]?.form?.questions || []).map((question, index) => {
               const result = getQuestionResult(question);
+              console.log('🔍 FEEDBACK SECTION DEBUG:', {
+                questionId: question.id,
+                questionType: question.questionType,
+                questionText: question.questionText,
+                correctAnswer: question.correctAnswer,
+                result: {
+                  isCorrect: result.isCorrect,
+                  wasAnswered: result.wasAnswered,
+                  textAnswer: result.textAnswer
+                }
+              });
               return (
                 <Card key={question.id} className={`border-l-4 ${
                   !result.wasAnswered ? 'border-l-gray-400' :
@@ -991,16 +1292,24 @@ export function ExamView({ contentId }: ActivityViewProps) {
                             }
                           </p>
                           
-                          {result.isCorrect ? (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <p className="text-green-800 text-sm">
-                                <strong>¡Correcto!</strong> {question.explanation || 'Excelente trabajo.'}
-                              </p>
-                            </div>
+                          {result.wasAnswered ? (
+                            result.isCorrect ? (
+                              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-green-800 text-sm">
+                                  <strong>¡Correcto!</strong> {question.explanation || 'Excelente trabajo.'}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-red-800 text-sm">
+                                  <strong>Incorrecto.</strong> {question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
+                                </p>
+                              </div>
+                            )
                           ) : (
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                              <p className="text-red-800 text-sm">
-                                <strong>Incorrecto.</strong> {question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
+                            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                              <p className="text-gray-800 text-sm">
+                                <strong>No respondida.</strong> Esta pregunta no fue contestada.
                               </p>
                             </div>
                           )}
@@ -1293,7 +1602,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
           <div>
             <CardTitle>{currentActivity?.form?.title || currentActivity?.name}</CardTitle>
             <CardDescription>
-              Actividad {currentActivityIndex + 1} de {exercises.length} • Pregunta {currentQuestionIndex + 1} de {currentActivityQuestions.length}
+              Actividad {currentActivityIndex + 1} de {exercises.length} • Pregunta {currentQuestionIndex + 1} de {displayQuestions.length}
             </CardDescription>
           </div>
           <div className="flex items-center gap-4">
@@ -1302,11 +1611,11 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <span className="text-sm font-mono">{formatTime(timeElapsed)}</span>
             </div>
             <Badge variant="outline">
-              {answers.length}/{currentActivityQuestions.length} respondidas
+              {answers.length}/{displayQuestions.length} respondidas
             </Badge>
           </div>
         </div>
-        <Progress value={(currentQuestionIndex + 1) / currentActivityQuestions.length * 100} className="mt-4" />
+        <Progress value={(currentQuestionIndex + 1) / displayQuestions.length * 100} className="mt-4" />
       </CardHeader>
       <CardContent className="space-y-6">
         {currentQuestion && (
@@ -1497,10 +1806,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
               </Button>
               
               <div className="text-sm text-muted-foreground">
-                {currentQuestionIndex + 1} / {currentActivityQuestions.length}
+                {currentQuestionIndex + 1} / {displayQuestions.length}
               </div>
               
-              {currentQuestionIndex === currentActivityQuestions.length - 1 ? (
+              {currentQuestionIndex === displayQuestions.length - 1 ? (
                 !examSubmitted ? (
                   <Button onClick={handleSubmitExam} disabled={submitLoading}>
                     {submitLoading ? 'Enviando...' : 'Completar Actividad'}

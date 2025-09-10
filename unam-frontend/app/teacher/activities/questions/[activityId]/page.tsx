@@ -199,11 +199,11 @@ export default function ActivityQuestionsPage() {
     });
   };
 
-  // Hook de guardado automático
+  // Hook de guardado automático discreto
   const { forceSave } = useAutoSave({
     data: questions,
     onSave: saveQuestions,
-    delay: 3000, // 3 segundos de delay
+    delay: 10000, // 10 segundos de delay para ser más discreto
     enabled: questions.length > 0 && !loading // Solo habilitar si hay preguntas y no está cargando
   });
 

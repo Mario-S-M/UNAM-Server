@@ -1,34 +1,22 @@
 import { InputType, Field, Int, ID } from '@nestjs/graphql';
-import { IsString, IsOptional, IsBoolean, IsArray, ValidateNested, IsUUID, IsInt, IsNumber, Min, Max, Validate } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, ValidateNested, IsUUID, IsInt, IsNumber, Min, Max, Validate, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
+import { QuestionTypeValidatorConstraint } from '../validators/question-type.validator';
 
-@ValidatorConstraint({ name: 'hasCorrectAnswer', async: false })
-export class HasCorrectAnswerConstraint implements ValidatorConstraintInterface {
-  validate(question: any, args: ValidationArguments) {
-    // Para preguntas de texto abierto, debe tener correctAnswer
-    if (question.questionType === 'open_text') {
-      return question.correctAnswer && question.correctAnswer.trim().length > 0;
-    }
-    
-    // Para preguntas de opción múltiple, debe tener al menos una opción correcta
-    if (question.questionType === 'multiple_choice' || question.questionType === 'true_false') {
-      return question.options && question.options.some((option: any) => option.isCorrect === true);
-    }
-    
-    return true;
-  }
-
-  defaultMessage(args: ValidationArguments) {
-    const question = args.object as any;
-    if (question.questionType === 'open_text') {
-      return 'Las preguntas de texto abierto deben tener una respuesta correcta';
-    }
-    if (question.questionType === 'multiple_choice' || question.questionType === 'true_false') {
-      return 'Las preguntas de opción múltiple deben tener al menos una respuesta correcta marcada';
-    }
-    return 'La pregunta debe tener una respuesta correcta válida';
-  }
+// Enum para tipos de preguntas soportados
+export enum QuestionType {
+  TEXT = 'TEXT',
+  TEXTAREA = 'TEXTAREA',
+  OPEN_TEXT = 'open_text',
+  MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
+  CHECKBOX = 'CHECKBOX',
+  RATING_SCALE = 'RATING_SCALE',
+  NUMBER = 'NUMBER',
+  EMAIL = 'EMAIL',
+  DATE = 'DATE',
+  TIME = 'TIME',
+  BOOLEAN = 'BOOLEAN'
 }
 
 @InputType()
@@ -69,8 +57,8 @@ export class CreateFormQuestionInput {
   questionText: string;
 
   @Field(() => String)
-  @IsString()
-  questionType: string; // 'multiple_choice', 'single_choice', 'open_text', 'checkbox', 'rating_scale', 'yes_no'
+  @IsEnum(QuestionType, { message: 'Tipo de pregunta no válido' })
+  questionType: QuestionType;
 
   @Field(() => Int)
   @IsInt()
@@ -165,7 +153,7 @@ export class CreateFormQuestionInput {
   @Type(() => CreateFormQuestionOptionInput)
   options?: CreateFormQuestionOptionInput[];
 
-  @Validate(HasCorrectAnswerConstraint)
+  @Validate(QuestionTypeValidatorConstraint)
   get _validation() {
     return this;
   }
@@ -219,5 +207,6 @@ export class CreateFormInput {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateFormQuestionInput)
+  @Validate(QuestionTypeValidatorConstraint, { each: true })
   questions?: CreateFormQuestionInput[];
 }

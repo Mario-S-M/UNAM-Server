@@ -7,6 +7,7 @@ export interface Content {
   updatedAt: string;
   levelId: string;
   userId: number;
+  languageId?: string;
   markdownPath?: string;
   assignedTeachers: Teacher[];
   validationStatus: string;

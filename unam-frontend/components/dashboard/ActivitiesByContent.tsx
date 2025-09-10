@@ -22,13 +22,13 @@ interface Activity {
     title: string;
     questions: {
       id: string;
-      text: string;
-      type: string;
-      required: boolean;
+      questionText: string;
+      questionType: string;
+      isRequired: boolean;
       options?: {
         id: string;
-        text: string;
-        value: string;
+        optionText: string;
+        optionValue: string;
       }[];
     }[];
   };
@@ -154,7 +154,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
 
   const getActivityTypeIcon = (activity: Activity) => {
     if (activity.form) {
-      const questionTypes = activity.form.questions.map(q => q.type);
+      const questionTypes = activity.form.questions.map(q => q.questionType);
       if (questionTypes.includes('multiple_choice')) {
         return <Target className="w-5 h-5" />;
       }
@@ -295,13 +295,13 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
                         {activity.form.questions.slice(0, 2).map((question, qIndex) => (
                           <div key={question.id} className="bg-gray-50 p-3 rounded border">
                             <p className="text-sm font-medium">
-                              {qIndex + 1}. {question.text}
+                              {qIndex + 1}. {question.questionText}
                             </p>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="secondary" className="text-xs">
-                                {question.type}
+                                {question.questionType}
                               </Badge>
-                              {question.required && (
+                              {question.isRequired && (
                                 <Badge variant="destructive" className="text-xs">
                                   Requerida
                                 </Badge>

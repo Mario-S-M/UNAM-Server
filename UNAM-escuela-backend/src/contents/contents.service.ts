@@ -68,7 +68,7 @@ export class ContentsService {
 
   async findAll(): Promise<Content[]> {
     return await this.contentsRepository.find({
-      relations: ['assignedTeachers', 'skill'],
+      relations: ['assignedTeachers', 'skill', 'level', 'language'],
     });
   }
 
@@ -120,7 +120,9 @@ export class ContentsService {
     let query = this.contentsRepository
       .createQueryBuilder('content')
       .leftJoinAndSelect('content.assignedTeachers', 'assignedTeachers')
-      .leftJoinAndSelect('content.skill', 'skill');
+      .leftJoinAndSelect('content.skill', 'skill')
+      .leftJoinAndSelect('content.level', 'level')
+      .leftJoinAndSelect('content.language', 'language');
 
     // Apply filters based on user permissions
     if (
@@ -240,7 +242,7 @@ export class ContentsService {
 
     const contents = await this.contentsRepository.find({
       where: { levelId: levelId },
-      relations: ['assignedTeachers', 'skill'],
+      relations: ['assignedTeachers', 'skill', 'level', 'language'],
     });
     return contents;
   }

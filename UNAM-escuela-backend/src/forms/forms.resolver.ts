@@ -15,6 +15,49 @@ export class FormsResolver {
     private readonly userProgressService: UserProgressService,
   ) {}
 
+  /**
+   * Evalúa si una respuesta de texto es correcta usando múltiples criterios
+   */
+  private evaluateTextAnswer(userAnswer: string, correctAnswer: string): boolean {
+    if (!userAnswer || !correctAnswer) return false;
+    
+    const userText = userAnswer.toLowerCase().trim();
+    const correctText = correctAnswer.toLowerCase().trim();
+    
+    // 1. Comparación exacta
+    if (userText === correctText) {
+      return true;
+    }
+    
+    // 2. Verificar si la respuesta del usuario contiene la respuesta correcta
+    if (userText.includes(correctText) || correctText.includes(userText)) {
+      return true;
+    }
+    
+    // 3. Comparación por palabras clave (si la respuesta correcta tiene múltiples palabras)
+    const correctWords = correctText.split(/\s+/).filter(word => word.length > 2);
+    const userWords = userText.split(/\s+/);
+    
+    if (correctWords.length > 1) {
+      const matchedWords = correctWords.filter(word => 
+        userWords.some(userWord => userWord.includes(word) || word.includes(userWord))
+      );
+      // Si coincide al menos el 70% de las palabras clave
+      if (matchedWords.length / correctWords.length >= 0.7) {
+        return true;
+      }
+    }
+    
+    // 4. Verificar números (para respuestas numéricas en texto)
+    const userNumbers = userText.match(/\d+/g);
+    const correctNumbers = correctText.match(/\d+/g);
+    if (userNumbers && correctNumbers && userNumbers.length > 0 && correctNumbers.length > 0) {
+      return userNumbers.some(num => correctNumbers.includes(num));
+    }
+    
+    return false;
+  }
+
   @Mutation(() => Form)
   @UseGuards(JwtAuthGuard)
   async createForm(
@@ -77,10 +120,10 @@ export class FormsResolver {
             
             if (formResponse.answers && form.questions) {
               for (const answer of formResponse.answers) {
-                if (answer.selectedOptionIds && answer.selectedOptionIds.length > 0) {
+                const question = form.questions.find(q => q.id === answer.questionId);
+                if (question) {
                   // Para preguntas de opción múltiple
-                  const question = form.questions.find(q => q.id === answer.questionId);
-                  if (question) {
+                  if (answer.selectedOptionIds && answer.selectedOptionIds.length > 0) {
                     const correctOptions = question.options.filter(opt => opt.isCorrect);
                     const selectedCorrectOptions = answer.selectedOptionIds.filter(selectedId => 
                       correctOptions.some(correctOpt => correctOpt.id === selectedId)
@@ -89,6 +132,20 @@ export class FormsResolver {
                         answer.selectedOptionIds.length === correctOptions.length) {
                       correctAnswers++;
                     }
+                  }
+                  // Para preguntas de texto
+                  else if (answer.textAnswer && question.correctAnswer) {
+                    const isCorrect = this.evaluateTextAnswer(answer.textAnswer, question.correctAnswer);
+                    if (isCorrect) {
+                      correctAnswers++;
+                    }
+                    console.log('🔍 BACKEND TEXT EVALUATION:', {
+                      questionId: question.id,
+                      questionType: question.questionType,
+                      userAnswer: answer.textAnswer,
+                      correctAnswer: question.correctAnswer,
+                      isCorrect
+                    });
                   }
                 }
               }

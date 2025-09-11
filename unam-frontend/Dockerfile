@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Configure npm for legacy peer deps
+RUN npm config set legacy-peer-deps true
+
 # Install dependencies
 RUN npm ci
 
@@ -20,7 +23,6 @@ ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_GRAPHQL_ENDPOINT=$NEXT_PUBLIC_GRAPHQL_ENDPOINT
 
 # Build the application
-RUN npm config set legacy-peer-deps true
 RUN npm run build
 
 # Production stage
@@ -33,6 +35,9 @@ RUN npm install -g pm2
 
 # Copy package files
 COPY package*.json ./
+
+# Configure npm for legacy peer deps
+RUN npm config set legacy-peer-deps true
 
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force

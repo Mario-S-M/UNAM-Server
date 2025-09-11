@@ -13,7 +13,6 @@ export default function TestDirectGraphQL({ contentId }: TestDirectGraphQLProps)
 
   useEffect(() => {
     const testDirectFetch = async () => {
-      console.log('🌐 TestDirectGraphQL: Starting direct fetch test...');
       setLoading(true);
       setError(null);
       
@@ -62,15 +61,12 @@ export default function TestDirectGraphQL({ contentId }: TestDirectGraphQLProps)
           })
         });
 
-        console.log('🌐 TestDirectGraphQL: Response status:', response.status);
-        console.log('🌐 TestDirectGraphQL: Response headers:', response.headers);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('✅ TestDirectGraphQL: Success:', data);
         setResult(data);
       } catch (err) {
         console.error('❌ TestDirectGraphQL: Error:', err);
@@ -85,7 +81,6 @@ export default function TestDirectGraphQL({ contentId }: TestDirectGraphQLProps)
     }
   }, [contentId]);
 
-  console.log('🌐 TestDirectGraphQL: State:', { result, loading, error });
 
   return (
     <div className="p-4 border border-green-200 bg-green-50 rounded">

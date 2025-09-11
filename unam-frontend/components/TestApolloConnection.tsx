@@ -10,11 +10,9 @@ const TEST_QUERY = gql`
 `;
 
 export function TestApolloConnection() {
-  console.log('🧪 TestApolloConnection: Component mounted');
   
   const { loading, error, data } = useQuery(TEST_QUERY, {
     onCompleted: (data) => {
-      console.log('🧪 TestApolloConnection: Query completed successfully!', data);
     },
     onError: (error) => {
       console.error('🧪 TestApolloConnection: Query failed:', error);
@@ -22,7 +20,6 @@ export function TestApolloConnection() {
   });
   
   useEffect(() => {
-    console.log('🧪 TestApolloConnection: Query state changed:', { loading, error: error?.message, data });
   }, [loading, error, data]);
   
   return (

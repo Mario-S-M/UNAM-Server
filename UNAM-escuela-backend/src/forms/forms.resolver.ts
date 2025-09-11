@@ -103,54 +103,147 @@ export class FormsResolver {
     @Args('createFormResponseInput') createFormResponseInput: CreateFormResponseInput,
     @CurrentUser([[], { optional: true }]) user?: User,
   ): Promise<FormResponse> {
+    console.log('🚀 BACKEND SUBMIT FORM RESPONSE - INPUT:', {
+           formId: createFormResponseInput.formId,
+           userId: user?.id || 'anonymous',
+           answersCount: createFormResponseInput.answers?.length || 0,
+           answers: createFormResponseInput.answers
+         });
+    
     const formResponse = await this.formsService.submitFormResponse(createFormResponseInput, user?.id);
     
-    // Guardar progreso automáticamente para usuarios 'mortal' o 'alumno'
-    if (user && user.roles && await this.userProgressService.shouldAutoSave(user.roles[0])) {
-      try {
-        // Obtener información del formulario para extraer contentId
-        const form = await this.formsService.findFormById(createFormResponseInput.formId);
-        if (form && form.contentId) {
-          // Buscar la actividad que tiene este formulario
-          const activity = await this.formsService.findActivityByFormId(form.id);
-          if (activity) {
-            // Calcular puntuación basada en las respuestas
-            const totalQuestions = form.questions?.length || 0;
-            let correctAnswers = 0;
+    console.log('✅ FORM RESPONSE CREATED:', {
+      responseId: formResponse.id,
+      answersCount: formResponse.answers?.length || 0
+    });
+    
+    console.log('🔍 USER INFO FOR EVALUATION:', {
+      hasUser: !!user,
+      userId: user?.id,
+      userRoles: user?.roles,
+      shouldEvaluate: true
+    });
+    
+    // Obtener información del formulario para extraer contentId
+    const form = await this.formsService.findFormById(createFormResponseInput.formId);
+    
+    // Evaluar si el formulario tiene contentId (sin requerir usuario)
+    if (form && form.contentId) {
+      // Buscar la actividad que tiene este formulario
+      const activity = await this.formsService.findActivityByFormId(form.id);
+      if (activity) {
+        // Calcular puntuación basada en las respuestas
+        const totalQuestions = form.questions?.length || 0;
+        let correctAnswers = 0;
+        
+        console.log('🔍 STARTING EVALUATION PROCESS:', {
+          totalQuestions,
+          hasAnswers: !!formResponse.answers,
+          hasQuestions: !!form.questions,
+          answersCount: formResponse.answers?.length || 0,
+          questionsCount: form.questions?.length || 0
+        });
+        
+        if (formResponse.answers && form.questions) {
+          for (const answer of formResponse.answers) {
+            const question = form.questions.find(q => q.id === answer.questionId);
             
-            if (formResponse.answers && form.questions) {
-              for (const answer of formResponse.answers) {
-                const question = form.questions.find(q => q.id === answer.questionId);
-                if (question) {
-                  // Para preguntas de opción múltiple
-                  if (answer.selectedOptionIds && answer.selectedOptionIds.length > 0) {
-                    const correctOptions = question.options.filter(opt => opt.isCorrect);
-                    const selectedCorrectOptions = answer.selectedOptionIds.filter(selectedId => 
-                      correctOptions.some(correctOpt => correctOpt.id === selectedId)
-                    );
-                    if (selectedCorrectOptions.length === correctOptions.length && 
-                        answer.selectedOptionIds.length === correctOptions.length) {
-                      correctAnswers++;
-                    }
-                  }
-                  // Para preguntas de texto
-                  else if (answer.textAnswer && question.correctAnswer) {
-                    const isCorrect = this.evaluateTextAnswer(answer.textAnswer, question.correctAnswer);
-                    if (isCorrect) {
-                      correctAnswers++;
-                    }
-                    console.log('🔍 BACKEND TEXT EVALUATION:', {
-                      questionId: question.id,
-                      questionType: question.questionType,
-                      userAnswer: answer.textAnswer,
-                      correctAnswer: question.correctAnswer,
-                      isCorrect
-                    });
-                  }
+            console.log('🔍 PROCESSING ANSWER:', {
+              questionId: answer.questionId,
+              questionFound: !!question,
+              questionText: question?.questionText?.substring(0, 50) + '...',
+              questionType: question?.questionType,
+              hasSelectedOptionIds: !!answer.selectedOptionIds,
+              hasSelectedOptionId: !!answer.selectedOptionId,
+              hasTextAnswer: !!answer.textAnswer
+            });
+            
+            if (question) {
+              let isCorrect = false;
+              let feedback = '';
+              
+              // Para preguntas de opción múltiple (array de opciones seleccionadas)
+              if (answer.selectedOptionIds && answer.selectedOptionIds.length > 0) {
+                const correctOptions = question.options.filter(opt => opt.isCorrect);
+                const selectedCorrectOptions = answer.selectedOptionIds.filter(selectedId => 
+                  correctOptions.some(correctOpt => correctOpt.id === selectedId)
+                );
+                const selectedIncorrectOptions = answer.selectedOptionIds.filter(selectedId => 
+                  question.options.some(opt => opt.id === selectedId && !opt.isCorrect)
+                );
+                
+                // Respuesta correcta si:
+                // 1. Seleccionó todas las opciones correctas
+                // 2. No seleccionó ninguna opción incorrecta
+                isCorrect = selectedCorrectOptions.length === correctOptions.length && 
+                           selectedIncorrectOptions.length === 0;
+                
+                if (isCorrect) {
+                  correctAnswers++;
+                  feedback = '¡Correcto! Has seleccionado todas las opciones correctas.';
+                } else {
+                  const correctTexts = correctOptions.map(opt => opt.optionText).join(', ');
+                  feedback = `Incorrecto. Las respuestas correctas son: ${correctTexts}`;
                 }
+                
+                console.log('🔍 BACKEND MULTIPLE CHOICE EVALUATION:', {
+                  questionId: question.id,
+                  questionType: question.questionType,
+                  selectedOptionIds: answer.selectedOptionIds,
+                  correctOptions: correctOptions.map(opt => ({ id: opt.id, text: opt.optionText })),
+                  selectedCorrectOptions,
+                  selectedIncorrectOptions,
+                  isCorrect
+                });
               }
+              // Para preguntas de selección única
+              else if (answer.selectedOptionId) {
+                const selectedOption = question.options.find(opt => opt.id === answer.selectedOptionId);
+                isCorrect = !!(selectedOption && selectedOption.isCorrect);
+                
+                if (isCorrect) {
+                  correctAnswers++;
+                  feedback = '¡Correcto!';
+                } else {
+                  const correctOption = question.options.find(opt => opt.isCorrect);
+                  feedback = correctOption ? `Incorrecto. La respuesta correcta es: ${correctOption.optionText}` : 'Incorrecto.';
+                }
+                
+                console.log('🔍 BACKEND SINGLE CHOICE EVALUATION:', {
+                  questionId: question.id,
+                  questionType: question.questionType,
+                  selectedOptionId: answer.selectedOptionId,
+                  selectedOption: selectedOption ? { id: selectedOption.id, text: selectedOption.optionText, isCorrect: selectedOption.isCorrect } : null,
+                  isCorrect
+                });
+              }
+              // Para preguntas de texto
+              else if (answer.textAnswer && question.correctAnswer) {
+                isCorrect = this.evaluateTextAnswer(answer.textAnswer, question.correctAnswer);
+                if (isCorrect) {
+                  correctAnswers++;
+                  feedback = '¡Correcto!';
+                } else {
+                  feedback = `Incorrecto. La respuesta correcta es: ${question.correctAnswer}`;
+                }
+                console.log('🔍 BACKEND TEXT EVALUATION:', {
+                  questionId: question.id,
+                  questionType: question.questionType,
+                  userAnswer: answer.textAnswer,
+                  correctAnswer: question.correctAnswer,
+                  isCorrect
+                });
+              }
+              
+              // Guardar los resultados de evaluación en la respuesta
+              await this.formsService.updateAnswerEvaluation(answer.id, isCorrect, feedback);
             }
-            
+          }
+        }
+        
+        // Guardar progreso automáticamente para usuarios 'mortal' o 'alumno', o crear progreso anónimo
+        if (user && user.roles && await this.userProgressService.shouldAutoSave(user.roles[0])) {
+          try {
             await this.userProgressService.updateUserProgress(
               user.id,
               form.contentId,
@@ -159,15 +252,21 @@ export class FormsResolver {
               correctAnswers,
               totalQuestions,
             );
+          } catch (error) {
+            // Log error but don't fail the form submission
+            console.error('Error updating user progress:', error);
           }
         }
-      } catch (error) {
-        // Log error but don't fail the form submission
-        console.error('Error updating user progress:', error);
       }
     }
     
-    return formResponse;
+    // Código anterior para usuarios autenticados (mantener compatibilidad)
+    if (user && user.roles && await this.userProgressService.shouldAutoSave(user.roles[0])) {
+      // Este bloque ya se ejecutó arriba, mantener para compatibilidad
+    }
+    
+    // Devolver la respuesta actualizada con los campos de evaluación
+    return this.formsService.findFormResponseById(formResponse.id);
   }
 
   @Query(() => FormResponse)

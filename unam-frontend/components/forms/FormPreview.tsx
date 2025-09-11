@@ -134,7 +134,6 @@ export function FormPreview({ formData, onSubmit, isReadOnly = false }: FormPrev
     if (onSubmit) {
       onSubmit(data);
     } else {
-      console.log('Form submitted:', data);
     }
   };
 

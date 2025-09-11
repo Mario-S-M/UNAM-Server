@@ -29,11 +29,28 @@ export class FormAnswer {
 
   @Column({ nullable: true })
   @Field(() => String, { nullable: true })
+  selectedOptionId?: string; // para selección única
+
+  @Column({ nullable: true })
+  @Field(() => String, { nullable: true })
   numericAnswer?: string; // para escalas de valoración
 
   @Column({ nullable: true })
   @Field(() => Boolean, { nullable: true })
   booleanAnswer?: boolean; // para preguntas sí/no
+
+  // Campos de evaluación
+  @Column({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
+  isCorrect?: boolean; // resultado de la evaluación
+
+  @Column({ nullable: true, type: 'text' })
+  @Field(() => String, { nullable: true })
+  feedback?: string; // retroalimentación específica
+
+  @Column({ nullable: true, type: 'float' })
+  @Field(() => Number, { nullable: true })
+  score?: number; // puntuación obtenida
 
   // Relaciones
   @Column()

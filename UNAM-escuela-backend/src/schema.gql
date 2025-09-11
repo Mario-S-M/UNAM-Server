@@ -170,8 +170,12 @@ type FormAnswer {
   id: ID!
   textAnswer: String
   selectedOptionIds: [String!]
+  selectedOptionId: String
   numericAnswer: String
   booleanAnswer: Boolean
+  isCorrect: Boolean
+  feedback: String
+  score: Float
   questionId: ID!
   question: FormQuestion!
   responseId: ID!

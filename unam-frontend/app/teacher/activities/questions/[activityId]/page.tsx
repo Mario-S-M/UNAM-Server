@@ -121,29 +121,28 @@ export default function ActivityQuestionsPage() {
 
   useEffect(() => {
     if (activityData?.activity) {
-      console.log('=== FRONTEND GET_ACTIVITY DEBUG ===');
-      console.log('Activity data received:', JSON.stringify(activityData, null, 2));
+      
       
       setActivityName(activityData.activity.name);
       
       if (activityData.activity.form?.questions) {
-        console.log('Questions found:', activityData.activity.form.questions.length);
+  
         const processedQuestions = activityData.activity.form.questions.map((q: any) => {
-          console.log('Processing question:', q.questionText, 'Type:', q.questionType, 'Options:', q.options?.length || 0);
+  
           return {
             ...q,
             allowMultiline: q.allowMultiline || false,
             options: q.options || []
           };
         });
-        console.log('Processed questions:', processedQuestions);
+  
         setQuestions(processedQuestions);
       } else {
-        console.log('No form or questions found');
+  
         setQuestions([]);
       }
       
-      console.log('=== END FRONTEND DEBUG ===');
+  
     }
   }, [activityData]);
 

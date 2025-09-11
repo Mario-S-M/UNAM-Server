@@ -24,21 +24,16 @@ export default function TestApolloQuery({ contentId }: TestApolloQueryProps) {
   const [testError, setTestError] = useState<any>(null);
   const [testLoading, setTestLoading] = useState(false);
   
-  console.log('🚀 TestApolloQuery: Component rendering with contentId:', contentId);
-  console.log('🔧 TestApolloQuery: Apollo client:', client);
-  console.log('📋 TestApolloQuery: GET_CONTENT_PUBLIC query:', GET_CONTENT_PUBLIC);
   
   // Simple test query
   useEffect(() => {
     const executeTestQuery = async () => {
-      console.log('🧪 TestApolloQuery: Starting simple test query...');
       setTestLoading(true);
       try {
         const result = await client.query({
           query: TEST_QUERY,
           fetchPolicy: 'no-cache',
         });
-        console.log('✅ TestApolloQuery: Test query success:', result);
         setTestResult(result);
       } catch (err) {
         console.error('❌ TestApolloQuery: Test query error:', err);
@@ -54,20 +49,15 @@ export default function TestApolloQuery({ contentId }: TestApolloQueryProps) {
   // Manual query with client.query
   useEffect(() => {
     const executeManualQuery = async () => {
-      console.log("🔍 TestApolloQuery: Starting manual query with variables:", { id: contentId });
-      console.log("🔍 TestApolloQuery: Client instance:", client);
-      console.log("🔍 TestApolloQuery: Client link:", client.link);
       
       setManualLoading(true);
       try {
-        console.log("🔍 TestApolloQuery: About to call client.query...");
         const result = await client.query({
           query: GET_CONTENT_PUBLIC,
           variables: { id: contentId },
           fetchPolicy: "no-cache",
           errorPolicy: "all",
         });
-        console.log("✅ TestApolloQuery: Manual query success:", result);
         setManualResult(result);
       } catch (err) {
           console.error("❌ TestApolloQuery: Manual query error:", err);
@@ -81,15 +71,12 @@ export default function TestApolloQuery({ contentId }: TestApolloQueryProps) {
           setManualError(apolloError);
       } finally {
         setManualLoading(false);
-        console.log("🔍 TestApolloQuery: Manual query finished");
       }
     };
 
     if (contentId) {
-      console.log("🔍 TestApolloQuery: ContentId provided, executing manual query...");
       executeManualQuery();
     } else {
-      console.log("🔍 TestApolloQuery: No contentId provided");
     }
   }, [client, contentId]);
   
@@ -99,16 +86,12 @@ export default function TestApolloQuery({ contentId }: TestApolloQueryProps) {
     errorPolicy: 'all',
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      console.log('✅ TestApolloQuery: useQuery completed:', data);
     },
     onError: (error) => {
       console.error('❌ TestApolloQuery: useQuery error:', error);
     }
   });
   
-  console.log('🧪 TestApolloQuery: useQuery state:', { data, loading, error });
-  console.log('🔧 TestApolloQuery: Manual query state:', { manualResult, manualLoading, manualError });
-  console.log('🧪 TestApolloQuery: Test query state:', { testResult, testLoading, testError });
   
   return (
     <div className="p-4 border border-blue-200 bg-blue-50 rounded">

@@ -71,7 +71,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
   const handleActivityClick = (activity: Activity) => {
     setSelectedActivity(activity);
     // Aquí podrías navegar a una página de actividad específica
-    console.log('Actividad seleccionada:', activity);
+    
   };
 
   if (!selectedContent) {

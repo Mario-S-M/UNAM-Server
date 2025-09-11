@@ -212,23 +212,23 @@ export function FormResponse({
           return { ...baseAnswer, textAnswer: answer || '' };
         
         case 'MULTIPLE_CHOICE':
-          return { ...baseAnswer, multipleChoiceAnswer: answer || [] };
+          return { ...baseAnswer, selectedOptionIds: answer || [] };
         
         case 'CHECKBOX':
         case 'BOOLEAN':
-          return { ...baseAnswer, singleChoiceAnswer: answer || '' };
+          return { ...baseAnswer, selectedOptionIds: Array.isArray(answer) ? answer : [answer] };
         
         case 'NUMBER':
-          return { ...baseAnswer, numberAnswer: answer || 0 };
+          return { ...baseAnswer, numericAnswer: answer?.toString() || '0' };
         
         case 'RATING_SCALE':
-          return { ...baseAnswer, ratingAnswer: answer || 1 };
+          return { ...baseAnswer, numericAnswer: answer?.toString() || '1' };
         
         case 'DATE':
-          return { ...baseAnswer, dateAnswer: answer || '' };
+          return { ...baseAnswer, textAnswer: answer || '' };
         
         case 'TIME':
-          return { ...baseAnswer, timeAnswer: answer || '' };
+          return { ...baseAnswer, textAnswer: answer || '' };
         
         default:
           return { ...baseAnswer, textAnswer: answer?.toString() || '' };

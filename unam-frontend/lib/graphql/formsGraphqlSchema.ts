@@ -269,7 +269,7 @@ export interface CreateFormAnswerInput {
   questionId: string;
   textAnswer?: string;
   selectedOptionIds?: string[];
-  numericAnswer?: number;
+  numericAnswer?: string;
   booleanAnswer?: boolean;
 }
 

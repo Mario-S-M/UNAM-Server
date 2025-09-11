@@ -90,8 +90,7 @@ export default function ContentDetail() {
   const router = useRouter();
   const id = Array.isArray(params.id) ? params.id[0] : params.id as string;
 
-  console.log('🔍 About to execute useQuery with:', { id, skip: !id });
-  console.log('🔍 GET_CONTENT_PUBLIC query:', GET_CONTENT_PUBLIC);
+
   
   const { data, loading, error } = useQuery<{ contentPublic: Content }>(
     GET_CONTENT_PUBLIC,
@@ -101,11 +100,11 @@ export default function ContentDetail() {
       errorPolicy: 'all',
       fetchPolicy: 'no-cache', // Force network request
       onCompleted: (data) => {
-        console.log('✅ ContentDetail: Query completed with data:', data);
+    
       },
       onError: (error) => {
         console.error('❌ Error fetching content:', error);
-        console.log('❌ ContentDetail: Query error:', error);
+    
         toast.error('Error al cargar el contenido');
       }
     }

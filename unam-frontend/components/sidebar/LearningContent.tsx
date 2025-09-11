@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 
 export default function LearningContent() {
   const router = useRouter();
-  console.log('LearningContent: Component mounted');
   const [languages, setLanguages] = useState<SidebarLanguage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,24 +20,19 @@ export default function LearningContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('🚀 LearningContent: Starting data load...');
         setLoading(true);
 
         
         const data = await loadLanguagesWithLevels();
-        console.log('✅ LearningContent: Data loaded:', data);
-        console.log('📊 LearningContent: Number of languages:', data.length);
         setLanguages(data);
       } catch (err) {
         console.error('❌ LearningContent: Error loading data:', err);
         setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
-        console.log('🏁 LearningContent: Loading finished');
         setLoading(false);
       }
     };
 
-    console.log('🔄 LearningContent: useEffect triggered, calling loadData...');
     loadData();
   }, []);
 

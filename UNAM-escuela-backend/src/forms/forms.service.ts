@@ -404,7 +404,8 @@ export class FormsService {
 
       const answer = this.formAnswerRepository.create({
         textAnswer: answerInput.textAnswer,
-        selectedOptionIds: answerInput.selectedOptionIds,
+        selectedOptionIds: answerInput.selectedOptionIds, // Para preguntas de opción múltiple
+        selectedOptionId: answerInput.selectedOptionIds?.[0], // Para preguntas de selección única (primer elemento del array)
         numericAnswer: answerInput.numericAnswer,
         booleanAnswer: answerInput.booleanAnswer,
         questionId: answerInput.questionId,
@@ -469,8 +470,16 @@ export class FormsService {
   }
 
   async findActivityByFormId(formId: string): Promise<Activity | null> {
-    return await this.activityRepository.findOne({
+    return this.activityRepository.findOne({
       where: { formId },
+    });
+  }
+
+  async updateAnswerEvaluation(answerId: string, isCorrect: boolean, feedback: string): Promise<void> {
+    await this.formAnswerRepository.update(answerId, {
+      isCorrect,
+      feedback,
+      score: isCorrect ? 1 : 0,
     });
   }
 }

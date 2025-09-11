@@ -124,7 +124,7 @@ import { toast } from 'sonner';
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
-  console.log('🌐 fetchGraphQL iniciado con:', { query: query.substring(0, 50) + '...', variables });
+  
   try {
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
@@ -138,17 +138,17 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
       }),
     });
 
-    console.log('📡 Response status:', response.status);
+    
     const result = await response.json();
-    console.log('📋 Response result:', result);
+    
     
     if (result.errors) {
-      console.log('❌ GraphQL errors encontrados:', result.errors);
+      
       throw new Error(result.errors[0].message);
     }
     return result.data;
   } catch (error) {
-    console.log('🚨 Error en fetchGraphQL:', error);
+    
     console.error('GraphQL Error:', error);
     throw error;
   }
@@ -360,19 +360,18 @@ export default function IdiomasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 handleSubmit iniciado');
+
     
     // Validar datos del formulario con Zod
     const dataToValidate = editingLanguage 
       ? { ...formData, id: editingLanguage.id }
       : formData;
     const validationResult = validateLanguageForm(dataToValidate, !!editingLanguage);
-    console.log('📋 Resultado de validación:', validationResult);
-    console.log('📋 Datos validados:', dataToValidate);
+    
     
     if (!validationResult.success) {
       const errors = validationResult.error.issues.map((err: any) => err.message).join(', ');
-      console.log('❌ Errores de validación:', errors);
+      
       toast.error(`Errores de validación: ${errors}`);
       return;
     }
@@ -381,7 +380,7 @@ export default function IdiomasPage() {
     let createData: any = undefined;
 
     try {
-      console.log('🔄 Entrando al bloque try');
+
       if (editingLanguage) {
         // Filtrar campos vacíos para evitar errores de validación en el backend
         updateData = {
@@ -411,7 +410,7 @@ export default function IdiomasPage() {
         if (data.icons && data.icons.length > 0) updateData.icons = data.icons;
         if (data.isActive !== undefined) updateData.isActive = data.isActive;
         
-        console.log('📤 Enviando updateData:', updateData);
+        
         const result = await fetchGraphQL(
           UPDATE_LANGUAGE,
           {
@@ -419,7 +418,7 @@ export default function IdiomasPage() {
           },
           token || undefined
          );
-        console.log('✅ Resultado de actualización:', result);
+        
         toast.warning('Idioma actualizado exitosamente');
       } else {
         // Filtrar campos vacíos para la creación también
@@ -448,7 +447,7 @@ export default function IdiomasPage() {
         if (data.icons && data.icons.length > 0) createData.icons = data.icons;
         if (data.isActive !== undefined) createData.isActive = data.isActive;
         
-        console.log('📤 Enviando createData:', createData);
+        
         const result = await fetchGraphQL(
           CREATE_LANGUAGE,
           {
@@ -456,14 +455,14 @@ export default function IdiomasPage() {
           },
           token || undefined
          );
-        console.log('✅ Resultado de creación:', result);
+        
         toast.success('Idioma creado exitosamente');
       }
       setIsDialogOpen(false);
       resetForm();
       fetchLanguages();
     } catch (error) {
-      console.log('🚨 ENTRANDO AL CATCH BLOCK');
+
       console.error('❌ Error saving language:', error);
       console.error('📊 Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -474,7 +473,7 @@ export default function IdiomasPage() {
         editingLanguage: editingLanguage
       });
       const errorMessage = error instanceof Error ? error.message : 'Error al guardar el idioma';
-      console.log('📢 Mostrando toast con mensaje:', errorMessage);
+
       toast.error(`Errores de Validación: ${errorMessage}`);
     }
   };

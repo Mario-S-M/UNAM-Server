@@ -124,6 +124,8 @@ const SUBMIT_FORM_RESPONSE = gql`
         questionId
         textAnswer
         selectedOptionIds
+        isCorrect
+        feedback
       }
     }
   }
@@ -230,23 +232,16 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const evaluateTextAnswer = (userAnswer: string, correctAnswer: string): boolean => {
     // Validación de entrada
     if (!userAnswer || !correctAnswer) {
-      console.log('❌ evaluateTextAnswer: Respuesta vacía o nula');
       return false;
     }
 
     const userText = userAnswer.toLowerCase().trim();
     const correctText = correctAnswer.toLowerCase().trim();
     
-    console.log('🔍 evaluateTextAnswer: Comparando:', {
-      userAnswer: userAnswer,
-      correctAnswer: correctAnswer,
-      userText: userText,
-      correctText: correctText
-    });
+
 
     // 1. Coincidencia exacta
     if (userText === correctText) {
-      console.log('✅ evaluateTextAnswer: Coincidencia exacta');
       return true;
     }
 
@@ -262,25 +257,19 @@ export function ExamView({ contentId }: ActivityViewProps) {
     const normalizedUser = normalizeText(userText);
     const normalizedCorrect = normalizeText(correctText);
     
-    console.log('🔄 evaluateTextAnswer: Texto normalizado:', {
-      normalizedUser,
-      normalizedCorrect
-    });
+
     
     if (normalizedUser === normalizedCorrect) {
-      console.log('✅ evaluateTextAnswer: Coincidencia después de normalización');
       return true;
     }
 
     // 3. Verificar si la respuesta del usuario está incluida en la respuesta correcta
     if (normalizedCorrect.includes(normalizedUser) && normalizedUser.length > 0) {
-      console.log('✅ evaluateTextAnswer: Respuesta del usuario incluida en correcta');
       return true;
     }
 
     // 4. Verificar si la respuesta correcta está incluida en la respuesta del usuario
     if (normalizedUser.includes(normalizedCorrect) && normalizedCorrect.length > 0) {
-      console.log('✅ evaluateTextAnswer: Respuesta correcta incluida en usuario');
       return true;
     }
 
@@ -295,15 +284,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
         )
       );
       const matchPercentage = matchingWords.length / Math.max(userWords.length, correctWords.length);
-      console.log('📊 evaluateTextAnswer: Análisis de palabras:', {
-        userWords,
-        correctWords,
-        matchingWords,
-        matchPercentage
-      });
+
       
       if (matchPercentage >= 0.7) {
-        console.log('✅ evaluateTextAnswer: Coincidencia por palabras clave');
         return true;
       }
     }
@@ -314,13 +297,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
     
     if (!isNaN(userNumber) && !isNaN(correctNumber)) {
       const isEqual = userNumber === correctNumber;
-      console.log('🔢 evaluateTextAnswer: Comparación numérica:', {
-        userNumber,
-        correctNumber,
-        isEqual
-      });
+
       if (isEqual) {
-        console.log('✅ evaluateTextAnswer: Coincidencia numérica');
         return true;
       }
     }
@@ -332,7 +310,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
           const threshold = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
           if (!isNaN(threshold)) {
             const result = userNumber < threshold;
-            console.log('📏 evaluateTextAnswer: Verificación menor que:', { userNumber, threshold, result });
             return result;
           }
         }
@@ -340,22 +317,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
           const threshold = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
           if (!isNaN(threshold)) {
             const result = userNumber > threshold;
-            console.log('📏 evaluateTextAnswer: Verificación mayor que:', { userNumber, threshold, result });
             return result;
           }
         }
       }
     }
 
-    console.log('❌ evaluateTextAnswer: No se encontró coincidencia');
     return false;
   };
 
-  console.log('ExamView: Starting with contentId:', contentId);
-  console.log('ExamView: Component mounted/re-rendered');
-  console.log('🚀 About to execute useQuery with contentId:', contentId);
-  console.log('🔧 Variables being passed:', { contentId });
-  console.log('🔧 Skip condition:', !contentId);
   
   const { data, loading, error } = useQuery<{ exercisesByContent: ActivityExercise[] }>(
     GET_EXERCISES_BY_CONTENT,
@@ -363,8 +333,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
       variables: { contentId },
       skip: !contentId,
       onCompleted: (data) => {
-        console.log('ExamView: ✅ Query completed successfully!');
-        console.log('ExamView: Query data received:', JSON.stringify(data, null, 2));
       },
       onError: (error) => {
         console.error('ExamView: ❌ Query failed:', error);
@@ -372,24 +340,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
     }
   );
   
-  console.log('🔧 useQuery declared with skip:', !contentId);
   
-  console.log('📊 useQuery hook result:', { loading, error: error?.message, hasData: !!data });
 
-  console.log('ExamView: 🔄 Query state - loading:', loading, 'error:', error?.message, 'hasData:', !!data);
   
   // Debug adicional
   if (data?.exercisesByContent) {
-    console.log('Exercises found:', data.exercisesByContent.length);
-    console.log('Exercises data:', data.exercisesByContent);
   } else {
-    console.log('No exercises data found');
   }
   if (data) {
-    console.log('ExamView: 📊 Data details:', {
-      exercisesCount: data.exercisesByContent?.length || 0,
-      exercises: data.exercisesByContent
-    });
+
   }
 
   const exercises = data?.exercisesByContent || [];
@@ -398,7 +357,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
   // Usar useMemo para evitar recalcular originalQuestions en cada render
   const originalQuestions = useMemo(() => {
     const questions = currentActivity?.form?.questions || [];
-    console.log('🔍 originalQuestions memoized:', questions.length, 'for activity:', currentActivityIndex);
     return questions;
   }, [currentActivity?.form?.questions, currentActivityIndex]);
   
@@ -414,12 +372,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
   
   // Aleatorizar preguntas y opciones cuando cambie la actividad
   useEffect(() => {
-    console.log('🔄 useEffect triggered - randomizing questions for activity:', currentActivityIndex, 'questions:', originalQuestions.length);
-    console.log('🔄 useEffect states:', { showFeedback, showActivityCompletion, examStarted });
     
     // Aleatorizar si hay preguntas (siempre que cambie la actividad o al inicio)
     if (originalQuestions.length > 0) {
-      console.log('🔄 Randomizing questions and options...');
       const randomizedQuestions = shuffleArray(originalQuestions);
       setShuffledQuestions(randomizedQuestions);
       
@@ -431,9 +386,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
         }
       });
       setShuffledOptions(randomizedOptions);
-      console.log('🔄 Questions and options randomized successfully');
     } else {
-      console.log('🔄 Skipping randomization - no questions available');
       // Limpiar shuffledQuestions si no hay preguntas originales
       setShuffledQuestions([]);
       setShuffledOptions({});
@@ -441,24 +394,12 @@ export function ExamView({ contentId }: ActivityViewProps) {
   }, [currentActivityIndex, originalQuestions.length]);
   
   // Debug de variables calculadas
-  console.log('🔍 === RENDER DEBUG ===');
-  console.log('🔍 All states:', { showFeedback, showActivityCompletion, examStarted, currentActivityIndex, showResults });
-  console.log('Exercises calculated:', exercises.length);
-  console.log('Current activity index:', currentActivityIndex);
-  console.log('Current activity:', currentActivity);
-  console.log('Current activity questions:', displayQuestions.length);
-  console.log('Total questions:', totalQuestions);
-  console.log('🔍 === END RENDER DEBUG ===');
   
   // Generar ID único para usuario anónimo (siempre el mismo)
   const anonymousUserId = 'anonymous-user-001';
   const anonymousUserName = 'Usuario Anónimo';
   const anonymousUserEmail = 'anonimo@sistema.local';
   
-  console.log('Current question index:', currentQuestionIndex);
-  console.log('Total questions:', totalQuestions);
-  console.log('Current question:', currentQuestion);
-  console.log('All questions:', allQuestions);
 
   const goToQuestion = (index: number) => {
     if (index >= 0 && index < displayQuestions.length) {
@@ -467,13 +408,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   const handleContinueToNextActivity = () => {
-    console.log('🔄 handleContinueToNextActivity called');
-    console.log('🔄 Current states before reset:', { showFeedback, showActivityCompletion, examStarted, currentActivityIndex });
     
     // Obtener la actividad actual para redirigir al formulario de edición
     const currentActivity = exercises[currentActivityIndex];
     if (currentActivity) {
-      console.log('🔄 Redirecting to activity edit form:', currentActivity.id);
       toast.info('Redirigiendo al formulario de edición de la actividad...');
       router.push(`/admin/actividades/${currentActivity.id}`);
       return;
@@ -482,11 +420,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
     if (currentActivityIndex < totalActivities - 1) {
       // Ir a la siguiente actividad
       const newActivityIndex = currentActivityIndex + 1;
-      console.log('🔄 Setting new activity index to:', newActivityIndex);
       
       // IMPORTANTE: Usar React.startTransition para asegurar que todos los resets se apliquen juntos
       React.startTransition(() => {
-        console.log('🔄 Starting transition - Resetting all states');
         setShowFeedback(false);
         setShowActivityCompletion(false);
         setExamStarted(false);
@@ -497,16 +433,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
         setShuffledQuestions([]);
         setShuffledOptions({});
         setTimeElapsed(0);
-        console.log('🔄 Transition completed - All states should be reset');
       });
       
-      console.log('🔄 All states reset for activity:', newActivityIndex);
-      console.log('🔄 States after reset:', { 
-        showFeedback: false, 
-        showActivityCompletion: false, 
-        examStarted: false, 
-        currentActivityIndex: newActivityIndex 
-      });
       
       toast.info(`Iniciando actividad ${newActivityIndex + 1} de ${totalActivities}`);
     } else {
@@ -519,7 +447,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   const handleShowFeedback = () => {
-    console.log('📝 handleShowFeedback called - Setting showFeedback to TRUE');
     setShowActivityCompletion(false);
     setShowFeedback(true);
   };
@@ -536,7 +463,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const [submitFormResponse, { loading: submitLoading }] = useMutation(SUBMIT_FORM_RESPONSE, {
     onCompleted: (data) => {
-      console.log('✅ Respuestas enviadas exitosamente:', data);
       setExamSubmitted(true);
       setExamResults(data.submitFormResponse);
       // Mostrar retroalimentación después de completar la actividad
@@ -595,12 +521,21 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const submitExam = async () => {
     try {
-      // Preparar las respuestas para enviar
-      const formAnswers = answers.map(answer => ({
-        questionId: answer.questionId,
-        selectedOptionIds: answer.selectedOptionIds || (answer.selectedOptionId ? [answer.selectedOptionId] : []),
-        textAnswer: answer.textAnswer || (answer.selectedOptionId ? currentActivityQuestions.find(q => q.id === answer.questionId)?.options.find(opt => opt.id === answer.selectedOptionId)?.optionText : null) || null
-      }));
+      // Preparar las respuestas para enviar según el DTO del backend
+      const formAnswers = answers.map(answer => {
+        const question = currentActivityQuestions.find(q => q.id === answer.questionId);
+        // Para preguntas de selección única, convertir selectedOptionId a array
+        const selectedOptionIds = answer.selectedOptionIds || 
+          (answer.selectedOptionId ? [answer.selectedOptionId] : null);
+        
+        return {
+          questionId: answer.questionId,
+          textAnswer: answer.textAnswer || null,
+          selectedOptionIds: selectedOptionIds,
+          numericAnswer: null,
+          booleanAnswer: null
+        };
+      });
 
       // Usar información del usuario autenticado si está disponible, sino usar datos anónimos
       const formResponseInput = {
@@ -611,7 +546,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
         answers: formAnswers
       };
 
-      console.log('📤 Enviando respuestas de actividad:', formResponseInput);
       await submitFormResponse({
         variables: {
           createFormResponseInput: formResponseInput
@@ -668,15 +602,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
           if (userText === correctText) {
             correctAnswers++;
           }
-          console.log('🔍 CALCULATE SCORE DEBUG:', {
-            questionId: question.id,
-            questionType: question.questionType,
-            userAnswer: userAnswer.textAnswer,
-            correctAnswer: question.correctAnswer,
-            userText,
-            correctText,
-            isCorrect: userText === correctText
-          });
         }
       }
     });
@@ -703,24 +628,20 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const handleAnswerSelect = (questionId: string, optionId: string) => {
     if (!currentQuestion) return;
-    console.log('Selecting answer:', { questionId, optionId });
     setAnswers(prev => {
       const existingIndex = prev.findIndex(a => a.questionId === questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
         updated[existingIndex] = { questionId, selectedOptionId: optionId };
-        console.log('Updated answers:', updated);
         return updated;
       }
       const newAnswers = [...prev, { questionId, selectedOptionId: optionId }];
-      console.log('New answers:', newAnswers);
       return newAnswers;
     });
   };
 
   const handleMultipleAnswerSelect = (questionId: string, optionId: string, checked: boolean) => {
     if (!currentQuestion) return;
-    console.log('Selecting multiple answer:', { questionId, optionId, checked });
     setAnswers(prev => {
       const existingIndex = prev.findIndex(a => a.questionId === questionId);
       if (existingIndex >= 0) {
@@ -741,13 +662,11 @@ export function ExamView({ contentId }: ActivityViewProps) {
             selectedOptionIds: currentSelectedIds.filter(id => id !== optionId) 
           };
         }
-        console.log('Updated multiple answers:', updated);
         return updated;
       }
       // Crear nueva respuesta si no existe
       if (checked) {
         const newAnswers = [...prev, { questionId, selectedOptionIds: [optionId] }];
-        console.log('New multiple answers:', newAnswers);
         return newAnswers;
       }
       return prev;
@@ -756,32 +675,26 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const handleTextAnswerChange = (questionId: string, textValue: string) => {
     if (!currentQuestion) return;
-    console.log('Text answer change:', { questionId, textValue });
     setAnswers(prev => {
       const existingIndex = prev.findIndex(a => a.questionId === questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
         // Preservar las propiedades existentes y solo actualizar textAnswer
         updated[existingIndex] = { ...updated[existingIndex], textAnswer: textValue };
-        console.log('Updated text answers:', updated);
         return updated;
       }
       const newAnswers = [...prev, { questionId, textAnswer: textValue }];
-      console.log('New text answers:', newAnswers);
       return newAnswers;
     });
   };
 
   const getSelectedAnswer = (questionId: string) => {
     const selectedAnswer = answers.find(a => a.questionId === questionId)?.selectedOptionId;
-    console.log('Getting selected answer for question:', questionId, 'Answer:', selectedAnswer);
-    console.log('All answers:', answers);
     return selectedAnswer;
   };
 
   const getSelectedAnswers = (questionId: string) => {
     const selectedAnswers = answers.find(a => a.questionId === questionId)?.selectedOptionIds || [];
-    console.log('Getting selected answers for question:', questionId, 'Answers:', selectedAnswers);
     return selectedAnswers;
   };
 
@@ -792,39 +705,32 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const getTextAnswer = (questionId: string) => {
     const textAnswer = answers.find(a => a.questionId === questionId)?.textAnswer;
-    console.log('Getting text answer for question:', questionId, 'Answer:', textAnswer);
     return textAnswer || '';
   };
 
   const handleNextQuestion = () => {
-    console.log('Next question clicked. Current index:', currentQuestionIndex, 'Total:', totalQuestions);
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(prev => {
-        console.log('Moving to next question:', prev + 1);
         return prev + 1;
       });
     }
   };
 
   const handlePreviousQuestion = () => {
-    console.log('Previous question clicked. Current index:', currentQuestionIndex);
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => {
-        console.log('Moving to previous question:', prev - 1);
         return prev - 1;
       });
     }
   };
 
   const handleFinishActivity = () => {
-    console.log('🏁 handleFinishActivity called');
     if (answers.length < totalQuestions) {
       const unanswered = totalQuestions - answers.length;
       if (!confirm(`Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas finalizar la actividad?`)) {
         return;
       }
     }
-    console.log('🏁 Setting showFeedback to TRUE from handleFinishActivity');
     setShowFeedback(true);
     toast.success('Actividad finalizada - Revisando respuestas');
   };
@@ -869,15 +775,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
           if (userText === correctText) {
             correct++;
           }
-          console.log('🔍 CALCULATE RESULTS DEBUG:', {
-            questionId: question.id,
-            questionType: question.questionType,
-            userAnswer: userAnswer.textAnswer,
-            correctAnswer: question.correctAnswer,
-            userText,
-            correctText,
-            isCorrect: userText === correctText
-          });
         }
       }
     });
@@ -892,7 +789,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   const resetActivity = () => {
-    console.log('🔄 resetActivity called - Cleaning all interfaces and states');
     
     // Limpiar todos los estados de la interfaz
     setCurrentQuestionIndex(0);
@@ -906,7 +802,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
     setShuffledQuestions([]);
     setShuffledOptions({});
     
-    console.log('🔄 All states cleaned - Ready to restart activity');
     toast.info('Actividad reiniciada. ¡Puedes comenzar de nuevo!');
   };
 
@@ -993,20 +888,35 @@ export function ExamView({ contentId }: ActivityViewProps) {
   }
 
   const getQuestionResult = (question: ActivityQuestion) => {
+    // Priorizar los resultados del backend si están disponibles
+    if (examResults?.answers) {
+      const backendAnswer = examResults.answers.find((a: any) => a.questionId === question.id);
+      
+      if (backendAnswer && typeof backendAnswer.isCorrect === 'boolean') {
+        const userAnswer = answers.find(a => a.questionId === question.id);
+        const selectedOption = userAnswer?.selectedOptionId ? question.options.find(opt => opt.id === userAnswer.selectedOptionId) : null;
+        const selectedOptions = userAnswer?.selectedOptionIds ? question.options.filter(opt => userAnswer.selectedOptionIds!.includes(opt.id)) : [];
+        const correctOptions = question.options.filter(opt => opt.isCorrect);
+        
+        return {
+          userAnswer,
+          selectedOption,
+          selectedOptions,
+          correctOptions,
+          isCorrect: backendAnswer.isCorrect,
+          wasAnswered: !!userAnswer,
+          textAnswer: userAnswer?.textAnswer,
+          backendFeedback: backendAnswer.feedback
+        };
+      }
+    }
+
+    // Fallback a evaluación local si no hay resultados del backend
     const userAnswer = answers.find(a => a.questionId === question.id);
     const selectedOption = userAnswer?.selectedOptionId ? question.options.find(opt => opt.id === userAnswer.selectedOptionId) : null;
     const selectedOptions = userAnswer?.selectedOptionIds ? question.options.filter(opt => userAnswer.selectedOptionIds!.includes(opt.id)) : [];
     const correctOptions = question.options.filter(opt => opt.isCorrect);
     
-    console.log('🔍 getQuestionResult DEBUG - Inicio:', {
-      questionId: question.id,
-      questionType: question.questionType,
-      questionText: question.questionText,
-      userAnswer: userAnswer,
-      correctAnswer: question.correctAnswer,
-      hasOptions: question.options.length > 0,
-      correctOptions: correctOptions.map(opt => ({ id: opt.id, text: opt.optionText, isCorrect: opt.isCorrect }))
-    });
     
     let isCorrect = false;
     if (userAnswer) {
@@ -1019,46 +929,20 @@ export function ExamView({ contentId }: ActivityViewProps) {
         isCorrect = correctSelectedOptions.length === correctOptions.length && 
                    userAnswer.selectedOptionIds.length === correctOptions.length;
         
-        console.log('🔍 MULTIPLE CHOICE DEBUG:', {
-          selectedOptionIds: userAnswer.selectedOptionIds,
-          correctSelectedOptions,
-          correctOptionsLength: correctOptions.length,
-          selectedLength: userAnswer.selectedOptionIds.length,
-          isCorrect
-        });
       }
       // Para preguntas de selección única con opciones
       else if (question.questionType === 'single_choice' && userAnswer.selectedOptionId && question.options.length > 0) {
         isCorrect = selectedOption?.isCorrect || false;
         
-        console.log('🔍 SINGLE CHOICE DEBUG:', {
-          selectedOptionId: userAnswer.selectedOptionId,
-          selectedOption: selectedOption,
-          selectedOptionIsCorrect: selectedOption?.isCorrect,
-          isCorrect
-        });
       }
       // Para preguntas MULTIPLE_CHOICE (mayúsculas) con selección única
       else if (question.questionType === 'MULTIPLE_CHOICE' && userAnswer.selectedOptionId && question.options.length > 0) {
         isCorrect = selectedOption?.isCorrect || false;
         
-        console.log('🔍 MULTIPLE_CHOICE (SINGLE SELECTION) DEBUG:', {
-          selectedOptionId: userAnswer.selectedOptionId,
-          selectedOption: selectedOption,
-          selectedOptionIsCorrect: selectedOption?.isCorrect,
-          isCorrect
-        });
       }
       // Para preguntas de texto con respuesta correcta definida
       else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
         isCorrect = evaluateTextAnswer(userAnswer.textAnswer, question.correctAnswer);
-        console.log('🔍 TEXT ANSWER DEBUG:', {
-          questionId: question.id,
-          questionType: question.questionType,
-          userAnswer: userAnswer.textAnswer,
-          correctAnswer: question.correctAnswer,
-          isCorrect
-        });
       }
       // Para preguntas mal configuradas: MULTIPLE_CHOICE sin opciones pero con textAnswer y correctAnswer
        else if ((question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
@@ -1066,14 +950,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 userAnswer.textAnswer && 
                 question.correctAnswer) {
          isCorrect = evaluateTextAnswer(userAnswer.textAnswer, question.correctAnswer);
-         console.log('🔍 MULTIPLE_CHOICE AS TEXT DEBUG:', {
-           questionId: question.id,
-           questionType: question.questionType,
-           userAnswer: userAnswer.textAnswer,
-           correctAnswer: question.correctAnswer,
-           isCorrect,
-           note: 'Pregunta configurada como MULTIPLE_CHOICE pero funcionando como TEXT'
-         });
        }
        // Caso específico para MULTIPLE_CHOICE con correctAnswer vacío pero textAnswer presente
        else if ((question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
@@ -1082,57 +958,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 (!question.correctAnswer || question.correctAnswer === '')) {
          // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
          isCorrect = true;
-         console.log('🔍 MULTIPLE_CHOICE WITHOUT CORRECT ANSWER DEBUG:', {
-           questionId: question.id,
-           questionType: question.questionType,
-           userAnswer: userAnswer.textAnswer,
-           correctAnswer: question.correctAnswer,
-           isCorrect: true,
-           note: 'MULTIPLE_CHOICE sin opciones y sin correctAnswer - marcando como correcto'
-         });
        }
       // Para preguntas de texto sin respuesta correcta definida
       else if (question.options.length === 0 && userAnswer.textAnswer && !question.correctAnswer) {
         // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
         isCorrect = true;
-        console.log('🔍 TEXT WITHOUT CORRECT ANSWER DEBUG:', {
-          questionType: question.questionType,
-          userAnswer: userAnswer.textAnswer,
-          isCorrect: true
-        });
       }
       else {
-        console.log('🔍 UNHANDLED QUESTION TYPE DEBUG:', {
-          questionType: question.questionType,
-          hasSelectedOptionId: !!userAnswer.selectedOptionId,
-          hasSelectedOptionIds: !!userAnswer.selectedOptionIds,
-          hasTextAnswer: !!userAnswer.textAnswer,
-          textAnswerValue: userAnswer.textAnswer,
-          hasCorrectAnswer: !!question.correctAnswer,
-          correctAnswerValue: question.correctAnswer,
-          correctAnswerType: typeof question.correctAnswer,
-          correctAnswerLength: question.correctAnswer?.length,
-          optionsLength: question.options.length,
-          conditionChecks: {
-            isMultipleChoice: (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice'),
-            hasNoOptions: question.options.length === 0,
-            hasTextAnswer: !!userAnswer.textAnswer,
-            hasCorrectAnswer: !!question.correctAnswer,
-            correctAnswerNotEmpty: question.correctAnswer !== '',
-            allConditionsForMCAsText: (
-              (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
-              question.options.length === 0 && 
-              userAnswer.textAnswer && 
-              question.correctAnswer
-            )
-          }
-        });
       }
     } else {
-      console.log('🔍 NO USER ANSWER DEBUG:', {
-        questionId: question.id,
-        questionType: question.questionType
-      });
     }
     
     const result = {
@@ -1145,16 +979,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
       textAnswer: userAnswer?.textAnswer
     };
     
-    console.log('🔍 getQuestionResult DEBUG - Resultado final:', result);
     
     return result;
   };
 
   // Debug de estados de renderizado
-  console.log('🎯 Render states:', { showResults, showFeedback, showActivityCompletion, examStarted });
   
   if (showResults) {
-    console.log('🎯 Rendering: showResults');
     const results = calculateResults();
 
     return (
@@ -1233,17 +1064,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
             {/* Solo mostrar preguntas de la actividad actual completada */}
             {(exercises[currentActivityIndex]?.form?.questions || []).map((question, index) => {
               const result = getQuestionResult(question);
-              console.log('🔍 FEEDBACK SECTION DEBUG:', {
-                questionId: question.id,
-                questionType: question.questionType,
-                questionText: question.questionText,
-                correctAnswer: question.correctAnswer,
-                result: {
-                  isCorrect: result.isCorrect,
-                  wasAnswered: result.wasAnswered,
-                  textAnswer: result.textAnswer
-                }
-              });
               return (
                 <Card key={question.id} className={`border-l-4 ${
                   !result.wasAnswered ? 'border-l-gray-400' :
@@ -1296,13 +1116,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
                             result.isCorrect ? (
                               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <p className="text-green-800 text-sm">
-                                  <strong>¡Correcto!</strong> {question.explanation || 'Excelente trabajo.'}
+                                  <strong>¡Correcto!</strong> {(result as any).backendFeedback || question.explanation || 'Excelente trabajo.'}
                                 </p>
                               </div>
                             ) : (
                               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                                 <p className="text-red-800 text-sm">
-                                  <strong>Incorrecto.</strong> {question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
+                                  <strong>Incorrecto.</strong> {(result as any).backendFeedback || question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
                                 </p>
                               </div>
                             )
@@ -1343,7 +1163,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   // Vista de completación de actividad
   if (showActivityCompletion) {
-    console.log('🎯 Rendering: showActivityCompletion');
     const completedActivity = exercises[currentActivityIndex];
     const nextActivity = exercises[currentActivityIndex + 1];
     const hasNextActivity = currentActivityIndex < exercises.length - 1;
@@ -1419,8 +1238,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   // IMPORTANTE: Esta condición debe ir ANTES que showFeedback
   if (!examStarted) {
-    console.log('🎯 Rendering: !examStarted (new activity form)');
-    console.log('🎯 Current states in !examStarted:', { showFeedback, showActivityCompletion, examStarted, currentActivityIndex });
     return (
       <Card>
         <CardHeader>
@@ -1484,8 +1301,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   // Vista de retroalimentación
   if (showFeedback) {
-    console.log('🎯 Rendering: showFeedback');
-    console.log('🎯 Current states in showFeedback:', { showFeedback, showActivityCompletion, examStarted, currentActivityIndex });
     return (
       <div className="space-y-6">
         <Card>
@@ -1550,13 +1365,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
                           {result.isCorrect ? (
                             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                               <p className="text-green-800 text-sm">
-                                <strong>¡Correcto!</strong> {question.explanation || 'Excelente trabajo.'}
+                                <strong>¡Correcto!</strong> {(result as any).backendFeedback || question.explanation || 'Excelente trabajo.'}
                               </p>
                             </div>
                           ) : (
                             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                               <p className="text-red-800 text-sm">
-                                <strong>Incorrecto.</strong> {question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
+                                <strong>Incorrecto.</strong> {(result as any).backendFeedback || question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
                               </p>
                             </div>
                           )}
@@ -1587,7 +1402,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
   }
 
   // Formulario de la actividad actual
-  console.log('🎯 Rendering: main exam form');
 
   return (
     <>
@@ -1661,7 +1475,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
               {currentQuestion.questionType === 'multiple_choice' && (
                 <div className="space-y-3">
                   {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
-                    console.log('Rendering multiple choice option:', option);
                     return (
                       <div key={option.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
                         <Checkbox
@@ -1687,7 +1500,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
                   className="space-y-3"
                 >
                   {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
-                    console.log('Rendering single choice option:', option);
                     return (
                       <div key={option.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
                         <RadioGroupItem value={option.id} id={option.id} disabled={examSubmitted} />

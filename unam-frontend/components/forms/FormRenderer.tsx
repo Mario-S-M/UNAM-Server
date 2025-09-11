@@ -174,19 +174,34 @@ export function FormRenderer({
         const fieldName = `question_${question.id}`;
         const value = data[fieldName];
         
-        return {
+        const baseAnswer = {
           questionId: question.id!,
-          answerText: Array.isArray(value) ? value.join(', ') : String(value || ''),
-          answerNumber: question.questionType === 'NUMBER' || question.questionType === 'RATING_SCALE' 
-            ? Number(value) || null 
-            : null,
-          answerBoolean: question.questionType === 'BOOLEAN' ? Boolean(value) : null,
-          selectedOptions: question.questionType === 'CHECKBOX' && Array.isArray(value) 
-            ? value 
-            : question.questionType === 'MULTIPLE_CHOICE' && typeof value === 'string'
-            ? [value]
-            : []
+          questionType: question.questionType
         };
+        
+        switch (question.questionType) {
+          case 'TEXT':
+          case 'TEXTAREA':
+          case 'EMAIL':
+          case 'DATE':
+          case 'TIME':
+            return { ...baseAnswer, textAnswer: String(value || '') };
+          
+          case 'NUMBER':
+          case 'RATING_SCALE':
+            return { ...baseAnswer, numericAnswer: String(Number(value) || 0) };
+          
+          case 'BOOLEAN':
+            return { ...baseAnswer, booleanAnswer: Boolean(value) };
+          
+          case 'MULTIPLE_CHOICE':
+          case 'CHECKBOX':
+            const selectedIds = Array.isArray(value) ? value : (value ? [String(value)] : []);
+            return { ...baseAnswer, selectedOptionIds: selectedIds };
+          
+          default:
+            return { ...baseAnswer, textAnswer: String(value || '') };
+        }
       });
 
       if (onSubmit) {

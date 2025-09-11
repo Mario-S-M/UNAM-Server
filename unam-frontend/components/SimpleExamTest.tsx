@@ -41,7 +41,6 @@ export function SimpleExamTest() {
   const currentQuestion = mockQuestions[currentQuestionIndex];
   
   const handleAnswerSelect = (questionId: string, selectedOptionId: string) => {
-    console.log('Answer selected:', { questionId, selectedOptionId });
     
     setAnswers(prev => {
       const existingIndex = prev.findIndex(a => a.questionId === questionId);
@@ -54,14 +53,12 @@ export function SimpleExamTest() {
         newAnswers = [...prev, { questionId, selectedOptionId }];
       }
       
-      console.log('Updated answers:', newAnswers);
       return newAnswers;
     });
   };
   
   const getSelectedAnswer = (questionId: string) => {
     const answer = answers.find(a => a.questionId === questionId)?.selectedOptionId;
-    console.log('Getting answer for:', questionId, 'Result:', answer);
     return answer;
   };
   

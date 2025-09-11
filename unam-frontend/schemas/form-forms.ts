@@ -127,9 +127,10 @@ export const FormIdSchema = z.object({
 // Esquemas para respuestas de formularios
 export const FormAnswerSchema = z.object({
   questionId: z.string().min(1, 'El ID de la pregunta es requerido'),
+  questionType: QuestionTypeEnum,
   textAnswer: z.string().optional(),
   selectedOptionIds: z.array(z.string()).optional(),
-  numericAnswer: z.number().optional(),
+  numericAnswer: z.string().optional(),
   booleanAnswer: z.boolean().optional()
 }).refine((data) => {
   // Al menos un tipo de respuesta debe estar presente

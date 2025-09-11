@@ -23,7 +23,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, /* _errorInfo: React.ErrorInfo */) {
-    console.log('Error capturado por ErrorBoundary:', error.message);
     // En lugar de romper la aplicación, solo logueamos el error
   }
 

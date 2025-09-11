@@ -82,7 +82,7 @@ export function AIMenu() {
   );
 
   const content = useLastAssistantMessage()?.parts.find(
-    (part: { type: string; }) => part.type === 'text'
+    (part): part is { type: 'text'; text: string } => part.type === 'text'
   )?.text;
 
   React.useEffect(() => {

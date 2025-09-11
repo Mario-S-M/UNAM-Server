@@ -29,7 +29,7 @@ export type MessageDataPart = {
   comment?: TComment;
 };
 
-export type Chat = UseChatHelpers<ChatMessage> & {
+export type Chat = UseChatHelpers & {
   toolName: ToolName;
   setToolName: (toolName: ToolName) => void;
 };
@@ -49,12 +49,10 @@ export const useChat = () => {
     }
   };
 
-  const baseChat = useBaseChat<ChatMessage>({
+  const baseChat = useBaseChat({
     id: 'editor',
-    transport: new DefaultChatTransport({
-      api: '/api/ai/command',
-      // Mock the API response. Remove it when you implement the route /api/ai/command
-      fetch: async (input, init) => {
+    // Mock the API response. Remove it when you implement the route /api/ai/command
+    fetch: async (input, init) => {
         const res = await fetch(input, init);
 
         if (!res.ok) {
@@ -98,67 +96,6 @@ export const useChat = () => {
 
         return res;
       },
-    }),
-    onData(data) {
-      if (data.type === 'data-toolName') {
-        editor.setOption(AIChatPlugin, 'toolName', data.data);
-      }
-
-      if (data.type === 'data-comment' && data.data) {
-        const aiComment = data.data;
-        const range = aiCommentToRange(editor, aiComment);
-
-        if (!range) return console.warn('No range found for AI comment');
-
-        const discussions =
-          editor.getOption(discussionPlugin, 'discussions') || [];
-
-        // Generate a new discussion ID
-        const discussionId = nanoid();
-
-        // Create a new comment
-        const newComment = {
-          id: nanoid(),
-          contentRich: [{ children: [{ text: aiComment.comment }], type: 'p' }],
-          createdAt: new Date(),
-          discussionId,
-          isEdited: false,
-          userId: editor.getOption(discussionPlugin, 'currentUserId'),
-        };
-
-        // Create a new discussion
-        const newDiscussion = {
-          id: discussionId,
-          comments: [newComment],
-          createdAt: new Date(),
-          documentContent: deserializeMd(editor, aiComment.content)
-            .map((node: TNode) => NodeApi.string(node))
-            .join('\n'),
-          isResolved: false,
-          userId: editor.getOption(discussionPlugin, 'currentUserId'),
-        };
-
-        // Update discussions
-        const updatedDiscussions = [...discussions, newDiscussion];
-        editor.setOption(discussionPlugin, 'discussions', updatedDiscussions);
-
-        // Apply comment marks to the editor
-        editor.tf.withMerging(() => {
-          editor.tf.setNodes(
-            {
-              [getCommentKey(newDiscussion.id)]: true,
-              [getTransientCommentKey()]: true,
-              [KEYS.comment]: true,
-            },
-            {
-              at: range,
-              match: TextApi.isText,
-              split: true,
-            }
-          );
-        });
-      }
-    },
 
     ...options,
   });

@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
 
           const { elementStream } = streamObject({
             maxOutputTokens: 2048,
-            model: openai('gpt-4o'),
+            model: google('gemini-2.5-flash'),
             output: 'array',
             prompt: commentPrompt,
             schema: z

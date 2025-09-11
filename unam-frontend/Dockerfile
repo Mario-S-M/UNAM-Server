@@ -20,6 +20,7 @@ ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_GRAPHQL_ENDPOINT=$NEXT_PUBLIC_GRAPHQL_ENDPOINT
 
 # Build the application
+RUN npm config set legacy-peer-deps true
 RUN npm run build
 
 # Production stage

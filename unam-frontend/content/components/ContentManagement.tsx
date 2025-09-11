@@ -33,6 +33,8 @@ export function ContentManagement() {
     teachers,
     languages,
     meta,
+    totalPages,
+    totalItems,
     
     // Loading states
     contentsLoading,
@@ -151,6 +153,7 @@ export function ContentManagement() {
         levels={levels}
         skills={skills}
         teachers={teachers}
+        languages={languages}
         isLoading={createLoading || updateLoading}
       />
     </div>

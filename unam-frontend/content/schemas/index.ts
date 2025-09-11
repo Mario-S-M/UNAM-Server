@@ -29,13 +29,22 @@ export const ContentSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   levelId: z.string(),
+  skillId: z.string(),
+  languageId: z.string().optional(),
   userId: z.number(),
   markdownPath: z.string().optional(),
   assignedTeachers: z.array(TeacherSchema),
   validationStatus: z.string(),
   publishedAt: z.string().optional(),
   skill: SkillSchema.optional(),
-  skillId: z.string().optional(),
+  level: z.object({
+    id: z.string(),
+    name: z.string(),
+  }).optional(),
+  language: z.object({
+    id: z.string(),
+    name: z.string(),
+  }).optional(),
 });
 
 // Schema para Level

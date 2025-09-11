@@ -78,7 +78,7 @@ export function useContentManagement() {
   const [selectedLevelId, setSelectedLevelId] = useState<string>('all');
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
-    description: true,
+    description: false,
     level: true,
     skill: true,
     status: true,
@@ -229,7 +229,7 @@ export function useContentManagement() {
     setFormData({
       name: content.name,
       description: content.description,
-      languageId: (content as any).languageId || '',
+      languageId: content.languageId || '',
       levelId: content.levelId || '',
       skillId: content.skillId || '',
       teacherIds: content.assignedTeachers?.map(teacher => teacher.id) || [],

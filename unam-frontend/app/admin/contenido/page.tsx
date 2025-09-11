@@ -47,7 +47,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, FileText, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, FileText, Search, Settings, ChevronLeft, ChevronRight, Filter, Check } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -217,7 +217,7 @@ export default function ContenidoPage() {
   const [activeFilter, setActiveFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | undefined>(undefined);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
-    description: true,
+    description: false,
     language: true,
     level: true,
     skill: true,
@@ -353,6 +353,7 @@ export default function ContenidoPage() {
               description
               levelId
               skillId
+              languageId
               validationStatus
               assignedTeachers {
                 id
@@ -470,6 +471,32 @@ export default function ContenidoPage() {
       return;
     }
 
+    // Validar campos requeridos
+    if (!formData.name.trim()) {
+      toast.error('El nombre es requerido');
+      return;
+    }
+    
+    if (!formData.description.trim()) {
+      toast.error('La descripción es requerida');
+      return;
+    }
+    
+    if (!formData.languageId) {
+      toast.error('El idioma es requerido');
+      return;
+    }
+    
+    if (!formData.levelId) {
+      toast.error('El nivel es requerido');
+      return;
+    }
+    
+    if (!formData.skillId) {
+      toast.error('La habilidad es requerida');
+      return;
+    }
+
     try {
       if (editingContent) {
         const mutation = `
@@ -544,30 +571,59 @@ export default function ContenidoPage() {
       teacherIds: [],
       validationStatus: 'PENDING',
     });
+    
+    // Load all necessary data for creating
     fetchTeachers();
+    fetchLanguages();
+    
+    // Reset dependent data
+    setLevels([]);
+    setSkills([]);
+    
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (content: Content) => {
-    setEditingContent(content);
-    setFormData({
-      name: content.name,
-      description: content.description,
-      languageId: content.languageId || '',
-      levelId: content.levelId,
-      skillId: content.skillId,
-      teacherIds: content.assignedTeachers?.map(t => t.id) || [],
-      validationStatus: content.validationStatus,
-    });
-    fetchTeachers();
-    // Load levels and skills for the selected language and level
-    if (content.languageId) {
-      fetchLevels(content.languageId);
-      if (content.levelId) {
-        fetchSkills(content.levelId, content.languageId);
+  const handleEdit = async (content: Content) => {
+    try {
+      // Set editing content first
+      setEditingContent(content);
+      
+      // Load all necessary data before setting form data
+      const promises = [
+        fetchTeachers(),
+        fetchLanguages()
+      ];
+      
+      // Load levels if language exists
+      if (content.languageId) {
+        promises.push(fetchLevels(content.languageId));
       }
+      
+      // Wait for initial data to load
+      await Promise.all(promises);
+      
+      // Load skills if both language and level exist
+      if (content.languageId && content.levelId) {
+        await fetchSkills(content.levelId, content.languageId);
+      }
+      
+      // Set form data after all dependencies are loaded
+      setFormData({
+        name: content.name,
+        description: content.description,
+        languageId: content.languageId || '',
+        levelId: content.levelId,
+        skillId: content.skillId,
+        teacherIds: content.assignedTeachers?.map(t => t.id) || [],
+        validationStatus: content.validationStatus,
+      });
+      
+      // Open dialog only after everything is loaded
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Error loading edit data:', error);
+      toast.error('Error al cargar los datos para edición');
     }
-    setIsDialogOpen(true);
   };
 
   const handleDelete = async (content: Content) => {
@@ -592,6 +648,88 @@ export default function ContenidoPage() {
     } catch (error) {
       console.error('Error deleting content:', error);
       toast.error('Error al eliminar contenido');
+    }
+  };
+
+  const handleApprove = async (content: Content) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
+    // Validar que el contenido tenga todos los campos requeridos
+    if (!content.languageId || !content.levelId || !content.skillId) {
+      toast.error('El contenido debe tener idioma, nivel y habilidad asignados para ser aprobado');
+      return;
+    }
+
+    try {
+      const mutation = `
+        mutation UpdateContent($updateContentInput: UpdateContentInput!) {
+          updateContent(updateContentInput: $updateContentInput) {
+            id
+            name
+            validationStatus
+          }
+        }
+      `;
+      
+      await fetchGraphQL(mutation, {
+        updateContentInput: {
+          id: content.id,
+          name: content.name,
+          description: content.description,
+          languageId: content.languageId,
+          levelId: content.levelId,
+          skillId: content.skillId,
+          teacherIds: content.assignedTeachers?.map(t => t.id) || [],
+          validationStatus: 'APPROVED'
+        }
+      }, token);
+      
+      toast.success('Contenido aprobado exitosamente');
+      fetchContents();
+    } catch (error) {
+      console.error('Error approving content:', error);
+      toast.error('Error al aprobar contenido');
+    }
+  };
+
+  const handleReject = async (content: Content) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
+    try {
+      const mutation = `
+        mutation UpdateContent($updateContentInput: UpdateContentInput!) {
+          updateContent(updateContentInput: $updateContentInput) {
+            id
+            name
+            validationStatus
+          }
+        }
+      `;
+      
+      await fetchGraphQL(mutation, {
+        updateContentInput: {
+          id: content.id,
+          name: content.name,
+          description: content.description,
+          languageId: content.languageId,
+          levelId: content.levelId,
+          skillId: content.skillId,
+          teacherIds: content.assignedTeachers?.map(t => t.id) || [],
+          validationStatus: 'REJECTED'
+        }
+      }, token);
+      
+      toast.success('Contenido rechazado exitosamente');
+      fetchContents();
+    } catch (error) {
+      console.error('Error rejecting content:', error);
+      toast.error('Error al rechazar contenido');
     }
   };
 
@@ -675,12 +813,33 @@ export default function ContenidoPage() {
                         <div className="space-y-2">
                           <Label>Idioma *</Label>
                           <Select 
-                            value={formData.languageId} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, languageId: value }))}
-                            disabled={languagesLoading || editingContent !== null}
+                            value={formData.languageId && languages.find(l => l.id === formData.languageId) ? formData.languageId : ''} 
+                            onValueChange={(value) => {
+                              // Solo resetear nivel y habilidad si realmente cambió el idioma
+                              const shouldReset = value !== formData.languageId;
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                languageId: value, 
+                                levelId: shouldReset ? '' : prev.levelId,
+                                skillId: shouldReset ? '' : prev.skillId
+                              }));
+                              fetchLevels(value);
+                              if (shouldReset) {
+                                setSkills([]);
+                              }
+                            }}
+                            disabled={languagesLoading}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona un idioma" />
+                              <SelectValue 
+                                placeholder="Selecciona un idioma" 
+                                className={formData.languageId && !languages.find(l => l.id === formData.languageId) ? 'text-red-500' : ''}
+                              >
+                                {formData.languageId && languages.find(l => l.id === formData.languageId) 
+                                  ? languages.find(l => l.id === formData.languageId)?.name
+                                  : formData.languageId ? 'Idioma no encontrado' : 'Selecciona un idioma'
+                                }
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {languages.map((language) => (
@@ -694,12 +853,31 @@ export default function ContenidoPage() {
                         <div className="space-y-2">
                           <Label>Nivel *</Label>
                           <Select 
-                            value={formData.levelId} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, levelId: value }))}
+                            value={formData.levelId && levels.find(l => l.id === formData.levelId) ? formData.levelId : ''} 
+                            onValueChange={(value) => {
+                              // Solo resetear habilidad si realmente cambió el nivel
+                              const shouldReset = value !== formData.levelId;
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                levelId: value, 
+                                skillId: shouldReset ? '' : prev.skillId
+                              }));
+                              if (formData.languageId) {
+                                fetchSkills(value, formData.languageId);
+                              }
+                            }}
                             disabled={levelsLoading || !formData.languageId}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona un nivel" />
+                              <SelectValue 
+                                placeholder="Selecciona un nivel" 
+                                className={formData.levelId && !levels.find(l => l.id === formData.levelId) ? 'text-red-500' : ''}
+                              >
+                                {formData.levelId && levels.find(l => l.id === formData.levelId) 
+                                  ? `${levels.find(l => l.id === formData.levelId)?.name} - ${levels.find(l => l.id === formData.levelId)?.difficulty}`
+                                  : formData.levelId ? 'Nivel no encontrado' : 'Selecciona un nivel'
+                                }
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {levels.map((level) => (
@@ -713,12 +891,20 @@ export default function ContenidoPage() {
                         <div className="space-y-2">
                           <Label>Habilidad *</Label>
                           <Select 
-                            value={formData.skillId} 
+                            value={formData.skillId && skills.find(s => s.id === formData.skillId) ? formData.skillId : ''} 
                             onValueChange={(value) => setFormData(prev => ({ ...prev, skillId: value }))}
                             disabled={skillsLoading || !formData.levelId}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecciona una habilidad" />
+                              <SelectValue 
+                                placeholder="Selecciona una habilidad" 
+                                className={formData.skillId && !skills.find(s => s.id === formData.skillId) ? 'text-red-500' : ''}
+                              >
+                                {formData.skillId && skills.find(s => s.id === formData.skillId) 
+                                  ? `${skills.find(s => s.id === formData.skillId)?.name} - ${skills.find(s => s.id === formData.skillId)?.difficulty}`
+                                  : formData.skillId ? 'Habilidad no encontrada' : 'Selecciona una habilidad'
+                                }
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {skills.map((skill) => (
@@ -732,32 +918,34 @@ export default function ContenidoPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold border-b pb-2">Estado y Configuración</h3>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                          <Label>Estado de Validación</Label>
+                    {!editingContent && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold border-b pb-2">Estado y Configuración</h3>
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="space-y-2">
-                            {['PENDING', 'APPROVED', 'REJECTED'].map((status) => (
-                              <div key={status} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`status-${status}`}
-                                  checked={formData.validationStatus === status}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setFormData(prev => ({ ...prev, validationStatus: status as 'PENDING' | 'APPROVED' | 'REJECTED' }));
-                                    }
-                                  }}
-                                />
-                                <Label htmlFor={`status-${status}`} className="text-sm font-normal">
-                                  {status === 'PENDING' ? 'Pendiente' : status === 'APPROVED' ? 'Aprobado' : 'Rechazado'}
-                                </Label>
-                              </div>
-                            ))}
+                            <Label>Estado de Validación</Label>
+                            <div className="space-y-2">
+                              {['PENDING', 'APPROVED', 'REJECTED'].map((status) => (
+                                <div key={status} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`status-${status}`}
+                                    checked={formData.validationStatus === status}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setFormData(prev => ({ ...prev, validationStatus: status as 'PENDING' | 'APPROVED' | 'REJECTED' }));
+                                      }
+                                    }}
+                                  />
+                                  <Label htmlFor={`status-${status}`} className="text-sm font-normal">
+                                    {status === 'PENDING' ? 'Pendiente' : status === 'APPROVED' ? 'Aprobado' : 'Rechazado'}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold border-b pb-2">Asignación de Profesores</h3>
@@ -1064,6 +1252,26 @@ export default function ContenidoPage() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
+                            {content.validationStatus !== 'APPROVED' && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleApprove(content)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {content.validationStatus !== 'REJECTED' && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleReject(content)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                ✕
+                              </Button>
+                            )}
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="destructive" size="sm">

@@ -15,6 +15,7 @@ interface ContentModalProps {
   levels: Level[];
   skills: Skill[];
   teachers: Teacher[];
+  languages: { id: string; name: string }[];
   isLoading: boolean;
 }
 
@@ -28,6 +29,7 @@ export function ContentModal({
   levels,
   skills,
   teachers,
+  languages,
   isLoading
 }: ContentModalProps) {
   const isFormValid = formData.name && formData.description && formData.levelId && formData.skillId;
@@ -54,6 +56,7 @@ export function ContentModal({
           levels={levels}
           skills={skills}
           teachers={teachers}
+          languages={languages}
         />
         
         <AlertDialogFooter>

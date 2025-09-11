@@ -49,4 +49,10 @@ export class UpdateContentInput extends PartialType(CreateContentInput) {
   @IsUUID('4', { message: 'El ID del nivel debe ser un UUID válido' })
   @Field(() => ID, { nullable: true })
   levelId?: string;
+
+  @IsOptional()
+  @IsString({ message: 'El ID del idioma debe ser un texto' })
+  @IsUUID('4', { message: 'El ID del idioma debe ser un UUID válido' })
+  @Field(() => ID, { nullable: true })
+  languageId?: string;
 }

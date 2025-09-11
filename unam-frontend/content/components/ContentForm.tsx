@@ -14,9 +14,10 @@ interface ContentFormProps {
   levels: Level[];
   skills: Skill[];
   teachers: Teacher[];
+  languages: { id: string; name: string }[];
 }
 
-export function ContentForm({ formData, onFormDataChange, levels, skills, teachers }: ContentFormProps) {
+export function ContentForm({ formData, onFormDataChange, levels, skills, teachers, languages }: ContentFormProps) {
   const updateFormData = (updates: Partial<ContentFormData>) => {
     onFormDataChange({ ...formData, ...updates });
   };
@@ -70,7 +71,26 @@ export function ContentForm({ formData, onFormDataChange, levels, skills, teache
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="language">Idioma</Label>
+          <Select
+            value={formData.languageId || ''}
+            onValueChange={(value: string) => updateFormData({ languageId: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Seleccionar idioma" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((language) => (
+                <SelectItem key={language.id} value={language.id}>
+                  {language.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="level">Nivel</Label>
           <Select

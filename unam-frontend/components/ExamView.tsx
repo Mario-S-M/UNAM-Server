@@ -576,7 +576,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
       if (userAnswer) {
         totalAnswered++;
         
-        if (question.questionType === 'multiple_choice') {
+        if (question.questionType === 'multiple_choice' || question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'CHECKBOX') {
           // Para preguntas de selección múltiple, verificar si todas las opciones correctas están seleccionadas
           const correctOptions = question.options.filter(opt => opt.isCorrect);
           const selectedOptions = userAnswer.selectedOptionIds || [];
@@ -897,7 +897,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     let isCorrect = false;
     if (userAnswer) {
       // Para preguntas de selección múltiple con opciones
-      if (question.questionType === 'multiple_choice' && userAnswer.selectedOptionIds && question.options.length > 0) {
+      if ((question.questionType === 'multiple_choice' || question.questionType === 'CHECKBOX') && userAnswer.selectedOptionIds && question.options.length > 0) {
         const correctSelectedOptions = userAnswer.selectedOptionIds.filter(id => 
           question.options.find(opt => opt.id === id)?.isCorrect
         );
@@ -1448,7 +1448,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
               )}
               
               {/* Preguntas de selección múltiple */}
-              {currentQuestion.questionType === 'multiple_choice' && (
+              {(currentQuestion.questionType === 'multiple_choice' || currentQuestion.questionType === 'MULTIPLE_CHOICE' || currentQuestion.questionType === 'CHECKBOX') && (
                 <div className="space-y-3">
                   {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
                     return (
@@ -1469,7 +1469,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
               )}
               
               {/* Preguntas de selección única */}
-              {(currentQuestion.questionType === 'single_choice' || (!['TEXT', 'TEXTAREA', 'OPEN_TEXT', 'multiple_choice'].includes(currentQuestion.questionType))) && (
+              {(currentQuestion.questionType === 'single_choice' || (!['TEXT', 'TEXTAREA', 'OPEN_TEXT', 'multiple_choice', 'MULTIPLE_CHOICE', 'CHECKBOX'].includes(currentQuestion.questionType))) && (
                 <RadioGroup
                   value={getSelectedAnswer(currentQuestion.id) || ""}
                   onValueChange={(value) => handleAnswerSelect(currentQuestion.id, value)}

@@ -84,7 +84,7 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
   }
 
   private validateCheckboxQuestion(question: any): boolean {
-    // Similar a multiple choice pero permite selección única
+    // Similar a multiple choice pero permite múltiples selecciones
     if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
       return false;
     }
@@ -97,10 +97,9 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
       return false;
     }
     
-    // Si es evaluable, debe tener exactamente una respuesta correcta
+    // Si es evaluable, debe tener al menos una respuesta correcta
     if (question.points && question.points > 0) {
-      const correctOptions = question.options.filter((option: any) => option.isCorrect === true);
-      return correctOptions.length === 1;
+      return question.options.some((option: any) => option.isCorrect === true);
     }
     
     return true;
@@ -187,7 +186,7 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
           return 'Las preguntas de selección deben tener al menos 2 opciones';
         }
         if (question.points && question.points > 0) {
-          return 'Las preguntas de selección evaluables deben tener exactamente una respuesta correcta';
+          return 'Las preguntas de selección evaluables deben tener al menos una respuesta correcta';
         }
         return 'Configuración inválida para pregunta de selección';
       

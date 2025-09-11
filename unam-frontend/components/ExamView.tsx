@@ -746,35 +746,11 @@ export function ExamView({ contentId }: ActivityViewProps) {
       const userAnswer = answers.find(a => a.questionId === question.id);
       if (userAnswer) {
         total++;
-        // Para preguntas de selección múltiple
-        if (question.questionType === 'multiple_choice' && userAnswer.selectedOptionIds) {
-          const correctOptions = question.options.filter(opt => opt.isCorrect);
-          const selectedOptions = userAnswer.selectedOptionIds;
-          const correctSelectedOptions = selectedOptions.filter(id => 
-            question.options.find(opt => opt.id === id)?.isCorrect
-          );
-          
-          // Respuesta correcta si seleccionó todas las correctas y ninguna incorrecta
-          if (correctSelectedOptions.length === correctOptions.length && 
-              selectedOptions.length === correctOptions.length) {
-            correct++;
-          }
-        }
-        // Para preguntas de selección única (single_choice)
-        else if (question.questionType === 'single_choice' && userAnswer.selectedOptionId) {
-          const selectedOption = question.options.find(opt => opt.id === userAnswer.selectedOptionId);
-          if (selectedOption?.isCorrect) {
-            correct++;
-          }
-        }
-        // Para preguntas de texto, comparar con la respuesta correcta
-        else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
-          // Comparación simple (se puede mejorar con lógica más sofisticada)
-          const userText = userAnswer.textAnswer.toLowerCase().trim();
-          const correctText = question.correctAnswer.toLowerCase().trim();
-          if (userText === correctText) {
-            correct++;
-          }
+        
+        // Usar la misma lógica que getQuestionResult para consistencia
+        const result = getQuestionResult(question);
+        if (result.isCorrect) {
+          correct++;
         }
       }
     });

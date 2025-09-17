@@ -34,7 +34,6 @@ export default function TestDirectGraphQL({ contentId }: TestDirectGraphQLProps)
                   updatedAt
                   levelId
                   userId
-                  markdownPath
                   validationStatus
                   publishedAt
                   skill {

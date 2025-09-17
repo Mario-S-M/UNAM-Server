@@ -8,7 +8,7 @@ export interface Content {
   levelId: string;
   userId: number;
   languageId?: string;
-  markdownPath?: string;
+  jsonContent?: string;
   assignedTeachers: Teacher[];
   validationStatus: string;
   publishedAt?: string;

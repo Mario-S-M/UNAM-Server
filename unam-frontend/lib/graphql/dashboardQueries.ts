@@ -48,7 +48,6 @@ export const GET_VALIDATED_CONTENTS_BY_SKILL = gql`
       updatedAt
       levelId
       userId
-      markdownPath
       skillId
       skill {
         id
@@ -108,7 +107,6 @@ export const GET_CONTENT_PUBLIC = gql`
       updatedAt
       levelId
       userId
-      markdownPath
       validationStatus
       publishedAt
       skillId

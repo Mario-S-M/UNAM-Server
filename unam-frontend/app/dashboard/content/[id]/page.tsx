@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { GET_CONTENT_PUBLIC } from "@/lib/graphql/dashboardQueries";
 import { ExamView } from "@/components/ExamView";
+import { ReadOnlyMarkdownEditor } from "@/components/editor/ReadOnlyMarkdownEditor";
 
 
 interface Content {
@@ -22,7 +23,6 @@ interface Content {
   updatedAt: string;
   levelId: string;
   userId: string;
-  markdownPath: string;
   validationStatus: string;
   publishedAt?: string;
   skill: {
@@ -335,6 +335,16 @@ export default function ContentDetail() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Contenido Markdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contenido Educativo</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ReadOnlyMarkdownEditor contentId={content.id} className="min-h-[400px]" />
           </CardContent>
         </Card>
 

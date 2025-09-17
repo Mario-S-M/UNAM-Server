@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, FileText } from "lucide-react";
+import { Loader2, ArrowLeft, FileText, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import { ContentActivities } from "@/components/ContentActivities";
 interface Content {
@@ -17,7 +17,6 @@ interface Content {
   updatedAt: string;
   levelId: string;
   userId: string;
-  markdownPath: string;
   validationStatus: string;
   publishedAt?: string;
   skill: {
@@ -50,7 +49,6 @@ const GET_CONTENT_BY_ID = gql`
       updatedAt
       levelId
       userId
-      markdownPath
       validationStatus
       publishedAt
       skill {
@@ -174,6 +172,28 @@ export default function TeacherContentDetail() {
               <p className="text-sm font-medium text-muted-foreground">Estado</p>
               <p className="text-sm">{content.isCompleted ? 'Completado' : 'En progreso'}</p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Botón para editar contenido */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium">Contenido del material</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Edita el contenido markdown de este material educativo
+              </p>
+            </div>
+            <Button 
+              onClick={() => router.push(`/editor/content/${contentId}`)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Edit3 className="h-4 w-4" />
+              Editar contenido
+            </Button>
           </div>
         </CardContent>
       </Card>

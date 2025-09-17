@@ -10,8 +10,7 @@ import { User } from '../users/entities/user.entity';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { promises as fs } from 'fs';
-import { join } from 'path';
+
 import * as mammoth from 'mammoth';
 import * as TurndownService from 'turndown';
 import { tables } from 'turndown-plugin-gfm';
@@ -44,18 +43,14 @@ export class ContentsService {
       );
     }
 
-    // Crear el contenido básico
+    // Crear el contenido básico con contenido JSON inicial
+    const initialJsonContent = `[{"type":"h1","children":[{"text":"Título: Contenido ${contentData.name}"}]},{"type":"p","children":[{"text":""}]}]`;
+    
     const newContent = this.contentsRepository.create({
       ...contentData,
+      jsonContent: initialJsonContent,
       validationStatus: 'sin validar', // Explicitly set as unvalidated
     });
-
-    // Crear la carpeta de markdown
-    const markdownPath = await this.createMarkdownStructure(
-      contentData.levelId,
-      contentData.name,
-    );
-    newContent.markdownPath = markdownPath;
 
     // Asignar profesores si se proporcionaron
     if (teacherIds && teacherIds.length > 0) {
@@ -444,118 +439,7 @@ export class ContentsService {
     return { ...content, id };
   }
 
-  private async createMarkdownStructure(
-    levelId: string,
-    contentName: string,
-  ): Promise<string> {
-    try {
-      // Obtener información del nivel
-      const level = await this.usersRepository.manager
-        .createQueryBuilder()
-        .select([
-          'level.id',
-          'level.name',
-          'level.description',
-          'level.lenguageId',
-        ])
-        .from('levels', 'level')
-        .where('level.id = :levelId', { levelId })
-        .getRawOne();
 
-      if (!level) {
-        throw new Error('Nivel no encontrado');
-      }
-
-      // Obtener información del lenguaje
-      const language = await this.usersRepository.manager
-        .createQueryBuilder()
-        .select(['lenguage.id', 'lenguage.name'])
-        .from('lenguages', 'lenguage')
-        .where('lenguage.id = :languageId', {
-          languageId: level.level_lenguageId,
-        })
-        .getRawOne();
-
-      if (!language) {
-        throw new Error('Lenguaje no encontrado');
-      }
-
-      // Sanitizar nombres para uso en rutas
-      const sanitizedLanguageName = language.lenguage_name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-      const sanitizedLevelName = level.level_name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-      const sanitizedContentName = contentName
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-
-      // Crear estructura: /Markdown/[Language]/[Level]/[Content]/ContentName.md
-      const markdownDir = join(
-        process.cwd(),
-        '..',
-        'Markdown',
-        sanitizedLanguageName,
-        sanitizedLevelName,
-        sanitizedContentName,
-      );
-
-      // Crear la estructura de directorios
-      await fs.mkdir(markdownDir, { recursive: true });
-
-      // Crear archivo markdown inicial con formato específico
-      const markdownFile = join(markdownDir, `${sanitizedContentName}.md`);
-      const initialContent = `# ${contentName}
-
-## Descripción
-
-${level.level_description || 'Contenido pendiente de desarrollo.'}
-
-## Información del Contenido
-
-- **Lenguaje**: ${language.lenguage_name}
-- **Nivel**: ${level.level_name}
-- **Estado**: Borrador
-- **Fecha de creación**: ${new Date().toLocaleDateString('es-ES')}
-
-## Objetivos de Aprendizaje
-
-- [ ] Objetivo 1: Pendiente de definir
-- [ ] Objetivo 2: Pendiente de definir
-- [ ] Objetivo 3: Pendiente de definir
-
-## Contenido Educativo
-
-*Escribe aquí el contenido educativo...*
-
-### Ejemplo Práctico
-
-*Incluye ejemplos prácticos aquí...*
-
-### Ejercicios
-
-*Agrega ejercicios relacionados...*
-
-## Recursos Adicionales
-
-- [Recurso 1](#)
-- [Recurso 2](#)
-
-## Notas para Profesores
-
-*Información específica para los docentes asignados...*
-`;
-
-      await fs.writeFile(markdownFile, initialContent, 'utf8');
-
-      return markdownFile;
-    } catch (error) {
-      throw new Error(
-        `No se pudo crear la estructura de archivos: ${error.message}`,
-      );
-    }
-  }
 
   async getMarkdownContent(contentId: string, userId: string): Promise<string> {
     // Verificar que el contenido existe y el usuario tiene acceso
@@ -588,49 +472,17 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     }
 
     try {
-      // Si ya existe un markdownPath en la entidad, usarlo
-      if (content.markdownPath) {
-        const markdownContent = await fs.readFile(content.markdownPath, 'utf8');
-        return markdownContent;
+      // Retornar el contenido JSON desde la base de datos
+      if (content.jsonContent) {
+        return content.jsonContent;
       }
 
-      // Si no, intentar construir la ruta basándose en el nombre del contenido
-      // Necesitamos obtener información del nivel y lenguaje
-      const level = await this.contentsRepository.query(
-        'SELECT l.name as level_name, lg.name as language_name FROM levels l JOIN lenguages lg ON l.lenguageId = lg.id WHERE l.id = $1',
-        [content.levelId],
-      );
-
-      if (!level[0]) {
-        throw new Error('No se pudo encontrar información del nivel');
-      }
-
-      // Construir ruta basándose en el nombre del contenido
-      const sanitizedLanguageName = level[0].language_name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-      const sanitizedLevelName = level[0].level_name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-      const sanitizedContentName = content.name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-
-      const markdownPath = join(
-        process.cwd(),
-        '..',
-        'Markdown',
-        sanitizedLanguageName,
-        sanitizedLevelName,
-        sanitizedContentName,
-        `${sanitizedContentName}.md`,
-      );
-
-      // Leer el contenido del archivo
-      const markdownContent = await fs.readFile(markdownPath, 'utf8');
-      return markdownContent;
+      // Si no hay contenido JSON, retornar contenido inicial
+      const initialContent = `[{"type":"h1","children":[{"text":"Título: Contenido ${content.name}"}]},{"type":"p","children":[{"text":""}]}]`;
+      return initialContent;
     } catch (error) {
-      throw new Error('No se pudo leer el archivo de contenido');
+      console.error('Error reading content:', error);
+      throw new Error('No se pudo leer el contenido');
     }
   }
 
@@ -669,60 +521,17 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     }
 
     try {
-      let markdownPath: string;
-
-      // Si ya existe un markdownPath en la entidad, usarlo
-      if (content.markdownPath) {
-        markdownPath = content.markdownPath;
-      } else {
-        // Si no, construir la ruta basándose en el nombre del contenido
-        const level = await this.contentsRepository.query(
-          'SELECT l.name as level_name, lg.name as language_name FROM levels l JOIN lenguages lg ON l.lenguageId = lg.id WHERE l.id = $1',
-          [content.levelId],
-        );
-
-        if (!level[0]) {
-          throw new Error('No se pudo encontrar información del nivel');
-        }
-
-        const sanitizedLanguageName = level[0].language_name
-          .replace(/[^a-zA-Z0-9]/g, '-')
-          .toLowerCase();
-        const sanitizedLevelName = level[0].level_name
-          .replace(/[^a-zA-Z0-9]/g, '-')
-          .toLowerCase();
-        const sanitizedContentName = content.name
-          .replace(/[^a-zA-Z0-9]/g, '-')
-          .toLowerCase();
-
-        markdownPath = join(
-          process.cwd(),
-          '..',
-          'Markdown',
-          sanitizedLanguageName,
-          sanitizedLevelName,
-          sanitizedContentName,
-          `${sanitizedContentName}.md`,
-        );
-      }
-
-      // Asegurar que el directorio existe antes de escribir
-      const markdownDir = join(markdownPath, '..');
-      await fs.mkdir(markdownDir, { recursive: true });
-
-      // Escribir el contenido al archivo
-      await fs.writeFile(markdownPath, markdownContent, 'utf8');
-
-      // Actualizar la fecha de modificación en la base de datos si es necesario
+      // Guardar el contenido JSON directamente en la base de datos
       await this.contentsRepository.update(contentId, {
+        jsonContent: markdownContent,
         updatedAt: new Date().toISOString(),
-        markdownPath: content.markdownPath || markdownPath, // Guardar la ruta si no existe
         validationStatus: 'sin validar', // Auto-invalidate when content is edited
       });
 
       return true;
     } catch (error) {
-      throw new Error('No se pudo guardar el archivo de contenido');
+      console.error('Error saving content:', error);
+      throw new Error('No se pudo guardar el contenido');
     }
   }
 
@@ -905,48 +714,17 @@ ${level.level_description || 'Contenido pendiente de desarrollo.'}
     }
 
     try {
-      // Si ya existe un markdownPath en la entidad, usarlo
-      if (content.markdownPath) {
-        const markdownContent = await fs.readFile(content.markdownPath, 'utf8');
-        return markdownContent;
+      // Retornar el contenido JSON desde la base de datos
+      if (content.jsonContent) {
+        return content.jsonContent;
       }
 
-      // Si no, intentar construir la ruta basándose en el nombre del contenido
-      const level = await this.contentsRepository.query(
-        'SELECT l.name as level_name, lg.name as language_name FROM levels l JOIN lenguages lg ON l.lenguageId = lg.id WHERE l.id = $1',
-        [content.levelId],
-      );
-
-      if (!level[0]) {
-        throw new Error('No se pudo encontrar información del nivel');
-      }
-
-      // Construir ruta basándose en el nombre del contenido
-      const sanitizedLanguageName = level[0].language_name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-      const sanitizedLevelName = level[0].level_name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-      const sanitizedContentName = content.name
-        .replace(/[^a-zA-Z0-9]/g, '-')
-        .toLowerCase();
-
-      const markdownPath = join(
-        process.cwd(),
-        '..',
-        'Markdown',
-        sanitizedLanguageName,
-        sanitizedLevelName,
-        sanitizedContentName,
-        `${sanitizedContentName}.md`,
-      );
-
-      // Leer el contenido del archivo
-      const markdownContent = await fs.readFile(markdownPath, 'utf8');
-      return markdownContent;
+      // Si no hay contenido JSON, retornar contenido inicial
+      const initialContent = `[{"type":"h1","children":[{"text":"Título: Contenido ${content.name}"}]},{"type":"p","children":[{"text":""}]}]`;
+      return initialContent;
     } catch (error) {
-      throw new Error('No se pudo cargar el contenido del archivo');
+      console.error('Error reading public content:', error);
+      throw new Error('No se pudo cargar el contenido');
     }
   }
 

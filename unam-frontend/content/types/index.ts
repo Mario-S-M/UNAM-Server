@@ -8,7 +8,7 @@ export interface Content {
   languageId?: string;
   isCompleted?: boolean;
   userId?: number;
-  markdownPath?: string;
+  jsonContent?: string;
   publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;

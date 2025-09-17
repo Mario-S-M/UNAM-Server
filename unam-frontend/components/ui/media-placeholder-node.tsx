@@ -16,7 +16,7 @@ import { PlateElement, useEditorPlugin, withHOC } from 'platejs/react';
 import { useFilePicker } from 'use-file-picker';
 
 import { cn } from '@/lib/utils';
-import { useUploadFile } from '@/hooks/use-upload-file';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 const CONTENT: Record<
   string,
@@ -55,8 +55,38 @@ export const PlaceholderElement = withHOC(
 
     const { api } = useEditorPlugin(PlaceholderPlugin);
 
-    const { isUploading, progress, uploadedFile, uploadFile, uploadingFile } =
-      useUploadFile();
+    const { isUploading, uploadProgress } = useFileUpload();
+    const [uploadingFile, setUploadingFile] = React.useState<File | null>(null);
+    const [uploadedFile, setUploadedFile] = React.useState<{ name: string; url: string } | null>(null);
+    const progress = uploadProgress;
+
+    const uploadFile = async (file: File) => {
+      setUploadingFile(file);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('/api/uploadthing', {
+          method: 'POST',
+          headers: {
+            'x-idioma': 'es',
+            'x-nivel': 'basico',
+            'x-skill': 'general',
+            'x-contenido': 'editor',
+          },
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          setUploadedFile({ name: result.name, url: result.url });
+        }
+      } catch (error) {
+        console.error('Upload failed:', error);
+      } finally {
+        setUploadingFile(null);
+      }
+    };
 
     const loading = isUploading && uploadingFile;
 

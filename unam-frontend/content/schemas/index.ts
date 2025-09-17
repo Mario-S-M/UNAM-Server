@@ -32,7 +32,7 @@ export const ContentSchema = z.object({
   skillId: z.string(),
   languageId: z.string().optional(),
   userId: z.number(),
-  markdownPath: z.string().optional(),
+  jsonContent: z.string().optional(),
   assignedTeachers: z.array(TeacherSchema),
   validationStatus: z.string(),
   publishedAt: z.string().optional(),

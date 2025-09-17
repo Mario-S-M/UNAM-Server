@@ -33,7 +33,6 @@ interface Content {
   updatedAt: string;
   levelId: string;
   userId: string;
-  markdownPath: string;
   validationStatus: string;
   publishedAt?: string;
   skill: {

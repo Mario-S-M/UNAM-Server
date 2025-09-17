@@ -1,5 +1,6 @@
-import { createRouteHandler } from 'uploadthing/next';
+import { NextRequest } from 'next/server';
+import { handleFileUpload } from '@/lib/uploadthing';
 
-import { ourFileRouter } from '@/lib/uploadthing';
-
-export const { GET, POST } = createRouteHandler({ router: ourFileRouter });
+export async function POST(request: NextRequest) {
+  return handleFileUpload(request);
+}

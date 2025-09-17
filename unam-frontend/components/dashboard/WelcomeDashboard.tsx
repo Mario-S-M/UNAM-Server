@@ -17,7 +17,6 @@ interface Content {
   updatedAt: string;
   levelId: string;
   userId: string;
-  markdownPath: string;
   skillId: string;
   skill: {
     id: string;

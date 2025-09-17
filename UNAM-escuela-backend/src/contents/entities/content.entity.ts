@@ -50,10 +50,10 @@ export class Content {
   @Field(() => Int)
   userId: number;
 
-  // Ruta del archivo markdown
-  @Column({ nullable: true })
+  // Contenido JSON del editor
+  @Column({ type: 'text', nullable: true })
   @Field(() => String, { nullable: true })
-  markdownPath?: string;
+  jsonContent?: string;
 
   // Relación muchos a muchos con profesores asignados
   @ManyToMany(() => User, { cascade: true })

@@ -54,7 +54,6 @@ export const GET_CONTENTS_BY_LEVEL = `
       updatedAt
       levelId
       userId
-      markdownPath
       assignedTeachers {
         id
         fullName
@@ -99,7 +98,6 @@ export const GET_CONTENTS_BY_LEVEL_AND_SKILL = `
       updatedAt
       levelId
       userId
-      markdownPath
       assignedTeachers {
         id
         fullName
@@ -135,7 +133,6 @@ export const GET_MY_ASSIGNED_CONTENTS = `
       updatedAt
       levelId
       userId
-      markdownPath
       assignedTeachers {
         id
         fullName
@@ -156,5 +153,19 @@ export const GET_MY_ASSIGNED_CONTENTS = `
       }
       skillId
     }
+  }
+`;
+
+// Query para obtener contenido markdown
+export const GET_CONTENT_MARKDOWN = `
+  query ContentMarkdown($contentId: ID!) {
+    contentMarkdown(contentId: $contentId)
+  }
+`;
+
+// Mutation para actualizar contenido markdown
+export const UPDATE_CONTENT_MARKDOWN = `
+  mutation UpdateContentMarkdown($contentId: ID!, $markdownContent: String!) {
+    updateContentMarkdown(contentId: $contentId, markdownContent: $markdownContent)
   }
 `;

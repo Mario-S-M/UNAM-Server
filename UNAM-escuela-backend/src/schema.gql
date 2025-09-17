@@ -97,7 +97,7 @@ type Content {
   updatedAt: String!
   levelId: ID
   userId: Int!
-  markdownPath: String
+  jsonContent: String
   assignedTeachers: [User!]
   validationStatus: String!
   publishedAt: String

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { GET_CONTENT_MARKDOWN } from '@/lib/graphql/contentGraphqlSchema';
 import { cn } from '@/lib/utils';
+import { ContentProvider } from '@/contexts/ContentContext';
 
 interface MarkdownEditorProps {
   contentId: string;
@@ -234,18 +235,20 @@ export function MarkdownEditor({ contentId, contentName, className }: MarkdownEd
       
       {/* Editor que ocupa todo el espacio restante */}
       <div className="flex-1 overflow-hidden">
-        <Plate 
-          editor={editor}
-          onChange={({ value }) => handleChange(value)}
-        >
-          <EditorContainer className="h-full">
-            <Editor 
-              variant="default"
-              className="p-6 h-full focus-visible:outline-none"
-              placeholder="Comienza a escribir el contenido..."
-            />
-          </EditorContainer>
-        </Plate>
+        <ContentProvider contentId={contentId} contentName={contentName}>
+          <Plate 
+            editor={editor}
+            onChange={({ value }) => handleChange(value)}
+          >
+            <EditorContainer className="h-full">
+              <Editor 
+                variant="default"
+                className="p-6 h-full focus-visible:outline-none"
+                placeholder="Comienza a escribir el contenido..."
+              />
+            </EditorContainer>
+          </Plate>
+        </ContentProvider>
       </div>
       
       {/* Footer con información */}

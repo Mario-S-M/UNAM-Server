@@ -47,10 +47,11 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, FileText, Search, Settings, ChevronLeft, ChevronRight, Filter, Check } from 'lucide-react';
+import { Plus, Search, Settings, ChevronLeft, ChevronRight, Filter, Edit, Trash2, Check, X } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -86,7 +87,7 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
       throw new Error(result.errors[0]?.message || 'GraphQL error');
     }
 
-    return result;
+    return result.data;
   } catch (error) {
     console.error('GraphQL fetch error:', error);
     throw error;
@@ -181,7 +182,7 @@ interface Skill {
 }
 
 export default function ContenidoPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [contents, setContents] = useState<PaginatedContents>({
     contents: [],
     total: 0,
@@ -244,7 +245,7 @@ export default function ContenidoPage() {
       `;
       
       const response = await fetchGraphQL(query, {}, token);
-      setLanguages(response.data.lenguagesActivate || []);
+      setLanguages(response.lenguagesActivate || []);
     } catch (error) {
       console.error('Error fetching languages:', error);
       toast.error('Error al cargar los idiomas');
@@ -271,7 +272,7 @@ export default function ContenidoPage() {
       `;
       
       const response = await fetchGraphQL(query, { lenguageId: languageId }, token);
-      const levels = response.data.levelsByLenguage || [];
+      const levels = response.levelsByLenguage || [];
       
       setLevels(levels);
     } catch (error) {
@@ -301,7 +302,7 @@ export default function ContenidoPage() {
       `;
       
       const response = await fetchGraphQL(query, { levelId }, token);
-      const skills = response.data.skillsByLevel || [];
+      const skills = response.skillsByLevel || [];
       
       setSkills(skills);
     } catch (error) {
@@ -328,8 +329,8 @@ export default function ContenidoPage() {
       `;
       
       const response = await fetchGraphQL(query, {}, token);
-      if (response.data?.users) {
-        setTeachers(response.data.users);
+      if (response?.users) {
+        setTeachers(response.users);
       }
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -392,7 +393,7 @@ export default function ContenidoPage() {
       };
       
       const response = await fetchGraphQL(query, variables, token);
-      setContents(response.data?.contentsPaginated || {
+      setContents(response?.contentsPaginated || {
         contents: [],
         total: 0,
         page: 1,
@@ -583,155 +584,11 @@ export default function ContenidoPage() {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = async (content: Content) => {
-    try {
-      // Set editing content first
-      setEditingContent(content);
-      
-      // Load all necessary data before setting form data
-      const promises = [
-        fetchTeachers(),
-        fetchLanguages()
-      ];
-      
-      // Load levels if language exists
-      if (content.languageId) {
-        promises.push(fetchLevels(content.languageId));
-      }
-      
-      // Wait for initial data to load
-      await Promise.all(promises);
-      
-      // Load skills if both language and level exist
-      if (content.languageId && content.levelId) {
-        await fetchSkills(content.levelId, content.languageId);
-      }
-      
-      // Set form data after all dependencies are loaded
-      setFormData({
-        name: content.name,
-        description: content.description,
-        languageId: content.languageId || '',
-        levelId: content.levelId,
-        skillId: content.skillId,
-        teacherIds: content.assignedTeachers?.map(t => t.id) || [],
-        validationStatus: content.validationStatus,
-      });
-      
-      // Open dialog only after everything is loaded
-      setIsDialogOpen(true);
-    } catch (error) {
-      console.error('Error loading edit data:', error);
-      toast.error('Error al cargar los datos para edición');
-    }
-  };
 
-  const handleDelete = async (content: Content) => {
-    if (!token) {
-      toast.error('No hay token de autenticación');
-      return;
-    }
 
-    try {
-      const mutation = `
-        mutation RemoveContent($id: ID!) {
-          removeContent(id: $id) {
-            id
-            name
-          }
-        }
-      `;
-      
-      await fetchGraphQL(mutation, { id: content.id }, token);
-      toast.success('Contenido eliminado exitosamente');
-      fetchContents();
-    } catch (error) {
-      console.error('Error deleting content:', error);
-      toast.error('Error al eliminar contenido');
-    }
-  };
 
-  const handleApprove = async (content: Content) => {
-    if (!token) {
-      toast.error('No hay token de autenticación');
-      return;
-    }
 
-    // Validar que el contenido tenga todos los campos requeridos
-    if (!content.languageId || !content.levelId || !content.skillId) {
-      toast.error('El contenido debe tener idioma, nivel y habilidad asignados para ser aprobado');
-      return;
-    }
 
-    try {
-      const mutation = `
-        mutation UpdateContent($updateContentInput: UpdateContentInput!) {
-          updateContent(updateContentInput: $updateContentInput) {
-            id
-            name
-            validationStatus
-          }
-        }
-      `;
-      
-      await fetchGraphQL(mutation, {
-        updateContentInput: {
-          id: content.id,
-          name: content.name,
-          description: content.description,
-          languageId: content.languageId,
-          levelId: content.levelId,
-          skillId: content.skillId,
-          teacherIds: content.assignedTeachers?.map(t => t.id) || [],
-          validationStatus: 'APPROVED'
-        }
-      }, token);
-      
-      toast.success('Contenido aprobado exitosamente');
-      fetchContents();
-    } catch (error) {
-      console.error('Error approving content:', error);
-      toast.error('Error al aprobar contenido');
-    }
-  };
-
-  const handleReject = async (content: Content) => {
-    if (!token) {
-      toast.error('No hay token de autenticación');
-      return;
-    }
-
-    try {
-      const mutation = `
-        mutation UpdateContent($updateContentInput: UpdateContentInput!) {
-          updateContent(updateContentInput: $updateContentInput) {
-            id
-            name
-            validationStatus
-          }
-        }
-      `;
-      
-      await fetchGraphQL(mutation, {
-        updateContentInput: {
-          id: content.id,
-          name: content.name,
-          description: content.description,
-          languageId: content.languageId,
-          levelId: content.levelId,
-          skillId: content.skillId,
-          teacherIds: content.assignedTeachers?.map(t => t.id) || [],
-          validationStatus: 'REJECTED'
-        }
-      }, token);
-      
-      toast.success('Contenido rechazado exitosamente');
-      fetchContents();
-    } catch (error) {
-      console.error('Error rejecting content:', error);
-      toast.error('Error al rechazar contenido');
-    }
-  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -747,6 +604,140 @@ export default function ContenidoPage() {
     }
   };
 
+
+
+  const handleEdit = (content: Content) => {
+    setEditingContent(content);
+    setFormData({
+      name: content.name,
+      description: content.description,
+      languageId: content.languageId || '',
+      levelId: content.levelId,
+      skillId: content.skillId,
+      teacherIds: content.assignedTeachers.map(t => t.id),
+      validationStatus: content.validationStatus,
+    });
+    
+    // Load dependent data
+    if (content.languageId) {
+      fetchLevels(content.languageId);
+      if (content.levelId) {
+        fetchSkills(content.levelId, content.languageId);
+      }
+    }
+    
+    setIsDialogOpen(true);
+  };
+
+  const handleApprove = async (contentId: string) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
+    try {
+      const mutation = `
+        mutation UpdateContent($updateContentInput: UpdateContentInput!) {
+          updateContent(updateContentInput: $updateContentInput) {
+            id
+            validationStatus
+          }
+        }
+      `;
+
+      const result = await fetchGraphQL(mutation, {
+        updateContentInput: {
+          id: contentId,
+          validationStatus: 'APPROVED'
+        }
+      }, token);
+
+      if (result.updateContent && result.updateContent.id) {
+        toast.success('Contenido aprobado exitosamente');
+        fetchContents();
+      } else {
+        toast.error('Error al aprobar contenido');
+      }
+    } catch (error) {
+      console.error('Error approving content:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al aprobar contenido: ${errorMessage}`);
+    }
+  };
+
+  const handleReject = async (contentId: string) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
+    try {
+      const mutation = `
+        mutation UpdateContent($updateContentInput: UpdateContentInput!) {
+          updateContent(updateContentInput: $updateContentInput) {
+            id
+            validationStatus
+          }
+        }
+      `;
+
+      const result = await fetchGraphQL(mutation, {
+        updateContentInput: {
+          id: contentId,
+          validationStatus: 'REJECTED'
+        }
+      }, token);
+
+      if (result.updateContent && result.updateContent.id) {
+        toast.success('Contenido rechazado exitosamente');
+        fetchContents();
+      } else {
+        toast.error('Error al rechazar contenido');
+      }
+    } catch (error) {
+      console.error('Error rejecting content:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al rechazar contenido: ${errorMessage}`);
+    }
+  };
+
+  const handleDelete = async (contentId: string) => {
+    if (!token) {
+      toast.error('No hay token de autenticación');
+      return;
+    }
+
+    try {
+      const mutation = `
+        mutation DeleteContent($id: ID!) {
+          removeContent(id: $id) {
+            success
+            message
+          }
+        }
+      `;
+
+      const result = await fetchGraphQL(mutation, {
+        id: contentId
+      }, token);
+
+      if (result.removeContent.success) {
+        toast.success('Contenido eliminado exitosamente');
+        fetchContents();
+      } else {
+        toast.error(result.removeContent.message || 'Error al eliminar contenido');
+      }
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      toast.error('Error al eliminar contenido');
+    }
+  };
+
+
+
+  // Verificar si el usuario tiene permisos para ver comentarios
+  const canViewComments = user && (user.roles.includes('admin') || user.roles.includes('docente') || user.roles.includes('superUser'));
+
   return (
     <div className="px-6 py-6">
       <Card className="max-w-none">
@@ -754,7 +745,7 @@ export default function ContenidoPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-6 w-6" />
+                <Settings className="h-6 w-6" />
                 Gestión de Contenidos
               </CardTitle>
               <CardDescription>
@@ -1246,35 +1237,43 @@ export default function ContenidoPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
                             <Button
-                              variant="secondary"
+                              variant="outline"
                               size="sm"
                               onClick={() => handleEdit(content)}
+                              title="Editar contenido"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            {content.validationStatus !== 'APPROVED' && (
+                            {content.validationStatus === 'APPROVED' ? (
                               <Button
-                                variant="default"
+                                variant="outline"
                                 size="sm"
-                                onClick={() => handleApprove(content)}
-                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleReject(content.id)}
+                                title="Rechazar contenido"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleApprove(content.id)}
+                                title="Aprobar contenido"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
                               >
                                 <Check className="h-4 w-4" />
                               </Button>
                             )}
-                            {content.validationStatus !== 'REJECTED' && (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => handleReject(content)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                ✕
-                              </Button>
-                            )}
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  title="Eliminar contenido"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -1282,13 +1281,15 @@ export default function ContenidoPage() {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el contenido
-                                    "{content.name}" de nuestros servidores.
+                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el contenido.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(content)}>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDelete(content.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
                                     Eliminar
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -1355,6 +1356,8 @@ export default function ContenidoPage() {
           </div>
         </CardContent>
       </Card>
+      
+
     </div>
   );
 }

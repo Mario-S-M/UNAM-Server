@@ -1,8 +1,11 @@
 import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { ContentsService } from './contents.service';
 import { Content } from './entities/content.entity';
+import { ContentComment } from './entities/content-comment.entity';
 import { CreateContentInput } from './dto/create-content.input';
 import { UpdateContentInput } from './dto/update-content.input';
+import { CreateContentCommentInput } from './dto/create-content-comment.input';
+import { UpdateContentCommentInput } from './dto/update-content-comment.input';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -356,5 +359,42 @@ export class ContentsResolver {
       console.error('Error stack:', error.stack);
       throw error;
     }
+  }
+
+  // Mutations y Queries para comentarios
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => ContentComment, { name: 'createContentComment' })
+  createContentComment(
+    @Args('createContentCommentInput') createContentCommentInput: CreateContentCommentInput,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<ContentComment> {
+    return this.contentsService.createComment(createContentCommentInput, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query(() => [ContentComment], { name: 'contentComments' })
+  getContentComments(
+    @Args('contentId', { type: () => ID }) contentId: string,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<ContentComment[]> {
+    return this.contentsService.getCommentsByContent(contentId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => ContentComment, { name: 'updateContentComment' })
+  updateContentComment(
+    @Args('updateContentCommentInput') updateContentCommentInput: UpdateContentCommentInput,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<ContentComment> {
+    return this.contentsService.updateComment(updateContentCommentInput, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => Boolean, { name: 'deleteContentComment' })
+  deleteContentComment(
+    @Args('commentId', { type: () => ID }) commentId: string,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<boolean> {
+    return this.contentsService.deleteComment(commentId, user.id);
   }
 }

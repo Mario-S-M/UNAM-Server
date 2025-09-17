@@ -10,19 +10,12 @@ interface ContentTableProps {
   formatDate: (dateString: string) => string;
   onEdit: (content: Content) => void;
   onDelete: (id: string) => void;
+  onComment?: (content: Content) => void;
   deleteLoading: boolean;
   contentsLoading: boolean;
 }
 
-export function ContentTable({ 
-  contents, 
-  columnVisibility, 
-  formatDate, 
-  onEdit, 
-  onDelete, 
-  deleteLoading, 
-  contentsLoading 
-}: ContentTableProps) {
+export function ContentTable({ contents, columnVisibility, formatDate, onEdit, onDelete, onComment, deleteLoading, contentsLoading }: ContentTableProps) {
   const visibleColumns = Object.entries(columnVisibility).filter(([_, visible]) => visible);
   const colSpan = visibleColumns.length;
 
@@ -79,6 +72,7 @@ export function ContentTable({
                 formatDate={formatDate}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onComment={onComment}
                 deleteLoading={deleteLoading}
               />
             ))

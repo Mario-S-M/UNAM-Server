@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, MessageSquare } from 'lucide-react';
 import { Content } from '../../types';
 import { ValidationStatusBadge } from './ValidationStatusBadge';
 
@@ -14,10 +14,11 @@ interface ContentTableRowProps {
   formatDate: (dateString: string) => string;
   onEdit: (content: Content) => void;
   onDelete: (id: string) => void;
+  onComment?: (content: Content) => void;
   deleteLoading: boolean;
 }
 
-export function ContentTableRow({ content, columnVisibility, formatDate, onEdit, onDelete, deleteLoading }: ContentTableRowProps) {
+export function ContentTableRow({ content, columnVisibility, formatDate, onEdit, onDelete, onComment, deleteLoading }: ContentTableRowProps) {
   return (
     <TableRow key={content.id}>
       {columnVisibility.name && (
@@ -101,6 +102,16 @@ export function ContentTableRow({ content, columnVisibility, formatDate, onEdit,
             >
               <Pencil className="h-4 w-4" />
             </Button>
+            {onComment && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onComment(content)}
+                title="Comentarios"
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+            )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">

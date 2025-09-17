@@ -335,3 +335,58 @@ export const GET_TEACHERS = gql`
     }
   }
 `;
+
+// Content Comments Queries
+export const GET_CONTENT_COMMENTS = gql`
+  query GetContentComments($contentId: ID!) {
+    contentComments(contentId: $contentId) {
+      id
+      comment
+      createdAt
+      updatedAt
+      author {
+        id
+        fullName
+        email
+      }
+    }
+  }
+`;
+
+export const CREATE_CONTENT_COMMENT = gql`
+  mutation CreateContentComment($input: CreateContentCommentInput!) {
+    createContentComment(input: $input) {
+      id
+      comment
+      createdAt
+      updatedAt
+      author {
+        id
+        fullName
+        email
+      }
+    }
+  }
+`;
+
+export const UPDATE_CONTENT_COMMENT = gql`
+  mutation UpdateContentComment($input: UpdateContentCommentInput!) {
+    updateContentComment(input: $input) {
+      id
+      comment
+      createdAt
+      updatedAt
+      author {
+        id
+        fullName
+        email
+      }
+    }
+  }
+`;
+
+export const DELETE_CONTENT_COMMENT = gql`
+  mutation DeleteContentComment($commentId: ID!) {
+    deleteContentComment(commentId: $commentId)
+  }
+`;

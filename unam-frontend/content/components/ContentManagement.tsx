@@ -4,14 +4,23 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
 import { useContentManagement } from '../hooks/useContentManagement';
+import { useAuth } from '@/contexts/AuthContext';
+import { Content } from '../types';
 import {
   ContentHeader,
   ContentTable,
   ContentPagination,
-  ContentModal
+  ContentModal,
+  CommentModal
 } from './index';
 
 export function ContentManagement() {
+  const [commentingContent, setCommentingContent] = React.useState<any>(null);
+  const { user } = useAuth();
+
+  // Verificar si el usuario tiene permisos para ver comentarios
+  const canViewComments = user && (user.roles.includes('admin') || user.roles.includes('docente') || user.roles.includes('superUser'));
+  
   const {
     // State
     search,
@@ -63,6 +72,10 @@ export function ContentManagement() {
     handleModalClose,
     handleModalSubmit
   } = useContentManagement();
+
+  const handleComment = (content: any) => {
+    setCommentingContent(content);
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -129,6 +142,7 @@ export function ContentManagement() {
           deleteLoading={deleteLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onComment={canViewComments ? handleComment : undefined}
           formatDate={formatDate}
         />
       </ContentHeader>
@@ -155,6 +169,12 @@ export function ContentManagement() {
         teachers={teachers}
         languages={languages}
         isLoading={createLoading || updateLoading}
+      />
+      
+      <CommentModal
+        isOpen={!!commentingContent}
+        onClose={() => setCommentingContent(null)}
+        content={commentingContent}
       />
     </div>
   );

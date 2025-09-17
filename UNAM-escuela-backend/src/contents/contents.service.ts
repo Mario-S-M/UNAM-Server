@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { CreateContentInput } from './dto/create-content.input';
 import { UpdateContentInput } from './dto/update-content.input';
+import { CreateContentCommentInput } from './dto/create-content-comment.input';
+import { UpdateContentCommentInput } from './dto/update-content-comment.input';
 import { Content } from './entities/content.entity';
+import { ContentComment } from './entities/content-comment.entity';
 import { User } from '../users/entities/user.entity';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { Repository } from 'typeorm';
@@ -22,6 +25,8 @@ export class ContentsService {
   constructor(
     @InjectRepository(Content)
     private readonly contentsRepository: Repository<Content>,
+    @InjectRepository(ContentComment)
+    private readonly contentCommentsRepository: Repository<ContentComment>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
   ) {}
@@ -914,5 +919,87 @@ export class ContentsService {
     }
 
     return highestRole;
+  }
+
+  // Métodos para comentarios
+  async createComment(
+    createCommentInput: CreateContentCommentInput,
+    authorId: string,
+  ): Promise<ContentComment> {
+    // Verificar que el contenido existe
+    const content = await this.contentsRepository.findOne({
+      where: { id: createCommentInput.contentId },
+    });
+
+    if (!content) {
+      throw new NotFoundException('Contenido no encontrado');
+    }
+
+    const comment = this.contentCommentsRepository.create({
+      ...createCommentInput,
+      authorId,
+    });
+
+    return await this.contentCommentsRepository.save(comment);
+  }
+
+  async getCommentsByContent(contentId: string): Promise<ContentComment[]> {
+    return await this.contentCommentsRepository.find({
+      where: { contentId },
+      relations: ['author', 'content'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async updateComment(
+    updateCommentInput: UpdateContentCommentInput,
+    authorId: string,
+  ): Promise<ContentComment> {
+    const comment = await this.contentCommentsRepository.findOne({
+      where: { id: updateCommentInput.id },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    // Solo el autor puede editar su comentario
+    if (comment.authorId !== authorId) {
+      throw new BadRequestException('No tienes permisos para editar este comentario');
+    }
+
+    await this.contentCommentsRepository.update(
+      updateCommentInput.id,
+      { comment: updateCommentInput.comment },
+    );
+
+    const updatedComment = await this.contentCommentsRepository.findOne({
+      where: { id: updateCommentInput.id },
+      relations: ['author', 'content'],
+    });
+
+    if (!updatedComment) {
+      throw new NotFoundException('Comentario actualizado no encontrado');
+    }
+
+    return updatedComment;
+  }
+
+  async deleteComment(commentId: string, authorId: string): Promise<boolean> {
+    const comment = await this.contentCommentsRepository.findOne({
+      where: { id: commentId },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    // Solo el autor puede eliminar su comentario
+    if (comment.authorId !== authorId) {
+      throw new BadRequestException('No tienes permisos para eliminar este comentario');
+    }
+
+    await this.contentCommentsRepository.delete(commentId);
+    return true;
   }
 }

@@ -108,6 +108,17 @@ type Content {
   language: Lenguage
 }
 
+type ContentComment {
+  id: ID!
+  comment: String!
+  contentId: ID!
+  authorId: ID!
+  createdAt: String!
+  updatedAt: String!
+  content: Content!
+  author: User!
+}
+
 type PaginatedContents {
   contents: [Content!]!
   total: Int!
@@ -357,6 +368,7 @@ type Query {
   validatedContentsByLevel(levelId: ID!): [Content!]!
   validatedContentsBySkill(skillId: ID!): [Content!]!
   validatedContentsByLevelAndSkill(levelId: ID!, skillId: ID!): [Content!]!
+  contentComments(contentId: ID!): [ContentComment!]!
   skillsActivePublic: [Skill!]!
   skillsByLevelPublic(levelId: ID!): [Skill!]!
   skillPublic(id: ID!): Skill!
@@ -424,6 +436,9 @@ type Mutation {
   invalidateContent(contentId: ID!): Content!
   validateAllContent: String!
   convertDocxToMarkdown(contentId: ID!, docxBase64: String!): Boolean!
+  createContentComment(createContentCommentInput: CreateContentCommentInput!): ContentComment!
+  updateContentComment(updateContentCommentInput: UpdateContentCommentInput!): ContentComment!
+  deleteContentComment(commentId: ID!): Boolean!
   createSkill(createSkillInput: CreateSkillInput!): Skill!
   updateSkill(updateSkillInput: UpdateSkillInput!): Skill!
   removeSkill(id: ID!): Skill!
@@ -500,6 +515,16 @@ input UpdateContentInput {
   difficulty: String
   isActive: Boolean
   id: ID!
+}
+
+input CreateContentCommentInput {
+  comment: String!
+  contentId: ID!
+}
+
+input UpdateContentCommentInput {
+  id: ID!
+  comment: String!
 }
 
 input CreateSkillInput {

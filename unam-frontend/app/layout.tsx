@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ApolloProviderWrapper from "@/components/providers/ApolloProvider";
+import { AccessibilityProvider } from "@/components/accessibility/AccessibilityContext";
+import { AccessibilityButton } from "@/components/accessibility/AccessibilityButton";
+import AccessibilityMenu from "@/components/accessibility/AccessibilityMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +31,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ApolloProviderWrapper>
-          {children}
-        </ApolloProviderWrapper>
+        <AccessibilityProvider>
+          <ApolloProviderWrapper>
+            {children}
+            <AccessibilityButton />
+            <AccessibilityMenu />
+          </ApolloProviderWrapper>
+        </AccessibilityProvider>
       </body>
     </html>
   );

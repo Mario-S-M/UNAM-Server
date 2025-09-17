@@ -55,18 +55,18 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.35 0.15 240); /* Azul UNAM */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: oklch(0.8 0.12 85); /* Amarillo UNAM */
+  --accent-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.35 0.15 240);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -74,14 +74,14 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.35 0.15 240);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --highlight: oklch(0.852 0.199 91.936);
-  --brand: oklch(0.623 0.214 259.815);
+  --sidebar-ring: oklch(0.35 0.15 240);
+  --highlight: oklch(0.8 0.12 85);
+  --brand: oklch(0.35 0.15 240);
 }
 
 .dark {
@@ -91,18 +91,18 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.5 0.18 240); /* Azul UNAM más claro para tema oscuro */
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.85 0.15 85); /* Amarillo UNAM para tema oscuro */
+  --accent-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.5 0.18 240);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -110,14 +110,14 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.5 0.18 240);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --highlight: oklch(0.852 0.199 91.936);
-  --brand: oklch(0.707 0.165 254.624);
+  --sidebar-ring: oklch(0.5 0.18 240);
+  --highlight: oklch(0.85 0.15 85);
+  --brand: oklch(0.5 0.18 240);
 }
 
 @layer base {
@@ -161,4 +161,240 @@
 
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.7);
+}
+
+/* Accessibility Styles */
+
+/* High Contrast Theme - UNAM Colors - Natural & Accessible */
+.high-contrast {
+  --background: oklch(0.08 0 0); /* Negro más suave */
+  --foreground: oklch(0.95 0 0); /* Blanco ligeramente menos intenso */
+  --card: oklch(0.15 0.01 240); /* Fondo de tarjetas más natural */
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.12 0.01 240);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.55 0.18 240); /* Azul UNAM más natural */
+  --primary-foreground: oklch(0.95 0 0);
+  --secondary: oklch(0.22 0.02 240); /* Gris azulado más suave */
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.18 0.01 240);
+  --muted-foreground: oklch(0.70 0.08 85); /* Amarillo UNAM más natural para texto secundario */
+  --accent: oklch(0.80 0.12 85); /* Amarillo UNAM más suave */
+  --accent-foreground: oklch(0.08 0 0);
+  --destructive: oklch(0.65 0.20 25); /* Rojo más natural */
+  --border: oklch(0.35 0.06 240); /* Bordes más suaves */
+  --input: oklch(0.20 0.02 240); /* Inputs más naturales */
+  --ring: oklch(0.80 0.12 85); /* Anillo de foco más suave */
+  --sidebar: oklch(0.10 0.01 240);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.55 0.18 240);
+  --sidebar-primary-foreground: oklch(0.95 0 0);
+  --sidebar-accent: oklch(0.18 0.01 240);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(0.30 0.04 240);
+  --sidebar-ring: oklch(0.80 0.12 85);
+  --highlight: oklch(0.80 0.12 85);
+  --brand: oklch(0.55 0.18 240);
+}
+
+/* Font Size Classes */
+.font-sm {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+
+.font-sm h1 { font-size: 1.5rem; }
+.font-sm h2 { font-size: 1.25rem; }
+.font-sm h3 { font-size: 1.125rem; }
+.font-sm h4 { font-size: 1rem; }
+.font-sm h5 { font-size: 0.875rem; }
+.font-sm h6 { font-size: 0.75rem; }
+
+.font-md {
+  font-size: 1rem; /* 16px - default */
+  line-height: 1.5rem; /* 24px */
+}
+
+.font-md h1 { font-size: 2rem; }
+.font-md h2 { font-size: 1.5rem; }
+.font-md h3 { font-size: 1.25rem; }
+.font-md h4 { font-size: 1.125rem; }
+.font-md h5 { font-size: 1rem; }
+.font-md h6 { font-size: 0.875rem; }
+
+.font-lg {
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.75rem; /* 28px */
+}
+
+.font-lg h1 { font-size: 2.5rem; }
+.font-lg h2 { font-size: 2rem; }
+.font-lg h3 { font-size: 1.75rem; }
+.font-lg h4 { font-size: 1.5rem; }
+.font-lg h5 { font-size: 1.25rem; }
+.font-lg h6 { font-size: 1.125rem; }
+
+/* Letter Spacing Classes */
+.letter-normal {
+  letter-spacing: normal;
+}
+
+.letter-wide {
+  letter-spacing: 0.025em;
+}
+
+.letter-wider {
+  letter-spacing: 0.05em;
+}
+
+/* Line Height Classes */
+.line-normal {
+  line-height: 1.5;
+}
+
+.line-relaxed {
+  line-height: 1.625;
+}
+
+.line-loose {
+  line-height: 2;
+}
+
+/* Hide Images */
+.hide-images img,
+.hide-images [role="img"],
+.hide-images picture,
+.hide-images svg:not([aria-hidden="true"]) {
+  display: none !important;
+}
+
+.hide-images img::after,
+.hide-images picture::after {
+  content: "[Imagen oculta]";
+  display: inline-block;
+  padding: 0.5rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+/* Dyslexia Font */
+.dyslexia-font,
+.dyslexia-font * {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', cursive, sans-serif !important;
+}
+
+/* Enhanced Focus Styles for Accessibility */
+.high-contrast *:focus,
+.high-contrast *:focus-visible {
+  outline: 3px solid oklch(0.9 0.15 85) !important;
+  outline-offset: 2px !important;
+}
+
+/* High contrast styles - Natural & Accessible */
+.high-contrast {
+  /* Removemos filtros excesivos para apariencia más natural */
+}
+
+.high-contrast * {
+  /* Sombra más sutil y natural */
+  text-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.4);
+  transition: all 0.15s ease;
+}
+
+/* Botones y elementos interactivos */
+.high-contrast button,
+.high-contrast [role="button"] {
+  border: 1px solid var(--border) !important;
+  font-weight: 500;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.high-contrast button:hover,
+.high-contrast [role="button"]:hover {
+  background: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Inputs y formularios */
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  border: 1px solid var(--border) !important;
+  border-radius: 4px;
+  padding: 6px 10px;
+  background: var(--input) !important;
+  color: var(--foreground) !important;
+}
+
+.high-contrast input:focus,
+.high-contrast textarea:focus,
+.high-contrast select:focus {
+  border-color: var(--ring) !important;
+  box-shadow: 0 0 0 1px var(--ring) !important;
+  outline: none;
+}
+
+/* Enlaces */
+.high-contrast a {
+  color: var(--accent) !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1.5px !important;
+  text-underline-offset: 3px;
+}
+
+.high-contrast a:hover {
+  color: var(--primary) !important;
+  text-decoration-thickness: 2px !important;
+}
+
+/* Tarjetas y contenedores */
+.high-contrast .card,
+.high-contrast [data-card] {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  background: var(--card) !important;
+  color: var(--card-foreground) !important;
+}
+
+/* Ensure proper contrast for all text */
+.high-contrast * {
+  color: var(--foreground) !important;
+}
+
+.high-contrast [data-slot="primary"],
+.high-contrast .bg-primary {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+/* Animation Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .hide-images img,
+  .hide-images picture {
+    display: none !important;
+  }
+  
+  .accessibility-button {
+    display: none !important;
+  }
 }

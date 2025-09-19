@@ -3,6 +3,8 @@ import { UseGuards, Logger } from '@nestjs/common';
 import { LevelsService } from './levels.service';
 import { Level } from './entities/level.entity';
 import { CreateLevelInput, UpdateLevelInput } from './dto/inputs';
+import { CreateLevelResponse } from './dto/create-level-response.dto';
+import { UpdateLevelResponse } from './dto/update-level-response.dto';
 import { DeleteLevelResponse } from './dto/delete-level-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
@@ -18,15 +20,19 @@ export class LevelsResolver {
   constructor(private readonly levelsService: LevelsService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Level)
+  @Mutation(() => CreateLevelResponse)
   async createLevel(
     @Args('createLevelInput') createLevelInput: CreateLevelInput,
     @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
-  ): Promise<Level> {
+  ): Promise<CreateLevelResponse> {
     this.logger.log(
       `User ${user.fullName} (${user.roles.join(', ')}) creating level for language: ${createLevelInput.lenguageId}`,
     );
-    return this.levelsService.create(createLevelInput, user);
+    await this.levelsService.create(createLevelInput, user);
+    return {
+      success: true,
+      message: 'Nivel creado exitosamente'
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -69,19 +75,23 @@ export class LevelsResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Level)
+  @Mutation(() => UpdateLevelResponse)
   async updateLevel(
     @Args('updateLevelInput') updateLevelInput: UpdateLevelInput,
     @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
-  ): Promise<Level> {
+  ): Promise<UpdateLevelResponse> {
     this.logger.log(
       `User ${user.fullName} updating level: ${updateLevelInput.id}`,
     );
-    return this.levelsService.update(
+    await this.levelsService.update(
       updateLevelInput.id,
       updateLevelInput,
       user,
     );
+    return {
+      success: true,
+      message: 'Nivel actualizado exitosamente'
+    };
   }
 
   @UseGuards(JwtAuthGuard)

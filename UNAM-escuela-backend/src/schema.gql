@@ -47,6 +47,16 @@ type Level {
   lenguage: Lenguage
 }
 
+type CreateLevelResponse {
+  success: Boolean!
+  message: String!
+}
+
+type UpdateLevelResponse {
+  success: Boolean!
+  message: String!
+}
+
 type DeleteLevelResponse {
   success: Boolean!
   message: String!
@@ -443,8 +453,8 @@ input FormFiltersInput {
 }
 
 type Mutation {
-  createLevel(createLevelInput: CreateLevelInput!): Level!
-  updateLevel(updateLevelInput: UpdateLevelInput!): Level!
+  createLevel(createLevelInput: CreateLevelInput!): CreateLevelResponse!
+  updateLevel(updateLevelInput: UpdateLevelInput!): UpdateLevelResponse!
   removeLevel(id: ID!): DeleteLevelResponse!
   toggleLevelStatus(id: ID!): Level!
   createContent(createContentInput: CreateContentInput!): Content!

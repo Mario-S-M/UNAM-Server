@@ -4,6 +4,8 @@ import { SkillsService } from './skills.service';
 import { Skill } from './entities/skill.entity';
 import { CreateSkillInput } from './dto/create-skill.input';
 import { UpdateSkillInput } from './dto/update-skill.input';
+import { CreateSkillResponse } from './dto/create-skill-response.dto';
+import { UpdateSkillResponse } from './dto/update-skill-response.dto';
 import { SkillsFilterArgs } from './dto/args/skills-filter.arg';
 import { PaginatedSkills } from './dto/paginated-skills.output';
 import { DeleteSkillResponse } from './dto/delete-skill-response.dto';
@@ -40,12 +42,16 @@ export class SkillsResolver {
 
   // Protected endpoints below
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Skill)
-  createSkill(
+  @Mutation(() => CreateSkillResponse)
+  async createSkill(
     @Args('createSkillInput') createSkillInput: CreateSkillInput,
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser]) user: User,
-  ): Promise<Skill> {
-    return this.skillsService.create(createSkillInput);
+  ): Promise<CreateSkillResponse> {
+    await this.skillsService.create(createSkillInput);
+    return {
+      success: true,
+      message: 'Habilidad creada exitosamente'
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -112,12 +118,16 @@ export class SkillsResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Skill)
-  updateSkill(
+  @Mutation(() => UpdateSkillResponse)
+  async updateSkill(
     @Args('updateSkillInput') updateSkillInput: UpdateSkillInput,
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser]) user: User,
-  ): Promise<Skill> {
-    return this.skillsService.update(updateSkillInput.id, updateSkillInput);
+  ): Promise<UpdateSkillResponse> {
+    await this.skillsService.update(updateSkillInput.id, updateSkillInput);
+    return {
+      success: true,
+      message: 'Habilidad actualizada exitosamente'
+    };
   }
 
   @UseGuards(JwtAuthGuard)

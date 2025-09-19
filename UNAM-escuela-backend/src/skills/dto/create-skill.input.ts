@@ -1,5 +1,5 @@
 import { InputType, Field, Int, ID } from '@nestjs/graphql';
-import { IsNotEmpty, IsString, IsOptional, Matches, IsUrl, IsInt, Min, IsArray, IsIn, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, Matches, IsUrl, IsInt, Min, IsArray, IsIn, IsUUID, IsBoolean } from 'class-validator';
 import { IsOptionalUUID } from '../../common/validators/optional-uuid.validator';
 
 @InputType()
@@ -69,4 +69,9 @@ export class CreateSkillInput {
   @IsOptionalUUID('4', { message: 'El ID del idioma debe ser un UUID válido o null' })
   @Field(() => ID, { nullable: true })
   lenguageId?: string | null; // ID del idioma al que pertenece esta skill
+
+  @IsOptional()
+  @IsBoolean()
+  @Field(() => Boolean, { nullable: true, defaultValue: true })
+  isActive?: boolean;
 }

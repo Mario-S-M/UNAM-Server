@@ -275,6 +275,16 @@ type RemoveContentResponse {
   message: String!
 }
 
+type CreateSkillResponse {
+  success: Boolean!
+  message: String!
+}
+
+type UpdateSkillResponse {
+  success: Boolean!
+  message: String!
+}
+
 type PaginatedSkills {
   skills: [Skill!]!
   total: Int!
@@ -473,8 +483,8 @@ type Mutation {
   createActivity(createActivityInput: CreateActivityInput!): Activity!
   updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
   removeActivity(id: ID!): Activity!
-  createSkill(createSkillInput: CreateSkillInput!): Skill!
-  updateSkill(updateSkillInput: UpdateSkillInput!): Skill!
+  createSkill(createSkillInput: CreateSkillInput!): CreateSkillResponse!
+  updateSkill(updateSkillInput: UpdateSkillInput!): UpdateSkillResponse!
   removeSkill(id: ID!): DeleteSkillResponse!
   toggleSkillActive(id: ID!): Skill!
   createHomework(createHomeworkInput: CreateHomeworkInput!): Homework!
@@ -627,6 +637,7 @@ input CreateSkillInput {
   tags: [String!]
   levelId: ID
   lenguageId: ID
+  isActive: Boolean = true
 }
 
 input UpdateSkillInput {
@@ -642,6 +653,7 @@ input UpdateSkillInput {
   tags: [String!]
   levelId: ID
   lenguageId: ID
+  isActive: Boolean = true
   id: ID!
 }
 

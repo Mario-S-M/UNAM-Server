@@ -30,7 +30,7 @@ import {
   Sun,
   Moon,
   Contrast,
-  Accessibility,
+  PersonStanding,
 } from 'lucide-react';
 import { useAccessibility, type Theme, type FontSize, type LetterSpacing, type LineHeight } from './AccessibilityContext';
 import { toast } from 'sonner';
@@ -134,7 +134,7 @@ const AccessibilityMenu: React.FC = () => {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Accessibility className="h-5 w-5" />
+            <PersonStanding className="h-5 w-5" />
             Menú de Accesibilidad
           </DialogTitle>
           <DialogDescription>

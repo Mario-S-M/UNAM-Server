@@ -53,6 +53,10 @@ export class Activity {
   @Field(() => ID, { nullable: true })
   formId?: string;
 
+  @Column({ type: 'int', nullable: true })
+  @Field(() => Int, { nullable: true })
+  estimatedTime?: number; // Tiempo estimado en minutos para completar la actividad
+
   @OneToOne(() => Form, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'formId' })
   @Field(() => Form, { nullable: true })

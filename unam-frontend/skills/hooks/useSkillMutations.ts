@@ -19,7 +19,7 @@ interface CreateSkillInput {
   objectives?: string;
   prerequisites?: string;
   difficulty?: string;
-  estimatedHours?: number;
+
   tags?: string[];
   levelId?: string;
   lenguageId?: string;
@@ -132,7 +132,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       if (formData.objectives && formData.objectives.length > 0) submitData.objectives = formData.objectives.join('\n');
       if (formData.prerequisites && formData.prerequisites.length > 0) submitData.prerequisites = formData.prerequisites.join('\n');
       if (formData.difficulty) submitData.difficulty = formData.difficulty;
-      if (formData.estimatedHours && formData.estimatedHours > 0) submitData.estimatedHours = formData.estimatedHours;
+
       if (formData.tags && formData.tags.length > 0) submitData.tags = formData.tags;
       if (formData.levelId && formData.levelId !== '') submitData.levelId = formData.levelId;
       if (formData.lenguageId && formData.lenguageId !== '') submitData.lenguageId = formData.lenguageId;
@@ -191,7 +191,7 @@ export const useSkillMutations = (refreshCallback?: () => void) => {
       if (formData.objectives && formData.objectives.length > 0) submitData.objectives = formData.objectives.join('\n');
       if (formData.prerequisites && formData.prerequisites.length > 0) submitData.prerequisites = formData.prerequisites.join('\n');
       if (formData.difficulty) submitData.difficulty = formData.difficulty;
-      if (formData.estimatedHours && formData.estimatedHours > 0) submitData.estimatedHours = formData.estimatedHours;
+
       if (formData.tags && formData.tags.length > 0) submitData.tags = formData.tags;
       if (formData.levelId && formData.levelId !== '') submitData.levelId = formData.levelId;
       if (formData.lenguageId && formData.lenguageId !== '') submitData.lenguageId = formData.lenguageId;

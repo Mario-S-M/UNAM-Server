@@ -98,6 +98,7 @@ interface Activity {
   description: string;
   indication: string;
   example: string;
+
   contentId: string;
   createdAt: string;
   updatedAt: string;
@@ -151,7 +152,8 @@ export default function ActivityDetailPage() {
           name: activity.name,
           description: activity.description,
           indication: activity.indication,
-          example: activity.example
+          example: activity.example,
+
         });
       }
     }
@@ -190,7 +192,8 @@ export default function ActivityDetailPage() {
             name: formData.name?.trim(),
             description: formData.description?.trim(),
             indication: formData.indication?.trim(),
-            example: formData.example?.trim()
+            example: formData.example?.trim(),
+
           }
         }
       });

@@ -105,6 +105,8 @@ const QUESTION_TYPES = [
   { value: 'CHECKBOX', label: 'Casillas de verificación' },
   { value: 'RATING_SCALE', label: 'Escala de valoración' },
   { value: 'YES_NO', label: 'Sí/No' },
+  { value: 'WORD_SEARCH', label: 'Sopa de letras' },
+  { value: 'CROSSWORD', label: 'Crucigrama' },
 ];
 
 export default function ActivityQuestionsPage() {
@@ -477,6 +479,173 @@ export default function ActivityQuestionsPage() {
                         onChange={(e) => updateQuestion(questionIndex, 'correctAnswer', e.target.value)}
                         placeholder="Valor esperado como respuesta correcta"
                       />
+                    </div>
+                  </div>
+                )}
+
+                {/* Configuración para sopa de letras */}
+                {question.questionType === 'WORD_SEARCH' && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                    <Label className="text-base font-medium">Configuración de Sopa de Letras</Label>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={`grid-rows-${questionIndex}`}>Filas de la cuadrícula</Label>
+                        <Input
+                          id={`grid-rows-${questionIndex}`}
+                          type="number"
+                          min="5"
+                          max="20"
+                          value={(() => {
+                            try {
+                              const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+                              return data?.gridSize || 8;
+                            } catch {
+                              return 8;
+                            }
+                          })()}
+                          onChange={(e) => {
+                            const size = parseInt(e.target.value) || 8;
+                            try {
+                              const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''] };
+                              const updatedData = { ...currentData, gridSize: size };
+                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                            } catch {
+                              const newData = { words: [''], gridSize: size };
+                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                            }
+                          }}
+                          placeholder="8"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`grid-cols-${questionIndex}`}>Columnas de la cuadrícula</Label>
+                        <Input
+                          id={`grid-cols-${questionIndex}`}
+                          type="number"
+                          min="5"
+                          max="20"
+                          value={(() => {
+                            try {
+                              const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+                              return data?.gridSize || 8;
+                            } catch {
+                              return 8;
+                            }
+                          })()}
+                          onChange={(e) => {
+                            const size = parseInt(e.target.value) || 8;
+                            try {
+                              const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''] };
+                              const updatedData = { ...currentData, gridSize: size };
+                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                            } catch {
+                              const newData = { words: [''], gridSize: size };
+                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                            }
+                          }}
+                          placeholder="8"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label>Palabras a buscar</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            try {
+                              const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''], gridSize: 8 };
+                              const newWords = [...(currentData.words || ['']), ''];
+                              const updatedData = { ...currentData, words: newWords };
+                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                            } catch {
+                              const newData = { words: ['', ''], gridSize: 8 };
+                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                            }
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Agregar palabra
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {(() => {
+                          try {
+                            const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+                            const words = data?.words || [''];
+                            return words.map((word: string, wordIndex: number) => (
+                              <div key={wordIndex} className="flex items-center gap-2">
+                                <Input
+                                  value={word}
+                                  onChange={(e) => {
+                                    try {
+                                      const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''], gridSize: 8 };
+                                      const newWords = [...(currentData.words || [])];
+                                      newWords[wordIndex] = e.target.value;
+                                      const updatedData = { ...currentData, words: newWords };
+                                      updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                                    } catch {
+                                      const newWords = [''];
+                                      newWords[wordIndex] = e.target.value;
+                                      const newData = { words: newWords, gridSize: 8 };
+                                      updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                                    }
+                                  }}
+                                  placeholder={`Palabra ${wordIndex + 1}`}
+                                />
+                                {words.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      try {
+                                        const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''], gridSize: 8 };
+                                        const newWords = (currentData.words || ['']).filter((_: any, i: number) => i !== wordIndex);
+                                        const updatedData = { ...currentData, words: newWords.length > 0 ? newWords : [''] };
+                                        updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                                      } catch {
+                                        const newData = { words: [''], gridSize: 8 };
+                                        updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            ));
+                          } catch {
+                            return (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value=""
+                                  onChange={(e) => {
+                                    const newData = { words: [e.target.value], gridSize: 8 };
+                                    updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                                  }}
+                                  placeholder="Palabra 1"
+                                />
+                              </div>
+                            );
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Configuración para crucigrama */}
+                {question.questionType === 'CROSSWORD' && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                    <Label className="text-base font-medium">Configuración de Crucigrama</Label>
+                    <div className="text-sm text-gray-600">
+                      <p>La configuración de crucigrama estará disponible próximamente.</p>
                     </div>
                   </div>
                 )}

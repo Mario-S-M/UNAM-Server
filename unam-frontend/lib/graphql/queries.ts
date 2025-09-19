@@ -183,6 +183,7 @@ export const GET_SKILLS_BY_LEVEL = gql`
       prerequisites
       difficulty
       estimatedHours
+      calculatedTotalTime
       tags
       isActive
       level {
@@ -210,6 +211,7 @@ export const GET_SKILL_BY_ID = gql`
       prerequisites
       difficulty
       estimatedHours
+      calculatedTotalTime
       tags
       isActive
       level {

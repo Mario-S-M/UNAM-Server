@@ -7,6 +7,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import LearningContent from "./sidebar/LearningContent";
+import SearchContent from "./sidebar/SearchContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "./auth/AuthModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -42,7 +43,16 @@ export default function AppSidebar() {
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <LearningContent />
+          {user ? (
+            <LearningContent />
+          ) : (
+            <div className="space-y-4">
+              <div className="px-4 py-2">
+                <SearchContent />
+              </div>
+              <LearningContent />
+            </div>
+          )}
         </SidebarContent>
         <SidebarFooter>
           {user ? (
@@ -75,26 +85,28 @@ export default function AppSidebar() {
             </div>
           ) : (
             <div className="px-4 py-2 space-y-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => handleAuthClick('login')}
-                className="w-full"
-                disabled={isLoading}
-              >
-                <LogIn className="h-4 w-4 mr-2" />
-                Iniciar Sesión
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleAuthClick('register')}
-                className="w-full"
-                disabled={isLoading}
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Registrarse
-              </Button>
+              <div className="pt-2 border-t space-y-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleAuthClick('login')}
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Iniciar Sesión
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAuthClick('register')}
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Registrarse
+                </Button>
+              </div>
               <div className="text-xs text-muted-foreground text-center pt-2">
                 © 2025 UNAM Escuela
               </div>

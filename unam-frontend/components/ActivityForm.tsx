@@ -113,7 +113,14 @@ export function ActivityForm({
   };
 
   const handleFieldChange = (field: keyof ActivityFormData, value: string) => {
-    setFormData({ ...formData, [field]: value });
+    let processedValue: any = value;
+    
+    // Convert estimatedTime to number
+    if (field === 'estimatedTime') {
+      processedValue = value === '' ? 0 : parseInt(value, 10);
+    }
+    
+    setFormData({ ...formData, [field]: processedValue });
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors({ ...errors, [field]: '' });
@@ -184,6 +191,21 @@ export function ActivityForm({
               disabled={isLoading}
             />
             {errors.example && <p className="text-sm text-red-500">{errors.example}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="estimatedTime">Tiempo Estimado (minutos)</Label>
+            <Input
+              id="estimatedTime"
+              type="number"
+              min="1"
+              max="1440"
+              placeholder="Ingresa el tiempo estimado en minutos"
+              value={formData.estimatedTime || ''}
+              onChange={(e) => handleFieldChange('estimatedTime', e.target.value)}
+              disabled={isLoading}
+            />
+            {errors.estimatedTime && <p className="text-sm text-red-500">{errors.estimatedTime}</p>}
           </div>
 
           <div className="space-y-2">

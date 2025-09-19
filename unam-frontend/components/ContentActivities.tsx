@@ -23,6 +23,7 @@ const GET_ACTIVITIES_BY_CONTENT = gql`
       indication
       example
       contentId
+      estimatedTime
       createdAt
       updatedAt
       userId
@@ -39,6 +40,7 @@ const CREATE_ACTIVITY = gql`
       indication
       example
       contentId
+      estimatedTime
       createdAt
       updatedAt
     }
@@ -54,6 +56,7 @@ const UPDATE_ACTIVITY = gql`
       indication
       example
       contentId
+      estimatedTime
       createdAt
       updatedAt
     }
@@ -82,7 +85,8 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
     description: '',
     indication: '',
     example: '',
-    contentId: contentId
+    contentId: contentId,
+    estimatedTime: 0
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -146,7 +150,8 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
       description: '',
       indication: '',
       example: '',
-      contentId: contentId
+      contentId: contentId,
+      estimatedTime: 0
     });
     setShowForm(true);
   };
@@ -158,7 +163,8 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
       description: activity.description,
       indication: activity.indication,
       example: activity.example,
-      contentId: activity.contentId
+      contentId: activity.contentId,
+      estimatedTime: activity.estimatedTime
     });
     setShowForm(true);
   };

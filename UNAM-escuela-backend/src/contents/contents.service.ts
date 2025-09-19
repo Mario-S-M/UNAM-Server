@@ -19,6 +19,7 @@ import * as TurndownService from 'turndown';
 import { tables } from 'turndown-plugin-gfm';
 import { PaginatedContents } from './dto/paginated-contents.output';
 import { ContentsFilterArgs } from './dto/args/contents-filter.arg';
+import { TimeCalculationService } from '../common/services/time-calculation.service';
 
 @Injectable()
 export class ContentsService {
@@ -29,6 +30,7 @@ export class ContentsService {
     private readonly contentCommentsRepository: Repository<ContentComment>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly timeCalculationService: TimeCalculationService,
   ) {}
 
   async create(createContentInput: CreateContentInput): Promise<Content> {
@@ -55,6 +57,7 @@ export class ContentsService {
       ...contentData,
       jsonContent: initialJsonContent,
       validationStatus: 'sin validar', // Explicitly set as unvalidated
+      calculatedTotalTime: 0, // Inicializar en 0, se calculará automáticamente
     });
 
     // Asignar profesores si se proporcionaron
@@ -63,7 +66,18 @@ export class ContentsService {
       newContent.assignedTeachers = teachers;
     }
 
-    return await this.contentsRepository.save(newContent);
+    const savedContent = await this.contentsRepository.save(newContent);
+    
+    // Recalcular tiempos en cascada
+    await this.timeCalculationService.updateContentCalculatedTime(savedContent.id);
+    if (savedContent.levelId) {
+      await this.timeCalculationService.updateLevelCalculatedTime(savedContent.levelId);
+    }
+    if (savedContent.skillId) {
+      await this.timeCalculationService.updateSkillCalculatedTime(savedContent.skillId);
+    }
+    
+    return savedContent;
   }
 
   async findAll(): Promise<Content[]> {
@@ -406,7 +420,18 @@ export class ContentsService {
       }
     }
 
-    return await this.contentsRepository.save(content);
+    const savedContent = await this.contentsRepository.save(content);
+    
+    // Recalcular tiempos en cascada
+    await this.timeCalculationService.updateContentCalculatedTime(savedContent.id);
+    if (savedContent.levelId) {
+      await this.timeCalculationService.updateLevelCalculatedTime(savedContent.levelId);
+    }
+    if (savedContent.skillId) {
+      await this.timeCalculationService.updateSkillCalculatedTime(savedContent.skillId);
+    }
+    
+    return savedContent;
   }
 
   async assignTeachers(

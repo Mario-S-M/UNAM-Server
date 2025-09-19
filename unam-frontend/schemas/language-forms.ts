@@ -58,13 +58,6 @@ export const CreateLanguageFormSchema = z.object({
     })
     .optional(),
   
-  duracion_total_horas: z
-    .number()
-    .int("La duración debe ser un número entero")
-    .min(1, "La duración debe ser al menos 1 hora")
-    .max(1000, "La duración no puede exceder 1000 horas")
-    .optional(),
-  
   color_tema: z
     .string()
     .optional()
@@ -182,13 +175,6 @@ export const UpdateLanguageFormSchema = z.object({
     .enum(NIVEL_OPTIONS, {
       message: "Selecciona un nivel válido"
     })
-    .optional(),
-  
-  duracion_total_horas: z
-    .number()
-    .int("La duración debe ser un número entero")
-    .min(1, "La duración debe ser al menos 1 hora")
-    .max(1000, "La duración no puede exceder 1000 horas")
     .optional(),
   
   color_tema: z

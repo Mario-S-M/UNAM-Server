@@ -47,12 +47,13 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter, Key } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useUserMutations } from './hooks/useUserMutations';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -140,7 +141,8 @@ const ROLES = [
 ];
 
 export default function UsersPage() {
-  const { token } = useAuth();
+  const { token, user: currentUser } = useAuth();
+  const { createUser, updateUser, deleteUser, changeUserPassword } = useUserMutations();
   const [users, setUsers] = useState<PaginatedUsers>({
     users: [],
     total: 0,
@@ -173,6 +175,9 @@ export default function UsersPage() {
     assignedLanguageId: false,
     actions: true,
   });
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [passwordChangeUser, setPasswordChangeUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const fetchUsers = useCallback(async () => {
     if (!token) return;
@@ -254,30 +259,14 @@ export default function UsersPage() {
   };
 
   const handleCreateUser = async () => {
-    if (!token) return;
-    
     try {
-      const mutation = `
-        mutation CreateUser($createUserInput: CreateUserInput!) {
-          createUser(createUserInput: $createUserInput) {
-            id
-            email
-            fullName
-            roles
-            isActive
-          }
-        }
-      `;
-      
-      await fetchGraphQL(mutation, {
-        createUserInput: {
-          email: formData.email,
-          fullName: formData.fullName,
-          password: formData.password,
-          roles: formData.roles,
-          isActive: formData.isActive,
-        }
-      }, token);
+      await createUser({
+         email: formData.email,
+         fullName: formData.fullName,
+         password: formData.password || '',
+         roles: formData.roles as ('admin' | 'docente' | 'superUser' | 'alumno' | 'mortal')[],
+         isActive: formData.isActive,
+       });
       
       toast.success('Usuario creado exitosamente');
       setIsDialogOpen(false);
@@ -290,72 +279,15 @@ export default function UsersPage() {
   };
 
   const handleUpdateUser = async () => {
-    if (!token || !editingUser) return;
+    if (!editingUser) return;
     
     try {
-      // 1. Actualizar campos básicos (email, fullName)
-      if (formData.email !== editingUser.email || formData.fullName !== editingUser.fullName) {
-        const updateUserMutation = `
-          mutation UpdateUser($updateUserInput: UpdateUserInput!) {
-            updateUser(updateUserInput: $updateUserInput) {
-              id
-              email
-              fullName
-              roles
-              isActive
-            }
-          }
-        `;
-        
-        await fetchGraphQL(updateUserMutation, {
-          updateUserInput: {
-            id: editingUser.id,
-            email: formData.email,
-            fullName: formData.fullName,
-          }
-        }, token);
-      }
-
-      // 2. Actualizar roles si han cambiado
-      if (JSON.stringify(formData.roles) !== JSON.stringify(editingUser.roles)) {
-        const updateRolesMutation = `
-          mutation UpdateUserRoles($updateUserRolesInput: UpdateUserRolesInput!) {
-            updateUserRoles(updateUserRolesInput: $updateUserRolesInput) {
-              id
-              email
-              fullName
-              roles
-              isActive
-            }
-          }
-        `;
-        
-        await fetchGraphQL(updateRolesMutation, {
-          updateUserRolesInput: {
-            id: editingUser.id,
-            roles: formData.roles,
-          }
-        }, token);
-      }
-
-      // 3. Actualizar estado activo si ha cambiado
-      if (formData.isActive !== editingUser.isActive) {
-        const blockUserMutation = `
-          mutation BlockUser($id: ID!) {
-            blockUser(id: $id) {
-              id
-              email
-              fullName
-              roles
-              isActive
-            }
-          }
-        `;
-        
-        await fetchGraphQL(blockUserMutation, {
-          id: editingUser.id,
-        }, token);
-      }
+      await updateUser(editingUser.id, {
+        email: formData.email,
+        fullName: formData.fullName,
+        roles: formData.roles as ('admin' | 'docente' | 'superUser' | 'alumno' | 'mortal')[],
+        isActive: formData.isActive,
+      });
       
       toast.success('Usuario actualizado exitosamente');
       setIsDialogOpen(false);
@@ -368,18 +300,8 @@ export default function UsersPage() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!token) return;
-    
     try {
-      const mutation = `
-        mutation RemoveUser($id: ID!) {
-          removeUser(id: $id) {
-            id
-          }
-        }
-      `;
-      
-      await fetchGraphQL(mutation, { id: userId }, token);
+      await deleteUser(userId);
       toast.success('Usuario eliminado exitosamente');
       fetchUsers();
     } catch (error) {
@@ -402,6 +324,37 @@ export default function UsersPage() {
     });
     setIsDialogOpen(true);
   };
+
+  const handleChangePassword = (user: User) => {
+    setPasswordChangeUser(user);
+    setNewPassword('');
+    setIsPasswordDialogOpen(true);
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (!passwordChangeUser) return;
+
+    try {
+      await changeUserPassword(passwordChangeUser.id, newPassword);
+      
+      toast.success('Contraseña cambiada exitosamente');
+      setIsPasswordDialogOpen(false);
+      setPasswordChangeUser(null);
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Error al cambiar la contraseña');
+    }
+  };
+
+  const isSuperUser = currentUser?.roles.includes('superUser') || false;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -471,6 +424,10 @@ export default function UsersPage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                         className="col-span-3"
                         required
+                        autoComplete="email"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -483,6 +440,10 @@ export default function UsersPage() {
                         onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                         className="col-span-3"
                         required
+                        autoComplete="name"
+                        autoCorrect="off"
+                        autoCapitalize="words"
+                        spellCheck="false"
                       />
                     </div>
                     {!editingUser && (
@@ -497,6 +458,10 @@ export default function UsersPage() {
                           onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                           className="col-span-3"
                           required
+                          autoComplete="new-password"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
                         />
                       </div>
                     )}
@@ -561,6 +526,10 @@ export default function UsersPage() {
                   value={search}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-8"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
               </div>
               <DropdownMenu>
@@ -715,15 +684,27 @@ export default function UsersPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
                             <Button
+                              type="button"
                               variant="secondary"
                               size="sm"
                               onClick={() => handleEditUser(user)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
+                            {isSuperUser && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleChangePassword(user)}
+                                title="Cambiar contraseña"
+                              >
+                                <Key className="h-4 w-4" />
+                              </Button>
+                            )}
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
+                                <Button type="button" variant="destructive" size="sm">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -803,6 +784,49 @@ export default function UsersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Diálogo de cambio de contraseña */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cambiar Contraseña</DialogTitle>
+            <DialogDescription>
+              Cambiar la contraseña para {passwordChangeUser?.fullName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="newPassword">Nueva Contraseña</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Ingrese la nueva contraseña"
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsPasswordDialogOpen(false);
+                setPasswordChangeUser(null);
+                setNewPassword('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handlePasswordSubmit} disabled={!newPassword.trim()}>
+              Cambiar Contraseña
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

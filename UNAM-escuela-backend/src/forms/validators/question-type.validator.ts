@@ -41,6 +41,12 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
       case 'BOOLEAN':
         return this.validateBooleanQuestion(question);
       
+      case 'WORD_SEARCH':
+        return this.validateWordSearchQuestion(question);
+      
+      case 'CROSSWORD':
+        return this.validateCrosswordQuestion(question);
+      
       default:
         return false;
     }
@@ -159,6 +165,46 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
     return true;
   }
 
+  private validateWordSearchQuestion(question: any): boolean {
+    // Las sopas de letras deben tener una lista de palabras a encontrar
+    if (!question.correctAnswer || typeof question.correctAnswer !== 'string') {
+      return false;
+    }
+    
+    // La respuesta correcta debe contener las palabras separadas por comas
+    const words = question.correctAnswer.split(',').map(w => w.trim()).filter(w => w.length > 0);
+    if (words.length === 0) {
+      return false;
+    }
+    
+    // Cada palabra debe tener al menos 3 caracteres
+    return words.every(word => word.length >= 3);
+  }
+
+  private validateCrosswordQuestion(question: any): boolean {
+    // Los crucigramas deben tener pistas y respuestas en formato JSON
+    if (!question.correctAnswer || typeof question.correctAnswer !== 'string') {
+      return false;
+    }
+    
+    try {
+      const crosswordData = JSON.parse(question.correctAnswer);
+      
+      // Debe tener estructura de crucigrama con pistas horizontales y verticales
+      if (!crosswordData.across || !crosswordData.down) {
+        return false;
+      }
+      
+      // Debe tener al menos una pista
+      const acrossClues = Object.keys(crosswordData.across);
+      const downClues = Object.keys(crosswordData.down);
+      
+      return acrossClues.length > 0 || downClues.length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
   defaultMessage(args: ValidationArguments) {
     const question = args.object as any;
     const { questionType } = question;
@@ -201,6 +247,12 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
       case 'TIME':
       case 'BOOLEAN':
         return `Configuración inválida para pregunta de tipo ${questionType}`;
+      
+      case 'WORD_SEARCH':
+        return 'Las sopas de letras deben tener una lista de palabras válidas (mínimo 3 caracteres cada una) separadas por comas';
+      
+      case 'CROSSWORD':
+        return 'Los crucigramas deben tener pistas y respuestas en formato JSON válido con secciones "across" y "down"';
       
       default:
         return `Tipo de pregunta no soportado: ${questionType}`;
@@ -257,6 +309,16 @@ export class AnswerTypeValidatorConstraint implements ValidatorConstraintInterfa
       case 'TIME':
         return typeof answerValue === 'string' && /^\d{2}:\d{2}$/.test(answerValue);
       
+      case 'WORD_SEARCH':
+        // Para sopas de letras, la respuesta debe ser un array de palabras encontradas
+        return Array.isArray(answerValue) && answerValue.length > 0 && 
+               answerValue.every(word => typeof word === 'string' && word.trim().length > 0);
+      
+      case 'CROSSWORD':
+        // Para crucigramas, la respuesta debe ser un objeto con las respuestas de cada pista
+        return typeof answerValue === 'object' && answerValue !== null && 
+               Object.keys(answerValue).length > 0;
+      
       default:
         return false;
     }
@@ -266,6 +328,13 @@ export class AnswerTypeValidatorConstraint implements ValidatorConstraintInterfa
     const answer = args.object as any;
     const { questionType } = answer;
 
-    return `Respuesta inválida para pregunta de tipo ${questionType}`;
+    switch (questionType) {
+      case 'WORD_SEARCH':
+        return 'La respuesta debe ser un array de palabras encontradas en la sopa de letras';
+      case 'CROSSWORD':
+        return 'La respuesta debe ser un objeto con las respuestas del crucigrama';
+      default:
+        return `Respuesta inválida para pregunta de tipo ${questionType}`;
+    }
   }
 }

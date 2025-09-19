@@ -42,7 +42,11 @@ export function ActivityQuestionBuilder({ questions, onQuestionsChange }: Activi
       ] : undefined,
       minValue: type === 'RATING_SCALE' ? 1 : undefined,
       maxValue: type === 'RATING_SCALE' ? 5 : undefined,
-      maxLength: ['TEXT', 'TEXTAREA', 'open_text'].includes(type) ? 255 : undefined
+      maxLength: ['TEXT', 'TEXTAREA', 'open_text'].includes(type) ? 255 : undefined,
+      // Campos específicos para sopa de letras
+      sentences: type === 'WORD_SEARCH' ? [''] : undefined,
+      phrases: type === 'WORD_SEARCH' ? [''] : undefined,
+      gridSize: type === 'WORD_SEARCH' ? 8 : undefined
     };
     
     const updatedQuestions = [...questions, newQuestion];
@@ -214,6 +218,168 @@ export function ActivityQuestionBuilder({ questions, onQuestionsChange }: Activi
           </Droppable>
         </DragDropContext>
       )}
+    </div>
+  );
+}
+
+// Componente para configurar sopa de letras
+interface WordSearchConfigProps {
+  questionIndex: number;
+  question: FormQuestionData;
+  onUpdateQuestion: (index: number, field: keyof FormQuestionData, value: any) => void;
+}
+
+function WordSearchConfig({ questionIndex, question, onUpdateQuestion }: WordSearchConfigProps) {
+  const [questionAnswerPairs, setQuestionAnswerPairs] = useState<{question: string, answer: string}[]>(() => {
+    try {
+      const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+      return data?.questionAnswerPairs || [{question: '', answer: ''}];
+    } catch {
+      return [{question: '', answer: ''}];
+    }
+  });
+  
+  const [gridSize, setGridSize] = useState<number>(() => {
+    try {
+      const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+      return data?.gridSize || 8;
+    } catch {
+      return 8;
+    }
+  });
+
+  const updateWordSearchData = useCallback((newPairs: {question: string, answer: string}[], newGridSize: number) => {
+    const wordSearchData = {
+      questionAnswerPairs: newPairs.filter(pair => pair.question.trim() !== '' && pair.answer.trim() !== ''),
+      gridSize: newGridSize
+    };
+    
+    onUpdateQuestion(questionIndex, 'correctAnswer', JSON.stringify(wordSearchData));
+  }, [questionIndex, onUpdateQuestion]);
+
+  const addQuestionAnswerPair = () => {
+    const newPairs = [...questionAnswerPairs, {question: '', answer: ''}];
+    setQuestionAnswerPairs(newPairs);
+  };
+
+  const removeQuestionAnswerPair = (index: number) => {
+    const newPairs = questionAnswerPairs.filter((_, i) => i !== index);
+    setQuestionAnswerPairs(newPairs);
+    updateWordSearchData(newPairs, gridSize);
+  };
+
+  const updateQuestionAnswerPair = (index: number, field: 'question' | 'answer', value: string) => {
+    const newPairs = [...questionAnswerPairs];
+    newPairs[index][field] = value;
+    setQuestionAnswerPairs(newPairs);
+    updateWordSearchData(newPairs, gridSize);
+  };
+
+  const updateGridSize = (size: number) => {
+    setGridSize(size);
+    updateWordSearchData(questionAnswerPairs, size);
+  };
+
+  return (
+    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+      <Label className="text-base font-medium">Configuración de Sopa de Letras</Label>
+      
+      <div>
+        <Label htmlFor={`grid-size-${questionIndex}`}>Tamaño de la cuadrícula</Label>
+        <Select value={gridSize.toString()} onValueChange={(value) => updateGridSize(parseInt(value))}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="6">6x6</SelectItem>
+            <SelectItem value="8">8x8</SelectItem>
+            <SelectItem value="10">10x10</SelectItem>
+            <SelectItem value="12">12x12</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-4">
+        {/* Sección de Pares Pregunta-Respuesta */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Palabras a buscar</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addQuestionAnswerPair}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Agregar palabra
+            </Button>
+          </div>
+          
+          {questionAnswerPairs.map((pair, index) => (
+            <div key={`pair-${index}`} className="space-y-2 p-3 border rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-gray-600">Pregunta</Label>
+                  <Input
+                    value={pair.question}
+                    onChange={(e) => updateQuestionAnswerPair(index, 'question', e.target.value)}
+                    placeholder="¿Cuál es la capital de Francia?"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-600">Respuesta</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      value={pair.answer}
+                      onChange={(e) => updateQuestionAnswerPair(index, 'answer', e.target.value)}
+                      placeholder="París"
+                      maxLength={gridSize}
+                      className="flex-1"
+                    />
+                    {questionAnswerPairs.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeQuestionAnswerPair(index)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="text-sm text-gray-600">
+        <p>• Las preguntas se mostrarán como ayuda al estudiante</p>
+        <p>• Las respuestas se colocarán automáticamente en la sopa de letras</p>
+        <p>• La longitud máxima de cada respuesta es {gridSize} caracteres</p>
+        <p>• Se generará una cuadrícula de {gridSize}x{gridSize}</p>
+      </div>
+    </div>
+  );
+}
+
+// Componente para configurar crucigrama
+interface CrosswordConfigProps {
+  questionIndex: number;
+  question: FormQuestionData;
+  onUpdateQuestion: (index: number, field: keyof FormQuestionData, value: any) => void;
+}
+
+function CrosswordConfig({ questionIndex, question, onUpdateQuestion }: CrosswordConfigProps) {
+  return (
+    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+      <Label className="text-base font-medium">Configuración de Crucigrama</Label>
+      <div className="text-sm text-gray-600">
+        <p>La configuración de crucigrama estará disponible próximamente.</p>
+      </div>
     </div>
   );
 }
@@ -391,6 +557,24 @@ function QuestionEditor({
             min={1}
           />
         </div>
+      )}
+      
+      {/* Configuración para sopa de letras */}
+      {question.questionType === 'WORD_SEARCH' && (
+        <WordSearchConfig
+          questionIndex={questionIndex}
+          question={question}
+          onUpdateQuestion={onUpdateQuestion}
+        />
+      )}
+      
+      {/* Configuración para crucigrama */}
+      {question.questionType === 'CROSSWORD' && (
+        <CrosswordConfig
+          questionIndex={questionIndex}
+          question={question}
+          onUpdateQuestion={onUpdateQuestion}
+        />
       )}
       
       <Separator className="my-4" />

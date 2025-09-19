@@ -18,13 +18,14 @@ interface UseLanguageMutationsReturn {
   createLanguage: (data: CreateLanguageFormData) => Promise<boolean>;
   updateLanguage: (id: string, data: UpdateLanguageFormData) => Promise<boolean>;
   deleteLanguage: (id: string) => Promise<boolean>;
+  toggleLanguageStatus: (id: string) => Promise<boolean>;
   loading: boolean;
 }
 
 const CREATE_LANGUAGE = `
   ${MUTATION_RESPONSE_FRAGMENT}
-  mutation CreateLanguage($input: CreateLanguageInput!) {
-    createLanguage(createLanguageInput: $input) {
+  mutation CreateLanguage($createLenguageInput: CreateLenguageInput!) {
+    createLenguage(createLenguageInput: $createLenguageInput) {
       ...MutationResponseFields
     }
   }
@@ -32,8 +33,8 @@ const CREATE_LANGUAGE = `
 
 const UPDATE_LANGUAGE = `
   ${MUTATION_RESPONSE_FRAGMENT}
-  mutation UpdateLanguage($id: String!, $input: UpdateLanguageInput!) {
-    updateLanguage(id: $id, updateLanguageInput: $input) {
+  mutation UpdateLanguage($updateLenguageInput: UpdateLenguageInput!) {
+    updateLenguage(updateLenguageInput: $updateLenguageInput) {
       ...MutationResponseFields
     }
   }
@@ -41,9 +42,18 @@ const UPDATE_LANGUAGE = `
 
 const DELETE_LANGUAGE = `
   ${DELETE_RESPONSE_FRAGMENT}
-  mutation DeleteLanguage($id: String!) {
-    deleteLanguage(id: $id) {
+  mutation DeleteLanguage($id: ID!) {
+    removeLenguage(id: $id) {
       ...DeleteResponseFields
+    }
+  }
+`;
+
+const TOGGLE_LANGUAGE_STATUS = `
+  ${MUTATION_RESPONSE_FRAGMENT}
+  mutation ToggleLanguageStatus($id: ID!) {
+    toggleLanguageStatus(id: $id) {
+      ...MutationResponseFields
     }
   }
 `;
@@ -104,7 +114,7 @@ export function useLanguageMutations({
       }
       
       const variables = {
-        input: validationResult.data
+        createLenguageInput: validationResult.data
       };
 
       await fetchGraphQL(CREATE_LANGUAGE, variables, token);
@@ -145,8 +155,10 @@ export function useLanguageMutations({
       }
       
       const variables = {
-        id,
-        input: validationResult.data
+        updateLenguageInput: {
+          id,
+          ...validationResult.data
+        }
       };
 
       await fetchGraphQL(UPDATE_LANGUAGE, variables, token);
@@ -193,10 +205,51 @@ export function useLanguageMutations({
     }
   }, [token, onSuccess, onError]);
 
+  const toggleLanguageStatus = useCallback(async (id: string): Promise<boolean> => {
+    if (!token) {
+      const error = 'Token de autenticación no disponible';
+      toast.error(error);
+      onError?.(error);
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      
+      const variables = { id };
+      const data = await fetchGraphQL(TOGGLE_LANGUAGE_STATUS, variables, token);
+      
+      // La mutación devuelve directamente el objeto Language actualizado
+      const updatedLanguage = data.toggleLanguageStatus;
+      if (updatedLanguage && updatedLanguage.isActive !== undefined) {
+        const statusMessage = updatedLanguage.isActive 
+          ? 'Idioma activado exitosamente' 
+          : 'Idioma desactivado exitosamente';
+        toast.success(statusMessage);
+        onSuccess?.();
+        return true;
+      } else {
+        const errorMessage = 'No se pudo obtener el estado actualizado del idioma';
+        toast.error(errorMessage);
+        onError?.(errorMessage);
+        return false;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al cambiar estado del idioma: ${errorMessage}`);
+      onError?.(errorMessage);
+      console.error('Error toggling language status:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [token, onSuccess, onError]);
+
   return {
     createLanguage,
     updateLanguage,
     deleteLanguage,
+    toggleLanguageStatus,
     loading
   };
 }

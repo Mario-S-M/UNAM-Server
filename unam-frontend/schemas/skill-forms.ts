@@ -32,12 +32,6 @@ export const CreateSkillFormSchema = z.object({
     message: 'La dificultad debe ser: Básico, Intermedio o Avanzado'
   }).optional(),
 
-  estimatedHours: z.number({
-    message: 'Las horas estimadas deben ser un número'
-  }).int('Las horas estimadas deben ser un número entero').min(1, 'Las horas estimadas deben ser al menos 1').max(1000, 'Las horas estimadas no pueden exceder 1000').optional(),
-
-
-
   levelId: z.string({
     message: 'El nivel debe ser un texto válido'
   }).uuid('El ID del nivel debe ser un UUID válido').optional(),
@@ -84,12 +78,6 @@ export const UpdateSkillFormSchema = z.object({
   difficulty: z.enum(['Básico', 'Intermedio', 'Avanzado'], {
     message: 'La dificultad debe ser: Básico, Intermedio o Avanzado'
   }).optional(),
-
-  estimatedHours: z.number({
-    message: 'Las horas estimadas deben ser un número'
-  }).int('Las horas estimadas deben ser un número entero').min(1, 'Las horas estimadas deben ser al menos 1').max(1000, 'Las horas estimadas no pueden exceder 1000').optional(),
-
-
 
   levelId: z.string({
     message: 'El nivel debe ser un texto válido'

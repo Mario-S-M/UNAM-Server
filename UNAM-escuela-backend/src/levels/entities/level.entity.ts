@@ -56,6 +56,11 @@ export class Level {
   @Field(() => String)
   difficulty: string; // Básico, Básico-Intermedio, Intermedio, Intermedio-Avanzado, Avanzado
 
+  // Tiempo total calculado basado en las actividades relacionadas (en minutos)
+  @Column({ type: 'int', nullable: true })
+  @Field(() => Int, { nullable: true })
+  calculatedTotalTime?: number;
+
   @Column({ nullable: true })
   @Field(() => ID, { nullable: true })
   lenguageId: string;

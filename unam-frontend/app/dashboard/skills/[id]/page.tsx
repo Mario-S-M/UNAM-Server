@@ -8,30 +8,49 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Target, Clock, BookOpen, CheckCircle, /*Users,*/ Award, Calendar, Globe } from 'lucide-react';
 import { GET_SKILL_BY_ID } from '@/lib/graphql/queries';
 
-// interface Skill {
-//   id: string;
-//   name: string;
-//   description: string;
-//   color: string;
-//   imageUrl?: string;
-//   icon?: string;
-//   objectives?: string;
-//   prerequisites?: string;
-//   difficulty: string;
-//   estimatedHours?: number;
-//   tags: string[];
-//   order: number;
-//   isActive: boolean;
-//   levelId: string;
-//   level?: {
-//     id: string;
-//     name: string;
-//     description: string;
-//     difficulty: string;
-//   };
-//   createdAt: string;
-//   updatedAt: string;
-// }
+// Función para formatear tiempo de minutos a horas y minutos
+const formatDuration = (totalMinutes: number | null | undefined): string => {
+  if (!totalMinutes || totalMinutes === 0) {
+    return '0 min';
+  }
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes} min`;
+  } else if (minutes === 0) {
+    return `${hours} h`;
+  } else {
+    return `${hours} h ${minutes} min`;
+  }
+};
+
+interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  imageUrl?: string;
+  icon?: string;
+  objectives?: string;
+  prerequisites?: string;
+  difficulty: string;
+  estimatedHours?: number;
+  calculatedTotalTime?: number;
+  tags: string[];
+  order: number;
+  isActive: boolean;
+  levelId: string;
+  level?: {
+    id: string;
+    name: string;
+    description: string;
+    difficulty: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
 
 
 
@@ -182,11 +201,11 @@ export default function SkillDetailPage() {
 
           {/* Información adicional */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-            {skill.estimatedHours && (
+            {skill.calculatedTotalTime && (
               <div className="flex items-center space-x-2">
                 <Clock className="h-5 w-5" />
                 <span className="text-sm">
-                  <strong>Tiempo estimado:</strong> {skill.estimatedHours} horas
+                  <strong>Tiempo estimado:</strong> {formatDuration(skill.calculatedTotalTime)}
                 </span>
               </div>
             )}

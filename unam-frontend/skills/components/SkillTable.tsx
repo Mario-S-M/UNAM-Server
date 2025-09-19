@@ -56,7 +56,7 @@ export const SkillTable: React.FC<SkillTableProps> = ({
           {columnVisibility.icon && <TableHead className="text-center">Icono</TableHead>}
           {columnVisibility.objectives && <TableHead className="text-center">Objetivos</TableHead>}
           {columnVisibility.prerequisites && <TableHead className="text-center">Prerrequisitos</TableHead>}
-          {columnVisibility.estimatedHours && <TableHead className="text-center">Duración (h)</TableHead>}
+
           {columnVisibility.isActive && <TableHead className="text-center">Estado</TableHead>}
           {columnVisibility.createdAt && <TableHead className="text-center">Creado</TableHead>}
           {columnVisibility.updatedAt && <TableHead className="text-center">Actualizado</TableHead>}
@@ -175,15 +175,7 @@ export const SkillTable: React.FC<SkillTableProps> = ({
                 )}
               </TableCell>
             )}
-            {columnVisibility.estimatedHours && (
-              <TableCell>
-                {skill.estimatedHours ? (
-                  <span>{skill.estimatedHours}h</span>
-                ) : (
-                  <span className="text-gray-400">No definido</span>
-                )}
-              </TableCell>
-            )}
+
             {columnVisibility.isActive && (
               <TableCell>
                 <Badge variant={skill.isActive ? 'default' : 'secondary'}>

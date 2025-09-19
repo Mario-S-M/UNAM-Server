@@ -43,11 +43,48 @@ export const LoginFormSchema = z.object({
     .min(1, 'La contraseña no puede estar vacía')
 });
 
+// Esquema para crear usuario (CreateUserInput)
+export const CreateUserFormSchema = z.object({
+  email: z
+    .string({ message: 'El email debe ser una cadena de texto' })
+    .email('Formato de email inválido')
+    .min(1, 'El email no puede estar vacío')
+    .max(255, 'El email no puede exceder 255 caracteres'),
+  
+  fullName: z
+    .string({ message: 'El nombre completo debe ser una cadena de texto' })
+    .min(1, 'El nombre completo no puede estar vacío')
+    .max(100, 'El nombre completo no puede exceder 100 caracteres')
+    .trim(),
+  
+  password: z
+    .string({ message: 'La contraseña debe ser una cadena de texto' })
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
+    .max(50, 'La contraseña no puede exceder 50 caracteres'),
+    
+  roles: z
+    .array(ValidRolesEnum, { message: 'Los roles deben ser un array' })
+    .min(1, 'Debe seleccionar al menos un rol')
+    .max(5, 'No puede seleccionar más de 5 roles'),
+    
+  isActive: z
+    .boolean({ message: 'El estado activo debe ser un booleano' })
+    .default(true)
+});
+
 // Esquema para actualizar usuario (UpdateUserInput)
 export const UpdateUserFormSchema = z.object({
   id: z
     .string({ message: 'El ID debe ser una cadena de texto' })
-    .uuid('El ID debe ser un UUID válido'),
+    .uuid('El ID debe ser un UUID válido')
+    .optional(),
+  
+  email: z
+    .string({ message: 'El email debe ser una cadena de texto' })
+    .email('Formato de email inválido')
+    .min(1, 'El email no puede estar vacío')
+    .max(255, 'El email no puede exceder 255 caracteres')
+    .optional(),
   
   fullName: z
     .string({ message: 'El nombre completo debe ser una cadena de texto' })
@@ -60,6 +97,16 @@ export const UpdateUserFormSchema = z.object({
     .string({ message: 'La contraseña debe ser una cadena de texto' })
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .max(50, 'La contraseña no puede exceder 50 caracteres')
+    .optional(),
+    
+  roles: z
+    .array(ValidRolesEnum, { message: 'Los roles deben ser un array' })
+    .min(1, 'Debe seleccionar al menos un rol')
+    .max(5, 'No puede seleccionar más de 5 roles')
+    .optional(),
+    
+  isActive: z
+    .boolean({ message: 'El estado activo debe ser un booleano' })
     .optional()
 });
 
@@ -147,6 +194,7 @@ export const UserIdSchema = z.object({
 // Tipos TypeScript derivados de los esquemas
 export type SignupFormData = z.infer<typeof SignupFormSchema>;
 export type LoginFormData = z.infer<typeof LoginFormSchema>;
+export type CreateUserFormData = z.infer<typeof CreateUserFormSchema>;
 export type UpdateUserFormData = z.infer<typeof UpdateUserFormSchema>;
 export type UpdateUserRolesFormData = z.infer<typeof UpdateUserRolesFormSchema>;
 export type AssignLanguageFormData = z.infer<typeof AssignLanguageFormSchema>;
@@ -171,6 +219,10 @@ export const validateSignupForm = (data: unknown) => {
 
 export const validateLoginForm = (data: unknown) => {
   return LoginFormSchema.safeParse(data);
+};
+
+export const validateCreateUserForm = (data: unknown) => {
+  return CreateUserFormSchema.safeParse(data);
 };
 
 export const validateUpdateUserForm = (data: unknown) => {

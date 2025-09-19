@@ -17,6 +17,7 @@ import { LenguagesModule } from './lenguages/lenguages.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { FormsModule } from './forms/forms.module';
 import { UserProgressModule } from './user-progress/user-progress.module';
+import { CommonModule } from './common/common.module';
 // ExercisesModule removed - using Activities instead
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -74,6 +75,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     UploadsModule,
     FormsModule,
     UserProgressModule,
+    CommonModule,
     // ExercisesModule removed - using Activities instead
   ],
   controllers: [],

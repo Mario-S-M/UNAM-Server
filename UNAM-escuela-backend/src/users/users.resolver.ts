@@ -140,4 +140,15 @@ export class UsersResolver {
     );
     return this.usersService.deleteUser(id, superUser);
   }
+
+  @Mutation(() => User, { name: 'changeUserPassword' })
+  changeUserPassword(
+    @Args('userId', { type: () => ID }, ParseUUIDPipe) userId: string,
+    @Args('newPassword', { type: () => String }) newPassword: string,
+    @CurrentUser([ValidRoles.superUser])
+    superUser: User,
+  ): Promise<User> {
+    this.logger.log(`SuperUser changing password for user: ${userId}`);
+    return this.usersService.changeUserPassword(userId, newPassword, superUser);
+  }
 }

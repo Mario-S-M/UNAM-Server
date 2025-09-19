@@ -10,6 +10,7 @@ type Lenguage {
   descripcion_completa: String
   nivel: String
   duracion_total_horas: Int
+  calculatedTotalTime: Int
   color_tema: String
   icono_curso: String
   imagen_hero: String
@@ -41,6 +42,7 @@ type Level {
   userId: Int!
   isActive: Boolean!
   difficulty: String!
+  calculatedTotalTime: Int
   lenguageId: ID
   lenguage: Lenguage
 }
@@ -78,6 +80,7 @@ type Skill {
   prerequisites: String
   difficulty: String!
   estimatedHours: Int
+  calculatedTotalTime: Int
   tags: [String!]!
   isActive: Boolean!
   levelId: ID
@@ -101,6 +104,7 @@ type Content {
   assignedTeachers: [User!]
   validationStatus: String!
   publishedAt: String
+  calculatedTotalTime: Int
   skillId: ID
   skill: Skill
   level: Level
@@ -117,26 +121,6 @@ type ContentComment {
   updatedAt: String!
   content: Content!
   author: User!
-}
-
-type PaginatedContents {
-  contents: [Content!]!
-  total: Int!
-  page: Int!
-  limit: Int!
-  totalPages: Int!
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-}
-
-type PaginatedSkills {
-  skills: [Skill!]!
-  total: Int!
-  page: Int!
-  limit: Int!
-  totalPages: Int!
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
 }
 
 type FormQuestionOption {
@@ -238,7 +222,7 @@ type Form {
   closedAt: Timestamp
   contentId: ID!
   content: Content!
-  userId: Int
+  userId: ID
   user: User
   questions: [FormQuestion!]!
   responses: [FormResponse!]!
@@ -257,7 +241,28 @@ type Activity {
   updatedAt: String!
   userId: Int!
   formId: ID
+  estimatedTime: Int
   form: Form
+}
+
+type PaginatedContents {
+  contents: [Content!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+type PaginatedSkills {
+  skills: [Skill!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
 }
 
 type Homework {
@@ -426,6 +431,7 @@ type Mutation {
   createLevel(createLevelInput: CreateLevelInput!): Level!
   updateLevel(updateLevelInput: UpdateLevelInput!): Level!
   removeLevel(id: ID!): Level!
+  toggleLevelStatus(id: ID!): Level!
   createContent(createContentInput: CreateContentInput!): Content!
   updateContent(updateContentInput: UpdateContentInput!): Content!
   assignTeachersToContent(contentId: ID!, teacherIds: [ID!]!): Content!
@@ -456,11 +462,13 @@ type Mutation {
   assignMultipleLanguagesToUser(assignMultipleLanguagesInput: AssignMultipleLanguagesInput!): User!
   assignAdminLanguageToTeacher(teacherId: ID!): User!
   deleteUser(id: ID!): User!
+  changeUserPassword(userId: ID!, newPassword: String!): User!
   signin(signUpInput: SignupInput!): AuthResponse!
   login(loginInput: LoginInput!): AuthResponse!
   createLenguage(createLenguageInput: CreateLenguageInput!): Lenguage!
   updateLenguage(updateLenguageInput: UpdateLenguageInput!): Lenguage!
   removeLenguage(id: ID!): Lenguage!
+  toggleLanguageStatus(id: ID!): Lenguage!
   createForm(createFormInput: CreateFormInput!): Form!
   updateForm(updateFormInput: UpdateFormInput!): Form!
   deleteForm(id: ID!): Boolean!
@@ -565,6 +573,7 @@ input CreateActivityInput {
   example: String!
   contentId: ID!
   formId: ID
+  estimatedTime: Int
   questions: [CreateFormQuestionInput!]
 }
 
@@ -606,6 +615,7 @@ input UpdateActivityInput {
   example: String
   contentId: ID
   formId: ID
+  estimatedTime: Int
   questions: [CreateFormQuestionInput!]
   id: ID!
 }

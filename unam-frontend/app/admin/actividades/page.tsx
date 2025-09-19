@@ -54,6 +54,7 @@ const GET_ALL_ACTIVITIES = gql`
       description
       indication
       example
+      estimatedTime
       createdAt
       updatedAt
       contentId
@@ -100,6 +101,7 @@ interface Activity {
   description: string;
   indication?: string;
   example?: string;
+  estimatedTime?: number;
   createdAt: string;
   updatedAt: string;
   contentId: string;

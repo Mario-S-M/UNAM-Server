@@ -75,6 +75,10 @@ export class Content {
   @Field(() => String, { nullable: true })
   publishedAt?: string;
 
+  // Tiempo total calculado basado en las actividades relacionadas (en minutos)
+  @Column({ type: 'int', nullable: true })
+  @Field(() => Int, { nullable: true })
+  calculatedTotalTime?: number;
 
   @Column({ nullable: true })
   @Field(() => ID, { nullable: true })

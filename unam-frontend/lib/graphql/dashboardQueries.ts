@@ -14,6 +14,7 @@ export const GET_SKILLS_ACTIVE_PUBLIC = gql`
       prerequisites
       difficulty
       estimatedHours
+      calculatedTotalTime
       tags
       isActive
       levelId

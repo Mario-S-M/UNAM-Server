@@ -20,7 +20,7 @@ export interface Skill {
   objectives?: string;
   prerequisites?: string;
   difficulty: string;
-  estimatedHours?: number;
+
   tags: string[];
   isActive: boolean;
   levelId?: string;
@@ -53,7 +53,7 @@ export interface ColumnVisibility {
   icon: boolean;
   objectives: boolean;
   prerequisites: boolean;
-  estimatedHours: boolean;
+
   isActive: boolean;
   createdAt: boolean;
   updatedAt: boolean;

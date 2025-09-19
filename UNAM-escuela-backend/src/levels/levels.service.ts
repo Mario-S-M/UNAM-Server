@@ -34,7 +34,10 @@ export class LevelsService {
       );
     }
 
-    const newLevel = this.itemsRepository.create(createLevelInput);
+    const newLevel = this.itemsRepository.create({
+      ...createLevelInput,
+      calculatedTotalTime: 0, // Inicializar en 0, se calculará automáticamente
+    });
     return await this.itemsRepository.save(newLevel);
   }
 
@@ -216,5 +219,11 @@ export class LevelsService {
       hasNextPage,
       hasPreviousPage,
     };
+  }
+
+  async toggleLevelStatus(id: string): Promise<Level> {
+    const level = await this.findOne(id);
+    level.isActive = !level.isActive;
+    return await this.itemsRepository.save(level);
   }
 }

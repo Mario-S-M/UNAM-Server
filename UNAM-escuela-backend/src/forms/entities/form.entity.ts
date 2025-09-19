@@ -76,8 +76,8 @@ export class Form {
   content: Content;
 
   @Column({ nullable: true })
-  @Field(() => Int, { nullable: true })
-  userId?: number;
+  @Field(() => ID, { nullable: true })
+  userId?: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'userId' })

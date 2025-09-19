@@ -45,7 +45,7 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
     objectives: [],
     prerequisites: [],
     difficulty: 'Básico' as const,
-    estimatedHours: 0,
+
     levelId: '',
   });
   
@@ -80,7 +80,7 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
           objectives: editingSkill.objectives ? editingSkill.objectives.split('\n').filter(obj => obj.trim()) : [],
           prerequisites: editingSkill.prerequisites ? editingSkill.prerequisites.split('\n').filter(pre => pre.trim()) : [],
           difficulty: editingSkill.difficulty as 'Básico' | 'Intermedio' | 'Avanzado',
-          estimatedHours: editingSkill.estimatedHours || 0,
+
           levelId: editingSkill.levelId || '',
         });
         
@@ -107,7 +107,7 @@ export const SkillDialog: React.FC<SkillDialogProps> = ({
       objectives: [],
       prerequisites: [],
       difficulty: 'Básico' as const,
-      estimatedHours: 0,
+
       levelId: '',
     });
     setNewObjective('');

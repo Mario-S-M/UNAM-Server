@@ -19,7 +19,9 @@ export const QuestionTypeEnum = z.enum([
   'EMAIL',
   'DATE',
   'TIME',
-  'BOOLEAN'
+  'BOOLEAN',
+  'WORD_SEARCH',
+  'CROSSWORD'
 ]);
 
 // Enum para estados de formulario
@@ -60,7 +62,11 @@ export const FormQuestionSchema = z.object({
   explanation: z.string().optional(),
   incorrectFeedback: z.string().optional(),
   points: z.number().min(0).optional(),
-  options: z.array(FormQuestionOptionSchema).optional()
+  options: z.array(FormQuestionOptionSchema).optional(),
+  // Campos específicos para sopa de letras
+  sentences: z.array(z.string()).optional(),
+  phrases: z.array(z.string()).optional(),
+  gridSize: z.number().min(5).max(20).optional()
 }).refine((data) => {
   // Validar que preguntas de opción múltiple y checkbox tengan opciones
   if (['MULTIPLE_CHOICE', 'CHECKBOX'].includes(data.questionType)) {
@@ -176,7 +182,9 @@ export const QUESTION_TYPES: QuestionType[] = [
   'EMAIL',
   'DATE',
   'TIME',
-  'BOOLEAN'
+  'BOOLEAN',
+  'WORD_SEARCH',
+  'CROSSWORD'
 ];
 
 export const FORM_STATUSES: FormStatus[] = [
@@ -198,7 +206,9 @@ export const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   EMAIL: 'Correo electrónico',
   DATE: 'Fecha',
   TIME: 'Hora',
-  BOOLEAN: 'Sí/No'
+  BOOLEAN: 'Sí/No',
+  WORD_SEARCH: 'Sopa de letras',
+  CROSSWORD: 'Crucigrama'
 };
 
 export const FORM_STATUS_LABELS: Record<FormStatus, string> = {

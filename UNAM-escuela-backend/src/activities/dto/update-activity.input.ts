@@ -38,6 +38,10 @@ export class UpdateActivityInput extends PartialType(CreateActivityInput) {
   formId?: string;
 
   @IsOptional()
+  @Field(() => Int, { nullable: true })
+  estimatedTime?: number; // Tiempo estimado en minutos para completar la actividad
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateFormQuestionInput)

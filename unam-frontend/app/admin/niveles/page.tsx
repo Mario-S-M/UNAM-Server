@@ -47,10 +47,11 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, GraduationCap, Search, Settings, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, GraduationCap, Search, Settings, ChevronLeft, ChevronRight, Filter, Power } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useLevelMutations } from './hooks/useLevelMutations';
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
@@ -130,6 +131,7 @@ type LevelFormData = {
 
 interface ColumnVisibility {
   name: boolean;
+  icon: boolean;
   description: boolean;
   difficulty: boolean;
   language: boolean;
@@ -149,6 +151,7 @@ const DIFFICULTY_OPTIONS = [
 
 export default function NivelesPage() {
   const { token } = useAuth();
+  const { toggleLevelStatus } = useLevelMutations();
   const [levels, setLevels] = useState<PaginatedLevels>({
     levels: [],
     total: 0,
@@ -177,9 +180,10 @@ export default function NivelesPage() {
   const [languageFilter, setLanguageFilter] = useState<string | undefined>(undefined);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
-    description: true,
-    difficulty: true,
-    language: true,
+    icon: true,
+    description: false,
+    difficulty: false,
+    language: false,
     isActive: true,
     createdAt: false,
     updatedAt: false,
@@ -384,6 +388,15 @@ export default function NivelesPage() {
     } catch (error) {
       console.error('Error deleting level:', error);
       toast.error('Error al eliminar nivel');
+    }
+  };
+
+  const handleToggleStatus = async (level: Level) => {
+    try {
+      await toggleLevelStatus(level.id);
+      fetchLevels();
+    } catch (error) {
+      console.error('Error toggling level status:', error);
     }
   };
 
@@ -641,6 +654,12 @@ export default function NivelesPage() {
                   Nombre
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
+                  checked={columnVisibility.icon}
+                  onCheckedChange={() => toggleColumnVisibility('icon')}
+                >
+                  Icono
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
                   checked={columnVisibility.description}
                   onCheckedChange={() => toggleColumnVisibility('description')}
                 >
@@ -707,6 +726,7 @@ export default function NivelesPage() {
               <TableHeader>
                 <TableRow>
                   {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
+                  {columnVisibility.icon && <TableHead className="text-center">Icono</TableHead>}
                   {columnVisibility.description && <TableHead className="text-center">Descripción</TableHead>}
                   {columnVisibility.difficulty && <TableHead className="text-center">Dificultad</TableHead>}
                   {columnVisibility.language && <TableHead className="text-center">Idioma</TableHead>}
@@ -735,6 +755,13 @@ export default function NivelesPage() {
                       {columnVisibility.name && (
                         <TableCell className="text-center font-medium">
                           {level.name}
+                        </TableCell>
+                      )}
+                      {columnVisibility.icon && (
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                          </div>
                         </TableCell>
                       )}
                       {columnVisibility.description && (
@@ -776,6 +803,14 @@ export default function NivelesPage() {
                       {columnVisibility.actions && (
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant={level.isActive ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handleToggleStatus(level)}
+                              title={level.isActive ? "Desactivar nivel" : "Activar nivel"}
+                            >
+                              <Power className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="secondary"
                               size="sm"

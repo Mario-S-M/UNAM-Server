@@ -92,4 +92,14 @@ export class LevelsResolver {
     this.logger.log(`User ${user.fullName} removing level: ${id}`);
     return this.levelsService.remove(id, user);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => Level)
+  toggleLevelStatus(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
+  ) {
+    this.logger.log(`User ${user.fullName} toggling level status: ${id}`);
+    return this.levelsService.toggleLevelStatus(id);
+  }
 }

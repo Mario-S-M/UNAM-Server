@@ -4,24 +4,26 @@ import { UpdateActivityInput } from './dto/update-activity.input';
 import { Activity } from './entities/activity.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundError } from 'rxjs';
+import { User } from '../users/entities/user.entity';
 import { Form } from '../forms/entities/form.entity';
 import { FormQuestion } from '../forms/entities/form-question.entity';
 import { FormQuestionOption } from '../forms/entities/form-question-option.entity';
+import { TimeCalculationService } from '../common/services/time-calculation.service';
 
 @Injectable()
 export class ActivitiesService {
 
   constructor(
-      @InjectRepository(Activity)
-          private readonly activitiesRepository: Repository<Activity>,
-      @InjectRepository(Form)
-          private readonly formRepository: Repository<Form>,
-      @InjectRepository(FormQuestion)
-          private readonly formQuestionRepository: Repository<FormQuestion>,
-      @InjectRepository(FormQuestionOption)
-          private readonly formQuestionOptionRepository: Repository<FormQuestionOption>,
-    ) {}
+    @InjectRepository(Activity)
+    private readonly activitiesRepository: Repository<Activity>,
+    @InjectRepository(Form)
+    private readonly formRepository: Repository<Form>,
+    @InjectRepository(FormQuestion)
+    private readonly formQuestionRepository: Repository<FormQuestion>,
+    @InjectRepository(FormQuestionOption)
+    private readonly formQuestionOptionRepository: Repository<FormQuestionOption>,
+    private readonly timeCalculationService: TimeCalculationService,
+  ) {}
 
     async create(createActivityInput: CreateActivityInput): Promise<Activity> {
       let formId = createActivityInput.formId;
@@ -89,6 +91,9 @@ export class ActivitiesService {
         formId,
       });
       const savedActivity = await this.activitiesRepository.save(newActivity);
+      
+      // Recalcular tiempos en cascada
+      await this.timeCalculationService.recalculateTimesForActivity(savedActivity.id);
       
       // Cargar la actividad con las relaciones para retornar los datos completos
       const activityWithRelations = await this.activitiesRepository.findOne({
@@ -162,6 +167,7 @@ export class ActivitiesService {
     if (updateActivityInput.indication) activity.indication = updateActivityInput.indication;
     if (updateActivityInput.example) activity.example = updateActivityInput.example;
     if (updateActivityInput.formId !== undefined) activity.formId = updateActivityInput.formId;
+    if (updateActivityInput.estimatedTime !== undefined) activity.estimatedTime = updateActivityInput.estimatedTime;
 
     // Si se proporcionan preguntas, actualizar o crear formulario
     if (updateActivityInput.questions) {
@@ -266,13 +272,26 @@ export class ActivitiesService {
     console.log('Saving activity with formId:', activity.formId);
     const savedActivity = await this.activitiesRepository.save(activity);
     console.log('Activity saved successfully with ID:', savedActivity.id);
+    
+    // Recalcular tiempos en cascada
+    await this.timeCalculationService.recalculateTimesForActivity(savedActivity.id);
+    
     console.log('=== END UPDATE ACTIVITY DEBUG ===');
     return savedActivity;
   }
 
   async remove(id: string):Promise<Activity> {
     const activity = await this.findOne(id);
+    const contentId = activity.contentId;
+    
     await this.activitiesRepository.remove(activity);
+    
+    // Recalcular tiempos en cascada después de eliminar la actividad
+    if (contentId) {
+      await this.timeCalculationService.updateContentCalculatedTime(contentId);
+      // El servicio de tiempo se encargará de propagar los cambios hacia arriba
+    }
+    
     return { ...activity, id };
   }
 }

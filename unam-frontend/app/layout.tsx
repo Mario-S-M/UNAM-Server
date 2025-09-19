@@ -5,6 +5,7 @@ import ApolloProviderWrapper from "@/components/providers/ApolloProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityContext";
 import { AccessibilityButton } from "@/components/accessibility/AccessibilityButton";
 import AccessibilityMenu from "@/components/accessibility/AccessibilityMenu";
+import { InfoButton } from "@/components/InfoButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
           <ApolloProviderWrapper>
             {children}
             <AccessibilityButton />
+            <InfoButton />
             <AccessibilityMenu />
           </ApolloProviderWrapper>
         </AccessibilityProvider>

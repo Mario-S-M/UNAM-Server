@@ -54,6 +54,11 @@ export class Skill {
   @Field(() => Int, { nullable: true })
   estimatedHours?: number; // Horas estimadas para dominar la skill
 
+  // Tiempo total calculado basado en las actividades relacionadas (en minutos)
+  @Column({ type: 'int', nullable: true })
+  @Field(() => Int, { nullable: true })
+  calculatedTotalTime?: number;
+
   @Column({ type: 'text', array: true, default: '{}' })
   @Field(() => [String])
   tags: string[]; // Etiquetas para categorizar la skill

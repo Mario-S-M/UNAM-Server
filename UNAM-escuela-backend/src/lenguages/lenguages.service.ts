@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateLenguageInput } from './dto/create-lenguage.input';
 import { UpdateLenguageInput } from './dto/update-lenguage.input';
 import { LenguagesFilterArgs } from './dto/args/lenguages-filter.arg';
 import { PaginatedLenguages } from './dto/paginated-lenguages.output';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Lenguage } from './entities/lenguage.entity';
+import { Level } from '../levels/entities/level.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -14,10 +15,15 @@ export class LenguagesService {
   constructor(
     @InjectRepository(Lenguage)
     private readonly lenguageRepository: Repository<Lenguage>,
+    @InjectRepository(Level)
+    private readonly levelRepository: Repository<Level>,
   ) {}
 
   create(createLenguageInput: CreateLenguageInput) {
-    const newLenguage = this.lenguageRepository.create(createLenguageInput);
+    const newLenguage = this.lenguageRepository.create({
+      ...createLenguageInput,
+      calculatedTotalTime: 0, // Inicializar en 0, se calculará automáticamente
+    });
     return this.lenguageRepository.save(newLenguage);
   }
   async findActive(): Promise<Lenguage[]> {
@@ -98,7 +104,28 @@ export class LenguagesService {
 
   async remove(id: string) {
     const lenguage = await this.findOne(id);
-    lenguage.isActive = false;
+    
+    // Verificar si existen niveles asociados a este idioma
+    const associatedLevels = await this.levelRepository.count({
+      where: { lenguageId: id }
+    });
+    
+    if (associatedLevels > 0) {
+      throw new BadRequestException(
+        `No se puede eliminar el idioma "${lenguage.name}" porque tiene ${associatedLevels} nivel(es) asociado(s). Elimine primero los niveles o desactive el idioma.`
+      );
+    }
+    
+    // Guardar una copia antes de eliminar
+    const deletedLanguage = { ...lenguage };
+    // Borrado completo de la base de datos
+    await this.lenguageRepository.remove(lenguage);
+    return deletedLanguage;
+  }
+
+  async toggleLanguageStatus(id: string) {
+    const lenguage = await this.findOne(id);
+    lenguage.isActive = !lenguage.isActive;
     return await this.lenguageRepository.save(lenguage);
   }
 

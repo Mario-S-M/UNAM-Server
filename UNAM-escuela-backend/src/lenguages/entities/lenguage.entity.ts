@@ -59,6 +59,11 @@ export class Lenguage {
   @Field(() => Int, { nullable: true })
   duracion_total_horas?: number;
 
+  // Tiempo total calculado basado en las actividades relacionadas (en minutos)
+  @Column({ type: 'int', nullable: true })
+  @Field(() => Int, { nullable: true })
+  calculatedTotalTime?: number;
+
   @Column({ type: 'varchar', length: 7, nullable: true })
   @Field(() => String, { nullable: true })
   color_tema?: string;

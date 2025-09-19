@@ -11,6 +11,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormQuestionData, FormQuestionOptionData } from '@/schemas/form-forms';
+import { WordSearchGame } from '@/components/WordSearchGame';
+import { InteractiveWordSearchGame } from '@/components/InteractiveWordSearchGame';
+import { SentencePhraseWordSearch } from '@/components/SentencePhraseWordSearch';
+import { CrosswordGame } from '@/components/CrosswordGame';
 
 interface QuestionRendererProps {
   question: FormQuestionData;
@@ -207,7 +211,103 @@ export function QuestionRenderer({
           />
         );
 
+      case 'WORD_SEARCH':
+        try {
+          console.log('WORD_SEARCH - correctAnswer:', question.correctAnswer);
+          const wordSearchData = question.correctAnswer ? JSON.parse(question.correctAnswer) : {};
+          console.log('WORD_SEARCH - parsed data:', wordSearchData);
+          
+          // Si tiene pares pregunta-respuesta, usar el nuevo componente
+          if (wordSearchData.questionAnswerPairs) {
+            console.log('Using SentencePhraseWordSearch with question-answer pairs');
+            const sentences = wordSearchData.questionAnswerPairs.map((pair: any) => pair.question).filter((q: string) => q.trim() !== '');
+            const phrases = wordSearchData.questionAnswerPairs.map((pair: any) => pair.answer).filter((a: string) => a.trim() !== '');
+            return (
+              <SentencePhraseWordSearch
+                sentences={sentences}
+                phrases={phrases}
+                gridSize={wordSearchData.gridSize || 12}
+                onPhrasesFound={(foundPhrases) => onChange(foundPhrases.join(', '))}
+                disabled={disabled}
+                showValidation={showValidation}
+                error={error}
+              />
+            );
+          }
+          
+          // Si tiene oraciones y frases (formato anterior), usar el nuevo componente
+          if (wordSearchData.sentences && wordSearchData.phrases) {
+            console.log('Using SentencePhraseWordSearch with sentences and phrases');
+            return (
+              <SentencePhraseWordSearch
+                sentences={wordSearchData.sentences || []}
+                phrases={wordSearchData.phrases || []}
+                gridSize={wordSearchData.gridSize || 12}
+                onPhrasesFound={(foundPhrases) => onChange(foundPhrases.join(', '))}
+                disabled={disabled}
+                showValidation={showValidation}
+                error={error}
+              />
+            );
+          }
+          
+          // Si tiene targetWord, usar el componente interactivo
+          if (wordSearchData.targetWord) {
+            console.log('Using InteractiveWordSearchGame with targetWord:', wordSearchData.targetWord);
+            return (
+              <InteractiveWordSearchGame
+                targetWord={wordSearchData.targetWord}
+                onWordFound={(found) => onChange(found ? wordSearchData.targetWord : '')}
+                disabled={disabled}
+                showValidation={showValidation}
+                error={error}
+              />
+            );
+          }
+          
+          // Si no, usar el componente tradicional con lista de palabras
+          console.log('Using traditional WordSearchGame');
+          const wordsData = Array.isArray(wordSearchData) ? wordSearchData : (wordSearchData.words || []);
+          return (
+            <WordSearchGame
+              words={wordsData}
+              onWordsFound={onChange}
+              disabled={disabled}
+              showValidation={showValidation}
+              error={error}
+            />
+          );
+        } catch (parseError) {
+          console.error('Error parsing WORD_SEARCH data:', parseError);
+          return (
+            <div className="p-4 border border-red-300 rounded bg-red-50">
+              <p className="text-red-600 text-sm">
+                Error al cargar la configuración de la sopa de letras. 
+                Verifica que el formato JSON sea correcto.
+              </p>
+            </div>
+          );
+        }
 
+      case 'CROSSWORD':
+        try {
+          const crosswordData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { across: {}, down: {} };
+          return (
+            <CrosswordGame
+              crosswordData={crosswordData}
+              onAnswersChange={onChange}
+              disabled={disabled}
+              showValidation={showValidation}
+              error={error}
+            />
+          );
+        } catch (e) {
+          return (
+            <div className="text-red-500 text-sm">
+              Error: Formato de crucigrama inválido
+            </div>
+          );
+        }
 
       default:
         return (

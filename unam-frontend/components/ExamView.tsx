@@ -20,6 +20,9 @@ import { UserProgressCard } from "@/components/UserProgressCard";
 import { UserActivityHistoryComponent } from "@/components/UserActivityHistory";
 import { UserOverallProgressCard } from "@/components/UserOverallProgressCard";
 import { useUserProgress, useUserActivityHistory, useUserOverallProgress } from "@/lib/hooks/useUserProgress";
+import { WordSearchGame } from "@/components/WordSearchGame";
+import { InteractiveWordSearchGame } from "@/components/InteractiveWordSearchGame";
+import { SentencePhraseWordSearch } from "@/components/SentencePhraseWordSearch";
 
 interface ActivityOption {
   id: string;
@@ -1447,6 +1450,99 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 </div>
               )}
               
+              {/* Sopa de letras */}
+              {currentQuestion.questionType === 'WORD_SEARCH' && (
+                <div className="space-y-4">
+                  {(() => {
+                    try {
+                      const wordSearchData = currentQuestion.correctAnswer ? JSON.parse(currentQuestion.correctAnswer) : {};
+                      
+                      // Si tiene pares pregunta-respuesta, usar el nuevo componente
+                      if (wordSearchData.questionAnswerPairs) {
+                        const sentences = wordSearchData.questionAnswerPairs.map((pair: any) => pair.question).filter((q: string) => q.trim() !== '');
+                        const phrases = wordSearchData.questionAnswerPairs.map((pair: any) => pair.answer).filter((a: string) => a.trim() !== '');
+                        return (
+                          <SentencePhraseWordSearch
+                            sentences={sentences}
+                            phrases={phrases}
+                            gridSize={wordSearchData.gridSize || 12}
+                            onPhrasesFound={(foundPhrases) => {
+                              handleTextAnswerChange(currentQuestion.id, foundPhrases.join(', '));
+                              if (foundPhrases.length > 0) {
+                                toast.success(`¡Encontraste ${foundPhrases.length} palabra(s)!`);
+                              }
+                            }}
+                            disabled={examSubmitted}
+                          />
+                        );
+                      }
+                      
+                      // Si tiene oraciones y frases (formato anterior), usar el nuevo componente
+                      if (wordSearchData.sentences && wordSearchData.phrases) {
+                        return (
+                          <SentencePhraseWordSearch
+                            sentences={wordSearchData.sentences || []}
+                            phrases={wordSearchData.phrases || []}
+                            gridSize={wordSearchData.gridSize || 12}
+                            onPhrasesFound={(foundPhrases) => {
+                              handleTextAnswerChange(currentQuestion.id, foundPhrases.join(', '));
+                              if (foundPhrases.length > 0) {
+                                toast.success(`¡Encontraste ${foundPhrases.length} palabra(s)!`);
+                              }
+                            }}
+                            disabled={examSubmitted}
+                          />
+                        );
+                      }
+                      
+                      // Si tiene targetWord, usar el componente interactivo
+                      if (wordSearchData.targetWord) {
+                        return (
+                           <InteractiveWordSearchGame
+                             targetWord={wordSearchData.targetWord}
+                             onWordFound={(found) => {
+                               if (found) {
+                                 handleTextAnswerChange(currentQuestion.id, wordSearchData.targetWord);
+                                 toast.success(`¡Encontraste la palabra: ${wordSearchData.targetWord}!`);
+                               } else {
+                                 toast.error('Palabra incorrecta');
+                               }
+                             }}
+                             disabled={examSubmitted}
+                           />
+                         );
+                      } else {
+                        // Si no tiene targetWord, usar el componente básico
+                        // Extraer las palabras correctamente del objeto JSON
+                        const wordsArray = Array.isArray(wordSearchData.words) 
+                          ? wordSearchData.words 
+                          : (wordSearchData.words ? [wordSearchData.words] : []);
+                        
+                        return (
+                          <WordSearchGame
+                            words={wordsArray}
+                            gridSize={wordSearchData.gridSize || 15}
+                            onWordsFound={(foundWords) => {
+                              handleTextAnswerChange(currentQuestion.id, foundWords.join(', '));
+                            }}
+                            disabled={examSubmitted}
+                          />
+                        );
+                      }
+                    } catch (error) {
+                       console.error('Error parsing WORD_SEARCH data:', error);
+                       return (
+                         <div className="text-red-500 p-4 border border-red-200 rounded">
+                           Error al cargar la sopa de letras
+                         </div>
+                       );
+                     }
+                   })()}
+                 </div>
+               )}
+               
+
+              
               {/* Preguntas de selección múltiple */}
               {(currentQuestion.questionType === 'multiple_choice' || currentQuestion.questionType === 'MULTIPLE_CHOICE' || currentQuestion.questionType === 'CHECKBOX') && (
                 <div className="space-y-3">
@@ -1469,7 +1565,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
               )}
               
               {/* Preguntas de selección única */}
-              {(currentQuestion.questionType === 'single_choice' || (!['TEXT', 'TEXTAREA', 'OPEN_TEXT', 'multiple_choice', 'MULTIPLE_CHOICE', 'CHECKBOX'].includes(currentQuestion.questionType))) && (
+              {(currentQuestion.questionType === 'single_choice' || (!['TEXT', 'TEXTAREA', 'OPEN_TEXT', 'multiple_choice', 'MULTIPLE_CHOICE', 'CHECKBOX', 'WORD_SEARCH'].includes(currentQuestion.questionType))) && (
                 <RadioGroup
                   value={getSelectedAnswer(currentQuestion.id) || ""}
                   onValueChange={(value) => handleAnswerSelect(currentQuestion.id, value)}

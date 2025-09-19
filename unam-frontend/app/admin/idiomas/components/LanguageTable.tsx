@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Edit, Trash2, MoreHorizontal, Eye, EyeOff } from 'lucide-react';
+import { Edit, Trash2, MoreHorizontal, Eye, EyeOff, Power, Languages } from 'lucide-react';
 import { LanguageEntity, LanguageColumnVisibility } from '@/types';
 
 interface LanguageTableProps {
@@ -12,6 +12,7 @@ interface LanguageTableProps {
   columnVisibility: LanguageColumnVisibility;
   onEdit: (language: LanguageEntity) => void;
   onDelete: (id: string) => void;
+  onToggleStatus: (id: string) => void;
   loading: boolean;
   formatDate: (dateString: string) => string;
 }
@@ -21,6 +22,7 @@ export function LanguageTable({
   columnVisibility,
   onEdit,
   onDelete,
+  onToggleStatus,
   loading,
   formatDate
 }: LanguageTableProps) {
@@ -73,28 +75,28 @@ export function LanguageTable({
       <Table>
         <TableHeader>
           <TableRow>
-            {columnVisibility.name && <TableHead>Nombre</TableHead>}
-            {columnVisibility.code && <TableHead>Código</TableHead>}
-            {columnVisibility.nativeName && <TableHead>Nombre Nativo</TableHead>}
-            {columnVisibility.flag && <TableHead>Bandera</TableHead>}
-            {columnVisibility.icons && <TableHead>Iconos</TableHead>}
-            {columnVisibility.isActive && <TableHead>Estado</TableHead>}
-            {columnVisibility.createdAt && <TableHead>Creado</TableHead>}
-            {columnVisibility.updatedAt && <TableHead>Actualizado</TableHead>}
-            {columnVisibility.actions && <TableHead className="text-right">Acciones</TableHead>}
+            {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
+            {columnVisibility.code && <TableHead className="text-center">Código</TableHead>}
+            {columnVisibility.nativeName && <TableHead className="text-center">Nombre Nativo</TableHead>}
+            {columnVisibility.flag && <TableHead className="text-center">Bandera</TableHead>}
+            {columnVisibility.icons && <TableHead className="text-center">Iconos</TableHead>}
+            {columnVisibility.isActive && <TableHead className="text-center">Estado</TableHead>}
+            {columnVisibility.createdAt && <TableHead className="text-center">Creado</TableHead>}
+            {columnVisibility.updatedAt && <TableHead className="text-center">Actualizado</TableHead>}
+            {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {languages.map((language) => (
             <TableRow key={language.id}>
               {columnVisibility.name && (
-                <TableCell className="font-medium">
+                <TableCell className="font-medium text-center">
                   {language.name}
                 </TableCell>
               )}
               
               {columnVisibility.code && (
-                <TableCell>
+                <TableCell className="text-center">
                   <Badge variant="outline" className="font-mono">
                     {language.code || 'N/A'}
                   </Badge>
@@ -102,61 +104,60 @@ export function LanguageTable({
               )}
               
               {columnVisibility.nativeName && (
-                <TableCell>
+                <TableCell className="text-center">
                   {language.nativeName || 'N/A'}
                 </TableCell>
               )}
               
               {columnVisibility.flag && (
-                <TableCell>
-                  {language.flag ? (
-                    <img
-                      src={language.flag}
-                      alt={`Bandera de ${language.name}`}
-                      className="w-8 h-6 object-cover rounded border"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<span class="text-xs text-muted-foreground">Sin imagen</span>';
-                        }
-                      }}
-                    />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Sin bandera</span>
-                  )}
+                <TableCell className="text-center">
+                  <div className="flex justify-center">
+                    {language.flag ? (
+                      <img
+                        src={language.flag}
+                        alt={`Bandera de ${language.name}`}
+                        className="w-8 h-6 object-cover rounded border"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<span class="text-xs text-muted-foreground">Sin imagen</span>';
+                          }
+                        }}
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Sin bandera</span>
+                    )}
+                  </div>
                 </TableCell>
               )}
               
               {columnVisibility.icons && (
-                <TableCell>
-                  {language.icons && language.icons.length > 0 ? (
-                    <div className="flex space-x-1">
-                      {language.icons.slice(0, 3).map((icon, index) => (
+                <TableCell className="text-center">
+                  <div className="flex justify-center gap-1 flex-wrap">
+                    {language.icons && language.icons.length > 0 ? (
+                      language.icons.map((iconUrl, index) => (
                         <img
                           key={index}
-                          src={icon}
+                          src={iconUrl}
                           alt={`Icono ${index + 1}`}
-                          className="w-5 h-5 object-contain"
+                          className="h-6 w-6 object-contain rounded"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                           }}
                         />
-                      ))}
-                      {language.icons.length > 3 && (
-                        <span className="text-xs text-muted-foreground">+{language.icons.length - 3}</span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Sin iconos</span>
-                  )}
+                      ))
+                    ) : (
+                      <Languages className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
                 </TableCell>
               )}
               
               {columnVisibility.isActive && (
-                <TableCell>
+                <TableCell className="text-center">
                   <Badge variant={language.isActive ? 'default' : 'secondary'}>
                     {language.isActive ? (
                       <>
@@ -174,62 +175,61 @@ export function LanguageTable({
               )}
               
               {columnVisibility.createdAt && (
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-sm text-muted-foreground text-center">
                   {formatDate(language.createdAt)}
                 </TableCell>
               )}
               
               {columnVisibility.updatedAt && (
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-sm text-muted-foreground text-center">
                   {formatDate(language.updatedAt)}
                 </TableCell>
               )}
               
               {columnVisibility.actions && (
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Abrir menú</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(language)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <DropdownMenuItem
-                            onSelect={(e) => e.preventDefault()}
-                            className="text-red-600 focus:text-red-600"
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variant={language.isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onToggleStatus(language.id)}
+                      title={language.isActive ? "Desactivar idioma" : "Activar idioma"}
+                    >
+                      <Power className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onEdit(language)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta acción no se puede deshacer. Esto eliminará permanentemente el idioma
+                            "{language.name}" y todos los datos asociados.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDelete(language.id)}
+                            className="bg-red-600 hover:bg-red-700"
                           >
-                            <Trash2 className="mr-2 h-4 w-4" />
                             Eliminar
-                          </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Esto eliminará permanentemente el idioma
-                              "{language.name}" y todos los datos asociados.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDelete(language.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               )}
             </TableRow>

@@ -85,12 +85,23 @@ const DELETE_LEVEL = `
   }
 `;
 
+const TOGGLE_LEVEL_STATUS = `
+  ${LEVEL_MUTATION_RESPONSE_FRAGMENT}
+  
+  mutation ToggleLevelStatus($id: ID!) {
+    toggleLevelStatus(id: $id) {
+      ...LevelMutationResponseFields
+    }
+  }
+`;
+
 
 
 interface UseLevelMutationsReturn {
   createLevel: (data: CreateLevelFormData) => Promise<void>;
   updateLevel: (id: string, data: UpdateLevelFormData) => Promise<void>;
   deleteLevel: (id: string) => Promise<void>;
+  toggleLevelStatus: (id: string) => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -189,10 +200,46 @@ export function useLevelMutations(): UseLevelMutationsReturn {
     }
   };
 
+  const toggleLevelStatus = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await fetchGraphQL(
+        TOGGLE_LEVEL_STATUS,
+        { id },
+        token || undefined
+      );
+      
+      console.log('Full response:', JSON.stringify(data, null, 2)); // Debug log
+      
+      // Acceder directamente a los datos de la mutación
+      const level = data?.toggleLevelStatus;
+      console.log('Level from toggleLevelStatus:', level); // Debug log
+      
+      if (level?.isActive !== undefined) {
+        const statusMessage = level.isActive ? 'Nivel activado con éxito' : 'Nivel desactivado con éxito';
+        console.log('Status message:', statusMessage); // Debug log
+        toast.success(statusMessage);
+      } else {
+        console.error('No se pudo obtener el estado del nivel:', level);
+        toast.error('Error al cambiar el estado del nivel');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al cambiar el estado del nivel';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     createLevel,
     updateLevel,
     deleteLevel,
+    toggleLevelStatus,
     loading,
     error,
   };

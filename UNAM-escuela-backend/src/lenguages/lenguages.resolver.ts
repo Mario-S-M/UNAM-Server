@@ -85,4 +85,14 @@ export class LenguagesResolver {
     this.logger.log(`SuperUser ${user.fullName} removing language: ${id}`);
     return this.lenguagesService.remove(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => Lenguage)
+  toggleLanguageStatus(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentUser([ValidRoles.superUser]) user: User,
+  ) {
+    this.logger.log(`SuperUser ${user.fullName} toggling language status: ${id}`);
+    return this.lenguagesService.toggleLanguageStatus(id);
+  }
 }

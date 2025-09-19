@@ -42,6 +42,7 @@ const GET_LANGUAGE_BY_ID = gql`
       descripcion_completa
       nivel
       duracion_total_horas
+      calculatedTotalTime
       color_tema
       icono_curso
       imagen_hero
@@ -59,6 +60,24 @@ const GET_LANGUAGE_BY_ID = gql`
     }
   }
 `;
+
+// Función para formatear tiempo de minutos a horas y minutos
+const formatDuration = (totalMinutes: number | null | undefined): string => {
+  if (!totalMinutes || totalMinutes === 0) {
+    return '0 min';
+  }
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes} min`;
+  } else if (minutes === 0) {
+    return `${hours} h`;
+  } else {
+    return `${hours} h ${minutes} min`;
+  }
+};
 
 export default function LanguageDetailPage() {
   const params = useParams();
@@ -214,7 +233,7 @@ export default function LanguageDetailPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Duración</p>
-                <p className="text-3xl font-bold text-gray-900">{language.duracion_total_horas}h</p>
+                <p className="text-3xl font-bold text-gray-900">{formatDuration(language.calculatedTotalTime)}</p>
               </div>
             </div>
           </CardContent>

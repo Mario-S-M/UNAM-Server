@@ -8,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Accessibility } from 'lucide-react';
+import { PersonStanding } from 'lucide-react';
 import { useAccessibility } from './AccessibilityContext';
 import { cn } from '@/lib/utils';
 
@@ -46,10 +46,9 @@ const AccessibilityButton: React.FC<AccessibilityButtonProps> = ({
     <Button
       onClick={handleClick}
       className={buttonClasses}
-      size={variant === 'floating' ? 'icon' : 'sm'}
       aria-label="Abrir menú de accesibilidad"
     >
-      <Accessibility className={variant === 'floating' ? 'h-8 w-8' : 'h-4 w-4'} />
+      <PersonStanding className={variant === 'floating' ? 'h-40 w-40' : 'h-36 w-36'} />
     </Button>
   );
 

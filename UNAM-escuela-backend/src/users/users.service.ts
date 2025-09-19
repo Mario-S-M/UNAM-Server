@@ -454,6 +454,35 @@ export class UsersService {
     return await this.usersRepository.save(userToUpdate);
   }
 
+  async changeUserPassword(
+    userId: string,
+    newPassword: string,
+    superUser: User,
+  ): Promise<User> {
+    this.logger.log(
+      `SuperUser ${superUser.fullName} changing password for user: ${userId}`,
+    );
+
+    // Verificar que el usuario que hace el cambio es superUser
+    if (!superUser.roles.includes(ValidRoles.superUser)) {
+      throw new BadRequestException(
+        'Solo los superAdministradores pueden cambiar contraseñas de usuarios',
+      );
+    }
+
+    const userToUpdate = await this.findOneById(userId);
+
+    // Hashear la nueva contraseña
+    userToUpdate.password = bcrypt.hashSync(newPassword, 10);
+    userToUpdate.lastUpdateBy = superUser;
+
+    this.logger.log(
+      `Contraseña actualizada para usuario ${userToUpdate.email} por superUser ${superUser.fullName}`,
+    );
+
+    return await this.usersRepository.save(userToUpdate);
+  }
+
   async assignLanguageToUser(
     userId: string,
     languageId: string | undefined,

@@ -16,7 +16,9 @@ export enum QuestionType {
   EMAIL = 'EMAIL',
   DATE = 'DATE',
   TIME = 'TIME',
-  BOOLEAN = 'BOOLEAN'
+  BOOLEAN = 'BOOLEAN',
+  WORD_SEARCH = 'WORD_SEARCH',
+  CROSSWORD = 'CROSSWORD'
 }
 
 @InputType()

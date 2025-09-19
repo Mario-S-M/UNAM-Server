@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Form } from '../forms/entities/form.entity';
 import { FormQuestion } from '../forms/entities/form-question.entity';
 import { FormQuestionOption } from '../forms/entities/form-question-option.entity';
+import { CommonModule } from '../common/common.module';
 
 @Module({
   providers: [ActivitiesResolver, ActivitiesService],
@@ -16,6 +17,7 @@ import { FormQuestionOption } from '../forms/entities/form-question-option.entit
       FormQuestion,
       FormQuestionOption,
     ]),
+    CommonModule,
   ],
 })
 export class ActivitiesModule {}

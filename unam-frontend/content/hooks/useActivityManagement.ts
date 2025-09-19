@@ -15,6 +15,7 @@ export interface Activity {
   indication: string;
   example: string;
   contentId: string;
+  estimatedTime: number;
   formId?: string;
   form?: {
     id: string;
@@ -31,6 +32,7 @@ export interface CreateActivityData {
   indication: string;
   example: string;
   contentId: string;
+  estimatedTime: number;
   formId?: string;
   questions?: FormQuestionData[];
 }
@@ -42,6 +44,7 @@ export interface UpdateActivityData {
   indication?: string;
   example?: string;
   contentId?: string;
+  estimatedTime?: number;
   formId?: string;
   questions?: FormQuestionData[];
 }
@@ -53,6 +56,7 @@ export const activityFormSchema = z.object({
   indication: z.string().min(1, 'Las indicaciones son requeridas').max(1000, 'Las indicaciones no pueden exceder 1000 caracteres'),
   example: z.string().min(1, 'El ejemplo es requerido').max(1000, 'El ejemplo no puede exceder 1000 caracteres'),
   contentId: z.string().min(1, 'Debe seleccionar un contenido'),
+  estimatedTime: z.number().min(1, 'El tiempo estimado debe ser mayor a 0').max(1440, 'El tiempo estimado no puede exceder 1440 minutos (24 horas)'),
   formId: z.string().optional(),
   questions: z.array(z.any()).optional(),
 });
@@ -69,6 +73,7 @@ const GET_ACTIVITIES = gql`
       indication
       example
       contentId
+      estimatedTime
       formId
       form {
         id
@@ -102,6 +107,7 @@ const GET_ACTIVITIES_BY_CONTENT = gql`
       indication
       example
       contentId
+      estimatedTime
       formId
       form {
         id
@@ -135,6 +141,7 @@ const CREATE_ACTIVITY = gql`
       indication
       example
       contentId
+      estimatedTime
       formId
       form {
         id
@@ -166,6 +173,7 @@ const UPDATE_ACTIVITY = gql`
       indication
       example
       contentId
+      estimatedTime
       formId
       form {
         id
@@ -207,6 +215,7 @@ export function useActivityManagement() {
     indication: '',
     example: '',
     contentId: '',
+    estimatedTime: 0,
     formId: '',
     questions: [],
   });
@@ -332,6 +341,7 @@ export function useActivityManagement() {
       indication: activity.indication,
       example: activity.example,
       contentId: activity.contentId,
+      estimatedTime: activity.estimatedTime,
       formId: activity.formId || '',
       questions: activity.form?.questions || [],
     });
@@ -347,6 +357,7 @@ export function useActivityManagement() {
       indication: '',
       example: '',
       contentId: '',
+      estimatedTime: 0,
       formId: '',
       questions: [],
     });

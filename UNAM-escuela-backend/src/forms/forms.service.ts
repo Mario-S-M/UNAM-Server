@@ -57,7 +57,7 @@ export class FormsService {
       textColor: createFormInput.textColor,
       fontFamily: createFormInput.fontFamily,
       contentId: createFormInput.contentId,
-      userId: parseInt(userId),
+      userId: userId,
     });
 
     const savedForm = await this.formRepository.save(form);

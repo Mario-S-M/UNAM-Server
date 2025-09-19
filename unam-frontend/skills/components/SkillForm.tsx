@@ -207,17 +207,7 @@ export const SkillForm: React.FC<SkillFormProps> = ({
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="estimatedHours">Duración Total (Horas)</Label>
-              <Input
-                id="estimatedHours"
-                type="number"
-                value={formData.estimatedHours}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: parseInt(e.target.value) || 0 }))}
-                min="0"
-                placeholder="0"
-              />
-            </div>
+
             <div className="space-y-2">
               <Label htmlFor="color">Color del Tema</Label>
               <div className="flex gap-2">

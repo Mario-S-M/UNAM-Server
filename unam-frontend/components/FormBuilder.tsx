@@ -79,6 +79,27 @@ const createDefaultQuestion = (type: QuestionType, orderIndex: number): FormQues
         ...baseQuestion,
         maxLength: 255
       };
+    case 'WORD_SEARCH':
+      return {
+        ...baseQuestion,
+        questionText: 'Ingresa una frase y encuentra la palabra objetivo en la sopa de letras',
+        correctAnswer: JSON.stringify({
+          targetWord: 'EJEMPLO',
+          description: 'Busca la palabra EJEMPLO en la sopa de letras generada con tu frase'
+        })
+      };
+    case 'CROSSWORD':
+      return {
+        ...baseQuestion,
+        questionText: 'Completa el crucigrama',
+        correctAnswer: JSON.stringify({
+          clues: {
+            across: [{ number: 1, clue: 'Ejemplo de pista horizontal', answer: 'EJEMPLO', startRow: 0, startCol: 0 }],
+            down: [{ number: 2, clue: 'Ejemplo de pista vertical', answer: 'PALABRA', startRow: 0, startCol: 0 }]
+          },
+          gridSize: 10
+        })
+      };
     default:
       return baseQuestion;
   }
@@ -168,6 +189,7 @@ export function FormBuilder({ initialQuestions = [], onQuestionsChange, disabled
     const needsOptions = ['MULTIPLE_CHOICE', 'CHECKBOX', 'BOOLEAN'].includes(question.questionType);
     const needsRange = question.questionType === 'RATING_SCALE';
     const needsLength = ['TEXT', 'TEXTAREA', 'open_text'].includes(question.questionType);
+    const needsGameConfig = ['WORD_SEARCH', 'CROSSWORD'].includes(question.questionType);
 
     return (
       <Card key={question.id} className="mb-4">
@@ -315,6 +337,72 @@ export function FormBuilder({ initialQuestions = [], onQuestionsChange, disabled
                 onChange={(e) => updateQuestion(index, { correctAnswer: e.target.value })}
                 disabled={disabled}
               />
+            </div>
+          )}
+
+          {/* Configuración para juegos */}
+          {needsGameConfig && (
+            <div className="space-y-3">
+              <Label>Configuración del juego</Label>
+              <div className="p-4 border rounded-lg bg-muted/50">
+                {question.questionType === 'WORD_SEARCH' && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Configura la sopa de letras. Puedes usar dos formatos:
+                    </p>
+                    <div className="text-xs text-muted-foreground space-y-2">
+                      <div>
+                        <strong>Formato interactivo (recomendado):</strong> El usuario ingresa una frase y busca una palabra específica.
+                      </div>
+                      <div>
+                        <strong>Formato tradicional:</strong> Lista predefinida de palabras para encontrar.
+                      </div>
+                    </div>
+                    <Textarea
+                      placeholder='Formato interactivo:
+{
+  "targetWord": "EJEMPLO",
+  "description": "Busca la palabra EJEMPLO en la sopa de letras"
+}
+
+Formato tradicional:
+{
+  "words": ["EJEMPLO", "PALABRA", "JUEGO"],
+  "gridSize": 12
+}'
+                      value={question.correctAnswer || ''}
+                      onChange={(e) => updateQuestion(index, { correctAnswer: e.target.value })}
+                      disabled={disabled}
+                      rows={10}
+                    />
+                  </div>
+                )}
+                {question.questionType === 'CROSSWORD' && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Configura las pistas y respuestas del crucigrama.
+                      Formato JSON con pistas horizontales y verticales.
+                    </p>
+                    <Textarea
+                      placeholder='{
+  "clues": {
+    "across": [
+      {"number": 1, "clue": "Pista horizontal", "answer": "RESPUESTA", "startRow": 0, "startCol": 0}
+    ],
+    "down": [
+      {"number": 2, "clue": "Pista vertical", "answer": "PALABRA", "startRow": 0, "startCol": 0}
+    ]
+  },
+  "gridSize": 10
+}'
+                      value={question.correctAnswer || ''}
+                      onChange={(e) => updateQuestion(index, { correctAnswer: e.target.value })}
+                      disabled={disabled}
+                      rows={8}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

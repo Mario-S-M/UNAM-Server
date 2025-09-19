@@ -50,6 +50,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Languages, Search, Settings, ChevronLeft, ChevronRight, Upload, Image, Filter } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
+import { LanguageTable } from './components/LanguageTable';
+import { LanguageEntity, LanguageColumnVisibility } from '@/types';
 import { 
   validateLanguageForm,
   type CreateLanguageFormData,
@@ -110,6 +112,16 @@ const DELETE_LANGUAGE = `
   }
 `;
 
+const TOGGLE_LANGUAGE_STATUS = `
+  ${MUTATION_RESPONSE_FRAGMENT}
+  
+  mutation ToggleLanguageStatus($id: ID!) {
+    toggleLanguageStatus(id: $id) {
+      ...MutationResponseFields
+    }
+  }
+`;
+
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
 type GraphQLInputValue = string | number | boolean | null | undefined | string[] | CreateLanguageFormData | {
@@ -121,6 +133,7 @@ interface GraphQLVariables {
 }
 
 import { toast } from 'sonner';
+import { useLanguageMutations } from './hooks/useLanguageMutations';
 
 // GraphQL fetch function
 const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?: string) => {
@@ -143,8 +156,8 @@ const fetchGraphQL = async (query: string, variables?: GraphQLVariables, token?:
     
     
     if (result.errors) {
-      
-      throw new Error(result.errors[0].message);
+      // Retornar el error en lugar de lanzarlo para manejo silencioso
+      return { error: result.errors[0].message };
     }
     return result.data;
   } catch (error) {
@@ -161,7 +174,6 @@ interface Language {
   descripcion_corta: string | null;
   descripcion_completa: string | null;
   nivel: 'Básico' | 'Básico-Intermedio' | 'Intermedio' | 'Intermedio-Avanzado' | 'Avanzado' | null;
-  duracion_total_horas: number | null;
   color_tema: string | null;
   icono_curso: string | null;
   imagen_hero: string | null;
@@ -194,25 +206,12 @@ interface PaginatedLanguages {
 // Using Zod-derived types from language-forms.ts
 type LanguageFormData = CreateLanguageFormData;
 
-interface ColumnVisibility {
-  name: boolean;
-  eslogan_atractivo: boolean;
-  nivel: boolean;
-  duracion_total_horas: boolean;
-  estado: boolean;
-  badge_destacado: boolean;
-  puntuacion_promedio: boolean;
-  total_estudiantes_inscritos: boolean;
-  featured: boolean;
-  icons: boolean;
-  isActive: boolean;
-  createdAt: boolean;
-  updatedAt: boolean;
-  actions: boolean;
-}
+// Usar LanguageColumnVisibility directamente
+type ColumnVisibility = LanguageColumnVisibility;
 
 export default function IdiomasPage() {
   const { token } = useAuth();
+  const { createLanguage, updateLanguage, deleteLanguage, toggleLanguageStatus } = useLanguageMutations();
   const [languages, setLanguages] = useState<PaginatedLanguages>({
     lenguages: [],
     total: 0,
@@ -231,7 +230,7 @@ export default function IdiomasPage() {
     descripcion_corta: '',
     descripcion_completa: '',
     nivel: 'Básico',
-    duracion_total_horas: 1,
+
     color_tema: '#000000',
     icono_curso: '',
     imagen_hero: '',
@@ -317,15 +316,10 @@ export default function IdiomasPage() {
   };
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     name: true,
-    eslogan_atractivo: false,
-    nivel: false,
-    duracion_total_horas: true,
-    estado: true,
-    badge_destacado: true,
-    puntuacion_promedio: true,
-    total_estudiantes_inscritos: true,
-    featured: false,
-    icons: true,
+    code: false,
+    nativeName: false,
+    flag: false,
+    icons: false,
     isActive: true,
     createdAt: false,
     updatedAt: false,
@@ -395,7 +389,7 @@ export default function IdiomasPage() {
         if (data.descripcion_corta && data.descripcion_corta.trim() !== '') updateData.descripcion_corta = data.descripcion_corta;
         if (data.descripcion_completa && data.descripcion_completa.trim() !== '') updateData.descripcion_completa = data.descripcion_completa;
         if (data.nivel) updateData.nivel = data.nivel;
-        if (data.duracion_total_horas !== undefined) updateData.duracion_total_horas = data.duracion_total_horas;
+
         if (data.color_tema && data.color_tema.trim() !== '' && /^#[0-9A-Fa-f]{6}$/.test(data.color_tema)) updateData.color_tema = data.color_tema;
         if (data.icono_curso && data.icono_curso.trim() !== '') updateData.icono_curso = data.icono_curso;
         if (data.imagen_hero && data.imagen_hero.trim() !== '') updateData.imagen_hero = data.imagen_hero;
@@ -432,7 +426,7 @@ export default function IdiomasPage() {
         if (data.descripcion_corta && data.descripcion_corta.trim() !== '') createData.descripcion_corta = data.descripcion_corta;
         if (data.descripcion_completa && data.descripcion_completa.trim() !== '') createData.descripcion_completa = data.descripcion_completa;
         if (data.nivel) createData.nivel = data.nivel;
-        if (data.duracion_total_horas !== undefined) createData.duracion_total_horas = data.duracion_total_horas;
+
         if (data.color_tema && data.color_tema.trim() !== '' && /^#[0-9A-Fa-f]{6}$/.test(data.color_tema)) createData.color_tema = data.color_tema;
         if (data.icono_curso && data.icono_curso.trim() !== '') createData.icono_curso = data.icono_curso;
         if (data.imagen_hero && data.imagen_hero.trim() !== '') createData.imagen_hero = data.imagen_hero;
@@ -480,12 +474,25 @@ export default function IdiomasPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetchGraphQL(DELETE_LANGUAGE, { id }, token || undefined);
-      toast.error('Idioma eliminado exitosamente');
+      const result = await fetchGraphQL(DELETE_LANGUAGE, { id }, token || undefined);
+      
+      // Verificar si hay error en la respuesta
+      if (result && 'error' in result) {
+        const errorMessage = result.error;
+        
+        if (errorMessage.includes('No se puede eliminar el idioma') && errorMessage.includes('nivel(es) asociado(s)')) {
+          toast.error('No se puede eliminar este idioma porque tiene niveles asociados. Primero elimina todos los niveles de este idioma.');
+        } else {
+          toast.error('Error al eliminar el idioma. Por favor, inténtalo de nuevo.');
+        }
+        return;
+      }
+      
+      toast.success('Idioma eliminado exitosamente');
       fetchLanguages();
     } catch (error) {
       console.error('Error deleting language:', error);
-      toast.error('Error al eliminar el idioma');
+      toast.error('Error al eliminar el idioma. Por favor, inténtalo de nuevo.');
     }
   };
 
@@ -496,7 +503,7 @@ export default function IdiomasPage() {
       descripcion_corta: '',
       descripcion_completa: '',
       nivel: 'Básico',
-      duracion_total_horas: 1,
+
       color_tema: '#000000',
       icono_curso: '',
       imagen_hero: '',
@@ -523,7 +530,7 @@ export default function IdiomasPage() {
       descripcion_corta: language.descripcion_corta || '',
       descripcion_completa: language.descripcion_completa || '',
       nivel: language.nivel || 'Básico',
-      duracion_total_horas: language.duracion_total_horas || 1,
+
       color_tema: language.color_tema || '#000000',
       icono_curso: language.icono_curso || '',
       imagen_hero: language.imagen_hero || '',
@@ -569,11 +576,36 @@ export default function IdiomasPage() {
     setCurrentPage(1); // Reset to first page when searching
   };
 
-  const toggleColumnVisibility = (column: keyof ColumnVisibility) => {
+  const toggleColumnVisibility = (column: keyof LanguageColumnVisibility) => {
     setColumnVisibility(prev => ({
       ...prev,
       [column]: !prev[column]
     }));
+  };
+
+  const handleToggleStatus = async (id: string) => {
+    try {
+      const data = await fetchGraphQL(
+        TOGGLE_LANGUAGE_STATUS,
+        { id },
+        token || undefined
+      );
+      
+      // La mutación devuelve directamente el objeto Language actualizado
+      const updatedLanguage = data.toggleLanguageStatus;
+      if (updatedLanguage && updatedLanguage.isActive !== undefined) {
+        const statusMessage = updatedLanguage.isActive 
+          ? 'Idioma activado exitosamente' 
+          : 'Idioma desactivado exitosamente';
+        toast.success(statusMessage);
+        await fetchLanguages();
+      } else {
+        toast.error('Error al cambiar el estado del idioma');
+      }
+    } catch (error) {
+      console.error('Error toggling language status:', error);
+      toast.error('Error al cambiar el estado del idioma');
+    }
   };
 
   // Computed values
@@ -603,6 +635,21 @@ export default function IdiomasPage() {
     } catch (error) {
       return 'Error en fecha';
     }
+  };
+
+  // Función para convertir Language a LanguageEntity
+  const convertToLanguageEntity = (language: Language): LanguageEntity => {
+    return {
+      id: language.id,
+      name: language.name,
+      code: language.idioma_origen || 'N/A',
+      nativeName: language.name,
+      flag: language.imagen_hero || '',
+      icons: language.icons || [],
+      isActive: language.isActive,
+      createdAt: language.createdAt,
+      updatedAt: language.updatedAt
+    };
   };
 
   return (
@@ -711,17 +758,7 @@ export default function IdiomasPage() {
                             ))}
                           </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="duracion_total_horas">Duración (horas)</Label>
-                          <Input
-                            id="duracion_total_horas"
-                            type="number"
-                            min="1"
-                            value={formData.duracion_total_horas}
-                            onChange={(e) => setFormData(prev => ({ ...prev, duracion_total_horas: parseInt(e.target.value) || 1 }))}
-                            placeholder="40"
-                          />
-                        </div>
+
 
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -987,52 +1024,22 @@ export default function IdiomasPage() {
                   Nombre
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.eslogan_atractivo}
-                  onCheckedChange={() => toggleColumnVisibility('eslogan_atractivo')}
+                  checked={columnVisibility.code}
+                  onCheckedChange={() => toggleColumnVisibility('code')}
                 >
-                  Eslogan Atractivo
+                  Código
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.nivel}
-                  onCheckedChange={() => toggleColumnVisibility('nivel')}
+                  checked={columnVisibility.nativeName}
+                  onCheckedChange={() => toggleColumnVisibility('nativeName')}
                 >
-                  Nivel
+                  Nombre Nativo
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.duracion_total_horas}
-                  onCheckedChange={() => toggleColumnVisibility('duracion_total_horas')}
+                  checked={columnVisibility.flag}
+                  onCheckedChange={() => toggleColumnVisibility('flag')}
                 >
-                  Duración (Horas)
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.estado}
-                  onCheckedChange={() => toggleColumnVisibility('estado')}
-                >
-                  Estado del Curso
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.badge_destacado}
-                  onCheckedChange={() => toggleColumnVisibility('badge_destacado')}
-                >
-                  Badge Destacado
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.puntuacion_promedio}
-                  onCheckedChange={() => toggleColumnVisibility('puntuacion_promedio')}
-                >
-                  Puntuación Promedio
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.total_estudiantes_inscritos}
-                  onCheckedChange={() => toggleColumnVisibility('total_estudiantes_inscritos')}
-                >
-                  Estudiantes Inscritos
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility.featured}
-                  onCheckedChange={() => toggleColumnVisibility('featured')}
-                >
-                  Destacado
+                  Bandera
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={columnVisibility.icons}
@@ -1044,7 +1051,7 @@ export default function IdiomasPage() {
                   checked={columnVisibility.isActive}
                   onCheckedChange={() => toggleColumnVisibility('isActive')}
                 >
-                  Activo/Inactivo
+                  Estado
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={columnVisibility.createdAt}
@@ -1082,160 +1089,20 @@ export default function IdiomasPage() {
             </Select>
           </div>
 
-          {/* Table */}
-          <div className="rounded-md border w-full">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow>
-                  {columnVisibility.name && <TableHead className="text-center">Nombre</TableHead>}
-                  {columnVisibility.eslogan_atractivo && <TableHead className="text-center">Eslogan Atractivo</TableHead>}
-                  {columnVisibility.nivel && <TableHead className="text-center">Nivel</TableHead>}
-                  {columnVisibility.duracion_total_horas && <TableHead className="text-center">Duración (Horas)</TableHead>}
-                  {columnVisibility.estado && <TableHead className="text-center">Estado del Curso</TableHead>}
-                  {columnVisibility.badge_destacado && <TableHead className="text-center">Badge Destacado</TableHead>}
-                  {columnVisibility.puntuacion_promedio && <TableHead className="text-center">Puntuación Promedio</TableHead>}
-                  {columnVisibility.total_estudiantes_inscritos && <TableHead className="text-center">Estudiantes Inscritos</TableHead>}
-                  {columnVisibility.featured && <TableHead className="text-center">Destacado</TableHead>}
-                  {columnVisibility.icons && <TableHead className="text-center">Iconos</TableHead>}
-                  {columnVisibility.isActive && <TableHead className="text-center">Activo/Inactivo</TableHead>}
-                  {columnVisibility.createdAt && <TableHead className="text-center">Fecha de Creación</TableHead>}
-                  {columnVisibility.updatedAt && <TableHead className="text-center">Última Actualización</TableHead>}
-                  {columnVisibility.actions && <TableHead className="text-center">Acciones</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={14} className="text-center py-8">
-                      Cargando idiomas...
-                    </TableCell>
-                  </TableRow>
-                ) : languages.lenguages.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={14} className="text-center py-8">
-                      No se encontraron idiomas
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  languages.lenguages.map((language) => (
-                    <TableRow key={language.id}>
-                      {columnVisibility.name && (
-                        <TableCell className="font-medium text-center">{language.name}</TableCell>
-                      )}
-                      {columnVisibility.eslogan_atractivo && (
-                        <TableCell className="max-w-xs truncate text-center">{language.eslogan_atractivo}</TableCell>
-                      )}
-                      {columnVisibility.nivel && (
-                        <TableCell className="text-center">
-                          <Badge variant="outline">{language.nivel}</Badge>
-                        </TableCell>
-                      )}
-                      {columnVisibility.duracion_total_horas && (
-                        <TableCell className="text-center">{language.duracion_total_horas}h</TableCell>
-                      )}
-                      {columnVisibility.estado && (
-                        <TableCell className="text-center">
-                          <Badge variant={language.estado === 'Activo' ? 'default' : language.estado === 'En Desarrollo' ? 'secondary' : 'destructive'}>
-                            {language.estado}
-                          </Badge>
-                        </TableCell>
-                      )}
-                      {columnVisibility.badge_destacado && (
-                        <TableCell className="text-center">
-                          {language.badge_destacado ? (
-                            <Badge variant="default">{language.badge_destacado}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">Sin badge</span>
-                          )}
-                        </TableCell>
-                      )}
-                      {columnVisibility.puntuacion_promedio && (
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{language.puntuacion_promedio.toFixed(1)}</span>
-                            <span className="text-yellow-500">★</span>
-                          </div>
-                        </TableCell>
-                      )}
-                      {columnVisibility.total_estudiantes_inscritos && (
-                        <TableCell className="text-center">{language.total_estudiantes_inscritos.toLocaleString()}</TableCell>
-                      )}
-                      {columnVisibility.featured && (
-                        <TableCell className="text-center">
-                          <Badge variant={language.featured ? 'default' : 'secondary'}>
-                            {language.featured ? 'Sí' : 'No'}
-                          </Badge>
-                        </TableCell>
-                      )}
-                      {columnVisibility.icons && (
-                        <TableCell className="text-center">
-                          <div className="flex flex-wrap justify-center gap-1">
-                            {(language.icons && language.icons.length > 0) ? (
-                              language.icons.map((icon, index) => (
-                                <div key={index} className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg text-lg">
-                                  {icon}
-                                </div>
-                              ))
-                            ) : (
-                              <span className="text-muted-foreground text-sm">Sin iconos</span>
-                            )}
-                          </div>
-                        </TableCell>
-                      )}
-                      {columnVisibility.isActive && (
-                        <TableCell className="text-center">
-                          <Badge variant={language.isActive ? 'default' : 'secondary'}>
-                            {language.isActive ? 'Activo' : 'Inactivo'}
-                          </Badge>
-                        </TableCell>
-                      )}
-                      {columnVisibility.createdAt && (
-                        <TableCell className="text-center">{formatDate(language.createdAt)}</TableCell>
-                      )}
-                      {columnVisibility.updatedAt && (
-                        <TableCell className="text-center">{formatDate(language.updatedAt)}</TableCell>
-                      )}
-                      {columnVisibility.actions && (
-                        <TableCell className="text-center">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleEdit(language)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el idioma
-                                    "{language.name}" de la base de datos.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(language.id)}>
-                                    Eliminar
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          {/* Language Table */}
+          <LanguageTable
+            languages={languages.lenguages.map(convertToLanguageEntity)}
+            loading={loading}
+            columnVisibility={columnVisibility as LanguageColumnVisibility}
+            onEdit={(language: LanguageEntity) => {
+              // Convertir LanguageEntity de vuelta a Language para handleEdit
+              const originalLanguage = languages.lenguages.find(l => l.id === language.id);
+              if (originalLanguage) handleEdit(originalLanguage);
+            }}
+            onDelete={handleDelete}
+            onToggleStatus={handleToggleStatus}
+            formatDate={formatDate}
+          />
 
           {/* Pagination */}
           <div className="flex items-center justify-between space-x-2 py-4">

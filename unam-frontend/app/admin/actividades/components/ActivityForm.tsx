@@ -67,6 +67,8 @@ export function ActivityForm({ formData, onFormDataChange }: ActivityFormProps) 
           required
         />
       </div>
+
+
     </div>
   );
 }

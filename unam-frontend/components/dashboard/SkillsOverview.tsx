@@ -20,6 +20,7 @@ interface Skill {
   prerequisites?: string;
   difficulty: string;
   estimatedHours?: number;
+  calculatedTotalTime?: number;
   tags: string[];
   isActive: boolean;
   levelId: string;
@@ -37,6 +38,24 @@ interface Skill {
   createdAt: string;
   updatedAt: string;
 }
+
+// Función para formatear tiempo de minutos a horas y minutos
+const formatDuration = (totalMinutes: number | null | undefined): string => {
+  if (!totalMinutes || totalMinutes === 0) {
+    return '0 min';
+  }
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  if (hours === 0) {
+    return `${minutes} min`;
+  } else if (minutes === 0) {
+    return `${hours} h`;
+  } else {
+    return `${hours} h ${minutes} min`;
+  }
+};
 
 interface SkillsQueryResponse {
   skillsActivePublic: Skill[];
@@ -179,10 +198,10 @@ export function SkillsOverview() {
                 <Badge className={getDifficultyColor(skill.difficulty)}>
                   {skill.difficulty}
                 </Badge>
-                {skill.estimatedHours && (
+                {skill.calculatedTotalTime && (
                   <Badge variant="outline" className="text-xs flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {skill.estimatedHours}h
+                    {formatDuration(skill.calculatedTotalTime)}
                   </Badge>
                 )}
               </div>

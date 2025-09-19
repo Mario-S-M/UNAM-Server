@@ -18,6 +18,7 @@ export class SkillsService {
     const newSkill = this.skillsRepository.create({
       ...createSkillInput,
       color: createSkillInput.color || '#3B82F6',
+      calculatedTotalTime: 0, // Inicializar en 0, se calculará automáticamente
     });
     return await this.skillsRepository.save(newSkill);
   }

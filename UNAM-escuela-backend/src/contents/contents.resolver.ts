@@ -13,6 +13,7 @@ import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { User } from '../users/entities/user.entity';
 import { PaginatedContents } from './dto/paginated-contents.output';
 import { ContentsFilterArgs } from './dto/args/contents-filter.arg';
+import { RemoveContentResponse } from './dto/remove-content-response.output';
 
 @Resolver(() => Content)
 export class ContentsResolver {
@@ -219,12 +220,23 @@ export class ContentsResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Content)
-  removeContent(
+  @Mutation(() => RemoveContentResponse)
+  async removeContent(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser]) user: User,
-  ): Promise<Content> {
-    return this.contentsService.remove(id);
+  ): Promise<RemoveContentResponse> {
+    try {
+      await this.contentsService.remove(id);
+      return {
+        success: true,
+        message: 'Contenido eliminado exitosamente'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Error al eliminar el contenido'
+      };
+    }
   }
 
   @UseGuards(JwtAuthGuard)

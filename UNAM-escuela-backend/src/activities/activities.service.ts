@@ -294,4 +294,40 @@ export class ActivitiesService {
     
     return { ...activity, id };
   }
+
+  async removeByContentId(contentId: string): Promise<void> {
+    const activities = await this.activitiesRepository.find({
+      where: { contentId },
+      relations: ['form']
+    });
+
+    // Eliminar formularios asociados si existen
+    for (const activity of activities) {
+      if (activity.form) {
+        // Eliminar preguntas y opciones del formulario
+        const questions = await this.formQuestionRepository.find({
+          where: { formId: activity.form.id },
+          relations: ['options']
+        });
+
+        for (const question of questions) {
+          if (question.options && question.options.length > 0) {
+            await this.formQuestionOptionRepository.remove(question.options);
+          }
+        }
+
+        if (questions.length > 0) {
+          await this.formQuestionRepository.remove(questions);
+        }
+
+        // Eliminar el formulario
+        await this.formRepository.remove(activity.form);
+      }
+    }
+
+    // Eliminar todas las actividades
+    if (activities.length > 0) {
+      await this.activitiesRepository.remove(activities);
+    }
+  }
 }

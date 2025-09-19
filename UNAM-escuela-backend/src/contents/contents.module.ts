@@ -7,12 +7,14 @@ import { User } from '../users/entities/user.entity';
 import { Skill } from '../skills/entities/skill.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from '../common/common.module';
+import { ActivitiesModule } from '../activities/activities.module';
 
 @Module({
   providers: [ContentsResolver, ContentsService],
   imports: [
     TypeOrmModule.forFeature([Content, ContentComment, User, Skill]),
     CommonModule,
+    ActivitiesModule,
   ],
   exports: [ContentsService],
 })

@@ -20,6 +20,7 @@ import { tables } from 'turndown-plugin-gfm';
 import { PaginatedContents } from './dto/paginated-contents.output';
 import { ContentsFilterArgs } from './dto/args/contents-filter.arg';
 import { TimeCalculationService } from '../common/services/time-calculation.service';
+import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class ContentsService {
@@ -31,6 +32,7 @@ export class ContentsService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly timeCalculationService: TimeCalculationService,
+    private readonly activitiesService: ActivitiesService,
   ) {}
 
   async create(createContentInput: CreateContentInput): Promise<Content> {
@@ -464,9 +466,62 @@ export class ContentsService {
   }
 
   async remove(id: string): Promise<Content> {
-    const content = await this.findOne(id);
-    await this.contentsRepository.remove(content);
-    return { ...content, id };
+    const content = await this.contentsRepository.findOne({
+      where: { id },
+      relations: ['assignedTeachers']
+    });
+
+    if (!content) {
+      throw new NotFoundException(`Content with ID ${id} not found`);
+    }
+
+    try {
+      // 0. Eliminar registros de la tabla 'exercises' antigua si existe
+      try {
+        await this.contentsRepository.query(
+          'DELETE FROM exercises WHERE "contentId" = $1',
+          [id]
+        );
+      } catch (error) {
+        // Ignorar si la tabla no existe
+        console.log('Table exercises does not exist or no records found:', error.message);
+      }
+
+      // 1. Eliminar todas las actividades vinculadas (incluyendo formularios)
+      await this.activitiesService.removeByContentId(id);
+
+      // 2. Eliminar comentarios del contenido
+      const comments = await this.contentCommentsRepository.find({
+        where: { contentId: id }
+      });
+      if (comments.length > 0) {
+        await this.contentCommentsRepository.remove(comments);
+      }
+
+      // 3. Desasignar profesores (limpiar la relación many-to-many)
+      if (content.assignedTeachers && content.assignedTeachers.length > 0) {
+        content.assignedTeachers = [];
+        await this.contentsRepository.save(content);
+      }
+
+      // 4. Eliminar el contenido
+      await this.contentsRepository.remove(content);
+
+      // 5. Recalcular tiempos en cascada si el contenido tenía skill, level o language
+      if (content.skillId) {
+        await this.timeCalculationService.updateSkillCalculatedTime(content.skillId);
+      }
+      if (content.levelId) {
+        await this.timeCalculationService.updateLevelCalculatedTime(content.levelId);
+      }
+      if (content.languageId) {
+        await this.timeCalculationService.updateLanguageCalculatedTime(content.languageId);
+      }
+
+      return { ...content, id };
+    } catch (error) {
+      throw new BadRequestException(`Error deleting content: ${error.message}`);
+    }
   }
 
 

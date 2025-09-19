@@ -19,5 +19,6 @@ import { CommonModule } from '../common/common.module';
     ]),
     CommonModule,
   ],
+  exports: [ActivitiesService],
 })
 export class ActivitiesModule {}

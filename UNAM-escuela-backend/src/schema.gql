@@ -255,6 +255,11 @@ type PaginatedContents {
   hasPreviousPage: Boolean!
 }
 
+type RemoveContentResponse {
+  success: Boolean!
+  message: String!
+}
+
 type PaginatedSkills {
   skills: [Skill!]!
   total: Int!
@@ -374,6 +379,10 @@ type Query {
   validatedContentsBySkill(skillId: ID!): [Content!]!
   validatedContentsByLevelAndSkill(levelId: ID!, skillId: ID!): [Content!]!
   contentComments(contentId: ID!): [ContentComment!]!
+  activities: [Activity!]!
+  activitiesByContent(contentId: ID!): [Activity!]!
+  exercisesByContent(contentId: ID!): [Activity!]!
+  activity(id: ID!): Activity!
   skillsActivePublic: [Skill!]!
   skillsByLevelPublic(levelId: ID!): [Skill!]!
   skillPublic(id: ID!): Skill!
@@ -383,10 +392,6 @@ type Query {
   skillsByLevel(levelId: ID!): [Skill!]!
   skillsByLanguage(lenguageId: ID!): [Skill!]!
   skillsPaginated(search: String, page: Int = 1, limit: Int = 10, isActive: Boolean, levelId: ID, lenguageId: ID): PaginatedSkills!
-  activities: [Activity!]!
-  activitiesByContent(contentId: ID!): [Activity!]!
-  exercisesByContent(contentId: ID!): [Activity!]!
-  activity(id: ID!): Activity!
   homeworks: [Homework!]!
   homework(id: Int!): Homework!
   users(roles: [ValidRoles!] = []): [User!]!
@@ -436,7 +441,7 @@ type Mutation {
   updateContent(updateContentInput: UpdateContentInput!): Content!
   assignTeachersToContent(contentId: ID!, teacherIds: [ID!]!): Content!
   removeTeacherFromContent(contentId: ID!, teacherId: ID!): Content!
-  removeContent(id: ID!): Content!
+  removeContent(id: ID!): RemoveContentResponse!
   updateContentMarkdown(contentId: ID!, markdownContent: String!): Boolean!
   validateContent(contentId: ID!): Content!
   invalidateContent(contentId: ID!): Content!
@@ -445,13 +450,13 @@ type Mutation {
   createContentComment(createContentCommentInput: CreateContentCommentInput!): ContentComment!
   updateContentComment(updateContentCommentInput: UpdateContentCommentInput!): ContentComment!
   deleteContentComment(commentId: ID!): Boolean!
+  createActivity(createActivityInput: CreateActivityInput!): Activity!
+  updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
+  removeActivity(id: ID!): Activity!
   createSkill(createSkillInput: CreateSkillInput!): Skill!
   updateSkill(updateSkillInput: UpdateSkillInput!): Skill!
   removeSkill(id: ID!): Skill!
   toggleSkillActive(id: ID!): Skill!
-  createActivity(createActivityInput: CreateActivityInput!): Activity!
-  updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
-  removeActivity(id: ID!): Activity!
   createHomework(createHomeworkInput: CreateHomeworkInput!): Homework!
   updateHomework(updateHomeworkInput: UpdateHomeworkInput!): Homework!
   removeHomework(id: Int!): Homework!
@@ -535,37 +540,6 @@ input UpdateContentCommentInput {
   comment: String!
 }
 
-input CreateSkillInput {
-  name: String!
-  description: String!
-  color: String
-  imageUrl: String
-  icon: String
-  objectives: String
-  prerequisites: String
-  difficulty: String
-  estimatedHours: Int
-  tags: [String!]
-  levelId: ID
-  lenguageId: ID
-}
-
-input UpdateSkillInput {
-  name: String
-  description: String
-  color: String
-  imageUrl: String
-  icon: String
-  objectives: String
-  prerequisites: String
-  difficulty: String
-  estimatedHours: Int
-  tags: [String!]
-  levelId: ID
-  lenguageId: ID
-  id: ID!
-}
-
 input CreateActivityInput {
   name: String!
   description: String!
@@ -617,6 +591,37 @@ input UpdateActivityInput {
   formId: ID
   estimatedTime: Int
   questions: [CreateFormQuestionInput!]
+  id: ID!
+}
+
+input CreateSkillInput {
+  name: String!
+  description: String!
+  color: String
+  imageUrl: String
+  icon: String
+  objectives: String
+  prerequisites: String
+  difficulty: String
+  estimatedHours: Int
+  tags: [String!]
+  levelId: ID
+  lenguageId: ID
+}
+
+input UpdateSkillInput {
+  name: String
+  description: String
+  color: String
+  imageUrl: String
+  icon: String
+  objectives: String
+  prerequisites: String
+  difficulty: String
+  estimatedHours: Int
+  tags: [String!]
+  levelId: ID
+  lenguageId: ID
   id: ID!
 }
 

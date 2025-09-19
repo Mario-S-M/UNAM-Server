@@ -47,6 +47,11 @@ type Level {
   lenguage: Lenguage
 }
 
+type DeleteLevelResponse {
+  success: Boolean!
+  message: String!
+}
+
 type User {
   id: ID!
   fullName: String!
@@ -270,6 +275,11 @@ type PaginatedSkills {
   hasPreviousPage: Boolean!
 }
 
+type DeleteSkillResponse {
+  success: Boolean!
+  message: String!
+}
+
 type Homework {
   id: ID!
   name: String!
@@ -435,7 +445,7 @@ input FormFiltersInput {
 type Mutation {
   createLevel(createLevelInput: CreateLevelInput!): Level!
   updateLevel(updateLevelInput: UpdateLevelInput!): Level!
-  removeLevel(id: ID!): Level!
+  removeLevel(id: ID!): DeleteLevelResponse!
   toggleLevelStatus(id: ID!): Level!
   createContent(createContentInput: CreateContentInput!): Content!
   updateContent(updateContentInput: UpdateContentInput!): Content!
@@ -455,7 +465,7 @@ type Mutation {
   removeActivity(id: ID!): Activity!
   createSkill(createSkillInput: CreateSkillInput!): Skill!
   updateSkill(updateSkillInput: UpdateSkillInput!): Skill!
-  removeSkill(id: ID!): Skill!
+  removeSkill(id: ID!): DeleteSkillResponse!
   toggleSkillActive(id: ID!): Skill!
   createHomework(createHomeworkInput: CreateHomeworkInput!): Homework!
   updateHomework(updateHomeworkInput: UpdateHomeworkInput!): Homework!

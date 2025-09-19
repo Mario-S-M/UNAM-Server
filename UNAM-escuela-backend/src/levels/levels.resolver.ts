@@ -3,6 +3,7 @@ import { UseGuards, Logger } from '@nestjs/common';
 import { LevelsService } from './levels.service';
 import { Level } from './entities/level.entity';
 import { CreateLevelInput, UpdateLevelInput } from './dto/inputs';
+import { DeleteLevelResponse } from './dto/delete-level-response.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ValidRoles } from 'src/auth/enums/valid-roles.enum';
@@ -84,13 +85,17 @@ export class LevelsResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Level)
+  @Mutation(() => DeleteLevelResponse)
   async removeLevel(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser([ValidRoles.superUser, ValidRoles.admin]) user: User,
-  ): Promise<Level> {
+  ): Promise<DeleteLevelResponse> {
     this.logger.log(`User ${user.fullName} removing level: ${id}`);
-    return this.levelsService.remove(id, user);
+    await this.levelsService.remove(id, user);
+    return {
+      success: true,
+      message: 'Nivel eliminado exitosamente'
+    };
   }
 
   @UseGuards(JwtAuthGuard)

@@ -6,6 +6,7 @@ import { CreateSkillInput } from './dto/create-skill.input';
 import { UpdateSkillInput } from './dto/update-skill.input';
 import { SkillsFilterArgs } from './dto/args/skills-filter.arg';
 import { PaginatedSkills } from './dto/paginated-skills.output';
+import { DeleteSkillResponse } from './dto/delete-skill-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
@@ -120,12 +121,16 @@ export class SkillsResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Mutation(() => Skill)
-  removeSkill(
+  @Mutation(() => DeleteSkillResponse)
+  async removeSkill(
     @Args('id', { type: () => ID }) id: string,
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser]) user: User,
-  ): Promise<Skill> {
-    return this.skillsService.remove(id);
+  ): Promise<DeleteSkillResponse> {
+    await this.skillsService.remove(id);
+    return {
+      success: true,
+      message: 'Skill eliminado exitosamente'
+    };
   }
 
   @UseGuards(JwtAuthGuard)

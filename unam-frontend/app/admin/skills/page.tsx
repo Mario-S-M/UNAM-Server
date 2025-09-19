@@ -98,6 +98,16 @@ interface Skill {
   name: string;
   description: string;
   isActive: boolean;
+  levelId?: string | null;
+  lenguageId?: string | null;
+  level?: {
+    id: string;
+    name: string;
+  };
+  lenguage?: {
+    id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -116,7 +126,22 @@ type SkillFormData = {
   name: string;
   description: string;
   isActive: boolean;
+  levelId?: string | null;
+  lenguageId?: string | null;
 };
+
+interface Language {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+
+interface Level {
+  id: string;
+  name: string;
+  isActive: boolean;
+  lenguageId: string;
+}
 
 interface ColumnVisibility {
   name: boolean;
@@ -145,7 +170,12 @@ export default function SkillsPage() {
     name: '',
     description: '',
     isActive: true,
+    levelId: null,
+    lenguageId: null,
   });
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [filteredLevels, setFilteredLevels] = useState<Level[]>([]);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -172,6 +202,16 @@ export default function SkillsPage() {
               name
               description
               isActive
+              levelId
+              lenguageId
+              level {
+                id
+                name
+              }
+              lenguage {
+                id
+                name
+              }
               createdAt
               updatedAt
             }
@@ -210,9 +250,56 @@ export default function SkillsPage() {
     }
   }, [token, search, currentPage, pageSize, activeFilter]);
 
+  const fetchLanguages = useCallback(async () => {
+    if (!token) return;
+    
+    try {
+      const query = `
+        query GetLanguages {
+          lenguages {
+            id
+            name
+            isActive
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, {}, token);
+      setLanguages(response.data?.lenguages?.filter((lang: Language) => lang.isActive) || []);
+    } catch (error) {
+      console.error('Error fetching languages:', error);
+      toast.error('Error al cargar idiomas');
+    }
+  }, [token]);
+
+  const fetchLevels = useCallback(async () => {
+    if (!token) return;
+    
+    try {
+      const query = `
+        query GetLevels {
+          levels {
+            id
+            name
+            isActive
+            lenguageId
+          }
+        }
+      `;
+      
+      const response = await fetchGraphQL(query, {}, token);
+      setLevels(response.data?.levels?.filter((level: Level) => level.isActive) || []);
+    } catch (error) {
+      console.error('Error fetching levels:', error);
+      toast.error('Error al cargar niveles');
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchSkills();
-  }, [fetchSkills]);
+    fetchLanguages();
+    fetchLevels();
+  }, [fetchSkills, fetchLanguages, fetchLevels]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -231,8 +318,11 @@ export default function SkillsPage() {
       name: '',
       description: '',
       isActive: true,
+      levelId: null,
+      lenguageId: null,
     });
     setEditingSkill(null);
+    setFilteredLevels([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -294,8 +384,35 @@ export default function SkillsPage() {
       name: skill.name,
       description: skill.description,
       isActive: skill.isActive,
+      levelId: skill.levelId || null,
+      lenguageId: skill.lenguageId || null,
     });
+    
+    // Filtrar niveles si hay un idioma seleccionado
+    if (skill.lenguageId) {
+      const filtered = levels.filter(level => level.lenguageId === skill.lenguageId);
+      setFilteredLevels(filtered);
+    } else {
+      setFilteredLevels([]);
+    }
+    
     setIsDialogOpen(true);
+  };
+
+  // Función para manejar el cambio de idioma
+  const handleLanguageChange = (languageId: string | null) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      lenguageId: languageId,
+      levelId: null // Reset level when language changes
+    }));
+    
+    if (languageId) {
+      const filtered = levels.filter(level => level.lenguageId === languageId);
+      setFilteredLevels(filtered);
+    } else {
+      setFilteredLevels([]);
+    }
   };
 
   const handleDelete = async (skill: Skill) => {
@@ -393,6 +510,49 @@ export default function SkillsPage() {
                             placeholder="Descripción de la habilidad..."
                             className="w-full min-h-[100px] px-3 py-2 border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold border-b pb-2">Asignación</h3>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="language">Idioma *</Label>
+                          <Select
+                            value={formData.lenguageId || ''}
+                            onValueChange={(value) => handleLanguageChange(value || null)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona un idioma" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {languages.map((language) => (
+                                <SelectItem key={language.id} value={language.id}>
+                                  {language.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="level">Nivel *</Label>
+                          <Select
+                            value={formData.levelId || ''}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, levelId: value || null }))}
+                            disabled={!formData.lenguageId || filteredLevels.length === 0}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={!formData.lenguageId ? "Primero selecciona un idioma" : "Selecciona un nivel"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {filteredLevels.map((level) => (
+                                <SelectItem key={level.id} value={level.id}>
+                                  {level.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>

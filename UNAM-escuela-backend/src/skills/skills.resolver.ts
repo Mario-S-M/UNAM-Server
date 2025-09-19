@@ -118,6 +118,22 @@ export class SkillsResolver {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Query(() => [Skill], { name: 'skillsByLevelAndLanguage' })
+  findByLevelAndLanguage(
+    @Args('levelId', { type: () => ID }) levelId: string,
+    @Args('languageId', { type: () => ID }) languageId: string,
+    @CurrentUser([
+      ValidRoles.admin,
+      ValidRoles.superUser,
+      ValidRoles.docente,
+      ValidRoles.alumno,
+    ])
+    user: User,
+  ): Promise<Skill[]> {
+    return this.skillsService.findByLevelAndLanguage(levelId, languageId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => UpdateSkillResponse)
   async updateSkill(
     @Args('updateSkillInput') updateSkillInput: UpdateSkillInput,

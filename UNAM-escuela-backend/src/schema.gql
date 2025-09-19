@@ -421,6 +421,7 @@ type Query {
   skill(id: ID!): Skill!
   skillsByLevel(levelId: ID!): [Skill!]!
   skillsByLanguage(lenguageId: ID!): [Skill!]!
+  skillsByLevelAndLanguage(levelId: ID!, languageId: ID!): [Skill!]!
   skillsPaginated(search: String, page: Int = 1, limit: Int = 10, isActive: Boolean, levelId: ID, lenguageId: ID): PaginatedSkills!
   homeworks: [Homework!]!
   homework(id: Int!): Homework!

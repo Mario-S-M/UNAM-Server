@@ -284,13 +284,13 @@ export default function ContenidoPage() {
   }, [token]);
 
   const fetchSkills = useCallback(async (levelId?: string, languageId?: string) => {
-    if (!token || !levelId) return;
+    if (!token || !levelId || !languageId) return;
     
     setSkillsLoading(true);
     try {
       const query = `
-        query GetSkillsByLevel($levelId: ID!) {
-          skillsByLevel(levelId: $levelId) {
+        query GetSkillsByLevelAndLanguage($levelId: ID!, $languageId: ID!) {
+          skillsByLevelAndLanguage(levelId: $levelId, languageId: $languageId) {
             id
             name
             description
@@ -301,8 +301,8 @@ export default function ContenidoPage() {
         }
       `;
       
-      const response = await fetchGraphQL(query, { levelId }, token);
-      const skills = response.skillsByLevel || [];
+      const response = await fetchGraphQL(query, { levelId, languageId }, token);
+      const skills = response.skillsByLevelAndLanguage || [];
       
       setSkills(skills);
     } catch (error) {

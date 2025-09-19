@@ -65,6 +65,14 @@ export class SkillsService {
     });
   }
 
+  async findByLevelAndLanguage(levelId: string, languageId: string): Promise<Skill[]> {
+    return await this.skillsRepository.find({
+      where: { levelId, lenguageId: languageId, isActive: true },
+      relations: ['level', 'lenguage'],
+      order: { name: 'ASC' },
+    });
+  }
+
   async update(id: string, updateSkillInput: UpdateSkillInput): Promise<Skill> {
     const skill = await this.findOne(id);
     Object.assign(skill, updateSkillInput);

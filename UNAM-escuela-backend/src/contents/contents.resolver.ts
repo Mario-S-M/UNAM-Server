@@ -2,10 +2,13 @@ import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { ContentsService } from './contents.service';
 import { Content } from './entities/content.entity';
 import { ContentComment } from './entities/content-comment.entity';
+import { PlateComment } from './entities/plate-comment.entity';
 import { CreateContentInput } from './dto/create-content.input';
 import { UpdateContentInput } from './dto/update-content.input';
 import { CreateContentCommentInput } from './dto/create-content-comment.input';
 import { UpdateContentCommentInput } from './dto/update-content-comment.input';
+import { CreatePlateCommentInput } from './dto/create-plate-comment.input';
+import { UpdatePlateCommentInput } from './dto/update-plate-comment.input';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -408,5 +411,51 @@ export class ContentsResolver {
     @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
   ): Promise<boolean> {
     return this.contentsService.deleteComment(commentId, user.id);
+  }
+
+  // PlateJS Comments Mutations and Queries
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => PlateComment, { name: 'createPlateComment' })
+  createPlateComment(
+    @Args('createPlateCommentInput') createPlateCommentInput: CreatePlateCommentInput,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<PlateComment> {
+    return this.contentsService.createPlateComment(createPlateCommentInput, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Query(() => [PlateComment], { name: 'plateComments' })
+  getPlateComments(
+    @Args('contentId', { type: () => ID }) contentId: string,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<PlateComment[]> {
+    return this.contentsService.getPlateCommentsByContent(contentId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => PlateComment, { name: 'updatePlateComment' })
+  updatePlateComment(
+    @Args('updatePlateCommentInput') updatePlateCommentInput: UpdatePlateCommentInput,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<PlateComment> {
+    return this.contentsService.updatePlateComment(updatePlateCommentInput, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => Boolean, { name: 'deletePlateComment' })
+  deletePlateComment(
+    @Args('commentId', { type: () => ID }) commentId: string,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<boolean> {
+    return this.contentsService.deletePlateComment(commentId, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Mutation(() => PlateComment, { name: 'resolvePlateComment' })
+  resolvePlateComment(
+    @Args('commentId', { type: () => ID }) commentId: string,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente]) user: User,
+  ): Promise<PlateComment> {
+    return this.contentsService.resolvePlateComment(commentId, user.id);
   }
 }

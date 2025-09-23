@@ -47,4 +47,9 @@ export class UpdateActivityInput extends PartialType(CreateActivityInput) {
   @Type(() => CreateFormQuestionInput)
   @Field(() => [CreateFormQuestionInput], { nullable: true })
   questions?: CreateFormQuestionInput[];
+
+  @IsOptional()
+  @IsString()
+  @Field(() => String, { nullable: true })
+  validationStatus?: string;
 }

@@ -47,7 +47,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Settings, ChevronLeft, ChevronRight, Filter, Edit, Trash2, Check, X } from 'lucide-react';
+import { Plus, Search, Settings, ChevronLeft, ChevronRight, Filter, Edit, Trash2, Check, X, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -733,6 +733,11 @@ export default function ContenidoPage() {
     }
   };
 
+  const handlePreview = (contentId: string) => {
+    // Abrir la vista previa en una nueva pestaña
+    window.open(`/admin/contenido/preview/${contentId}`, '_blank');
+  };
+
 
 
   // Verificar si el usuario tiene permisos para ver comentarios
@@ -1244,6 +1249,15 @@ export default function ContenidoPage() {
                               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePreview(content.id)}
+                              title="Vista previa del contenido"
+                              className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 border-purple-200"
+                            >
+                              <Eye className="h-4 w-4" />
                             </Button>
                             {content.validationStatus === 'APPROVED' ? (
                               <Button

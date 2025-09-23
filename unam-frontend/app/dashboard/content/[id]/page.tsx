@@ -6,12 +6,13 @@ import { useQuery } from "@apollo/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { FileText, User, Calendar, CheckCircle, Clock, XCircle, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { GET_CONTENT_PUBLIC } from "@/lib/graphql/dashboardQueries";
 import { ExamView } from "@/components/ExamView";
-import { ReadOnlyMarkdownEditor } from "@/components/editor/ReadOnlyMarkdownEditor";
+import CommentOnlyMarkdownEditor from "@/components/admin/CommentOnlyMarkdownEditor";
 
 
 interface Content {
@@ -289,13 +290,9 @@ export default function ContentDetail() {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {teacher.roles?.map((role, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {role}
-                          </Badge>
+                          <RoleBadge key={index} role={role} className="text-xs" />
                         )) || (
-                          <Badge variant="outline" className="text-xs">
-                            Usuario
-                          </Badge>
+                          <RoleBadge role="mortal" className="text-xs" />
                         )}
                       </div>
                     </div>
@@ -344,7 +341,7 @@ export default function ContentDetail() {
             <CardTitle>Contenido Educativo</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ReadOnlyMarkdownEditor contentId={content.id} className="min-h-[400px]" />
+            <CommentOnlyMarkdownEditor contentId={content.id} className="min-h-[400px]" />
           </CardContent>
         </Card>
 

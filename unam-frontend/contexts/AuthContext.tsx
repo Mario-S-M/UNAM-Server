@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCookie, setCookie, removeCookie } from '@/lib/cookies';
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -120,7 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
       
       if (data.errors) {
-        throw new Error(data.errors[0].message);
+        // Mostrar toast de error en lugar de lanzar excepción
+        toast.error('Sesión expirada', {
+          description: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+        });
+        logout();
+        return;
       }
 
       const userData = data.data.revalidate.user;

@@ -2,7 +2,7 @@
 
 import { useQuery, gql } from '@apollo/client';
 import { useParams } from 'next/navigation';
-import { ReadOnlyMarkdownEditor } from '@/components/editor/ReadOnlyMarkdownEditor';
+import CommentOnlyMarkdownEditor from '@/components/admin/CommentOnlyMarkdownEditor';
 import { ContentActivitiesReadOnly } from '@/components/content/ContentActivitiesReadOnly';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -150,7 +150,7 @@ export default function PublicContentPage() {
           
           {/* Contenido Markdown */}
           <div className="flex-1 overflow-hidden">
-            <ReadOnlyMarkdownEditor contentId={contentId} />
+            <CommentOnlyMarkdownEditor contentId={contentId} />
           </div>
         </div>
 

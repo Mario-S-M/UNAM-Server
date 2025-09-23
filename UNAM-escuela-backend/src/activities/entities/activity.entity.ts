@@ -57,6 +57,10 @@ export class Activity {
   @Field(() => Int, { nullable: true })
   estimatedTime?: number; // Tiempo estimado en minutos para completar la actividad
 
+  @Column({ default: 'sin validar' })
+  @Field(() => String)
+  validationStatus: string; // Estado de validación: 'sin validar', 'APPROVED', 'REJECTED'
+
   @OneToOne(() => Form, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'formId' })
   @Field(() => Form, { nullable: true })

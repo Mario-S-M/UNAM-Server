@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/ui/role-badge';
 import { Plus, Edit, Trash2, Users, Search, Settings, ChevronLeft, ChevronRight, Filter, Key } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -663,9 +664,7 @@ export default function UsersPage() {
                         <TableCell className="text-center">
                           <div className="flex gap-1 justify-center">
                             {user.roles.map((role, index) => (
-                              <Badge key={index} variant="secondary">
-                                {ROLES.find(r => r.value === role)?.label || role}
-                              </Badge>
+                              <RoleBadge key={index} role={role} />
                             ))}
                           </div>
                         </TableCell>

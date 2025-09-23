@@ -12,6 +12,7 @@ import { Editor, EditorContainer } from '@/components/ui/editor';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { discussionPlugin } from '@/components/editor/plugins/discussion-kit';
+import { usePlateComments } from '@/hooks/usePlateComments';
 
 const GET_CONTENT_MARKDOWN_PUBLIC = gql`
   query ContentMarkdownPublic($contentId: ID!) {
@@ -40,11 +41,41 @@ export function CommentableContentEditor({
     }
   );
 
+  // Hook para manejar comentarios de PlateJS
+  const {
+    comments,
+    loading: commentsLoading,
+    createComment,
+    updateComment,
+    deleteComment,
+    resolveComment,
+  } = usePlateComments(contentId);
+
   const content = data?.contentMarkdownPublic;
   const [initialValue, setInitialValue] = React.useState<any[]>([{
     type: 'p',
     children: [{ text: 'Cargando contenido...' }],
   }]);
+
+  // Función para manejar la creación de comentarios
+  const handleCreateComment = React.useCallback(async (commentData: {
+    comment: string;
+    commentRich?: string;
+    textSelection?: string;
+    selectedText?: string;
+    position?: string;
+  }) => {
+    try {
+      await createComment({
+        ...commentData,
+        contentId,
+      });
+      toast.success('Comentario guardado exitosamente');
+    } catch (error) {
+      console.error('Error creating comment:', error);
+      toast.error('Error al guardar el comentario');
+    }
+  }, [createComment, contentId]);
 
   // Configurar el editor de Plate con funcionalidad de comentarios
   const editor = usePlateEditor({
@@ -62,6 +93,8 @@ export function CommentableContentEditor({
             },
           },
           discussions: [],
+          contentId, // Pasar el contentId para usar en la persistencia
+          onCreateComment: handleCreateComment,
         },
       }),
     ],

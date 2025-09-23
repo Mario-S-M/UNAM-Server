@@ -7,8 +7,11 @@ import { CreateContentInput } from './dto/create-content.input';
 import { UpdateContentInput } from './dto/update-content.input';
 import { CreateContentCommentInput } from './dto/create-content-comment.input';
 import { UpdateContentCommentInput } from './dto/update-content-comment.input';
+import { CreatePlateCommentInput } from './dto/create-plate-comment.input';
+import { UpdatePlateCommentInput } from './dto/update-plate-comment.input';
 import { Content } from './entities/content.entity';
 import { ContentComment } from './entities/content-comment.entity';
+import { PlateComment } from './entities/plate-comment.entity';
 import { User } from '../users/entities/user.entity';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
 import { Repository } from 'typeorm';
@@ -29,6 +32,8 @@ export class ContentsService {
     private readonly contentsRepository: Repository<Content>,
     @InjectRepository(ContentComment)
     private readonly contentCommentsRepository: Repository<ContentComment>,
+    @InjectRepository(PlateComment)
+    private readonly plateCommentsRepository: Repository<PlateComment>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly timeCalculationService: TimeCalculationService,
@@ -1081,5 +1086,96 @@ export class ContentsService {
 
     await this.contentCommentsRepository.delete(commentId);
     return true;
+  }
+
+  // PlateJS Comments Methods
+  async createPlateComment(
+    createPlateCommentInput: CreatePlateCommentInput,
+    userId: string,
+  ): Promise<PlateComment> {
+    // Verificar que el contenido existe
+    const content = await this.contentsRepository.findOne({
+      where: { id: createPlateCommentInput.contentId },
+    });
+
+    if (!content) {
+      throw new NotFoundException('Contenido no encontrado');
+    }
+
+    const plateComment = this.plateCommentsRepository.create({
+      ...createPlateCommentInput,
+      userId,
+    });
+
+    return await this.plateCommentsRepository.save(plateComment);
+  }
+
+  async getPlateCommentsByContent(contentId: string): Promise<PlateComment[]> {
+    return await this.plateCommentsRepository.find({
+      where: { contentId },
+      relations: ['user'],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async updatePlateComment(
+    updatePlateCommentInput: UpdatePlateCommentInput,
+    userId: string,
+  ): Promise<PlateComment> {
+    const { id, ...updateData } = updatePlateCommentInput;
+
+    const plateComment = await this.plateCommentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!plateComment) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    if (plateComment.userId !== userId) {
+      throw new BadRequestException(
+        'No tienes permisos para actualizar este comentario',
+      );
+    }
+
+    // Marcar como editado si se está actualizando el contenido
+    if (updateData.comment || updateData.commentRich) {
+      updateData.isEdited = true;
+    }
+
+    Object.assign(plateComment, updateData);
+    return await this.plateCommentsRepository.save(plateComment);
+  }
+
+  async deletePlateComment(commentId: string, userId: string): Promise<boolean> {
+    const plateComment = await this.plateCommentsRepository.findOne({
+      where: { id: commentId },
+    });
+
+    if (!plateComment) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    if (plateComment.userId !== userId) {
+      throw new BadRequestException(
+        'No tienes permisos para eliminar este comentario',
+      );
+    }
+
+    await this.plateCommentsRepository.remove(plateComment);
+    return true;
+  }
+
+  async resolvePlateComment(commentId: string, userId: string): Promise<PlateComment> {
+    const plateComment = await this.plateCommentsRepository.findOne({
+      where: { id: commentId },
+    });
+
+    if (!plateComment) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    plateComment.isResolved = true;
+    return await this.plateCommentsRepository.save(plateComment);
   }
 }

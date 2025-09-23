@@ -8,17 +8,20 @@ import { CommentModal } from '@/content/components/CommentModal';
 
 import { ToolbarButton } from './toolbar';
 
-export function CommentToolbarButton() {
+export function CommentToolbarButton({ contentId: propContentId }: { contentId?: string } = {}) {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   
-  // Usar el contexto de forma defensiva
-  let contentId: string | null = null;
-  try {
-    const context = useContentContext();
-    contentId = context.contentId;
-  } catch (error) {
-    // Si no hay contexto disponible, el botón estará deshabilitado
-    contentId = null;
+  // Usar el contexto de forma defensiva o usar el contentId pasado como prop
+  let contentId: string | null = propContentId || null;
+  
+  if (!contentId) {
+    try {
+      const context = useContentContext();
+      contentId = context.contentId;
+    } catch (error) {
+      // Si no hay contexto disponible y no se pasó contentId como prop, el botón estará deshabilitado
+      contentId = null;
+    }
   }
 
   const handleClick = () => {

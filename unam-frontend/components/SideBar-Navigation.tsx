@@ -13,6 +13,7 @@ import { AuthModal } from "./auth/AuthModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { User, LogIn, UserPlus, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -68,9 +69,7 @@ export default function AppSidebar() {
               </div>
               <div className="flex flex-wrap gap-1">
                 {user.roles.map((role, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {role}
-                  </Badge>
+                  <RoleBadge key={index} role={role} className="text-xs" />
                 ))}
               </div>
               <Button

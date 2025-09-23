@@ -392,3 +392,102 @@ export const DELETE_CONTENT_COMMENT = gql`
     deleteContentComment(commentId: $commentId)
   }
 `;
+
+// PlateJS Comments Queries
+export const GET_PLATE_COMMENTS = gql`
+  query GetPlateComments($contentId: ID!) {
+    plateComments(contentId: $contentId) {
+      id
+      comment
+      commentRich
+      textSelection
+      selectedText
+      position
+      isResolved
+      isEdited
+      createdAt
+      updatedAt
+      user {
+        id
+        fullName
+        email
+        roles
+      }
+    }
+  }
+`;
+
+export const CREATE_PLATE_COMMENT = gql`
+  mutation CreatePlateComment($createPlateCommentInput: CreatePlateCommentInput!) {
+    createPlateComment(createPlateCommentInput: $createPlateCommentInput) {
+      id
+      comment
+      commentRich
+      textSelection
+      selectedText
+      position
+      isResolved
+      isEdited
+      createdAt
+      updatedAt
+      user {
+        id
+        fullName
+        email
+        roles
+      }
+    }
+  }
+`;
+
+export const UPDATE_PLATE_COMMENT = gql`
+  mutation UpdatePlateComment($updatePlateCommentInput: UpdatePlateCommentInput!) {
+    updatePlateComment(updatePlateCommentInput: $updatePlateCommentInput) {
+      id
+      comment
+      commentRich
+      textSelection
+      selectedText
+      position
+      isResolved
+      isEdited
+      createdAt
+      updatedAt
+      user {
+        id
+        fullName
+        email
+        roles
+      }
+    }
+  }
+`;
+
+export const DELETE_PLATE_COMMENT = gql`
+  mutation DeletePlateComment($commentId: ID!) {
+    deletePlateComment(commentId: $commentId)
+  }
+`;
+
+export const RESOLVE_PLATE_COMMENT = gql`
+  mutation ResolvePlateComment($commentId: ID!) {
+    resolvePlateComment(commentId: $commentId) {
+      id
+      comment
+      commentRich
+      textSelection
+      selectedText
+      position
+      isResolved
+      isEdited
+      createdAt
+      updatedAt
+      user {
+        id
+        fullName
+        email
+        roles
+      }
+    }
+  }
+`;

@@ -138,6 +138,23 @@ type ContentComment {
   author: User!
 }
 
+type PlateComment {
+  id: ID!
+  comment: String!
+  commentRich: String
+  contentId: ID!
+  userId: ID!
+  textSelection: String
+  selectedText: String
+  position: String
+  isResolved: Boolean!
+  isEdited: Boolean!
+  createdAt: String!
+  updatedAt: String!
+  content: Content!
+  user: User!
+}
+
 type FormQuestionOption {
   id: ID!
   optionText: String!
@@ -257,6 +274,7 @@ type Activity {
   userId: Int!
   formId: ID
   estimatedTime: Int
+  validationStatus: String!
   form: Form
 }
 
@@ -409,6 +427,7 @@ type Query {
   validatedContentsBySkill(skillId: ID!): [Content!]!
   validatedContentsByLevelAndSkill(levelId: ID!, skillId: ID!): [Content!]!
   contentComments(contentId: ID!): [ContentComment!]!
+  plateComments(contentId: ID!): [PlateComment!]!
   activities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
   exercisesByContent(contentId: ID!): [Activity!]!
@@ -481,6 +500,10 @@ type Mutation {
   createContentComment(createContentCommentInput: CreateContentCommentInput!): ContentComment!
   updateContentComment(updateContentCommentInput: UpdateContentCommentInput!): ContentComment!
   deleteContentComment(commentId: ID!): Boolean!
+  createPlateComment(createPlateCommentInput: CreatePlateCommentInput!): PlateComment!
+  updatePlateComment(updatePlateCommentInput: UpdatePlateCommentInput!): PlateComment!
+  deletePlateComment(commentId: ID!): Boolean!
+  resolvePlateComment(commentId: ID!): PlateComment!
   createActivity(createActivityInput: CreateActivityInput!): Activity!
   updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
   removeActivity(id: ID!): Activity!
@@ -571,6 +594,26 @@ input UpdateContentCommentInput {
   comment: String!
 }
 
+input CreatePlateCommentInput {
+  comment: String!
+  commentRich: String
+  contentId: ID!
+  textSelection: String
+  selectedText: String
+  position: String
+}
+
+input UpdatePlateCommentInput {
+  id: ID!
+  comment: String
+  commentRich: String
+  textSelection: String
+  selectedText: String
+  position: String
+  isResolved: Boolean
+  isEdited: Boolean
+}
+
 input CreateActivityInput {
   name: String!
   description: String!
@@ -623,6 +666,7 @@ input UpdateActivityInput {
   estimatedTime: Int
   questions: [CreateFormQuestionInput!]
   id: ID!
+  validationStatus: String
 }
 
 input CreateSkillInput {

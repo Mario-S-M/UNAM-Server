@@ -135,6 +135,8 @@ export const discussionPlugin = createPlatePlugin({
     currentUserId: 'alice',
     discussions: discussionsData,
     users: usersData,
+    contentId: undefined as string | undefined,
+    onCreateComment: undefined as ((commentData: any) => Promise<void>) | undefined,
   },
 })
   .configure({

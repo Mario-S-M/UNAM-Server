@@ -44,6 +44,7 @@ import {
   useResolveSuggestion,
 } from './block-suggestion';
 import { Comment, CommentCreateForm } from './comment';
+import { PersistentCommentCreateForm } from './persistent-comment';
 
 export const BlockDiscussion: RenderNodeWrapper<AnyPluginConfig> = (props) => {
   const { editor, element } = props;
@@ -181,14 +182,12 @@ const BlockCommentContent = ({
       <Popover
         open={open}
         onOpenChange={(_open_) => {
-          if (!_open_ && isCommenting && draftCommentNode) {
-            editor.tf.unsetNodes(getDraftCommentKey(), {
-              at: [],
-              mode: 'lowest',
-              match: (n) => n[getDraftCommentKey()],
-            });
+          // Solo cerrar si no se está escribiendo un comentario
+          if (!_open_ && !isCommenting) {
+            setOpen(_open_);
+          } else if (_open_) {
+            setOpen(_open_);
           }
-          setOpen(_open_);
         }}
       >
         <div className="w-full">{children}</div>
@@ -287,6 +286,8 @@ function BlockComment({
   isLast: boolean;
 }) {
   const [editingId, setEditingId] = React.useState<string | null>(null);
+  const editor = useEditorRef();
+  const contentId = editor.getOption(discussionPlugin, 'contentId');
 
   return (
     <React.Fragment key={discussion.id}>
@@ -303,7 +304,14 @@ function BlockComment({
             showDocumentContent
           />
         ))}
-        <CommentCreateForm discussionId={discussion.id} />
+        {contentId ? (
+          <PersistentCommentCreateForm 
+            discussionId={discussion.id} 
+            contentId={contentId}
+          />
+        ) : (
+          <CommentCreateForm discussionId={discussion.id} />
+        )}
       </div>
 
       {!isLast && <div className="h-px w-full bg-muted" />}

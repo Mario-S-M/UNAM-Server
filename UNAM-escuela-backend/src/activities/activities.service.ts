@@ -168,6 +168,9 @@ export class ActivitiesService {
     if (updateActivityInput.example) activity.example = updateActivityInput.example;
     if (updateActivityInput.formId !== undefined) activity.formId = updateActivityInput.formId;
     if (updateActivityInput.estimatedTime !== undefined) activity.estimatedTime = updateActivityInput.estimatedTime;
+    
+    // Auto-invalidate when activity is updated by teacher
+    activity.validationStatus = 'sin validar';
 
     // Si se proporcionan preguntas, actualizar o crear formulario
     if (updateActivityInput.questions) {

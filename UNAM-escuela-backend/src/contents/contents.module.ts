@@ -3,6 +3,7 @@ import { ContentsService } from './contents.service';
 import { ContentsResolver } from './contents.resolver';
 import { Content } from './entities/content.entity';
 import { ContentComment } from './entities/content-comment.entity';
+import { PlateComment } from './entities/plate-comment.entity';
 import { User } from '../users/entities/user.entity';
 import { Skill } from '../skills/entities/skill.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,7 +13,7 @@ import { ActivitiesModule } from '../activities/activities.module';
 @Module({
   providers: [ContentsResolver, ContentsService],
   imports: [
-    TypeOrmModule.forFeature([Content, ContentComment, User, Skill]),
+    TypeOrmModule.forFeature([Content, ContentComment, PlateComment, User, Skill]),
     CommonModule,
     ActivitiesModule,
   ],

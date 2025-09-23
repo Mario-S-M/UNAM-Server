@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { GraduationCap, FileText, LogOut, User, BookOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client";
@@ -208,9 +209,7 @@ export default function TeacherSidebar() {
             </div>
             <div className="flex flex-wrap gap-1">
               {user.roles.map((role) => (
-                <Badge key={role} variant="secondary" className="text-xs">
-                  {role}
-                </Badge>
+                <RoleBadge key={role} role={role} className="text-xs" />
               ))}
             </div>
             <Button

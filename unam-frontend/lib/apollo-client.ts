@@ -61,7 +61,10 @@ const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) 
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
       // Check if it's an authentication error and if the operation is public
-      const isAuthError = message.includes('Usuario no autenticado') || message.includes('no autenticado');
+      const isAuthError = message.includes('Usuario no autenticado') || 
+                         message.includes('no autenticado') || 
+                         message.includes('Unauthorized') || 
+                         message.includes('unauthorized');
       const isPublicOperation = operation.operationName && (
         operation.operationName.includes('Public') || 
         operation.operationName.toLowerCase().includes('public') ||

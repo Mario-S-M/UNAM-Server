@@ -231,7 +231,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     return shuffled;
   };
 
-  // Función para evaluar respuestas de texto de manera flexible
+  // Función para evaluar respuestas de texto de manera estricta
   const evaluateTextAnswer = (userAnswer: string, correctAnswer: string): boolean => {
     // Validación de entrada
     if (!userAnswer || !correctAnswer) {
@@ -241,92 +241,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
     const userText = userAnswer.toLowerCase().trim();
     const correctText = correctAnswer.toLowerCase().trim();
     
-
-
-    // 1. Coincidencia exacta
-    if (userText === correctText) {
-      return true;
-    }
-
-    // 2. Normalización de caracteres especiales y acentos
-    const normalizeText = (text: string) => {
-      return text
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remover acentos
-        .replace(/[^a-z0-9\s]/gi, '') // Remover caracteres especiales
-        .trim();
-    };
-    
-    const normalizedUser = normalizeText(userText);
-    const normalizedCorrect = normalizeText(correctText);
-    
-
-    
-    if (normalizedUser === normalizedCorrect) {
-      return true;
-    }
-
-    // 3. Verificar si la respuesta del usuario está incluida en la respuesta correcta
-    if (normalizedCorrect.includes(normalizedUser) && normalizedUser.length > 0) {
-      return true;
-    }
-
-    // 4. Verificar si la respuesta correcta está incluida en la respuesta del usuario
-    if (normalizedUser.includes(normalizedCorrect) && normalizedCorrect.length > 0) {
-      return true;
-    }
-
-    // 5. Coincidencia de palabras clave (al menos 70% de las palabras)
-    const userWords = normalizedUser.split(/\s+/).filter(word => word.length > 1);
-    const correctWords = normalizedCorrect.split(/\s+/).filter(word => word.length > 1);
-    
-    if (userWords.length > 0 && correctWords.length > 0) {
-      const matchingWords = userWords.filter(word => 
-        correctWords.some(correctWord => 
-          correctWord.includes(word) || word.includes(correctWord)
-        )
-      );
-      const matchPercentage = matchingWords.length / Math.max(userWords.length, correctWords.length);
-
-      
-      if (matchPercentage >= 0.7) {
-        return true;
-      }
-    }
-
-    // 6. Verificación numérica especial
-    const userNumber = parseFloat(userText.replace(/[^0-9.-]/g, ''));
-    const correctNumber = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
-    
-    if (!isNaN(userNumber) && !isNaN(correctNumber)) {
-      const isEqual = userNumber === correctNumber;
-
-      if (isEqual) {
-        return true;
-      }
-    }
-
-    // 7. Verificación de rangos numéricos en texto
-    if (correctText.includes('menor') || correctText.includes('mayor')) {
-      if (!isNaN(userNumber)) {
-        if (correctText.includes('menor de') || correctText.includes('menos de')) {
-          const threshold = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
-          if (!isNaN(threshold)) {
-            const result = userNumber < threshold;
-            return result;
-          }
-        }
-        if (correctText.includes('mayor de') || correctText.includes('más de')) {
-          const threshold = parseFloat(correctText.replace(/[^0-9.-]/g, ''));
-          if (!isNaN(threshold)) {
-            const result = userNumber > threshold;
-            return result;
-          }
-        }
-      }
-    }
-
-    return false;
+    // Solo comparación exacta para preguntas de texto abierto
+    // Esto asegura que la respuesta sea exactamente la esperada
+    return userText === correctText;
   };
 
   

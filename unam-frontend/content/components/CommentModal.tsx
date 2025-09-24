@@ -39,14 +39,9 @@ export function CommentModal({ isOpen, onClose, content }: CommentModalProps) {
   // Verificar si el usuario tiene permisos para ver comentarios
   const canViewComments = user && (user.roles.includes('admin') || user.roles.includes('docente') || user.roles.includes('superUser'));
 
-  // Si no tiene permisos, no mostrar el modal
-  if (!canViewComments) {
-    return null;
-  }
-
   const { data, loading, refetch } = useQuery(GET_CONTENT_COMMENTS, {
     variables: { contentId: content?.id },
-    skip: !content?.id,
+    skip: !content?.id || !canViewComments,
   });
 
   const [createComment, { loading: createLoading }] = useMutation(CREATE_CONTENT_COMMENT, {
@@ -137,6 +132,11 @@ export function CommentModal({ isOpen, onClose, content }: CommentModalProps) {
   };
 
   const comments: ContentComment[] = data?.contentComments || [];
+
+  // Si no tiene permisos, no mostrar el modal
+  if (!canViewComments) {
+    return null;
+  }
 
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

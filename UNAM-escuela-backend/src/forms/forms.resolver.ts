@@ -24,38 +24,9 @@ export class FormsResolver {
     const userText = userAnswer.toLowerCase().trim();
     const correctText = correctAnswer.toLowerCase().trim();
     
-    // 1. Comparación exacta
-    if (userText === correctText) {
-      return true;
-    }
-    
-    // 2. Verificar si la respuesta del usuario contiene la respuesta correcta
-    if (userText.includes(correctText) || correctText.includes(userText)) {
-      return true;
-    }
-    
-    // 3. Comparación por palabras clave (si la respuesta correcta tiene múltiples palabras)
-    const correctWords = correctText.split(/\s+/).filter(word => word.length > 2);
-    const userWords = userText.split(/\s+/);
-    
-    if (correctWords.length > 1) {
-      const matchedWords = correctWords.filter(word => 
-        userWords.some(userWord => userWord.includes(word) || word.includes(userWord))
-      );
-      // Si coincide al menos el 70% de las palabras clave
-      if (matchedWords.length / correctWords.length >= 0.7) {
-        return true;
-      }
-    }
-    
-    // 4. Verificar números (para respuestas numéricas en texto)
-    const userNumbers = userText.match(/\d+/g);
-    const correctNumbers = correctText.match(/\d+/g);
-    if (userNumbers && correctNumbers && userNumbers.length > 0 && correctNumbers.length > 0) {
-      return userNumbers.some(num => correctNumbers.includes(num));
-    }
-    
-    return false;
+    // Solo comparación exacta para preguntas de texto abierto
+    // Esto asegura que la respuesta sea exactamente la esperada
+    return userText === correctText;
   }
 
   @Mutation(() => Form)

@@ -42,7 +42,7 @@ services:
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-produccion}
+      DB_NAME: ${DB_NAME:-postgres}
       NODE_ENV: production
     env_file:
       - .env

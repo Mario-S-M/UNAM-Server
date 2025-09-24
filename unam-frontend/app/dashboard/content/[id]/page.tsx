@@ -270,38 +270,51 @@ export default function ContentDetail() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Profesores Asignados */}
-          {content.assignedTeachers && content.assignedTeachers.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Profesores Asignados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {content.assignedTeachers.map((teacher) => (
-                    <div key={teacher.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <User className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{teacher.fullName}</p>
-                        <p className="text-sm text-muted-foreground">{teacher.email}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {teacher.roles?.map((role, index) => (
-                          <RoleBadge key={index} role={role} className="text-xs" />
-                        )) || (
-                          <RoleBadge role="mortal" className="text-xs" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
+
+        {/* Contenido Markdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Contenido Educativo</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <CommentOnlyMarkdownEditor contentId={content.id} className="min-h-[400px]" />
+          </CardContent>
+        </Card>
+
+        {/* Examen */}
+        <ExamView contentId={content.id} />
+
+        {/* Profesores Asignados */}
+        {content.assignedTeachers && content.assignedTeachers.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Profesores Asignados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {content.assignedTeachers.map((teacher) => (
+                  <div key={teacher.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{teacher.fullName}</p>
+                      <p className="text-sm text-muted-foreground">{teacher.email}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {teacher.roles?.map((role, index) => (
+                        <RoleBadge key={index} role={role} className="text-xs" />
+                      )) || (
+                        <RoleBadge role="mortal" className="text-xs" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Fechas */}
         <Card>
@@ -334,19 +347,6 @@ export default function ContentDetail() {
             )}
           </CardContent>
         </Card>
-
-        {/* Contenido Markdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contenido Educativo</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <CommentOnlyMarkdownEditor contentId={content.id} className="min-h-[400px]" />
-          </CardContent>
-        </Card>
-
-        {/* Examen */}
-        <ExamView contentId={content.id} />
       </div>
     </div>
   );

@@ -719,12 +719,11 @@ input UpdateUserRolesInput {
 }
 
 input UpdateUserInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: ID!
-  fullName: String
   email: String
+  fullName: String
   password: String
+  isActive: Boolean
+  id: ID!
 }
 
 input AssignLanguageInput {

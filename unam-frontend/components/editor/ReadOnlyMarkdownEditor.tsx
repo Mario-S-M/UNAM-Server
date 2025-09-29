@@ -39,7 +39,7 @@ export function ReadOnlyMarkdownEditor({
     children: [{ text: 'Cargando contenido...' }],
   }]);
 
-  // Configurar el editor de Plate en modo solo lectura
+  // Configurar el editor de Plate en modo solo lectura sin barras de herramientas
   const editor = usePlateEditor({
     plugins: [
       ...ReadOnlyEditorKit,
@@ -158,7 +158,7 @@ export function ReadOnlyMarkdownEditor({
         </div>
       </div>
 
-      {/* Editor en modo solo lectura */}
+      {/* Editor en modo solo lectura sin barras de herramientas */}
       <div className="flex-1 overflow-auto">
         <Plate editor={editor}>
           <EditorContainer variant="demo">

@@ -399,7 +399,7 @@ export class UsersService {
     updateUserInput: UpdateUserInput,
     adminUser: User,
   ): Promise<User> {
-    const { id, fullName, email, password } = updateUserInput;
+    const { id, fullName, email, password, isActive } = updateUserInput;
 
     this.logger.log(
       `Actualizando usuario ${id} por admin ${adminUser.fullName}`,
@@ -442,6 +442,11 @@ export class UsersService {
     // Actualizar contraseña si se proporciona
     if (password && password.trim()) {
       userToUpdate.password = bcrypt.hashSync(password, 10);
+    }
+
+    // Actualizar estado activo si se proporciona
+    if (isActive !== undefined) {
+      userToUpdate.isActive = isActive;
     }
 
     // Registrar quién hizo la actualización

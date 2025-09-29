@@ -5,7 +5,7 @@ import { useQuery } from '@apollo/client';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import CommentOnlyMarkdownEditor from '@/components/admin/CommentOnlyMarkdownEditor';
+import { TeacherMarkdownEditor } from '@/components/editor/TeacherMarkdownEditor';
 import { gql } from '@apollo/client';
 
 interface Content {
@@ -121,7 +121,11 @@ export default function EditContentPage() {
 
       {/* Editor */}
       <div className="flex-1 overflow-hidden">
-        <CommentOnlyMarkdownEditor contentId={contentId} />
+        <TeacherMarkdownEditor 
+          contentId={contentId} 
+          contentName={content.name}
+          className="h-full"
+        />
       </div>
     </div>
   );

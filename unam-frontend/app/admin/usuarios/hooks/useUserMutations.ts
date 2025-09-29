@@ -42,6 +42,15 @@ const UPDATE_USER = `
   }
 `;
 
+const UPDATE_USER_ROLES = `
+  ${USER_MUTATION_RESPONSE_FRAGMENT}
+  mutation UpdateUserRoles($updateUserRolesInput: UpdateUserRolesInput!) {
+    updateUserRoles(updateUserRolesInput: $updateUserRolesInput) {
+      ...UserMutationResponseFields
+    }
+  }
+`;
+
 const DELETE_USER = `
   ${USER_DELETE_RESPONSE_FRAGMENT}
   mutation DeleteUser($id: ID!) {
@@ -153,18 +162,32 @@ export function useUserMutations({ onSuccess, onError }: UseUserMutationsProps =
         return false;
       }
 
-      const variables = {
-        updateUserInput: {
-          id,
-          ...(formData.email && { email: formData.email }),
-          ...(formData.fullName && { fullName: formData.fullName }),
-          ...(formData.password && { password: formData.password }),
-          ...(formData.roles && { roles: formData.roles }),
-          ...(formData.isActive !== undefined && { isActive: formData.isActive }),
-        }
+      // Separar la actualización de datos básicos y roles
+      const basicData = {
+        id,
+        ...(formData.email && { email: formData.email }),
+        ...(formData.fullName && { fullName: formData.fullName }),
+        ...(formData.password && { password: formData.password }),
+        ...(formData.isActive !== undefined && { isActive: formData.isActive }),
       };
-      
-      await fetchGraphQL(UPDATE_USER, variables, token);
+
+      // Actualizar datos básicos si hay cambios
+      const hasBasicChanges = formData.email || formData.fullName || formData.password || formData.isActive !== undefined;
+      if (hasBasicChanges) {
+        const basicVariables = { updateUserInput: basicData };
+        await fetchGraphQL(UPDATE_USER, basicVariables, token);
+      }
+
+      // Actualizar roles si se proporcionaron
+      if (formData.roles && formData.roles.length > 0) {
+        const rolesVariables = {
+          updateUserRolesInput: {
+            id,
+            roles: formData.roles
+          }
+        };
+        await fetchGraphQL(UPDATE_USER_ROLES, rolesVariables, token);
+      }
       
       toast.success('Usuario actualizado exitosamente');
       onSuccess?.();

@@ -2,6 +2,22 @@
 
 import { type Value, TrailingBlockPlugin } from 'platejs';
 import { type TPlateEditor, useEditorRef } from 'platejs/react';
+import { CaptionPlugin } from '@platejs/caption/react';
+import {
+  AudioPlugin,
+  FilePlugin,
+  ImagePlugin,
+  MediaEmbedPlugin,
+  PlaceholderPlugin,
+  VideoPlugin,
+} from '@platejs/media/react';
+import {
+  TableCellHeaderPlugin,
+  TableCellPlugin,
+  TablePlugin,
+  TableRowPlugin,
+} from '@platejs/table/react';
+import { KEYS } from 'platejs';
 
 import { AlignKit } from '@/components/editor/plugins/align-kit';
 import { BasicBlocksKit } from '@/components/editor/plugins/basic-blocks-kit';
@@ -26,20 +42,61 @@ import { LinkKit } from '@/components/editor/plugins/link-kit';
 import { ListKit } from '@/components/editor/plugins/list-kit';
 import { MarkdownKit } from '@/components/editor/plugins/markdown-kit';
 import { MathKit } from '@/components/editor/plugins/math-kit';
-import { MediaKit } from '@/components/editor/plugins/media-kit';
-import { TableKit } from '@/components/editor/plugins/table-kit';
 import { TocKit } from '@/components/editor/plugins/toc-kit';
 import { ToggleKit } from '@/components/editor/plugins/toggle-kit';
+
+// Componentes de solo lectura sin barras de herramientas
+import {
+  ReadOnlyTableElement,
+  ReadOnlyTableRowElement,
+  ReadOnlyTableCellElement,
+  ReadOnlyTableCellHeaderElement,
+} from '@/components/ui/read-only-table-node';
+import {
+  ReadOnlyImageElement,
+  ReadOnlyVideoElement,
+  ReadOnlyAudioElement,
+  ReadOnlyFileElement,
+  ReadOnlyMediaEmbedElement,
+  ReadOnlyPlaceholderElement,
+} from '@/components/ui/read-only-media-node';
 
 // Kit específico para modo solo lectura - sin comentarios, emojis, sugerencias, etc.
 export const ReadOnlyEditorKit = [
   // Elements básicos
   ...BasicBlocksKit,
   ...CodeBlockKit,
-  ...TableKit,
+  
+  // Table plugins con componentes de solo lectura
+  TablePlugin.withComponent(ReadOnlyTableElement),
+  TableRowPlugin.withComponent(ReadOnlyTableRowElement),
+  TableCellPlugin.withComponent(ReadOnlyTableCellElement),
+  TableCellHeaderPlugin.withComponent(ReadOnlyTableCellHeaderElement),
+  
   ...ToggleKit,
   ...TocKit,
-  ...MediaKit,
+  
+  // Media plugins con componentes de solo lectura
+  ImagePlugin.configure({
+    options: { disableUploadInsert: true },
+    render: { node: ReadOnlyImageElement },
+  }),
+  MediaEmbedPlugin.withComponent(ReadOnlyMediaEmbedElement),
+  VideoPlugin.withComponent(ReadOnlyVideoElement),
+  AudioPlugin.withComponent(ReadOnlyAudioElement),
+  FilePlugin.withComponent(ReadOnlyFileElement),
+  PlaceholderPlugin.configure({
+    options: { disableEmptyPlaceholder: true },
+    render: { node: ReadOnlyPlaceholderElement },
+  }),
+  CaptionPlugin.configure({
+    options: {
+      query: {
+        allow: [KEYS.img, KEYS.video, KEYS.audio, KEYS.file, KEYS.mediaEmbed],
+      },
+    },
+  }),
+  
   ...CalloutKit,
   ...ColumnKit,
   ...MathKit,

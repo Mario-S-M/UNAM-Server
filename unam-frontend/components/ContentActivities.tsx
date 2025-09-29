@@ -86,7 +86,7 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
     indication: '',
     example: '',
     contentId: contentId,
-    estimatedTime: 0
+    estimatedTime: 30 // Valor por defecto de 30 minutos
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -151,7 +151,7 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
       indication: '',
       example: '',
       contentId: contentId,
-      estimatedTime: 0
+      estimatedTime: 30 // Valor por defecto de 30 minutos
     });
     setShowForm(true);
   };

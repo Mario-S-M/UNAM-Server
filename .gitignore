@@ -80,4 +80,8 @@ backend/postgres/
 postgres/
 pg_stat_tmp/
 
+# Uploads
+uploads/
+UNAM-escuela-backend/uploads/
+
 ./DB

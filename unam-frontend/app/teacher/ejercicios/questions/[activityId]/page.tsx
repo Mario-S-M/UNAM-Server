@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, ArrowLeft, Save, Upload, Volume2 } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Save, Upload, Volume2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
@@ -237,7 +237,24 @@ export default function ActivityQuestionsPage() {
     setQuestions([...questions, newQuestion]);
   };
 
-  const removeQuestion = (index: number) => {
+  const removeQuestion = async (index: number) => {
+    const questionToRemove = questions[index];
+    
+    // Si la pregunta tiene audio, eliminarlo del servidor
+    if (questionToRemove.audioUrl) {
+      try {
+        const filename = questionToRemove.audioUrl.split('/').pop();
+        if (filename) {
+          await fetch(`http://localhost:3000/uploads/audio/public/${filename}`, {
+            method: 'DELETE',
+          });
+        }
+      } catch (error) {
+        console.error('Error deleting audio file:', error);
+        // No mostramos error al usuario para no interrumpir la eliminación de la pregunta
+      }
+    }
+    
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
@@ -298,6 +315,34 @@ export default function ActivityQuestionsPage() {
 
   const needsOptions = (questionType: string) => {
     return ['MULTIPLE_CHOICE', 'SINGLE_CHOICE'].includes(questionType);
+  };
+
+  const deleteAudio = async (questionIndex: number, audioUrl: string) => {
+    try {
+      // Extraer el nombre del archivo de la URL
+      const filename = audioUrl.split('/').pop();
+      if (!filename) {
+        throw new Error('No se pudo obtener el nombre del archivo');
+      }
+
+      toast.loading('Eliminando archivo de audio...');
+      
+      const response = await fetch(`http://localhost:3000/uploads/audio/public/${filename}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        updateQuestion(questionIndex, 'audioUrl', '');
+        toast.dismiss();
+        toast.success('Archivo de audio eliminado exitosamente');
+      } else {
+        throw new Error('Error al eliminar el archivo');
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Error al eliminar el archivo de audio');
+      console.error('Error deleting audio:', error);
+    }
   };
 
   if (loading) {
@@ -415,45 +460,58 @@ export default function ActivityQuestionsPage() {
                 <div className="space-y-2">
                   <Label htmlFor={`audio-${questionIndex}`}>Audio de la pregunta</Label>
                   <div className="flex items-center space-x-2">
-                    <Input
-                      id={`audio-${questionIndex}`}
-                      type="file"
-                      accept="audio/*"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          try {
-                            toast.loading('Subiendo archivo de audio...');
-                            
-                            const formData = new FormData();
-                            formData.append('audio', file);
-                            
-                            const response = await fetch('http://localhost:3000/uploads/audio/public', {
-                              method: 'POST',
-                              body: formData,
-                            });
-                            
-                            if (response.ok) {
-                              const result = await response.json();
-                              updateQuestion(questionIndex, 'audioUrl', result.url);
+                    {!question.audioUrl ? (
+                      <Input
+                        id={`audio-${questionIndex}`}
+                        type="file"
+                        accept="audio/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              toast.loading('Subiendo archivo de audio...');
+                              
+                              const formData = new FormData();
+                              formData.append('audio', file);
+                              
+                              const response = await fetch('http://localhost:3000/uploads/audio/public', {
+                                method: 'POST',
+                                body: formData,
+                              });
+                              
+                              if (response.ok) {
+                                const result = await response.json();
+                                updateQuestion(questionIndex, 'audioUrl', result.url);
+                                toast.dismiss();
+                                toast.success('Archivo de audio subido exitosamente');
+                              } else {
+                                throw new Error('Error al subir el archivo');
+                              }
+                            } catch (error) {
                               toast.dismiss();
-                              toast.success('Archivo de audio subido exitosamente');
-                            } else {
-                              throw new Error('Error al subir el archivo');
+                              toast.error('Error al subir el archivo de audio');
+                              console.error('Error uploading audio:', error);
                             }
-                          } catch (error) {
-                            toast.dismiss();
-                            toast.error('Error al subir el archivo de audio');
-                            console.error('Error uploading audio:', error);
                           }
-                        }
-                      }}
-                      className="flex-1"
-                    />
-                    {question.audioUrl && (
-                      <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                        <Volume2 className="h-4 w-4" />
-                        <span>{question.audioUrl}</span>
+                        }}
+                        className="flex-1"
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-2 flex-1">
+                        <div className="flex items-center space-x-2 flex-1 p-2 border rounded-md bg-muted">
+                          <Volume2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground truncate">
+                            {question.audioUrl.split('/').pop()}
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteAudio(questionIndex, question.audioUrl!)}
+                          className="shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                   </div>

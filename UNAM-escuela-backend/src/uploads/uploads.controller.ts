@@ -764,4 +764,50 @@ export class UploadsController {
       throw new BadRequestException('Error al eliminar la imagen');
     }
   }
+
+  // Endpoint para eliminar archivos de audio
+  @Delete('audio/:filename')
+  async deleteAudio(
+    @Param('filename') filename: string,
+  ) {
+    try {
+      const filePath = `./uploads/audio/${filename}`;
+      
+      if (!existsSync(filePath)) {
+        throw new BadRequestException('El archivo de audio no existe');
+      }
+
+      unlinkSync(filePath);
+      
+      return {
+        message: 'Archivo de audio eliminado exitosamente',
+        filename,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error al eliminar el archivo de audio');
+    }
+  }
+
+  // Endpoint público para eliminar archivos de audio
+  @Delete('audio/public/:filename')
+  async deleteAudioPublic(
+    @Param('filename') filename: string,
+  ) {
+    try {
+      const filePath = `./uploads/audio/${filename}`;
+      
+      if (!existsSync(filePath)) {
+        throw new BadRequestException('El archivo de audio no existe');
+      }
+
+      unlinkSync(filePath);
+      
+      return {
+        message: 'Archivo de audio eliminado exitosamente',
+        filename,
+      };
+    } catch (error) {
+      throw new BadRequestException('Error al eliminar el archivo de audio');
+    }
+  }
 }

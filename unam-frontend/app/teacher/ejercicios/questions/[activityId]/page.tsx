@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useAutoSave } from '@/lib/hooks/useAutoSave';
+import { useAuth } from '@/contexts/AuthContext';
 
 const GET_ACTIVITY = gql`
   query GetActivity($id: ID!) {
@@ -126,6 +127,7 @@ const QUESTION_TYPES = [
 export default function ActivityQuestionsPage() {
   const params = useParams();
   const router = useRouter();
+  const { token } = useAuth();
   const activityId = params.activityId as string;
   
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -417,13 +419,36 @@ export default function ActivityQuestionsPage() {
                       id={`audio-${questionIndex}`}
                       type="file"
                       accept="audio/*"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          // Por ahora solo guardamos el nombre del archivo
-                          // En una implementación real, aquí subirías el archivo a un servicio de almacenamiento
-                          updateQuestion(questionIndex, 'audioUrl', file.name);
-                          toast.success('Archivo de audio seleccionado');
+                        if (file && token) {
+                          try {
+                            toast.loading('Subiendo archivo de audio...');
+                            
+                            const formData = new FormData();
+                            formData.append('audio', file);
+                            
+                            const response = await fetch('http://localhost:3000/uploads/audio', {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                              },
+                              body: formData,
+                            });
+                            
+                            if (response.ok) {
+                              const result = await response.json();
+                              updateQuestion(questionIndex, 'audioUrl', result.url);
+                              toast.dismiss();
+                              toast.success('Archivo de audio subido exitosamente');
+                            } else {
+                              throw new Error('Error al subir el archivo');
+                            }
+                          } catch (error) {
+                            toast.dismiss();
+                            toast.error('Error al subir el archivo de audio');
+                            console.error('Error uploading audio:', error);
+                          }
                         }
                       }}
                       className="flex-1"

@@ -54,8 +54,8 @@ export default function TeacherDashboard() {
   
   const assignedContents = data?.myAssignedContents || [];
   
-  const validatedContents = assignedContents.filter((content: Content) => content.validationStatus === 'validado');
-  const unvalidatedContents = assignedContents.filter((content: Content) => content.validationStatus !== 'validado');
+  const validatedContents = assignedContents.filter((content: Content) => content.validationStatus === 'APPROVED');
+  const unvalidatedContents = assignedContents.filter((content: Content) => content.validationStatus !== 'APPROVED');
 
   const handleContentClick = (contentId: string) => {
     router.push(`/teacher/content/${contentId}`);
@@ -158,10 +158,10 @@ export default function TeacherDashboard() {
                       <CardTitle className="text-base truncate">{content.name}</CardTitle>
                     </div>
                     <Badge 
-                      variant={content.validationStatus === 'validado' ? 'default' : 'secondary'}
+                      variant={content.validationStatus === 'APPROVED' ? 'default' : 'secondary'}
                       className="text-xs"
                     >
-                      {content.validationStatus === 'validado' ? 'Validado' : 'Sin validar'}
+                      {content.validationStatus === 'APPROVED' ? 'Validado' : 'Sin validar'}
                     </Badge>
                   </div>
                   <CardDescription className="text-sm">

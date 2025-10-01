@@ -6,6 +6,7 @@ import { AccessibilityProvider } from "@/components/accessibility/AccessibilityC
 import { AccessibilityButton } from "@/components/accessibility/AccessibilityButton";
 import AccessibilityMenu from "@/components/accessibility/AccessibilityMenu";
 import { InfoButton } from "@/components/InfoButton";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "UNAM - Sistema de Gestión Educativa",
-  description: "Plataforma educativa para la gestión de contenidos, usuarios y actividades académicas",
+  description: "Plataforma educativa para la gestión de contenidos, usuarios y ejercicios académicos",
 };
 
 export default function RootLayout({
@@ -33,12 +34,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AccessibilityProvider>
-          <ApolloProviderWrapper>
-            {children}
-            <AccessibilityButton />
-            <InfoButton />
-            <AccessibilityMenu />
-          </ApolloProviderWrapper>
+          <AuthProvider>
+            <ApolloProviderWrapper>
+              {children}
+              <AccessibilityButton />
+              <InfoButton />
+              <AccessibilityMenu />
+            </ApolloProviderWrapper>
+          </AuthProvider>
         </AccessibilityProvider>
       </body>
     </html>

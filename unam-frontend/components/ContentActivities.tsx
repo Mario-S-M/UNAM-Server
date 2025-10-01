@@ -98,41 +98,41 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
       errorPolicy: 'all',
       onError: (error) => {
         console.error('Error fetching activities:', error);
-        toast.error('Error al cargar las actividades');
+        toast.error('Error al cargar los ejercicios');
       }
     }
   );
 
   const [createActivity] = useMutation(CREATE_ACTIVITY, {
     onCompleted: (data) => {
-      toast.success(`Actividad "${data.createActivity.name}" creada exitosamente`);
+      toast.success(`Ejercicio "${data.createActivity.name}" creado exitosamente`);
       refetch();
     },
     onError: (error) => {
       console.error('Error creating activity:', error);
-      toast.error('Error al crear la actividad');
+      toast.error('Error al crear el ejercicio');
     }
   });
 
   const [updateActivity] = useMutation(UPDATE_ACTIVITY, {
     onCompleted: (data) => {
-      toast.success(`Actividad "${data.updateActivity.name}" actualizada exitosamente`);
+      toast.success(`Ejercicio "${data.updateActivity.name}" actualizado exitosamente`);
       refetch();
     },
     onError: (error) => {
       console.error('Error updating activity:', error);
-      toast.error('Error al actualizar la actividad');
+      toast.error('Error al actualizar el ejercicio');
     }
   });
 
   const [deleteActivity] = useMutation(DELETE_ACTIVITY, {
     onCompleted: (data) => {
-      toast.success(`Actividad "${data.removeActivity.name}" eliminada exitosamente`);
+      toast.success(`Ejercicio "${data.removeActivity.name}" eliminado exitosamente`);
       refetch();
     },
     onError: (error) => {
       console.error('Error deleting activity:', error);
-      toast.error('Error al eliminar la actividad');
+      toast.error('Error al eliminar el ejercicio');
     }
   });
 
@@ -170,7 +170,7 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
   };
 
   const handleDeleteActivity = async (activity: Activity) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar la actividad "${activity.name}"?`)) {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar el ejercicio "${activity.name}"?`)) {
       try {
         await deleteActivity({ variables: { id: activity.id } });
       } catch (error) {
@@ -219,13 +219,13 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividades</CardTitle>
+          <CardTitle>Ejercicios</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Cargando actividades...</p>
+              <p className="text-sm text-muted-foreground">Cargando ejercicios...</p>
             </div>
           </div>
         </CardContent>
@@ -237,11 +237,11 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividades</CardTitle>
+          <CardTitle>Ejercicios</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-red-500">Error al cargar las actividades</p>
+            <p className="text-red-500">Error al cargar los ejercicios</p>
             <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
           </div>
         </CardContent>
@@ -254,14 +254,14 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Actividades</CardTitle>
+            <CardTitle>Ejercicios</CardTitle>
             <CardDescription>
-              Gestiona las actividades para este contenido
+              Gestiona los ejercicios para este contenido
             </CardDescription>
           </div>
           <Button onClick={handleCreateActivity}>
             <Plus className="h-4 w-4 mr-2" />
-            Nueva Actividad
+            Nuevo Ejercicio
           </Button>
         </div>
       </CardHeader>
@@ -270,23 +270,23 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Buscar actividades..."
+            placeholder="Buscar ejercicios..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
 
-        {/* Lista de actividades */}
+        {/* Lista de ejercicios */}
         {filteredActivities.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">
-              {searchTerm ? 'No se encontraron actividades que coincidan con la búsqueda' : 'No hay actividades creadas para este contenido'}
+              {searchTerm ? 'No se encontraron ejercicios que coincidan con la búsqueda' : 'No hay ejercicios creados para este contenido'}
             </p>
             {!searchTerm && (
               <Button variant="outline" onClick={handleCreateActivity} className="mt-4">
                 <Plus className="h-4 w-4 mr-2" />
-                Crear primera actividad
+                Crear primer ejercicio
               </Button>
             )}
           </div>
@@ -331,7 +331,7 @@ export function ContentActivities({ contentId }: ContentActivitiesProps) {
           </div>
         )}
 
-        {/* Formulario de actividad */}
+        {/* Formulario de ejercicio */}
         <ContentActivityForm
           isOpen={showForm}
           onClose={handleFormCancel}

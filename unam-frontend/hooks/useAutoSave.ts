@@ -34,6 +34,16 @@ export function useAutoSave({
   const isSavingRef = useRef(false);
 
   const [updateMarkdown] = useMutation(UPDATE_CONTENT_MARKDOWN_MUTATION, {
+    refetchQueries: [
+      {
+        query: gql`
+          query GetContentMarkdown($contentId: ID!) {
+            contentMarkdown(contentId: $contentId)
+          }
+        `,
+        variables: { contentId }
+      }
+    ],
     onCompleted: () => {
       isSavingRef.current = false;
       lastSavedRef.current = new Date();

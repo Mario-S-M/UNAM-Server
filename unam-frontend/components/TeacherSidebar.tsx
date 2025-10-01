@@ -110,12 +110,12 @@ export default function TeacherSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                onClick={() => router.push('/teacher/activities')}
-                className={`w-full justify-start p-3 ${pathname === '/teacher/activities' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
+                onClick={() => router.push('/teacher/ejercicios')}
+            className={`w-full justify-start p-3 ${pathname === '/teacher/ejercicios' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
               >
                 <div className="flex items-center gap-3 w-full">
                   <BookOpen className="h-4 w-4" />
-                  <span className="font-medium text-sm">Actividades</span>
+                  <span className="font-medium text-sm">Ejercicios</span>
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -179,10 +179,10 @@ export default function TeacherSidebar() {
                                 </div>
                               </div>
                               <Badge 
-                                variant={content.validationStatus === 'validado' ? 'default' : 'secondary'}
+                                variant={content.validationStatus === 'APPROVED' ? 'default' : 'secondary'}
                                 className="text-xs px-1 py-0 ml-1"
                               >
-                                {content.validationStatus === 'validado' ? 'V' : 'P'}
+                                {content.validationStatus === 'APPROVED' ? 'V' : 'P'}
                               </Badge>
                             </div>
                           </SidebarMenuSubButton>

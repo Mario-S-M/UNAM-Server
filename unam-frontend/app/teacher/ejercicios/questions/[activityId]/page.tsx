@@ -287,7 +287,7 @@ export default function ActivityQuestionsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Cargando actividad...</div>
+          <div className="text-lg">Cargando ejercicio...</div>
         </div>
       </div>
     );
@@ -306,7 +306,7 @@ export default function ActivityQuestionsPage() {
             Volver
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Preguntas de Actividad</h1>
+            <h1 className="text-2xl font-bold">Preguntas de Ejercicio</h1>
             <p className="text-muted-foreground">{activityName}</p>
           </div>
         </div>

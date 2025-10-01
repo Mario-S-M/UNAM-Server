@@ -400,7 +400,7 @@ export default function ContentPreviewPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Actividades ({activities.length})
+              Ejercicios ({activities.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -469,7 +469,7 @@ export default function ContentPreviewPage() {
         <Card>
           <CardContent className="text-center py-8">
             <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No hay actividades disponibles para este contenido.</p>
+            <p className="text-muted-foreground">No hay ejercicios disponibles para este contenido.</p>
           </CardContent>
         </Card>
       )}

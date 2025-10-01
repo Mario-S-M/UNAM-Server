@@ -104,11 +104,11 @@ export function UserOverallProgressCard({ overallProgress, loading }: UserOveral
           </div>
         </div>
 
-        {/* Estadísticas de Actividades */}
+        {/* Estadísticas de Ejercicios */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Actividades
+            Ejercicios
           </h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -117,8 +117,8 @@ export function UserOverallProgressCard({ overallProgress, loading }: UserOveral
                 <span className="text-sm font-medium">Completadas</span>
               </div>
               <p className="text-2xl font-bold text-green-600">
-                {overallProgress.completedActivities}
-              </p>
+                  {overallProgress.completedActivities}
+                </p>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -126,8 +126,8 @@ export function UserOverallProgressCard({ overallProgress, loading }: UserOveral
                 <span className="text-sm font-medium">Total</span>
               </div>
               <p className="text-2xl font-bold text-blue-600">
-                {overallProgress.totalActivities}
-              </p>
+                  {overallProgress.totalActivities}
+                </p>
             </div>
           </div>
         </div>

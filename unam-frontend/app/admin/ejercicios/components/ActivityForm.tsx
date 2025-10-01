@@ -21,13 +21,13 @@ export function ActivityForm({ formData, onFormDataChange }: ActivityFormProps) 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre de la Actividad *</Label>
+        <Label htmlFor="name">Nombre del Ejercicio *</Label>
         <Input
           id="name"
           type="text"
           value={formData.name || ''}
           onChange={handleInputChange('name')}
-          placeholder="Ingresa el nombre de la actividad"
+          placeholder="Ingresa el nombre del ejercicio"
           required
         />
       </div>
@@ -38,7 +38,7 @@ export function ActivityForm({ formData, onFormDataChange }: ActivityFormProps) 
           id="description"
           value={formData.description || ''}
           onChange={handleInputChange('description')}
-          placeholder="Describe brevemente la actividad"
+          placeholder="Describe brevemente el ejercicio"
           rows={3}
           required
         />
@@ -62,7 +62,7 @@ export function ActivityForm({ formData, onFormDataChange }: ActivityFormProps) 
           id="example"
           value={formData.example || ''}
           onChange={handleInputChange('example')}
-          placeholder="Proporciona un ejemplo de la actividad"
+          placeholder="Proporciona un ejemplo del ejercicio"
           rows={3}
           required
         />

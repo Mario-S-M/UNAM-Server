@@ -91,21 +91,21 @@ export function ContentActivityForm({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editingActivity ? 'Editar Actividad' : 'Crear Nueva Actividad'}
+            {editingActivity ? 'Editar Ejercicio' : 'Crear Nuevo Ejercicio'}
           </DialogTitle>
           <DialogDescription>
             {editingActivity
-              ? 'Modifica los datos de la actividad'
-              : 'Completa los datos para crear una nueva actividad en este contenido'}
+        ? 'Modifica los datos del ejercicio'
+        : 'Completa los datos para crear un nuevo ejercicio en este contenido'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre de la Actividad</Label>
+            <Label htmlFor="name">Nombre del Ejercicio</Label>
             <Input
               id="name"
-              placeholder="Ingresa el nombre de la actividad"
+              placeholder="Ingresa el nombre del ejercicio"
               value={formData.name}
               onChange={(e) => handleFieldChange('name', e.target.value)}
               disabled={isLoading}
@@ -117,7 +117,7 @@ export function ContentActivityForm({
             <Label htmlFor="description">Descripción</Label>
             <Textarea
               id="description"
-              placeholder="Describe brevemente la actividad"
+              placeholder="Describe brevemente el ejercicio"
               className="min-h-[80px]"
               value={formData.description}
               onChange={(e) => handleFieldChange('description', e.target.value)}
@@ -130,7 +130,7 @@ export function ContentActivityForm({
             <Label htmlFor="indication">Indicaciones</Label>
             <Textarea
               id="indication"
-              placeholder="Proporciona las indicaciones detalladas para realizar la actividad"
+              placeholder="Proporciona las indicaciones detalladas para realizar el ejercicio"
               className="min-h-[100px]"
               value={formData.indication}
               onChange={(e) => handleFieldChange('indication', e.target.value)}
@@ -143,7 +143,7 @@ export function ContentActivityForm({
             <Label htmlFor="example">Ejemplo</Label>
             <Textarea
               id="example"
-              placeholder="Proporciona un ejemplo de cómo realizar la actividad"
+              placeholder="Proporciona un ejemplo de cómo realizar el ejercicio"
               className="min-h-[100px]"
               value={formData.example}
               onChange={(e) => handleFieldChange('example', e.target.value)}
@@ -188,11 +188,11 @@ export function ContentActivityForm({
             <Button type="submit" disabled={isLoading}>
               {isLoading
                 ? editingActivity
-                  ? 'Actualizando...'
-                  : 'Creando...'
-                : editingActivity
-                ? 'Actualizar Actividad'
-                : 'Crear Actividad'}
+          ? 'Actualizando...'
+          : 'Creando...'
+        : editingActivity
+        ? 'Actualizar Ejercicio'
+        : 'Crear Ejercicio'}
             </Button>
           </DialogFooter>
         </form>

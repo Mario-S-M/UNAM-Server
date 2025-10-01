@@ -42,7 +42,7 @@ export function UserActivityHistoryComponent({ activities, loading }: UserActivi
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Historial de Actividades
+            Historial de Ejercicios
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -65,13 +65,13 @@ export function UserActivityHistoryComponent({ activities, loading }: UserActivi
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Historial de Actividades
+            Historial de Ejercicios
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No hay actividades completadas aún</p>
+            <p>No hay ejercicios completados aún</p>
           </div>
         </CardContent>
       </Card>
@@ -83,7 +83,7 @@ export function UserActivityHistoryComponent({ activities, loading }: UserActivi
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          Historial de Actividades
+          Historial de Ejercicios
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -66,7 +66,7 @@ export function UserProgressCard({ progress, showDetails = true }: UserProgressC
               <div className="flex items-center gap-2 pt-2 border-t">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  Última actividad: {formatDate(progress.lastActivityDate)}
+                  Último ejercicio: {formatDate(progress.lastActivityDate)}
                 </span>
               </div>
             )}

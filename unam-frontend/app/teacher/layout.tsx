@@ -2,7 +2,6 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import TeacherSidebar from "@/components/TeacherSidebar";
-import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -51,8 +50,6 @@ function TeacherLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <TeacherLayoutContent>{children}</TeacherLayoutContent>
-    </AuthProvider>
+    <TeacherLayoutContent>{children}</TeacherLayoutContent>
   );
 }

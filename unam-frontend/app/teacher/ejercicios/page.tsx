@@ -91,7 +91,7 @@ export default function ActivitiesManagement() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Cargando actividades...</div>
+          <div className="text-lg">Cargando ejercicios...</div>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export default function ActivitiesManagement() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-red-500">Error al cargar las actividades</div>
+          <div className="text-lg text-red-500">Error al cargar los ejercicios</div>
         </div>
       </div>
     );
@@ -112,14 +112,14 @@ export default function ActivitiesManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Gestión de Actividades</h1>
+          <h1 className="text-2xl font-bold">Gestión de Ejercicios</h1>
           <p className="text-muted-foreground">
-            Crea y gestiona actividades para tus contenidos asignados
+            Crea y gestiona ejercicios para tus contenidos asignados
           </p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Nueva Actividad
+          Nuevo Ejercicio
         </Button>
       </div>
 
@@ -128,7 +128,7 @@ export default function ActivitiesManagement() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar actividades..."
+            placeholder="Buscar ejercicios..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
@@ -149,21 +149,21 @@ export default function ActivitiesManagement() {
         </Select>
       </div>
 
-      {/* Lista de actividades */}
+      {/* Lista de ejercicios */}
       {activities.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay actividades</h3>
+            <h3 className="text-lg font-semibold mb-2">No hay ejercicios</h3>
             <p className="text-muted-foreground text-center mb-4">
               {search || selectedContentId
-                ? 'No se encontraron actividades con los filtros aplicados'
-                : 'Aún no has creado ninguna actividad'}
+                ? 'No se encontraron ejercicios con los filtros aplicados'
+                      : 'Aún no has creado ningún ejercicio'}
             </p>
             {!search && !selectedContentId && (
               <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Crear primera actividad
+                Crear primer ejercicio
               </Button>
             )}
           </CardContent>
@@ -205,7 +205,7 @@ export default function ActivitiesManagement() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(activity)}
-                        title="Editar actividad"
+                        title="Editar ejercicio"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -215,7 +215,7 @@ export default function ActivitiesManagement() {
                             variant="outline"
                             size="sm"
                             disabled={deleteLoading}
-                            title="Eliminar actividad"
+                            title="Eliminar ejercicio"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -224,7 +224,7 @@ export default function ActivitiesManagement() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Se eliminará permanentemente la actividad "{activity.name}".
+                              Esta acción no se puede deshacer. Se eliminará permanentemente el ejercicio "{activity.name}".
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -349,7 +349,7 @@ export default function ActivitiesManagement() {
                                 Sin preguntas configuradas
                               </p>
                               <p className="text-xs text-orange-700">
-                                Haz clic en el botón de preguntas (?) para agregar y configurar las preguntas de esta actividad.
+                                Haz clic en el botón de preguntas (?) para agregar y configurar las preguntas de este ejercicio.
                               </p>
                             </div>
                           </div>

@@ -23,17 +23,23 @@ import { ToolbarButton } from './toolbar';
 
 const siteUrl = 'https://platejs.org';
 
-export function ExportToolbarButton(props: DropdownMenuProps) {
+const ExportToolbarButtonComponent = React.memo(function ExportToolbarButton(props: DropdownMenuProps) {
   const editor = useEditorRef();
   const [open, setOpen] = React.useState(false);
 
-  const getCanvas = async () => {
+  const handleOpenChange = React.useCallback((newOpen: boolean) => {
+    setOpen(newOpen);
+  }, []);
+
+  const stableEditor = React.useMemo(() => editor, [editor.id]);
+
+  const getCanvas = React.useCallback(async () => {
     const { default: html2canvas } = await import('html2canvas-pro');
 
     const style = document.createElement('style');
     document.head.append(style);
 
-    const canvas = await html2canvas(editor.api.toDOMNode(editor)!, {
+    const canvas = await html2canvas(stableEditor.api.toDOMNode(stableEditor)!, {
       onclone: (document: Document) => {
         const editorElement = document.querySelector(
           '[contenteditable="true"]'
@@ -52,9 +58,9 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
     style.remove();
 
     return canvas;
-  };
+  }, [stableEditor]);
 
-  const downloadFile = async (url: string, filename: string) => {
+  const downloadFile = React.useCallback(async (url: string, filename: string) => {
     const response = await fetch(url);
 
     const blob = await response.blob();
@@ -69,9 +75,9 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
 
     // Clean up the blob URL
     window.URL.revokeObjectURL(blobUrl);
-  };
+  }, []);
 
-  const exportToPdf = async () => {
+  const exportToPdf = React.useCallback(async () => {
     const canvas = await getCanvas();
 
     const PDFLib = await import('pdf-lib');
@@ -88,17 +94,17 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
     const pdfBase64 = await pdfDoc.saveAsBase64({ dataUri: true });
 
     await downloadFile(pdfBase64, 'plate.pdf');
-  };
+  }, [getCanvas, downloadFile]);
 
-  const exportToImage = async () => {
+  const exportToImage = React.useCallback(async () => {
     const canvas = await getCanvas();
     await downloadFile(canvas.toDataURL('image/png'), 'plate.png');
-  };
+  }, [getCanvas, downloadFile]);
 
-  const exportToHtml = async () => {
+  const exportToHtml = React.useCallback(async () => {
     const editorStatic = createSlateEditor({
       plugins: BaseEditorKit,
-      value: editor.children,
+      value: stableEditor.children,
     });
 
     const editorHtml = await serializeHtml(editorStatic, {
@@ -138,18 +144,18 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
     const url = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
 
     await downloadFile(url, 'plate.html');
-  };
+  }, [stableEditor.children, downloadFile]);
 
-  const exportToMarkdown = async () => {
-    const md = editor.getApi(MarkdownPlugin).markdown.serialize();
+  const exportToMarkdown = React.useCallback(async () => {
+    const md = stableEditor.getApi(MarkdownPlugin).markdown.serialize();
     const url = `data:text/markdown;charset=utf-8,${encodeURIComponent(md)}`;
     await downloadFile(url, 'plate.md');
-  };
+  }, [stableEditor, downloadFile]);
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen} modal={false} {...props}>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange} modal={false} {...props}>
       <DropdownMenuTrigger asChild>
-        <ToolbarButton pressed={open} tooltip="Export" isDropdown>
+        <ToolbarButton tooltip="Export" isDropdown>
           <ArrowDownToLineIcon className="size-4" />
         </ToolbarButton>
       </DropdownMenuTrigger>
@@ -172,4 +178,6 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
+
+export const ExportToolbarButton = ExportToolbarButtonComponent;

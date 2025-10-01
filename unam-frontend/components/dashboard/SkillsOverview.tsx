@@ -154,7 +154,7 @@ export function SkillsOverview() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Explora las Habilidades</h1>
         <p className="text-lg text-muted-foreground">
-          Descubre y domina nuevas habilidades a través de contenido estructurado y actividades prácticas
+          Descubre y domina nuevas habilidades a través de contenido estructurado y ejercicios prácticos
         </p>
       </div>
 

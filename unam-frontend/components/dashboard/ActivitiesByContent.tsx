@@ -70,7 +70,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
 
   const handleActivityClick = (activity: Activity) => {
     setSelectedActivity(activity);
-    // Aquí podrías navegar a una página de actividad específica
+    // Aquí podrías navegar a una página de ejercicio específico
     
   };
 
@@ -142,7 +142,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
         
         <div className="flex items-center justify-center h-64">
           <div className="text-center space-y-2">
-            <p className="text-lg font-medium text-red-600">Error al cargar las actividades</p>
+            <p className="text-lg font-medium text-red-600">Error al cargar los ejercicios</p>
             <p className="text-sm text-muted-foreground">Por favor, intenta recargar la página</p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
         </Badge>
       );
     }
-    return <Badge variant="outline" className="text-xs">Actividad</Badge>;
+    return <Badge variant="outline" className="text-xs">Ejercicio</Badge>;
   };
 
   return (
@@ -211,7 +211,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Target className="w-4 h-4" />
-                {activities.length} actividad{activities.length !== 1 ? 'es' : ''}
+                {activities.length} ejercicio{activities.length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -223,15 +223,15 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
         <div className="flex items-center justify-center h-64">
           <div className="text-center space-y-2">
             <Target className="h-12 w-12 text-muted-foreground mx-auto" />
-            <p className="text-lg font-medium">No hay actividades disponibles</p>
-            <p className="text-sm text-muted-foreground">
-              Las actividades para este contenido estarán disponibles pronto
+            <p className="text-lg font-medium">No hay ejercicios disponibles</p>
+                <p className="text-sm text-muted-foreground">
+                  Los ejercicios para este contenido estarán disponibles pronto
             </p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Actividades Prácticas</h2>
+          <h2 className="text-xl font-semibold">Ejercicios Prácticos</h2>
           
           <div className="space-y-4">
             {activities.map((activity, index) => (
@@ -324,7 +324,7 @@ export function ActivitiesByContent({ selectedContent, onBackToContents }: Activ
                     variant="outline"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Comenzar Actividad
+                    Comenzar Ejercicio
                   </Button>
                 </CardContent>
               </Card>

@@ -131,7 +131,7 @@ interface Activity {
   };
 }
 
-export default function ActividadesAdminPage() {
+export default function EjerciciosAdminPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('all');
@@ -145,13 +145,13 @@ export default function ActividadesAdminPage() {
 
   const [deleteActivity] = useMutation(DELETE_ACTIVITY, {
     onCompleted: (data) => {
-      toast.success(`Actividad "${data.removeActivity.name}" eliminada exitosamente`);
+      toast.success(`Ejercicio "${data.removeActivity.name}" eliminado exitosamente`);
       refetch();
       setActivityToDelete(null);
     },
     onError: (error) => {
       console.error('Error deleting activity:', error);
-      toast.error('Error al eliminar la actividad');
+      toast.error('Error al eliminar el ejercicio');
     }
   });
 
@@ -159,7 +159,7 @@ export default function ActividadesAdminPage() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Cargando actividades...</div>
+          <div className="text-lg">Cargando ejercicios...</div>
         </div>
       </div>
     );
@@ -169,7 +169,7 @@ export default function ActividadesAdminPage() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-red-500">Error al cargar las actividades</div>
+          <div className="text-lg text-red-500">Error al cargar los ejercicios</div>
         </div>
       </div>
     );
@@ -177,7 +177,7 @@ export default function ActividadesAdminPage() {
 
   const activities: Activity[] = data?.activities || [];
 
-  // Filtrar actividades
+  // Filtrar ejercicios
   const filteredActivities = activities.filter(activity => {
     const matchesSearch = activity.name.toLowerCase().includes(search.toLowerCase()) ||
                          activity.description.toLowerCase().includes(search.toLowerCase());
@@ -234,14 +234,14 @@ export default function ActividadesAdminPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Gestión de Actividades</h1>
+          <h1 className="text-2xl font-bold">Gestión de Ejercicios</h1>
           <p className="text-muted-foreground">
-            Administra todas las actividades creadas por los profesores
+            Administra todos los ejercicios creados por los profesores
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
-            {filteredActivities.length} actividad{filteredActivities.length !== 1 ? 'es' : ''}
+            {filteredActivities.length} ejercicio{filteredActivities.length !== 1 ? 's' : ''}
           </Badge>
         </div>
       </div>
@@ -251,7 +251,7 @@ export default function ActividadesAdminPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar actividades..."
+            placeholder="Buscar ejercicios..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -304,16 +304,16 @@ export default function ActividadesAdminPage() {
         </Select>
       </div>
 
-      {/* Tabla de actividades */}
+      {/* Tabla de ejercicios */}
       {filteredActivities.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay actividades</h3>
+            <h3 className="text-lg font-semibold mb-2">No hay ejercicios</h3>
             <p className="text-muted-foreground text-center">
               {search || selectedLanguage !== 'all' || selectedLevel !== 'all' || selectedSkill !== 'all'
-                ? 'No se encontraron actividades con los filtros aplicados'
-                : 'Aún no hay actividades creadas por los profesores'}
+                ? 'No se encontraron ejercicios con los filtros aplicados'
+              : 'Aún no hay ejercicios creados por los profesores'}
             </p>
           </CardContent>
         </Card>
@@ -371,7 +371,7 @@ export default function ActividadesAdminPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/admin/actividades/${activity.id}`)}
+                          onClick={() => router.push(`/admin/ejercicios/${activity.id}`)}
                           title="Ver detalles"
                         >
                           <Edit className="h-4 w-4" />
@@ -382,16 +382,16 @@ export default function ActividadesAdminPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => setActivityToDelete(activity)}
-                              title="Eliminar actividad"
+                              title="Eliminar ejercicio"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar actividad?</AlertDialogTitle>
+                              <AlertDialogTitle>¿Eliminar ejercicio?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta acción no se puede deshacer. Se eliminará permanentemente la actividad
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el ejercicio
                                 "{activityToDelete?.name}" y todos sus datos asociados.
                               </AlertDialogDescription>
                             </AlertDialogHeader>

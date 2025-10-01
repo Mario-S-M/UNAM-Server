@@ -155,9 +155,9 @@ export default function TeacherContentDetail() {
               </div>
             </div>
             <Badge 
-              variant={content.validationStatus === 'validado' ? 'default' : 'secondary'}
-            >
-              {content.validationStatus === 'validado' ? 'Validado' : 'Sin validar'}
+              variant={content.validationStatus === 'APPROVED' ? 'default' : 'secondary'}
+              >
+                {content.validationStatus === 'APPROVED' ? 'Validado' : 'Sin validar'}
             </Badge>
           </div>
         </CardHeader>
@@ -198,7 +198,7 @@ export default function TeacherContentDetail() {
         </CardContent>
       </Card>
 
-      {/* Sección de Actividades */}
+      {/* Sección de Ejercicios */}
       <ContentActivities contentId={contentId} />
     </div>
   );

@@ -101,7 +101,7 @@ export function ContentActivitiesReadOnly({ contentId }: ContentActivitiesReadOn
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          Ejercicios y actividades relacionadas con este contenido
+          Ejercicios y ejercicios relacionados con este contenido
         </p>
         
         {/* Barra de búsqueda */}

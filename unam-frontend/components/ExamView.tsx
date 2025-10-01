@@ -290,10 +290,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const totalActivities = exercises.length;
   const allQuestions = exercises.flatMap(exercise => exercise.form?.questions || []);
   
-  // Aleatorizar preguntas y opciones cuando cambie la actividad
+  // Aleatorizar preguntas y opciones cuando cambie el ejercicio
   useEffect(() => {
     
-    // Aleatorizar si hay preguntas (siempre que cambie la actividad o al inicio)
+    // Aleatorizar si hay preguntas (siempre que cambie el ejercicio o al inicio)
     if (originalQuestions.length > 0) {
       const randomizedQuestions = shuffleArray(originalQuestions);
       setShuffledQuestions(randomizedQuestions);
@@ -329,16 +329,16 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const handleContinueToNextActivity = () => {
     
-    // Obtener la actividad actual para redirigir al formulario de edición
+    // Obtener el ejercicio actual para redirigir al formulario de edición
     const currentActivity = exercises[currentActivityIndex];
     if (currentActivity) {
-      toast.info('Redirigiendo al formulario de edición de la actividad...');
-      router.push(`/admin/actividades/${currentActivity.id}`);
+      toast.info('Redirigiendo al formulario de edición del ejercicio...');
+      router.push(`/admin/ejercicios/${currentActivity.id}`);
       return;
     }
     
     if (currentActivityIndex < totalActivities - 1) {
-      // Ir a la siguiente actividad
+      // Ir al siguiente ejercicio
       const newActivityIndex = currentActivityIndex + 1;
       
       // IMPORTANTE: Usar React.startTransition para asegurar que todos los resets se apliquen juntos
@@ -356,13 +356,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
       });
       
       
-      toast.info(`Iniciando actividad ${newActivityIndex + 1} de ${totalActivities}`);
+      toast.info(`Iniciando ejercicio ${newActivityIndex + 1} de ${totalActivities}`);
     } else {
-      // Todas las actividades completadas
+      // Todos los ejercicios completados
       setAllActivitiesCompleted(true);
       setShowActivityCompletion(false);
       setShowResults(true);
-      toast.success('¡Felicidades! Has completado todas las actividades.');
+      toast.success('¡Felicidades! Has completado todos los ejercicios.');
     }
   };
 
@@ -385,17 +385,17 @@ export function ExamView({ contentId }: ActivityViewProps) {
     onCompleted: (data) => {
       setExamSubmitted(true);
       setExamResults(data.submitFormResponse);
-      // Mostrar retroalimentación después de completar la actividad
+      // Mostrar retroalimentación después de completar el ejercicio
       setShowFeedback(true);
-      // Solo mostrar resultados finales si es la última actividad
+      // Solo mostrar resultados finales si es el último ejercicio
       const isLastActivity = currentActivityIndex >= exercises.length - 1;
       if (isLastActivity) {
         setShowResults(true);
       }
       if (user) {
-        toast.success('Actividad completada y progreso guardado');
+        toast.success('Ejercicio completado y progreso guardado');
       } else {
-        toast.success('Actividad completada');
+        toast.success('Ejercicio completado');
       }
     },
     onError: (error) => {
@@ -428,8 +428,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
       setValidationDialog({
         open: true,
         title: 'Preguntas sin responder',
-        message: `Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas completar la actividad?`,
-        confirmText: 'Completar actividad',
+        message: `Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas completar el ejercicio?`,
+        confirmText: 'Completar ejercicio',
         showCancel: true,
         onConfirm: () => submitExam()
       });
@@ -472,14 +472,14 @@ export function ExamView({ contentId }: ActivityViewProps) {
         }
       });
 
-      // Marcar actividad como completada
+      // Marcar ejercicio como completado
       const activityId = currentActivity?.id || '';
       setCompletedActivities(prev => [...prev, activityId]);
       setExamSubmitted(true);
       
-      // Mostrar pantalla de completación de actividad (no avanzar automáticamente)
+      // Mostrar pantalla de completación de ejercicio (no avanzar automáticamente)
       setShowActivityCompletion(true);
-      toast.success(`Actividad "${currentActivity?.name}" completada con éxito.`);
+      toast.success(`Ejercicio "${currentActivity?.name}" completado con éxito.`);
       
     } catch (error) {
       console.error('Error al procesar envío:', error);
@@ -647,19 +647,19 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const handleFinishActivity = () => {
     if (answers.length < totalQuestions) {
       const unanswered = totalQuestions - answers.length;
-      if (!confirm(`Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas finalizar la actividad?`)) {
+      if (!confirm(`Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas finalizar el ejercicio?`)) {
         return;
       }
     }
     setShowFeedback(true);
-    toast.success('Actividad finalizada - Revisando respuestas');
+    toast.success('Ejercicio finalizado - Revisando respuestas');
   };
 
   const calculateResults = () => {
     let correct = 0;
     let total = 0;
 
-    // Solo usar las preguntas de la actividad actual completada
+    // Solo usar las preguntas del ejercicio actual completado
     const currentActivityQuestions = exercises[currentActivityIndex]?.form?.questions || [];
     
     currentActivityQuestions.forEach(question => {
@@ -681,7 +681,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const startActivity = () => {
     setExamStarted(true);
     setTimeElapsed(0);
-    toast.success('Actividad iniciada. ¡Buena suerte!');
+    toast.success('Ejercicio iniciado. ¡Buena suerte!');
   };
 
   const resetActivity = () => {
@@ -698,20 +698,20 @@ export function ExamView({ contentId }: ActivityViewProps) {
     setShuffledQuestions([]);
     setShuffledOptions({});
     
-    toast.info('Actividad reiniciada. ¡Puedes comenzar de nuevo!');
+    toast.info('Ejercicio reiniciado. ¡Puedes comenzar de nuevo!');
   };
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividades</CardTitle>
+          <CardTitle>Ejercicios</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Cargando actividades...</p>
+              <p className="text-sm text-muted-foreground">Cargando ejercicios...</p>
             </div>
           </div>
         </CardContent>
@@ -723,11 +723,11 @@ export function ExamView({ contentId }: ActivityViewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividades</CardTitle>
+          <CardTitle>Ejercicios</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-red-500">Error al cargar las actividades</p>
+            <p className="text-red-500">Error al cargar los ejercicios</p>
             <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
           </div>
         </CardContent>
@@ -740,41 +740,41 @@ export function ExamView({ contentId }: ActivityViewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividades</CardTitle>
-          <CardDescription>No hay actividades disponibles para este contenido</CardDescription>
+          <CardTitle>Ejercicios</CardTitle>
+          <CardDescription>No hay ejercicios disponibles para este contenido</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Este contenido aún no tiene actividades configuradas.</p>
+            <p className="text-muted-foreground">Este contenido aún no tiene ejercicios configurados.</p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // Verificar si la actividad actual tiene preguntas
+  // Verificar si el ejercicio actual tiene preguntas
   if (totalQuestions === 0 && currentActivity) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>{currentActivity.form?.title || currentActivity.name}</CardTitle>
-          <CardDescription>Esta actividad no tiene preguntas configuradas</CardDescription>
+          <CardDescription>Este ejercicio no tiene preguntas configuradas</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Esta actividad aún no tiene preguntas configuradas.</p>
+            <p className="text-muted-foreground">Este ejercicio aún no tiene preguntas configuradas.</p>
             {currentActivityIndex < exercises.length - 1 && (
               <Button 
                 onClick={() => {
                   setCurrentActivityIndex(prev => prev + 1);
                   setCurrentQuestionIndex(0);
-                  toast.info('Pasando a la siguiente actividad');
+                  toast.info('Pasando al siguiente ejercicio');
                 }} 
                 className="mt-4"
               >
-                Ir a la siguiente actividad
+                Ir al siguiente ejercicio
               </Button>
             )}
           </div>
@@ -942,7 +942,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
             <div className="flex justify-center">
               <Button onClick={resetActivity} className="flex items-center gap-2">
                 <RotateCcw className="h-4 w-4" />
-                Reintentar Actividad
+                Reintentar Ejercicio
               </Button>
             </div>
           </CardContent>
@@ -957,7 +957,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Solo mostrar preguntas de la actividad actual completada */}
+            {/* Solo mostrar preguntas del ejercicio actual completado */}
             {(exercises[currentActivityIndex]?.form?.questions || []).map((question, index) => {
               const result = getQuestionResult(question);
               return (
@@ -1041,7 +1041,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
             <div className="flex justify-center gap-4 mt-6">
               {currentActivityIndex < exercises.length - 1 ? (
                 <Button onClick={handleContinueFromFeedback} size="lg">
-                  Continuar con la siguiente actividad
+                  Continuar con el siguiente ejercicio
                 </Button>
               ) : (
                 <Button onClick={handleViewResults} size="lg">
@@ -1068,10 +1068,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-500" />
-            Actividad Completada
+            Ejercicio Completado
           </CardTitle>
           <CardDescription>
-            Has completado exitosamente la actividad {currentActivityIndex + 1} de {exercises.length}
+            Has completado exitosamente el ejercicio {currentActivityIndex + 1} de {exercises.length}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -1093,14 +1093,14 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Progreso: {completedActivities.length} de {exercises.length} actividades completadas
+                Progreso: {completedActivities.length} de {exercises.length} ejercicios completados
               </p>
             </div>
           </div>
 
           {hasNextActivity && (
             <div className="border rounded-lg p-4 bg-blue-50">
-              <h4 className="font-medium mb-2">Siguiente actividad:</h4>
+              <h4 className="font-medium mb-2">Siguiente ejercicio:</h4>
               <p className="text-sm text-muted-foreground mb-1">
                 {nextActivity?.form?.title || nextActivity?.name}
               </p>
@@ -1119,7 +1119,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
             </Button>
             {hasNextActivity ? (
               <Button onClick={handleContinueToNextActivity} size="lg">
-                Continuar con la siguiente actividad
+                Continuar con el siguiente ejercicio
               </Button>
             ) : (
               <Button onClick={handleViewResults} size="lg">
@@ -1137,7 +1137,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Actividades</CardTitle>
+          <CardTitle>Ejercicios</CardTitle>
           <CardDescription>
             Prepárate para responder {totalQuestions} pregunta{totalQuestions > 1 ? 's' : ''}
           </CardDescription>
@@ -1147,7 +1147,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
             <BookOpen className="h-16 w-16 mx-auto mb-4 text-blue-500" />
             <h3 className="text-lg font-semibold mb-2">¿Listo para comenzar?</h3>
             <p className="text-muted-foreground mb-6">
-              Esta actividad contiene {totalQuestions} pregunta{totalQuestions > 1 ? 's' : ''} de opción múltiple.
+              Este ejercicio contiene {totalQuestions} pregunta{totalQuestions > 1 ? 's' : ''} de opción múltiple.
               Tómate tu tiempo y lee cada pregunta cuidadosamente.
             </p>
           </div>
@@ -1177,7 +1177,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
                   <div className="text-center">
                     <CheckCircle className="h-8 w-8 mx-auto mb-2 text-purple-500" />
                     <div className="text-2xl font-semibold">{exercises.length}</div>
-                    <p className="text-sm text-muted-foreground">Actividad{exercises.length > 1 ? 'es' : ''}</p>
+                    <p className="text-sm text-muted-foreground">Ejercicio{exercises.length > 1 ? 's' : ''}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1187,7 +1187,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
           <div className="flex justify-center">
              <Button onClick={startActivity} size="lg" className="flex items-center gap-2">
                <BookOpen className="h-4 w-4" />
-               Comenzar Actividad
+               Comenzar Ejercicio
              </Button>
            </div>
         </CardContent>
@@ -1283,7 +1283,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
             <div className="flex justify-center gap-4 mt-6">
               {currentActivityIndex < exercises.length - 1 ? (
                 <Button onClick={handleContinueFromFeedback} size="lg">
-                  Continuar con la siguiente actividad
+                  Continuar con el siguiente ejercicio
                 </Button>
               ) : (
                 <Button onClick={handleViewResults} size="lg">
@@ -1297,7 +1297,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     );
   }
 
-  // Formulario de la actividad actual
+  // Formulario del ejercicio actual
 
   return (
     <>
@@ -1312,7 +1312,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
           <div>
             <CardTitle>{currentActivity?.form?.title || currentActivity?.name}</CardTitle>
             <CardDescription>
-              Actividad {currentActivityIndex + 1} de {exercises.length} • Pregunta {currentQuestionIndex + 1} de {displayQuestions.length}
+              Ejercicio {currentActivityIndex + 1} de {exercises.length} • Pregunta {currentQuestionIndex + 1} de {displayQuestions.length}
             </CardDescription>
           </div>
           <div className="flex items-center gap-4">
@@ -1613,11 +1613,11 @@ export function ExamView({ contentId }: ActivityViewProps) {
               {currentQuestionIndex === displayQuestions.length - 1 ? (
                 !examSubmitted ? (
                   <Button onClick={handleSubmitExam} disabled={submitLoading}>
-                    {submitLoading ? 'Enviando...' : 'Completar Actividad'}
+                    {submitLoading ? 'Enviando...' : 'Completar Ejercicio'}
                   </Button>
                 ) : (
                   <div className="text-green-600 font-medium">
-                    ✅ Actividad Completada
+                    ✅ Ejercicio Completado
                   </div>
                 )
               ) : (

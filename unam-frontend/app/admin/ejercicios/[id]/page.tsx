@@ -127,7 +127,7 @@ interface Activity {
   };
 }
 
-export default function ActivityDetailPage() {
+export default function EjercicioDetailPage() {
   const router = useRouter();
   const params = useParams();
   const activityId = params.id as string;
@@ -161,12 +161,12 @@ export default function ActivityDetailPage() {
 
   const [updateActivity] = useMutation(UPDATE_ACTIVITY, {
     onCompleted: (data) => {
-      toast.success('Actividad actualizada exitosamente');
+      toast.success('Ejercicio actualizado exitosamente');
       setIsSubmitting(false);
     },
     onError: (error) => {
       console.error('Error updating activity:', error);
-      toast.error('Error al actualizar la actividad');
+      toast.error('Error al actualizar el ejercicio');
       setIsSubmitting(false);
     }
   });
@@ -213,7 +213,7 @@ export default function ActivityDetailPage() {
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="text-lg">Cargando actividad...</span>
+            <span className="text-lg">Cargando ejercicio...</span>
           </div>
         </div>
       </div>
@@ -225,10 +225,10 @@ export default function ActivityDetailPage() {
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-lg text-red-500 mb-2">Error al cargar la actividad</div>
-            <Button onClick={() => router.push('/admin/actividades')}>
+            <div className="text-lg text-red-500 mb-2">Error al cargar el ejercicio</div>
+            <Button onClick={() => router.push('/admin/ejercicios')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver a actividades
+              Volver a ejercicios
             </Button>
           </div>
         </div>
@@ -246,15 +246,15 @@ export default function ActivityDetailPage() {
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
-            onClick={() => router.push('/admin/actividades')}
+            onClick={() => router.push('/admin/ejercicios')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Editar Actividad</h1>
+            <h1 className="text-2xl font-bold">Editar Ejercicio</h1>
             <p className="text-muted-foreground">
-              Modifica los datos de la actividad "{activity.name}"
+              Modifica los datos del ejercicio "{activity.name}"
             </p>
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function ActivityDetailPage() {
       {/* Formulario de edición */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Datos de la Actividad</CardTitle>
+          <CardTitle className="text-lg">Datos del Ejercicio</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -307,7 +307,7 @@ export default function ActivityDetailPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/admin/actividades')}
+                onClick={() => router.push('/admin/ejercicios')}
                 disabled={isSubmitting}
               >
                 Cancelar

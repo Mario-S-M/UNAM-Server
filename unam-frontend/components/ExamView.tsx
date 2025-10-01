@@ -207,7 +207,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [allActivitiesCompleted, setAllActivitiesCompleted] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [shuffledQuestions, setShuffledQuestions] = useState<ActivityQuestion[]>([]);
   const [shuffledOptions, setShuffledOptions] = useState<Record<string, ActivityOption[]>>({});
   const [validationDialog, setValidationDialog] = useState<{
     open: boolean;
@@ -277,38 +276,32 @@ export function ExamView({ contentId }: ActivityViewProps) {
   // Usar useMemo para evitar recalcular originalQuestions en cada render
   const originalQuestions = useMemo(() => {
     const questions = currentActivity?.form?.questions || [];
-    return questions;
+    // Ordenar las preguntas por orderIndex para mostrarlas en orden
+    return questions.sort((a, b) => a.orderIndex - b.orderIndex);
   }, [currentActivity?.form?.questions, currentActivityIndex]);
   
-  // Usar preguntas aleatorizadas si están disponibles, sino las originales
-  // IMPORTANTE: Siempre usar originalQuestions si shuffledQuestions está vacío
-  const currentActivityQuestions = shuffledQuestions.length > 0 ? shuffledQuestions : originalQuestions;
-  const displayQuestions = currentActivityQuestions; // Para mostrar las preguntas (aleatorizadas o no)
+  // Usar las preguntas originales ordenadas (no aleatorizadas)
+  const displayQuestions = originalQuestions; // Mostrar preguntas en orden
   const currentQuestion = displayQuestions[currentQuestionIndex];
-  // CORREGIDO: Usar originalQuestions.length para totalQuestions para evitar mostrar "sin preguntas"
   const totalQuestions = originalQuestions.length;
   const totalActivities = exercises.length;
   const allQuestions = exercises.flatMap(exercise => exercise.form?.questions || []);
   
-  // Aleatorizar preguntas y opciones cuando cambie el ejercicio
+  // Aleatorizar solo las opciones cuando cambie el ejercicio
   useEffect(() => {
     
-    // Aleatorizar si hay preguntas (siempre que cambie el ejercicio o al inicio)
+    // Aleatorizar solo las opciones si hay preguntas
     if (originalQuestions.length > 0) {
-      const randomizedQuestions = shuffleArray(originalQuestions);
-      setShuffledQuestions(randomizedQuestions);
-      
       // Aleatorizar opciones para cada pregunta
       const randomizedOptions: Record<string, ActivityOption[]> = {};
-      randomizedQuestions.forEach(question => {
+      originalQuestions.forEach(question => {
         if (question.options && question.options.length > 0) {
           randomizedOptions[question.id] = shuffleArray(question.options);
         }
       });
       setShuffledOptions(randomizedOptions);
     } else {
-      // Limpiar shuffledQuestions si no hay preguntas originales
-      setShuffledQuestions([]);
+      // Limpiar opciones aleatorizadas si no hay preguntas originales
       setShuffledOptions({});
     }
   }, [currentActivityIndex, originalQuestions.length]);
@@ -350,7 +343,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
         setCurrentQuestionIndex(0);
         setAnswers([]);
         setExamSubmitted(false);
-        setShuffledQuestions([]);
         setShuffledOptions({});
         setTimeElapsed(0);
       });
@@ -443,7 +435,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     try {
       // Preparar las respuestas para enviar según el DTO del backend
       const formAnswers = answers.map(answer => {
-        const question = currentActivityQuestions.find(q => q.id === answer.questionId);
+        const question = displayQuestions.find((q: ActivityQuestion) => q.id === answer.questionId);
         // Para preguntas de selección única, convertir selectedOptionId a array
         const selectedOptionIds = answer.selectedOptionIds || 
           (answer.selectedOptionId ? [answer.selectedOptionId] : null);
@@ -695,7 +687,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
     setTimeElapsed(0);
     setExamStarted(false);
     setExamSubmitted(false);
-    setShuffledQuestions([]);
     setShuffledOptions({});
     
     toast.info('Ejercicio reiniciado. ¡Puedes comenzar de nuevo!');

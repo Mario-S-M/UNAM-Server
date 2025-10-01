@@ -421,18 +421,15 @@ export default function ActivityQuestionsPage() {
                       accept="audio/*"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
-                        if (file && token) {
+                        if (file) {
                           try {
                             toast.loading('Subiendo archivo de audio...');
                             
                             const formData = new FormData();
                             formData.append('audio', file);
                             
-                            const response = await fetch('http://localhost:3000/uploads/audio', {
+                            const response = await fetch('http://localhost:3000/uploads/audio/public', {
                               method: 'POST',
-                              headers: {
-                                'Authorization': `Bearer ${token}`,
-                              },
                               body: formData,
                             });
                             

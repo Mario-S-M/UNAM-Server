@@ -52,6 +52,7 @@ services:
       - ./Markdown:/Markdown
       - ./logs/backend:/app/logs/backend
       - ./logs/pm2/backend:/root/.pm2/logs
+      - ./UNAM-escuela-backend/uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy

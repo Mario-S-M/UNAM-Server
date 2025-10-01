@@ -155,17 +155,40 @@ const storage = diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = uuidv4();
-    const ext = extname(file.originalname);
-    cb(null, `${uniqueSuffix}${ext}`);
+    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
   },
 });
 
-// Filtro para validar tipos de archivo
+// Configuración de multer para archivos de audio
+const audioStorage = diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = './uploads/audio';
+    if (!existsSync(uploadPath)) {
+      mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = uuidv4();
+    cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+  },
+});
+
+// Filtro para validar tipos de archivo de imagen
 const fileFilter = (req: any, file: any, cb: any) => {
   if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|avif|svg\+xml)$/)) {
     cb(null, true);
   } else {
     cb(new BadRequestException('Solo se permiten archivos de imagen'), false);
+  }
+};
+
+// Filtro para validar tipos de archivo de audio
+const audioFileFilter = (req: any, file: any, cb: any) => {
+  if (file.mimetype.match(/\/(wav|x-wav|mp3|mpeg|ogg|m4a|flac|aac)$/)) {
+    cb(null, true);
+  } else {
+    cb(new BadRequestException('Solo se permiten archivos de audio (wav, mp3, ogg, m4a, flac, aac)'), false);
   }
 };
 
@@ -228,6 +251,68 @@ export class UploadsController {
       filename: file.filename,
       originalName: file.originalname,
       size: file.size,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('audio')
+  @UseInterceptors(
+    FileInterceptor('audio', {
+      storage: audioStorage,
+      fileFilter: audioFileFilter,
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB máximo para archivos de audio
+      },
+    }),
+  )
+  uploadAudio(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser([ValidRoles.admin, ValidRoles.superUser, ValidRoles.docente])
+    user: User,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No se ha subido ningún archivo de audio');
+    }
+
+    // Generar URL del archivo de audio
+    const audioUrl = `http://localhost:3000/uploads/audio/${file.filename}`;
+
+    return {
+      message: 'Archivo de audio subido exitosamente',
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+      url: audioUrl,
+    };
+  }
+
+  // Endpoint público para subir archivos de audio
+  @Post('audio/public')
+  @UseInterceptors(
+    FileInterceptor('audio', {
+      storage: audioStorage,
+      fileFilter: audioFileFilter,
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB máximo para archivos de audio
+      },
+    }),
+  )
+  uploadAudioPublic(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No se ha subido ningún archivo de audio');
+    }
+
+    // Generar URL del archivo de audio
+    const audioUrl = `http://localhost:3000/uploads/audio/${file.filename}`;
+
+    return {
+      message: 'Archivo de audio subido exitosamente',
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+      url: audioUrl,
     };
   }
 

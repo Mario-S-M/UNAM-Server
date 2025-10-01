@@ -87,15 +87,13 @@ export class CreateFormAnswerInput {
       case QuestionType.MULTIPLE_CHOICE:
         return this.multipleChoiceAnswer;
       
-      case QuestionType.CHECKBOX:
+      case QuestionType.SINGLE_CHOICE:
+      case QuestionType.YES_NO:
       case QuestionType.BOOLEAN:
         return this.singleChoiceAnswer || (this.booleanAnswer !== undefined ? this.booleanAnswer.toString() : undefined);
       
       case QuestionType.NUMBER:
         return this.numberAnswer;
-      
-      case QuestionType.RATING_SCALE:
-        return this.ratingAnswer;
       
       case QuestionType.DATE:
         return this.dateAnswer;

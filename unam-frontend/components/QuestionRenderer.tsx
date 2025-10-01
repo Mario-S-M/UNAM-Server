@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star } from 'lucide-react';
+import { Star, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FormQuestionData, FormQuestionOptionData } from '@/schemas/form-forms';
 import { WordSearchGame } from '@/components/WordSearchGame';
@@ -331,9 +331,30 @@ export function QuestionRenderer({
                 )}
               </h3>
               {question.description && (
-                <p className="text-sm text-gray-600 mt-1">
-                  {question.description}
-                </p>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mt-2">
+                  <p className="text-sm text-blue-800">
+                    <strong>Instrucciones:</strong> {question.description}
+                  </p>
+                </div>
+              )}
+              
+              {question.audioUrl && (
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg mt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Volume2 className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Audio de la pregunta:</span>
+                  </div>
+                  <audio 
+                    controls 
+                    className="w-full" 
+                    preload="metadata"
+                  >
+                    <source src={question.audioUrl} type="audio/mpeg" />
+                    <source src={question.audioUrl} type="audio/wav" />
+                    <source src={question.audioUrl} type="audio/ogg" />
+                    Tu navegador no soporta el elemento de audio.
+                  </audio>
+                </div>
               )}
             </div>
             {showValidation && question.points && (

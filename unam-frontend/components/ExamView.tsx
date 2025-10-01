@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen, FileText, Loader2, XCircle, RotateCcw, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen, FileText, Loader2, XCircle, RotateCcw, AlertCircle, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ValidationErrorDialog } from "@/components/ValidationErrorDialog";
@@ -43,6 +43,8 @@ interface ActivityQuestion {
   incorrectFeedback?: string;
   points?: number;
   maxLength?: number;
+  description?: string;
+  audioUrl?: string;
   options: ActivityOption[];
 }
 
@@ -99,6 +101,8 @@ const GET_EXERCISES_BY_CONTENT = gql`
           explanation
           incorrectFeedback
           points
+          description
+          audioUrl
           options {
             id
             optionText
@@ -156,6 +160,8 @@ const GET_EXERCISES_BY_CONTENT_FULL = gql`
           explanation
           incorrectFeedback
           points
+          description
+          audioUrl
           options {
             id
             optionText
@@ -252,15 +258,51 @@ export function ExamView({ contentId }: ActivityViewProps) {
       variables: { contentId },
       skip: !contentId,
       onCompleted: (data) => {
+        // Validar estructura de datos completa
+        if (data?.exercisesByContent) {
+          const hasIncompleteData = data.exercisesByContent.some(exercise => {
+            if (!exercise.form || !exercise.form.questions) {
+              console.warn('Ejercicio con datos de formulario incompletos:', exercise.id);
+              return true;
+            }
+            
+            const hasInvalidQuestions = exercise.form.questions.some(question => {
+              if (!question.id || !question.questionText || typeof question.orderIndex !== 'number') {
+                console.warn('Pregunta con estructura inconsistente:', question);
+                return true;
+              }
+              return false;
+            });
+            
+            return hasInvalidQuestions;
+          });
+          
+          if (hasIncompleteData) {
+            toast.error('Se detectaron inconsistencias en la estructura de las preguntas');
+          }
+        }
       },
       onError: (error) => {
         console.error('ExamView: ❌ Query failed:', error);
+        
+        // Manejo específico de errores de autenticación
+        if (error.message.includes('Unauthorized') || error.message.includes('Authentication')) {
+          setAuthError(true);
+          toast.error('Error de autenticación. Por favor, inicia sesión nuevamente.');
+          return;
+        }
+        
+        // Manejo de otros errores de red o servidor
+        if (error.networkError) {
+          toast.error('Error de conexión. Verifica tu conexión a internet.');
+        } else if (error.graphQLErrors?.length > 0) {
+          toast.error('Error del servidor. Intenta nuevamente más tarde.');
+        } else {
+          toast.error('Error inesperado al cargar los ejercicios.');
+        }
       }
     }
   );
-  
-  
-
   
   // Debug adicional
   if (data?.exercisesByContent) {
@@ -275,9 +317,27 @@ export function ExamView({ contentId }: ActivityViewProps) {
   
   // Usar useMemo para evitar recalcular originalQuestions en cada render
   const originalQuestions = useMemo(() => {
-    const questions = currentActivity?.form?.questions || [];
-    // Ordenar las preguntas por orderIndex para mostrarlas en orden
-    return questions.sort((a, b) => a.orderIndex - b.orderIndex);
+    // Validar que currentActivity?.form?.questions existe
+    if (!currentActivity?.form?.questions) {
+      return [];
+    }
+    
+    const questions = currentActivity.form.questions;
+    
+    // Validar que questions no es null o undefined
+    if (!questions || !Array.isArray(questions)) {
+      return [];
+    }
+    
+    // Validar que todos los elementos tienen orderIndex definido
+    const validQuestions = questions.filter(q => q && typeof q.orderIndex === 'number');
+    
+    if (validQuestions.length !== questions.length) {
+      console.warn('Algunas preguntas no tienen orderIndex definido');
+    }
+    
+    // Crear una copia del array antes de ordenarlo para evitar mutación
+    return [...validQuestions].sort((a, b) => a.orderIndex - b.orderIndex);
   }, [currentActivity?.form?.questions, currentActivityIndex]);
   
   // Usar las preguntas originales ordenadas (no aleatorizadas)
@@ -720,6 +780,34 @@ export function ExamView({ contentId }: ActivityViewProps) {
           <div className="text-center py-8">
             <p className="text-red-500">Error al cargar los ejercicios</p>
             <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Manejo de errores de autenticación
+  if (authError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            Error de Autenticación
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 space-y-4">
+            <p className="text-red-500">No tienes permisos para acceder a este contenido</p>
+            <p className="text-sm text-muted-foreground">
+              Por favor, inicia sesión con una cuenta válida para continuar.
+            </p>
+            <Button 
+              onClick={() => router.push('/login')}
+              className="mt-4"
+            >
+              Ir a Iniciar Sesión
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -1325,6 +1413,35 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <h3 className="text-lg font-semibold">
                 {currentQuestionIndex + 1}. {currentQuestion.questionText}
               </h3>
+              
+              {/* Instrucciones individuales de la pregunta */}
+              {currentQuestion.description && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Instrucciones:</strong> {currentQuestion.description}
+                  </p>
+                </div>
+              )}
+              
+              {/* Reproductor de audio */}
+              {currentQuestion.audioUrl && (
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Volume2 className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Audio de la pregunta:</span>
+                  </div>
+                  <audio 
+                    controls 
+                    className="w-full" 
+                    preload="metadata"
+                  >
+                    <source src={currentQuestion.audioUrl} type="audio/mpeg" />
+                    <source src={currentQuestion.audioUrl} type="audio/wav" />
+                    <source src={currentQuestion.audioUrl} type="audio/ogg" />
+                    Tu navegador no soporta el elemento de audio.
+                  </audio>
+                </div>
+              )}
               
               {/* Renderizado condicional según el tipo de pregunta */}
               {(currentQuestion.questionType === 'TEXT' || currentQuestion.questionType === 'OPEN_TEXT' || currentQuestion.questionType === 'open_text') && (

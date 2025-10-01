@@ -24,7 +24,7 @@ export class FormQuestion {
   @Field(() => String)
   questionText: string;
 
-  @Column() // 'multiple_choice', 'single_choice', 'open_text', 'checkbox', 'rating_scale', 'yes_no'
+  @Column() // 'MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'OPEN_TEXT', 'YES_NO', 'WORD_SEARCH'
   @Field(() => String)
   questionType: string;
 
@@ -47,6 +47,10 @@ export class FormQuestion {
   @Column({ nullable: true })
   @Field(() => String, { nullable: true })
   imageUrl?: string;
+
+  @Column({ nullable: true })
+  @Field(() => String, { nullable: true })
+  audioUrl?: string;
 
   // Para escalas de valoración
   @Column({ nullable: true })

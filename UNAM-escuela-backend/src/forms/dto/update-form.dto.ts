@@ -148,6 +148,11 @@ export class UpdateFormQuestionInput {
   @Min(0)
   points?: number;
 
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  audioUrl?: string;
+
   @Field(() => [UpdateFormQuestionOptionInput], { nullable: true })
   @IsOptional()
   @IsArray()

@@ -10,15 +10,14 @@ export enum QuestionType {
   TEXTAREA = 'TEXTAREA',
   OPEN_TEXT = 'open_text',
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
-  CHECKBOX = 'CHECKBOX',
-  RATING_SCALE = 'RATING_SCALE',
+  SINGLE_CHOICE = 'SINGLE_CHOICE',
   NUMBER = 'NUMBER',
   EMAIL = 'EMAIL',
   DATE = 'DATE',
   TIME = 'TIME',
   BOOLEAN = 'BOOLEAN',
-  WORD_SEARCH = 'WORD_SEARCH',
-  CROSSWORD = 'CROSSWORD'
+  YES_NO = 'YES_NO',
+  WORD_SEARCH = 'WORD_SEARCH'
 }
 
 @InputType()
@@ -147,6 +146,11 @@ export class CreateFormQuestionInput {
   @IsNumber()
   @Min(0)
   points?: number;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  @IsString()
+  audioUrl?: string;
 
   @Field(() => [CreateFormQuestionOptionInput], { nullable: true })
   @IsOptional()

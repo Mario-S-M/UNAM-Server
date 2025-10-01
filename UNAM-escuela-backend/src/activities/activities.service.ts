@@ -53,6 +53,7 @@ export class ActivitiesService {
             description: questionInput.description,
             placeholder: questionInput.placeholder,
             imageUrl: questionInput.imageUrl,
+            audioUrl: questionInput.audioUrl,
             minValue: questionInput.minValue,
             maxValue: questionInput.maxValue,
             minLabel: questionInput.minLabel,
@@ -112,6 +113,20 @@ export class ActivitiesService {
     return await this.activitiesRepository.find({
       relations: ['form', 'form.questions', 'form.questions.options']
     });
+  }
+
+  async findByAssignedTeacher(teacherId: string): Promise<Activity[]> {
+    return await this.activitiesRepository
+      .createQueryBuilder('activity')
+      .leftJoinAndSelect('activity.form', 'form')
+      .leftJoinAndSelect('form.questions', 'questions')
+      .leftJoinAndSelect('questions.options', 'options')
+      .innerJoin('contents', 'content', 'content.id::text = activity.contentId')
+      .innerJoin('content_teachers', 'ct', 'ct.contentId = content.id AND ct.teacherId = :teacherId::uuid', { teacherId })
+      .orderBy('activity.createdAt', 'ASC')
+      .addOrderBy('questions.orderIndex', 'ASC')
+      .addOrderBy('options.orderIndex', 'ASC')
+      .getMany();
   }
 
   async findByContent(contentId: string):Promise<Activity[]> {
@@ -235,6 +250,7 @@ export class ActivitiesService {
             description: questionInput.description,
             placeholder: questionInput.placeholder,
             imageUrl: questionInput.imageUrl,
+            audioUrl: questionInput.audioUrl,
             minValue: questionInput.minValue,
             maxValue: questionInput.maxValue,
             minLabel: questionInput.minLabel,

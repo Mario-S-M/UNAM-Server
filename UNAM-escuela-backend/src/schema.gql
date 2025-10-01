@@ -220,6 +220,7 @@ type FormQuestion {
   description: String
   placeholder: String
   imageUrl: String
+  audioUrl: String
   minValue: Int
   maxValue: Int
   minLabel: String
@@ -429,6 +430,7 @@ type Query {
   contentComments(contentId: ID!): [ContentComment!]!
   plateComments(contentId: ID!): [PlateComment!]!
   activities: [Activity!]!
+  myAssignedActivities: [Activity!]!
   activitiesByContent(contentId: ID!): [Activity!]!
   exercisesByContent(contentId: ID!): [Activity!]!
   activity(id: ID!): Activity!
@@ -644,6 +646,7 @@ input CreateFormQuestionInput {
   explanation: String
   incorrectFeedback: String
   points: Float
+  audioUrl: String
   options: [CreateFormQuestionOptionInput!]
 }
 
@@ -840,6 +843,7 @@ input UpdateFormQuestionInput {
   explanation: String
   incorrectFeedback: String
   points: Float
+  audioUrl: String
   options: [UpdateFormQuestionOptionInput!]
 }
 

@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, ArrowLeft, Save } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Save, Upload, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
@@ -36,6 +36,7 @@ const GET_ACTIVITY = gql`
           description
           placeholder
           imageUrl
+          audioUrl
           minValue
           maxValue
           minLabel
@@ -46,7 +47,15 @@ const GET_ACTIVITY = gql`
           explanation
           incorrectFeedback
           points
-          options {            id            optionText            optionValue            orderIndex            imageUrl            color            isCorrect          }
+          options {
+            id
+            optionText
+            optionValue
+            orderIndex
+            imageUrl
+            color
+            isCorrect
+          }
         }
       }
     }
@@ -67,7 +76,14 @@ const UPDATE_ACTIVITY = gql`
           questionType
           orderIndex
           isRequired
-          options {            id            optionText            optionValue            orderIndex            isCorrect          }
+          audioUrl
+          options {
+            id
+            optionText
+            optionValue
+            orderIndex
+            isCorrect
+          }
         }
       }
     }
@@ -85,6 +101,7 @@ interface Question {
   description?: string;
   placeholder?: string;
   imageUrl?: string;
+  audioUrl?: string;
   minValue?: number;
   maxValue?: number;
   minLabel?: string;
@@ -100,13 +117,10 @@ interface Question {
 
 const QUESTION_TYPES = [
   { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
-  { value: 'SINGLE_CHOICE', label: 'Selección única' },
+  { value: 'SINGLE_CHOICE', label: 'Opción única' },
   { value: 'OPEN_TEXT', label: 'Texto abierto' },
-  { value: 'CHECKBOX', label: 'Casillas de verificación' },
-  { value: 'RATING_SCALE', label: 'Escala de valoración' },
   { value: 'YES_NO', label: 'Sí/No' },
   { value: 'WORD_SEARCH', label: 'Sopa de letras' },
-  { value: 'CROSSWORD', label: 'Crucigrama' },
 ];
 
 export default function ActivityQuestionsPage() {
@@ -170,6 +184,7 @@ export default function ActivityQuestionsPage() {
       description: question.description || '',
       placeholder: question.placeholder || '',
       imageUrl: question.imageUrl || '',
+      audioUrl: question.audioUrl || '',
       minValue: question.minValue || 0,
       maxValue: question.maxValue || 0,
       minLabel: question.minLabel || '',
@@ -280,7 +295,7 @@ export default function ActivityQuestionsPage() {
   };
 
   const needsOptions = (questionType: string) => {
-    return ['MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'CHECKBOX'].includes(questionType);
+    return ['MULTIPLE_CHOICE', 'SINGLE_CHOICE'].includes(questionType);
   };
 
   if (loading) {
@@ -384,6 +399,44 @@ export default function ActivityQuestionsPage() {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor={`description-${questionIndex}`}>Indicación individual</Label>
+                  <Textarea
+                    id={`description-${questionIndex}`}
+                    value={question.description || ''}
+                    onChange={(e) => updateQuestion(questionIndex, 'description', e.target.value)}
+                    placeholder="Instrucciones específicas para esta pregunta..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`audio-${questionIndex}`}>Audio de la pregunta</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id={`audio-${questionIndex}`}
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Por ahora solo guardamos el nombre del archivo
+                          // En una implementación real, aquí subirías el archivo a un servicio de almacenamiento
+                          updateQuestion(questionIndex, 'audioUrl', file.name);
+                          toast.success('Archivo de audio seleccionado');
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    {question.audioUrl && (
+                      <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                        <Volume2 className="h-4 w-4" />
+                        <span>{question.audioUrl}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id={`required-${questionIndex}`}
@@ -428,60 +481,7 @@ export default function ActivityQuestionsPage() {
                   </div>
                 )}
 
-                {question.questionType === 'RATING_SCALE' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor={`min-value-${questionIndex}`}>Valor mínimo</Label>
-                        <Input
-                          id={`min-value-${questionIndex}`}
-                          type="number"
-                          value={question.minValue || ''}
-                          onChange={(e) => updateQuestion(questionIndex, 'minValue', parseInt(e.target.value) || 0)}
-                          placeholder="1"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`max-value-${questionIndex}`}>Valor máximo</Label>
-                        <Input
-                          id={`max-value-${questionIndex}`}
-                          type="number"
-                          value={question.maxValue || ''}
-                          onChange={(e) => updateQuestion(questionIndex, 'maxValue', parseInt(e.target.value) || 0)}
-                          placeholder="5"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`min-label-${questionIndex}`}>Etiqueta mínima</Label>
-                        <Input
-                          id={`min-label-${questionIndex}`}
-                          value={question.minLabel || ''}
-                          onChange={(e) => updateQuestion(questionIndex, 'minLabel', e.target.value)}
-                          placeholder="Muy malo"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`max-label-${questionIndex}`}>Etiqueta máxima</Label>
-                        <Input
-                          id={`max-label-${questionIndex}`}
-                          value={question.maxLabel || ''}
-                          onChange={(e) => updateQuestion(questionIndex, 'maxLabel', e.target.value)}
-                          placeholder="Excelente"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`correct-answer-${questionIndex}`}>Valor correcto</Label>
-                      <Input
-                        id={`correct-answer-${questionIndex}`}
-                        type="number"
-                        value={question.correctAnswer || ''}
-                        onChange={(e) => updateQuestion(questionIndex, 'correctAnswer', e.target.value)}
-                        placeholder="Valor esperado como respuesta correcta"
-                      />
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Configuración para sopa de letras */}
                 {question.questionType === 'WORD_SEARCH' && (
@@ -640,15 +640,7 @@ export default function ActivityQuestionsPage() {
                   </div>
                 )}
 
-                {/* Configuración para crucigrama */}
-                {question.questionType === 'CROSSWORD' && (
-                  <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-                    <Label className="text-base font-medium">Configuración de Crucigrama</Label>
-                    <div className="text-sm text-gray-600">
-                      <p>La configuración de crucigrama estará disponible próximamente.</p>
-                    </div>
-                  </div>
-                )}
+
 
                 {needsOptions(question.questionType) && (
                   <div className="space-y-4">
@@ -672,22 +664,22 @@ export default function ActivityQuestionsPage() {
                               onChange={(e) => updateOption(questionIndex, optionIndex, 'optionText', e.target.value)}
                               placeholder={`Opción ${optionIndex + 1}`}
                             />
-                            {(question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'SINGLE_CHOICE' || question.questionType === 'CHECKBOX') && (
+                            {(question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'SINGLE_CHOICE') && (
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`correct-${questionIndex}-${optionIndex}`}
                                   checked={option.isCorrect || false}
                                   onCheckedChange={(checked) => {
-                                    if (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'SINGLE_CHOICE') {
-                                      // Para opción múltiple y selección única, solo una opción puede ser correcta
+                                    if (question.questionType === 'MULTIPLE_CHOICE') {
+                                      // Para opción múltiple, múltiples opciones pueden ser correctas
+                                      updateOption(questionIndex, optionIndex, 'isCorrect', checked);
+                                    } else {
+                                      // Para selección única, solo una opción puede ser correcta
                                       const updatedOptions = question.options.map((opt, idx) => ({
                                         ...opt,
                                         isCorrect: idx === optionIndex ? checked : false
                                       }));
                                       updateQuestion(questionIndex, 'options', updatedOptions);
-                                    } else {
-                                      // Para checkbox, múltiples opciones pueden ser correctas
-                                      updateOption(questionIndex, optionIndex, 'isCorrect', checked);
                                     }
                                   }}
                                 />

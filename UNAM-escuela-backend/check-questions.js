@@ -16,23 +16,35 @@ async function checkQuestions() {
     await AppDataSource.initialize();
     console.log('Database connected successfully');
 
-    // Consultar preguntas con opciones
-    const questions = await AppDataSource.query(`
+    // Consultar preguntas con audioUrl
+    const questionsWithAudio = await AppDataSource.query(`
       SELECT 
-        fq.id,
-        fq."questionText",
-        fq."questionType",
-        fqo.id as option_id,
-        fqo."optionText"
-      FROM form_questions fq
-      LEFT JOIN form_question_options fqo ON fq.id = fqo."questionId"
-      WHERE fq."questionType" IN ('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'CHECKBOX')
-      ORDER BY fq.id, fqo."orderIndex"
-      LIMIT 20;
+        id,
+        "questionText",
+        "questionType",
+        "audioUrl"
+      FROM form_questions
+      WHERE "audioUrl" IS NOT NULL AND "audioUrl" != ''
+      ORDER BY id;
     `);
 
-    console.log('Questions with options found:', questions.length);
-    console.log('Questions:', JSON.stringify(questions, null, 2));
+    console.log('Questions with audioUrl found:', questionsWithAudio.length);
+    console.log('Questions with audio:', JSON.stringify(questionsWithAudio, null, 2));
+
+    // Consultar todas las preguntas para ver el estado general
+    const allQuestions = await AppDataSource.query(`
+      SELECT 
+        id,
+        "questionText",
+        "questionType",
+        "audioUrl",
+        "description"
+      FROM form_questions
+      ORDER BY id
+      LIMIT 10;
+    `);
+
+    console.log('\nFirst 10 questions (general overview):', JSON.stringify(allQuestions, null, 2));
 
     // Contar preguntas por tipo
     const counts = await AppDataSource.query(`

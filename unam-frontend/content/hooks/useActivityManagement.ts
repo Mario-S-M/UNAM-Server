@@ -64,9 +64,9 @@ export const activityFormSchema = z.object({
 export type ActivityFormData = z.infer<typeof activityFormSchema>;
 
 // GraphQL Queries y Mutations
-const GET_ACTIVITIES = gql`
-  query Activities {
-    activities {
+const GET_MY_ASSIGNED_ACTIVITIES = gql`
+  query MyAssignedActivities {
+    myAssignedActivities {
       id
       name
       description
@@ -223,8 +223,8 @@ export function useActivityManagement() {
   const [selectedContentId, setSelectedContentId] = useState<string>('all');
 
   // Queries
-  const { data: activitiesData, loading: activitiesLoading, error: activitiesError, refetch: refetchActivities } = useQuery<{ activities: Activity[] }>(
-    GET_ACTIVITIES,
+  const { data: activitiesData, loading: activitiesLoading, error: activitiesError, refetch: refetchActivities } = useQuery<{ myAssignedActivities: Activity[] }>(
+    GET_MY_ASSIGNED_ACTIVITIES,
     {
       errorPolicy: 'all',
       onError: (error) => {
@@ -372,7 +372,7 @@ export function useActivityManagement() {
   };
 
   // Datos procesados
-  const activities = activitiesData?.activities || [];
+  const activities = activitiesData?.myAssignedActivities || [];
   
   const filteredActivities = activities.filter(activity => {
     const matchesSearch = activity.name.toLowerCase().includes(search.toLowerCase()) ||

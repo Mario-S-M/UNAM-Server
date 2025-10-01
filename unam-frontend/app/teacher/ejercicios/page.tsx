@@ -196,7 +196,7 @@ export default function ActivitiesManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`/teacher/activities/questions/${activity.id}`)}
+                        onClick={() => router.push(`/teacher/ejercicios/questions/${activity.id}`)}
                         title="Editar preguntas"
                       >
                         <HelpCircle className="h-4 w-4" />

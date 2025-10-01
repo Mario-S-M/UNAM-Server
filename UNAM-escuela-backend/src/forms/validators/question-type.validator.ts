@@ -16,17 +16,14 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
     switch (questionType) {
       case 'TEXT':
       case 'TEXTAREA':
-      case 'open_text':
+      case 'OPEN_TEXT':
         return this.validateTextQuestion(question);
       
       case 'MULTIPLE_CHOICE':
         return this.validateMultipleChoiceQuestion(question);
       
-      case 'CHECKBOX':
-        return this.validateCheckboxQuestion(question);
-      
-      case 'RATING_SCALE':
-        return this.validateRatingScaleQuestion(question);
+      case 'SINGLE_CHOICE':
+        return this.validateSingleChoiceQuestion(question);
       
       case 'NUMBER':
         return this.validateNumberQuestion(question);
@@ -39,13 +36,11 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
         return this.validateDateTimeQuestion(question);
       
       case 'BOOLEAN':
+      case 'YES_NO':
         return this.validateBooleanQuestion(question);
       
       case 'WORD_SEARCH':
         return this.validateWordSearchQuestion(question);
-      
-      case 'CROSSWORD':
-        return this.validateCrosswordQuestion(question);
       
       default:
         return false;
@@ -89,8 +84,8 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
     return true;
   }
 
-  private validateCheckboxQuestion(question: any): boolean {
-    // Similar a multiple choice pero permite múltiples selecciones
+  private validateSingleChoiceQuestion(question: any): boolean {
+    // Similar a multiple choice pero solo permite una selección
     if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
       return false;
     }
@@ -103,32 +98,10 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
       return false;
     }
     
-    // Si es evaluable, debe tener al menos una respuesta correcta
+    // Si es evaluable, debe tener exactamente una respuesta correcta
     if (question.points && question.points > 0) {
-      return question.options.some((option: any) => option.isCorrect === true);
-    }
-    
-    return true;
-  }
-
-  private validateRatingScaleQuestion(question: any): boolean {
-    // Debe tener minValue y maxValue válidos
-    if (!question.minValue || !question.maxValue) {
-      return false;
-    }
-    
-    if (typeof question.minValue !== 'number' || typeof question.maxValue !== 'number') {
-      return false;
-    }
-    
-    if (question.minValue >= question.maxValue) {
-      return false;
-    }
-    
-    // El rango debe ser razonable (entre 2 y 10 puntos)
-    const range = question.maxValue - question.minValue + 1;
-    if (range < 2 || range > 10) {
-      return false;
+      const correctOptions = question.options.filter((option: any) => option.isCorrect === true);
+      return correctOptions.length === 1;
     }
     
     return true;
@@ -181,29 +154,7 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
     return words.every(word => word.length >= 3);
   }
 
-  private validateCrosswordQuestion(question: any): boolean {
-    // Los crucigramas deben tener pistas y respuestas en formato JSON
-    if (!question.correctAnswer || typeof question.correctAnswer !== 'string') {
-      return false;
-    }
-    
-    try {
-      const crosswordData = JSON.parse(question.correctAnswer);
-      
-      // Debe tener estructura de crucigrama con pistas horizontales y verticales
-      if (!crosswordData.across || !crosswordData.down) {
-        return false;
-      }
-      
-      // Debe tener al menos una pista
-      const acrossClues = Object.keys(crosswordData.across);
-      const downClues = Object.keys(crosswordData.down);
-      
-      return acrossClues.length > 0 || downClues.length > 0;
-    } catch (error) {
-      return false;
-    }
-  }
+
 
   defaultMessage(args: ValidationArguments) {
     const question = args.object as any;
@@ -212,8 +163,8 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
     switch (questionType) {
       case 'TEXT':
       case 'TEXTAREA':
-      case 'open_text':
-        if (question.questionType === 'open_text' && question.points && question.points > 0) {
+      case 'OPEN_TEXT':
+        if (question.questionType === 'OPEN_TEXT' && question.points && question.points > 0) {
           return 'Las preguntas de texto abierto evaluables deben tener una respuesta correcta';
         }
         return 'Configuración inválida para pregunta de texto';
@@ -227,17 +178,14 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
         }
         return 'Configuración inválida para pregunta de opción múltiple';
       
-      case 'CHECKBOX':
+      case 'SINGLE_CHOICE':
         if (!question.options || question.options.length < 2) {
-          return 'Las preguntas de selección deben tener al menos 2 opciones';
+          return 'Las preguntas de opción única deben tener al menos 2 opciones';
         }
         if (question.points && question.points > 0) {
-          return 'Las preguntas de selección evaluables deben tener al menos una respuesta correcta';
+          return 'Las preguntas de opción única evaluables deben tener exactamente una respuesta correcta';
         }
-        return 'Configuración inválida para pregunta de selección';
-      
-      case 'RATING_SCALE':
-        return 'Las preguntas de escala deben tener valores mínimo y máximo válidos (rango de 2-10 puntos)';
+        return 'Configuración inválida para pregunta de opción única';
       
       case 'NUMBER':
         return 'Configuración inválida para pregunta numérica';
@@ -246,13 +194,11 @@ export class QuestionTypeValidatorConstraint implements ValidatorConstraintInter
       case 'DATE':
       case 'TIME':
       case 'BOOLEAN':
+      case 'YES_NO':
         return `Configuración inválida para pregunta de tipo ${questionType}`;
       
       case 'WORD_SEARCH':
         return 'Las sopas de letras deben tener una lista de palabras válidas (mínimo 3 caracteres cada una) separadas por comas';
-      
-      case 'CROSSWORD':
-        return 'Los crucigramas deben tener pistas y respuestas en formato JSON válido con secciones "across" y "down"';
       
       default:
         return `Tipo de pregunta no soportado: ${questionType}`;
@@ -286,7 +232,7 @@ export class AnswerTypeValidatorConstraint implements ValidatorConstraintInterfa
     switch (questionType) {
       case 'TEXT':
       case 'TEXTAREA':
-      case 'open_text':
+      case 'OPEN_TEXT':
       case 'EMAIL':
         return typeof answerValue === 'string' && answerValue.trim().length > 0;
       
@@ -296,12 +242,10 @@ export class AnswerTypeValidatorConstraint implements ValidatorConstraintInterfa
       case 'MULTIPLE_CHOICE':
         return Array.isArray(answerValue) && answerValue.length > 0;
       
-      case 'CHECKBOX':
+      case 'SINGLE_CHOICE':
       case 'BOOLEAN':
+      case 'YES_NO':
         return typeof answerValue === 'string' && answerValue.length > 0;
-      
-      case 'RATING_SCALE':
-        return typeof answerValue === 'number' && answerValue >= (answer.minValue || 1) && answerValue <= (answer.maxValue || 5);
       
       case 'DATE':
         return typeof answerValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(answerValue);
@@ -313,11 +257,6 @@ export class AnswerTypeValidatorConstraint implements ValidatorConstraintInterfa
         // Para sopas de letras, la respuesta debe ser un array de palabras encontradas
         return Array.isArray(answerValue) && answerValue.length > 0 && 
                answerValue.every(word => typeof word === 'string' && word.trim().length > 0);
-      
-      case 'CROSSWORD':
-        // Para crucigramas, la respuesta debe ser un objeto con las respuestas de cada pista
-        return typeof answerValue === 'object' && answerValue !== null && 
-               Object.keys(answerValue).length > 0;
       
       default:
         return false;
@@ -331,8 +270,6 @@ export class AnswerTypeValidatorConstraint implements ValidatorConstraintInterfa
     switch (questionType) {
       case 'WORD_SEARCH':
         return 'La respuesta debe ser un array de palabras encontradas en la sopa de letras';
-      case 'CROSSWORD':
-        return 'La respuesta debe ser un objeto con las respuestas del crucigrama';
       default:
         return `Respuesta inválida para pregunta de tipo ${questionType}`;
     }

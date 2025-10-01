@@ -54,6 +54,7 @@ export const FormQuestionSchema = z.object({
   description: z.string().optional(),
   placeholder: z.string().optional(),
   imageUrl: z.string().url('URL de imagen inválida').optional().or(z.literal('')),
+  audioUrl: z.string().url('URL de audio inválida').optional().or(z.literal('')),
   minValue: z.number().optional(),
   maxValue: z.number().optional(),
   maxLength: z.number().min(1).optional(),

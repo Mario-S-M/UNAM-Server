@@ -12,8 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Link, FileText, Loader2 } from 'lucide-react';
+import { Upload, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import mammoth from 'mammoth';
 
@@ -24,7 +23,6 @@ interface DocumentImporterProps {
 export function DocumentImporter({ onContentImported }: DocumentImporterProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [googleDriveUrl, setGoogleDriveUrl] = React.useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Función para convertir archivo Word a contenido del editor
@@ -98,22 +96,28 @@ export function DocumentImporter({ onContentImported }: DocumentImporterProps) {
             return { type: 'p', children: children.length ? children : [{ text: '' }] };
           case 'strong':
           case 'b':
-            return children.map(child => ({ ...child, bold: true }));
+            return Array.isArray(children) && children.length > 0 
+              ? children.map(child => ({ ...child, bold: true }))
+              : [{ text: '', bold: true }];
           case 'em':
           case 'i':
-            return children.map(child => ({ ...child, italic: true }));
+            return Array.isArray(children) && children.length > 0 
+              ? children.map(child => ({ ...child, italic: true }))
+              : [{ text: '', italic: true }];
           case 'u':
-            return children.map(child => ({ ...child, underline: true }));
+            return Array.isArray(children) && children.length > 0 
+              ? children.map(child => ({ ...child, underline: true }))
+              : [{ text: '', underline: true }];
           case 'ul':
-            return { type: 'ul', children: children };
+            return { type: 'ul', children: Array.isArray(children) ? children : [] };
           case 'ol':
-            return { type: 'ol', children: children };
+            return { type: 'ol', children: Array.isArray(children) ? children : [] };
           case 'li':
-            return { type: 'li', children: children.length ? children : [{ text: '' }] };
+            return { type: 'li', children: Array.isArray(children) && children.length > 0 ? children : [{ text: '' }] };
           case 'blockquote':
-            return { type: 'blockquote', children: children.length ? children : [{ text: '' }] };
+            return { type: 'blockquote', children: Array.isArray(children) && children.length > 0 ? children : [{ text: '' }] };
           default:
-            return children.length === 1 ? children[0] : children;
+            return Array.isArray(children) && children.length === 1 ? children[0] : (Array.isArray(children) ? children : [{ text: '' }]);
         }
       }
 
@@ -183,69 +187,7 @@ export function DocumentImporter({ onContentImported }: DocumentImporterProps) {
     }
   };
 
-  // Función para manejar enlaces de Google Drive
-  const handleGoogleDriveImport = async () => {
-    if (!googleDriveUrl.trim()) {
-      toast.error('Por favor ingrese un enlace válido');
-      return;
-    }
 
-    // Validar que sea un enlace de Google Drive
-    if (!googleDriveUrl.includes('drive.google.com')) {
-      toast.error('Por favor ingrese un enlace válido de Google Drive');
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      // Convertir enlace de Google Drive a enlace de descarga directa
-      const fileId = extractGoogleDriveFileId(googleDriveUrl);
-      if (!fileId) {
-        throw new Error('No se pudo extraer el ID del archivo');
-      }
-
-      const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-      
-      // Descargar el archivo
-      const response = await fetch(downloadUrl, { mode: 'cors' });
-      if (!response.ok) {
-        throw new Error('Error al descargar el archivo');
-      }
-
-      const blob = await response.blob();
-      const file = new File([blob], 'document.docx', { type: blob.type });
-      
-      const content = await convertWordToContent(file);
-      onContentImported(content);
-      toast.success('Documento de Google Drive importado exitosamente');
-      setIsOpen(false);
-      setGoogleDriveUrl('');
-    } catch (error) {
-      console.error('Error importing from Google Drive:', error);
-      toast.error('Error al importar desde Google Drive. Verifique que el archivo sea público.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Función para extraer el ID del archivo de Google Drive
-  const extractGoogleDriveFileId = (url: string): string | null => {
-    const patterns = [
-      /\/file\/d\/([a-zA-Z0-9-_]+)/,
-      /id=([a-zA-Z0-9-_]+)/,
-      /\/d\/([a-zA-Z0-9-_]+)/
-    ];
-
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) {
-        return match[1];
-      }
-    }
-
-    return null;
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -259,71 +201,33 @@ export function DocumentImporter({ onContentImported }: DocumentImporterProps) {
         <DialogHeader>
           <DialogTitle>Importar Documento</DialogTitle>
           <DialogDescription>
-            Cargue un archivo Word o pegue un enlace de Google Drive para importar contenido al editor.
+            Cargue un archivo Word para importar contenido al editor.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="file" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="file" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Archivo
-            </TabsTrigger>
-            <TabsTrigger value="drive" className="gap-2">
-              <Link className="h-4 w-4" />
-              Google Drive
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="file-upload">Seleccionar archivo</Label>
+            <Input
+              id="file-upload"
+              type="file"
+              ref={fileInputRef}
+              accept=".doc,.docx,.txt"
+              onChange={handleFileUpload}
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Formatos soportados: .doc, .docx, .txt
+            </p>
+          </div>
           
-          <TabsContent value="file" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="file-upload">Seleccionar archivo</Label>
-              <Input
-                id="file-upload"
-                type="file"
-                ref={fileInputRef}
-                accept=".doc,.docx,.txt"
-                onChange={handleFileUpload}
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Formatos soportados: .doc, .docx, .txt
-              </p>
+          {isLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <span className="text-sm text-muted-foreground">Importando archivo...</span>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="drive" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="drive-url">Enlace de Google Drive</Label>
-              <Input
-                id="drive-url"
-                type="url"
-                placeholder="https://drive.google.com/file/d/..."
-                value={googleDriveUrl}
-                onChange={(e) => setGoogleDriveUrl(e.target.value)}
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Asegúrese de que el archivo sea público o tenga permisos de visualización.
-              </p>
-            </div>
-            
-            <Button 
-              onClick={handleGoogleDriveImport}
-              disabled={isLoading || !googleDriveUrl.trim()}
-              className="w-full"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Importando...
-                </>
-              ) : (
-                'Importar desde Google Drive'
-              )}
-            </Button>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

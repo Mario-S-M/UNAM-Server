@@ -221,6 +221,71 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
     }];
   }, []);
 
+  // Función para normalizar contenido y aplanar arrays anidados
+  const normalizeContent = React.useCallback((content: any[]): any[] => {
+    const normalizeNode = (node: any): any => {
+      if (!node || typeof node !== 'object') {
+        return { text: String(node || '') };
+      }
+
+      // Si es un array, procesarlo recursivamente
+      if (Array.isArray(node)) {
+        // Si es un array de nodos, convertirlo en elementos separados
+        return node.map(normalizeNode).filter(Boolean);
+      }
+
+      // Si tiene children, normalizarlos
+      if (node.children) {
+        const normalizedChildren: any[] = [];
+        
+        for (const child of node.children) {
+          if (Array.isArray(child)) {
+            // Aplanar arrays anidados
+            normalizedChildren.push(...child.map(normalizeNode).filter(Boolean));
+          } else {
+            const normalized = normalizeNode(child);
+            if (Array.isArray(normalized)) {
+              normalizedChildren.push(...normalized);
+            } else {
+              normalizedChildren.push(normalized);
+            }
+          }
+        }
+        
+        return {
+          ...node,
+          children: normalizedChildren.length > 0 ? normalizedChildren : [{ text: '' }]
+        };
+      }
+
+      return node;
+    };
+
+    const result: any[] = [];
+    for (const item of content) {
+      if (Array.isArray(item)) {
+        // Si el item es un array (como las filas de tabla), convertirlo en elementos separados
+        const tableRow = {
+          type: 'table_row',
+          children: item.map(cell => ({
+            type: 'table_cell',
+            children: Array.isArray(cell.children) ? cell.children : [{ text: cell.text || '' }]
+          }))
+        };
+        result.push(tableRow);
+      } else {
+        const normalized = normalizeNode(item);
+        if (Array.isArray(normalized)) {
+          result.push(...normalized);
+        } else {
+          result.push(normalized);
+        }
+      }
+    }
+    
+    return result.length > 0 ? result : [{ type: 'p', children: [{ text: '' }] }];
+  }, []);
+
   // Función para parsear contenido markdown o JSON
   const parseContent = React.useCallback((content: string | null | undefined, editorInstance?: any) => {
     // Manejar casos de contenido vacío, null o undefined
@@ -233,7 +298,8 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
       const parsed = JSON.parse(content);
       
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        // Normalizar el contenido para aplanar arrays anidados
+        return normalizeContent(parsed);
       }
     } catch (jsonError) {
       // Si no es JSON válido, intentar como markdown solo si hay editor
@@ -242,7 +308,7 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
           const deserializedValue = deserializeMd(editorInstance, content);
           
           if (Array.isArray(deserializedValue) && deserializedValue.length > 0) {
-            return deserializedValue;
+            return normalizeContent(deserializedValue);
           }
         } catch (mdError) {
           // Error silencioso para markdown
@@ -255,7 +321,7 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
       type: 'p',
       children: [{ text: content || '' }],
     }];
-  }, [contentName, generateInitialContent]);
+  }, [contentName, generateInitialContent, normalizeContent]);
 
   // Efecto para actualizar el valor del editor cuando se carga el contenido
   React.useEffect(() => {
@@ -311,9 +377,9 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
       console.log('Contenido importado:', importedContent);
       
       try {
-        // Normalizar el contenido importado
+        // Normalizar el contenido importado usando la función de normalización
         const normalizedContent = Array.isArray(importedContent) && importedContent.length > 0 
-          ? importedContent 
+          ? normalizeContent(importedContent)
           : [{ type: 'p', children: [{ text: importedContent || '' }] }];
 
         // Actualizar el valor del editor
@@ -331,7 +397,7 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
         toast.error('Error al importar el contenido');
       }
     },
-    [save, editor]
+    [save, editor, normalizeContent]
   );
 
   if (loading || !isEditorReady || !editorValue || !Array.isArray(editorValue) || editorValue.length === 0) {

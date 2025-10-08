@@ -211,7 +211,7 @@ const InfoButton: React.FC<InfoButtonProps> = ({
                   <div>
                     <p className="font-medium">Correo Electrónico</p>
                     <p className="text-sm text-muted-foreground">
-                      contacto@enesmorelia.unam.mx
+                      eskani@enesmorelia.unam.mx
                     </p>
                   </div>
                 </div>

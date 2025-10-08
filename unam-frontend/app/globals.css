@@ -96,12 +96,12 @@
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
+  --muted-foreground: oklch(0.85 0 0); /* Mejorado para mejor contraste */
   --accent: oklch(0.85 0.15 85); /* Amarillo UNAM para tema oscuro */
   --accent-foreground: oklch(0.145 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: oklch(1 0 0 / 15%); /* Bordes más visibles */
+  --input: oklch(1 0 0 / 20%); /* Inputs más visibles */
   --ring: oklch(0.5 0.18 240);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -114,7 +114,7 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: oklch(1 0 0 / 15%);
   --sidebar-ring: oklch(0.5 0.18 240);
   --highlight: oklch(0.85 0.15 85);
   --brand: oklch(0.5 0.18 240);
@@ -126,6 +126,198 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Mejoras específicas para tema oscuro */
+.dark {
+  /* Títulos y headers con mejor contraste */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--foreground) !important;
+    font-weight: 600;
+  }
+  
+  /* CardTitle específicamente */
+  [data-slot="card-title"] {
+    color: var(--foreground) !important;
+  }
+  
+  /* Mejorar contraste de labels */
+  label {
+    color: var(--foreground) !important;
+    font-weight: 500;
+  }
+  
+  /* Texto de descripción con mejor contraste */
+  [data-slot="card-description"] {
+    color: var(--muted-foreground) !important;
+  }
+  
+  /* Mejorar contraste de elementos de navegación */
+  .font-semibold {
+    color: var(--foreground) !important;
+  }
+  
+  /* Asegurar que los títulos de sección sean visibles */
+  .text-lg.font-semibold {
+    color: var(--foreground) !important;
+  }
+  
+  /* Mejorar contraste de badges y elementos secundarios */
+  .text-sm.font-medium {
+    color: var(--foreground) !important;
+  }
+  
+  /* Mejorar contraste de texto en elementos interactivos */
+  .font-medium {
+    color: var(--foreground) !important;
+  }
+  
+  /* Asegurar que los placeholders sean visibles */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-foreground) !important;
+    opacity: 0.8;
+  }
+  
+  /* Mejorar contraste de elementos de tabla */
+  th {
+    color: var(--foreground) !important;
+    font-weight: 600;
+  }
+  
+  /* Mejorar contraste de elementos de navegación */
+  .truncate.font-semibold {
+    color: var(--foreground) !important;
+  }
+  
+  /* Asegurar que los iconos tengan buen contraste */
+  .text-muted-foreground {
+    color: var(--muted-foreground) !important;
+  }
+  
+  /* Corregir fondos problemáticos en tarjetas */
+  .bg-yellow-50 {
+    background-color: var(--accent) !important;
+    color: var(--accent-foreground) !important;
+  }
+  
+  .bg-blue-50 {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+  }
+  
+  .bg-green-50 {
+    background-color: var(--secondary) !important;
+    color: var(--secondary-foreground) !important;
+  }
+  
+  .bg-gray-50 {
+    background-color: var(--muted) !important;
+    color: var(--foreground) !important;
+  }
+  
+  /* Corregir colores de texto problemáticos */
+  .text-gray-600 {
+    color: var(--muted-foreground) !important;
+  }
+  
+  .text-gray-700 {
+    color: var(--muted-foreground) !important;
+  }
+  
+  .text-gray-800 {
+    color: var(--foreground) !important;
+  }
+  
+  .text-gray-900 {
+    color: var(--foreground) !important;
+  }
+  
+  /* Corregir colores de iconos específicos */
+  .text-yellow-500 {
+    color: var(--accent-foreground) !important;
+  }
+  
+  .text-blue-500 {
+    color: var(--primary-foreground) !important;
+  }
+  
+  .text-green-500 {
+    color: var(--secondary-foreground) !important;
+  }
+  
+  /* Corregir fondos de gradientes problemáticos */
+  .from-blue-50 {
+    --tw-gradient-from: var(--accent) !important;
+  }
+  
+  .to-indigo-50 {
+    --tw-gradient-to: var(--accent) !important;
+  }
+  
+  /* Corregir colores específicos de badges de dificultad */
+  .bg-green-100 {
+    background-color: var(--secondary) !important;
+    color: var(--secondary-foreground) !important;
+  }
+  
+  .text-green-800 {
+    color: var(--secondary-foreground) !important;
+  }
+  
+  .bg-blue-100 {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+  }
+  
+  .text-blue-800 {
+    color: var(--primary-foreground) !important;
+  }
+  
+  .bg-yellow-100 {
+    background-color: var(--accent) !important;
+    color: var(--accent-foreground) !important;
+  }
+  
+  .text-yellow-800 {
+    color: var(--accent-foreground) !important;
+  }
+  
+  .bg-orange-100 {
+    background-color: var(--destructive) !important;
+    color: var(--destructive-foreground) !important;
+  }
+  
+  .text-orange-800 {
+    color: var(--destructive-foreground) !important;
+  }
+  
+  .bg-red-100 {
+    background-color: var(--destructive) !important;
+    color: var(--destructive-foreground) !important;
+  }
+  
+  .text-red-800 {
+    color: var(--destructive-foreground) !important;
+  }
+  
+  .bg-gray-100 {
+    background-color: var(--muted) !important;
+    color: var(--foreground) !important;
+  }
+  
+  .text-gray-800 {
+    color: var(--foreground) !important;
+  }
+  
+  /* Corregir colores de iconos específicos */
+  .text-purple-600 {
+    color: var(--primary-foreground) !important;
+  }
+  
+  .text-yellow-600 {
+    color: var(--accent-foreground) !important;
   }
 }
 

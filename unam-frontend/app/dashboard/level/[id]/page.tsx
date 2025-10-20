@@ -434,11 +434,13 @@ export default function LevelDetailPage() {
       </Card>
 
       {/* Botón de acción */}
-      <div className="mt-6 flex justify-center">
-        <Button size="lg" className="px-8">
-          {level.isCompleted ? 'Revisar Contenido' : 'Comenzar Nivel'}
-        </Button>
-      </div>
+      {level.isCompleted && (
+        <div className="mt-6 flex justify-center">
+          <Button size="lg" className="px-8">
+            Revisar Contenido
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { AccessibilityProvider } from "@/components/accessibility/AccessibilityC
 import { AccessibilityButton } from "@/components/accessibility/AccessibilityButton";
 import AccessibilityMenu from "@/components/accessibility/AccessibilityMenu";
 import { InfoButton } from "@/components/InfoButton";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
@@ -39,6 +40,7 @@ export default function RootLayout({
               {children}
               <AccessibilityButton />
               <InfoButton />
+              <FeedbackButton />
               <AccessibilityMenu />
             </ApolloProviderWrapper>
           </AuthProvider>

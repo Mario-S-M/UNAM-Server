@@ -183,6 +183,7 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
   // Hook de autoguardado
   const { save } = useAutoSave({
     contentId,
+    delay: 2000,
     onSaveStart: () => setIsSaving(true),
     onSaveSuccess: () => {
       setIsSaving(false);
@@ -190,7 +191,7 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
     },
     onSaveError: (error: Error) => {
       console.error('Error saving content:', error);
-      toast.error('Error al guardar el contenido');
+      // Experiencia silenciosa: sin toast de error mientras se escribe
     },
   });
 
@@ -433,21 +434,8 @@ export function TeacherMarkdownEditor({ contentId, contentName, className }: Tea
           {/* Botón de importar documento */}
           <DocumentImporter onContentImported={handleContentImported} />
           
-          {/* Estado de guardado */}
-          <div className="flex items-center gap-2">
-            {isSaving && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground opacity-60">
-                <Save className="h-2.5 w-2.5 animate-pulse" />
-                <span>Guardando...</span>
-              </div>
-            )}
-            {!isSaving && lastSaved && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground opacity-50">
-                <CheckCircle2 className="h-2.5 w-2.5 text-green-500" />
-                <span>Guardado {formatLastSaved(lastSaved)}</span>
-              </div>
-            )}
-          </div>
+          {/* Estado de guardado ocultado para experiencia fluida */}
+          {/* Estado de guardado ocultado para experiencia fluida */}
         </div>
       </div>
       

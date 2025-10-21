@@ -24,7 +24,7 @@ const UPDATE_CONTENT_MARKDOWN_MUTATION = gql`${UPDATE_CONTENT_MARKDOWN}`;
 
 export function useAutoSave({
   contentId,
-  delay = 500, // 500ms para guardado más rápido
+  delay = 2000, // 2s para guardado más discreto
   onSaveStart,
   onSaveSuccess,
   onSaveError,
@@ -32,18 +32,9 @@ export function useAutoSave({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedRef = useRef<Date | null>(null);
   const isSavingRef = useRef(false);
+  const lastSavedContentRef = useRef<string>('');
 
   const [updateMarkdown] = useMutation(UPDATE_CONTENT_MARKDOWN_MUTATION, {
-    refetchQueries: [
-      {
-        query: gql`
-          query GetContentMarkdown($contentId: ID!) {
-            contentMarkdown(contentId: $contentId)
-          }
-        `,
-        variables: { contentId }
-      }
-    ],
     onCompleted: () => {
       isSavingRef.current = false;
       lastSavedRef.current = new Date();
@@ -71,6 +62,8 @@ export function useAutoSave({
             markdownContent: content,
           },
         });
+        // Actualizar referencia del último contenido guardado
+        lastSavedContentRef.current = content;
       } catch (error) {
         isSavingRef.current = false;
         console.error('Error in performSave:', error);
@@ -81,6 +74,11 @@ export function useAutoSave({
 
   const save = useCallback(
     (content: string) => {
+      // Evitar programar guardado si el contenido no cambió
+      if (lastSavedContentRef.current && content === lastSavedContentRef.current) {
+        return;
+      }
+
       // Limpiar timeout anterior si existe
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

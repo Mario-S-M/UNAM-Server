@@ -169,9 +169,9 @@ const AccessibilityMenu: React.FC = () => {
                     <div className="text-center">
                       <div className="font-medium text-sm">{getThemeLabel(theme)}</div>
                       <div className="text-xs text-muted-foreground mt-1 leading-tight">
-                        {theme === 'light' && 'Azul y amarillo UNAM'}
-                        {theme === 'dark' && 'Azul y amarillo UNAM'}
-                        {theme === 'high-contrast' && 'Elegante y profesional'}
+                        {theme === 'light' && 'Claro'}
+                        {theme === 'dark' && 'Oscuro'}
+                        {theme === 'high-contrast' && 'Alto contraste'}
                       </div>
                     </div>
                     {settings.theme === theme && (

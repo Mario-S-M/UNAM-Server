@@ -381,20 +381,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   const handleContinueToNextActivity = () => {
-    
-    // Obtener el ejercicio actual para redirigir al formulario de edición
-    const currentActivity = exercises[currentActivityIndex];
-    if (currentActivity) {
-      toast.info('Redirigiendo al formulario de edición del ejercicio...');
-      router.push(`/admin/ejercicios/${currentActivity.id}`);
-      return;
-    }
-    
+    // Ir al siguiente ejercicio dentro del mismo contenido
     if (currentActivityIndex < totalActivities - 1) {
-      // Ir al siguiente ejercicio
       const newActivityIndex = currentActivityIndex + 1;
-      
-      // IMPORTANTE: Usar React.startTransition para asegurar que todos los resets se apliquen juntos
+
       React.startTransition(() => {
         setShowFeedback(false);
         setShowActivityCompletion(false);
@@ -406,15 +396,14 @@ export function ExamView({ contentId }: ActivityViewProps) {
         setShuffledOptions({});
         setTimeElapsed(0);
       });
-      
-      
+
       toast.info(`Iniciando ejercicio ${newActivityIndex + 1} de ${totalActivities}`);
     } else {
-      // Todos los ejercicios completados
+      // Todos los ejercicios completados en este contenido
       setAllActivitiesCompleted(true);
       setShowActivityCompletion(false);
       setShowResults(true);
-      toast.success('¡Felicidades! Has completado todos los ejercicios.');
+      toast.success('Ha completado este contenido con éxito. Elija otro para continuar.');
     }
   };
 
@@ -733,7 +722,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const startActivity = () => {
     setExamStarted(true);
     setTimeElapsed(0);
-    toast.success('Ejercicio iniciado. ¡Buena suerte!');
+    toast.info(`Iniciando ejercicio ${currentActivityIndex + 1} de ${totalActivities}`);
   };
 
   const resetActivity = () => {
@@ -1260,6 +1249,38 @@ export function ExamView({ contentId }: ActivityViewProps) {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="mt-4">
+              <h4 className="font-medium mb-2">Lista de ejercicios</h4>
+              <div className="space-y-2">
+                {exercises.map((ex, idx) => {
+                  const qCount = ex.form?.questions?.length || 0;
+                  const estimatedMinutes = qCount > 0 ? qCount : 0; // ~1 min por pregunta
+                  const isCurrent = idx === currentActivityIndex;
+                  return (
+                    <div
+                      key={ex.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${isCurrent ? 'bg-blue-50 border-blue-200' : 'bg-card/40'} `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`text-sm px-2 py-1 rounded ${isCurrent ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>#{idx + 1}</span>
+                        <div>
+                          <p className="text-sm font-medium">{ex.form?.title || ex.name}</p>
+                          <p className="text-xs text-muted-foreground">{ex.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant="outline">{qCount} pregunta{qCount !== 1 ? 's' : ''}</Badge>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          {estimatedMinutes > 0 ? `${estimatedMinutes} min` : '—'}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

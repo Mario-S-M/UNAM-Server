@@ -17,6 +17,7 @@ import { gql } from '@apollo/client';
 import { useAutoSave } from '@/lib/hooks/useAutoSave';
 import { useAuth } from '@/contexts/AuthContext';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
 const GET_ACTIVITY = gql`
   query GetActivity($id: ID!) {
     activity(id: $id) {
@@ -245,7 +246,7 @@ export default function ActivityQuestionsPage() {
       try {
         const filename = questionToRemove.audioUrl.split('/').pop();
         if (filename) {
-          await fetch(`http://localhost:3000/uploads/audio/public/${filename}`, {
+          await fetch(`${API_BASE}/uploads/audio/public/${filename}`, {
             method: 'DELETE',
           });
         }
@@ -327,7 +328,7 @@ export default function ActivityQuestionsPage() {
 
       toast.loading('Eliminando archivo de audio...');
       
-      const response = await fetch(`http://localhost:3000/uploads/audio/public/${filename}`, {
+      const response = await fetch(`${API_BASE}/uploads/audio/public/${filename}`, {
         method: 'DELETE',
       });
       
@@ -474,7 +475,7 @@ export default function ActivityQuestionsPage() {
                               const formData = new FormData();
                               formData.append('audio', file);
                               
-                              const response = await fetch('http://localhost:3000/uploads/audio/public', {
+                              const response = await fetch(`${API_BASE}/uploads/audio/public`, {
                                 method: 'POST',
                                 body: formData,
                               });

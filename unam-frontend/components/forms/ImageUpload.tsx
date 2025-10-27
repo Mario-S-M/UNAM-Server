@@ -57,6 +57,8 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+
   const validateFile = (file: File): boolean => {
     // Validate file type
     if (!acceptedTypes.includes(file.type)) {
@@ -79,10 +81,10 @@ export function ImageUpload({
     if (uploadEndpoint) return uploadEndpoint;
     
     if (!entityType) {
-      return 'http://localhost:3000/uploads/image/public';
+      return `${API_BASE}/uploads/image/public`;
     }
     
-    return `http://localhost:3000/uploads/${entityType}-image`;
+    return `${API_BASE}/uploads/${entityType}-image`;
   };
 
   const handleFileSelect = async (file: File) => {
@@ -160,7 +162,7 @@ export function ImageUpload({
     
     try {
       // Si tenemos información de la entidad, intentar eliminar del servidor
-      if (entityType && entityData && value.includes('localhost:3000/images/')) {
+      if (entityType && entityData && value.includes('/images/')) {
         const token = localStorage.getItem('token');
         
         if (token) {
@@ -173,19 +175,19 @@ export function ImageUpload({
           
           switch (entityType) {
             case 'language':
-              deleteUrl = `http://localhost:3000/uploads/language-image/${entityData.languageName || entityData.languageId}/${filename}`;
+              deleteUrl = `${API_BASE}/uploads/language-image/${entityData.languageName || entityData.languageId}/${filename}`;
               break;
             case 'level':
-              deleteUrl = `http://localhost:3000/uploads/level-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${filename}`;
+              deleteUrl = `${API_BASE}/uploads/level-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${filename}`;
               break;
             case 'skill':
-              deleteUrl = `http://localhost:3000/uploads/skill-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${filename}`;
+              deleteUrl = `${API_BASE}/uploads/skill-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${filename}`;
               break;
             case 'content':
-              deleteUrl = `http://localhost:3000/uploads/content-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${entityData.contentName || entityData.contentId}/${filename}`;
+              deleteUrl = `${API_BASE}/uploads/content-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${entityData.contentName || entityData.contentId}/${filename}`;
               break;
             case 'activity':
-              deleteUrl = `http://localhost:3000/uploads/activity-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${entityData.contentName || entityData.contentId}/${entityData.activityName || entityData.activityId}/${filename}`;
+              deleteUrl = `${API_BASE}/uploads/activity-image/${entityData.languageName || entityData.languageId}/${entityData.levelName || entityData.levelId}/${entityData.skillName || entityData.skillId}/${entityData.contentName || entityData.contentId}/${entityData.activityName || entityData.activityId}/${filename}`;
               break;
           }
           

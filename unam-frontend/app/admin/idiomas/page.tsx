@@ -124,6 +124,8 @@ const TOGGLE_LANGUAGE_STATUS = `
 
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || "http://localhost:3000/graphql";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+
 type GraphQLInputValue = string | number | boolean | null | undefined | string[] | CreateLanguageFormData | {
   [key: string]: string | number | boolean | null | undefined | string[];
 };
@@ -282,8 +284,8 @@ export default function IdiomasPage() {
       
       // Usar el endpoint específico de languages si tenemos el nombre
       const endpoint = formData.name 
-        ? 'http://localhost:3000/uploads/language-image'
-        : 'http://localhost:3000/uploads/image/public';
+        ? `${API_BASE}/uploads/language-image`
+        : `${API_BASE}/uploads/image/public`;
       
       const headers: HeadersInit = {};
       if (token && formData.name) {

@@ -7,6 +7,7 @@ import { Form } from '../forms/entities/form.entity';
 import { FormQuestion } from '../forms/entities/form-question.entity';
 import { FormQuestionOption } from '../forms/entities/form-question-option.entity';
 import { CommonModule } from '../common/common.module';
+import { Content } from '../contents/entities/content.entity';
 
 @Module({
   providers: [ActivitiesResolver, ActivitiesService],
@@ -16,6 +17,7 @@ import { CommonModule } from '../common/common.module';
       Form,
       FormQuestion,
       FormQuestionOption,
+      Content,
     ]),
     CommonModule,
   ],

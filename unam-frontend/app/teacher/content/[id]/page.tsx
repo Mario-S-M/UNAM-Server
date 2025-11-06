@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, FileText, Edit3 } from "lucide-react";
 import { toast } from "sonner";
-import { ContentActivities } from "@/components/ContentActivities";
 interface Content {
   id: string;
   name: string;
@@ -198,8 +197,7 @@ export default function TeacherContentDetail() {
         </CardContent>
       </Card>
 
-      {/* Sección de Ejercicios */}
-      <ContentActivities contentId={contentId} />
+      {/* Se eliminó la sección de Ejercicios para dejar solo edición de contenido */}
     </div>
   );
 }

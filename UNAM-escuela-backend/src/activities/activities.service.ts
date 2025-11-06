@@ -9,6 +9,7 @@ import { Form } from '../forms/entities/form.entity';
 import { FormQuestion } from '../forms/entities/form-question.entity';
 import { FormQuestionOption } from '../forms/entities/form-question-option.entity';
 import { TimeCalculationService } from '../common/services/time-calculation.service';
+import { Content } from '../contents/entities/content.entity';
 
 @Injectable()
 export class ActivitiesService {
@@ -16,6 +17,8 @@ export class ActivitiesService {
   constructor(
     @InjectRepository(Activity)
     private readonly activitiesRepository: Repository<Activity>,
+    @InjectRepository(Content)
+    private readonly contentsRepository: Repository<Content>,
     @InjectRepository(Form)
     private readonly formRepository: Repository<Form>,
     @InjectRepository(FormQuestion)
@@ -184,7 +187,7 @@ export class ActivitiesService {
     if (updateActivityInput.formId !== undefined) activity.formId = updateActivityInput.formId;
     if (updateActivityInput.estimatedTime !== undefined) activity.estimatedTime = updateActivityInput.estimatedTime;
     
-    // Auto-invalidate when activity is updated by teacher
+    // Marcar la actividad como sin validar ante cualquier actualización
     activity.validationStatus = 'sin validar';
 
     // Si se proporcionan preguntas, actualizar o crear formulario
@@ -292,6 +295,14 @@ export class ActivitiesService {
     const savedActivity = await this.activitiesRepository.save(activity);
     console.log('Activity saved successfully with ID:', savedActivity.id);
     
+    // Invalidar el contenido asociado para requerir validación de administrador
+    if (savedActivity.contentId) {
+      await this.contentsRepository.update(savedActivity.contentId, {
+        validationStatus: 'sin validar',
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    
     // Recalcular tiempos en cascada
     await this.timeCalculationService.recalculateTimesForActivity(savedActivity.id);
     
@@ -307,6 +318,12 @@ export class ActivitiesService {
     
     // Recalcular tiempos en cascada después de eliminar la actividad
     if (contentId) {
+      // Invalidar el contenido asociado para requerir validación de administrador
+      await this.contentsRepository.update(contentId, {
+        validationStatus: 'sin validar',
+        updatedAt: new Date().toISOString(),
+      });
+
       await this.timeCalculationService.updateContentCalculatedTime(contentId);
       // El servicio de tiempo se encargará de propagar los cambios hacia arriba
     }

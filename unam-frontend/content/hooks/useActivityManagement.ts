@@ -237,6 +237,7 @@ export function useActivityManagement() {
   // Mutations
   const [createActivityMutation, { loading: createLoading }] = useMutation(CREATE_ACTIVITY, {
     onCompleted: (data) => {
+      toast.success(`Actividad "${data.createActivity.name}" creada correctamente`);
       refetchActivities();
     },
     onError: (error) => {
@@ -247,6 +248,7 @@ export function useActivityManagement() {
 
   const [updateActivityMutation, { loading: updateLoading }] = useMutation(UPDATE_ACTIVITY, {
     onCompleted: (data) => {
+      toast.success(`Actividad "${data.updateActivity.name}" actualizada correctamente`);
       refetchActivities();
     },
     onError: (error) => {
@@ -316,9 +318,12 @@ export function useActivityManagement() {
       };
       
       if (editingActivity) {
+        // El backend NO acepta contentId en UpdateActivityInput; omitirlo.
+        // Además, NO enviamos questions desde este modal (se gestionan en otra vista).
+        const { contentId, questions, ...updatePayload } = cleanedData as Omit<ActivityFormData, 'contentId' | 'questions'> & { contentId?: string; questions?: FormQuestionData[] };
         return await handleUpdateActivity({
           id: editingActivity.id,
-          ...cleanedData
+          ...updatePayload
         });
       } else {
         return await handleCreateActivity(cleanedData);

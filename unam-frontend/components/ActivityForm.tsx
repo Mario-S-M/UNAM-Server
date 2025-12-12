@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { ActivityFormData, activityFormSchema, Activity } from '@/content/hooks/useActivityManagement';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
 interface Content {
   id: string;
@@ -103,11 +104,18 @@ export function ActivityForm({
       try {
         const activity = await onSubmit(formData);
         if (activity && activity.id) {
-          // Redirigir a la página de preguntas después de crear/actualizar el ejercicio
-          router.push(`/teacher/ejercicios/questions/${activity.id}`);
+          if (editingActivity) {
+            toast.success('Actividad actualizada correctamente');
+            onClose();
+          } else {
+            toast.success('Actividad creada correctamente. Redirigiendo a gestión de preguntas...');
+            // Redirigir a la página de preguntas después de crear el ejercicio
+            router.push(`/teacher/ejercicios/questions/${activity.id}`);
+          }
         }
       } catch (error) {
         console.error('Error al procesar el ejercicio:', error);
+        toast.error('Error al guardar el ejercicio. Revisa los campos y vuelve a intentar.');
       }
     }
   };
@@ -244,7 +252,7 @@ export function ActivityForm({
                   ? 'Actualizando...'
                   : 'Creando...'
                 : editingActivity
-                ? 'Actualizar y Gestionar Preguntas'
+                ? 'Actualizar'
                 : 'Crear y Gestionar Preguntas'}
             </Button>
           </DialogFooter>

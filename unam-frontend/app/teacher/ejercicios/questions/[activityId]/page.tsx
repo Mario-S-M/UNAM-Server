@@ -363,7 +363,7 @@ export default function ActivityQuestionsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push('/teacher/activities')}
+            onClick={() => router.push('/teacher/ejercicios')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver

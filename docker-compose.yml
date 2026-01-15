@@ -84,7 +84,7 @@ services:
     env_file:
       - .env
     ports:
-      - "80:3001"
+      - "50002:3001"
     depends_on:
       - backend
     volumes:

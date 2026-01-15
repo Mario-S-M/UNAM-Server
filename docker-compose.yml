@@ -79,6 +79,8 @@ services:
       # Para runtime, usar URLs del servidor remoto para el navegador del cliente
       NEXT_PUBLIC_BACKEND_URL: http://132.247.186.91:50001
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: http://132.247.186.91:50001/graphql
+      # Para SSR, usar conexión interna de Docker
+      SERVER_GRAPHQL_ENDPOINT: http://backend:3000/graphql
     env_file:
       - .env
     ports:

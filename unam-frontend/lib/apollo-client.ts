@@ -5,7 +5,9 @@ import { getCookie } from '@/lib/cookies';
 import { Operation, NextLink, FetchResult } from '@apollo/client/core';
 
 const httpLink = createHttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql',
+  uri: (typeof window === 'undefined' && process.env.SERVER_GRAPHQL_ENDPOINT) 
+    ? process.env.SERVER_GRAPHQL_ENDPOINT 
+    : (process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql'),
 });
 
 // Simplified logging link for production

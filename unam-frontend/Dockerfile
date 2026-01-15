@@ -77,7 +77,7 @@ RUN echo 'const { createServer } = require("http");' > server.js && \
     echo '      console.error(err);' >> server.js && \
     echo '      process.exit(1);' >> server.js && \
     echo '    })' >> server.js && \
-    echo '    .listen(port, () => {' >> server.js && \
+    echo '    .listen(port, hostname, () => {' >> server.js && \
     echo '      console.log(`> Ready on http://${hostname}:${port}`);' >> server.js && \
     echo '    });' >> server.js && \
     echo '});' >> server.js

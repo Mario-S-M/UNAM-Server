@@ -1,3 +1,4 @@
+import "@/lib/fix-return-nan";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -21,7 +22,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "UNAM - Sistema de Gestión Educativa",
-  description: "Plataforma educativa para la gestión de contenidos, usuarios y ejercicios académicos",
+  description:
+    "Plataforma educativa para la gestión de contenidos, usuarios y ejercicios académicos",
 };
 
 export default function RootLayout({

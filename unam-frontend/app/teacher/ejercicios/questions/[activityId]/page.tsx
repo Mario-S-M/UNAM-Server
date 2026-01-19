@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, ArrowLeft, Save, Upload, Volume2, X } from 'lucide-react';
+import { Trash2, Plus, ArrowLeft, Save, Upload, Volume2, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
@@ -259,6 +259,22 @@ export default function ActivityQuestionsPage() {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
+  const moveQuestion = (index: number, direction: 'up' | 'down') => {
+    setQuestions((prevQuestions) => {
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+      if (targetIndex < 0 || targetIndex >= prevQuestions.length) {
+        return prevQuestions;
+      }
+
+      const updatedQuestions = [...prevQuestions];
+      const [movedQuestion] = updatedQuestions.splice(index, 1);
+      updatedQuestions.splice(targetIndex, 0, movedQuestion);
+
+      return updatedQuestions;
+    });
+  };
+
   const updateQuestion = (index: number, field: keyof Question, value: any) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
@@ -407,13 +423,31 @@ export default function ActivityQuestionsPage() {
                       {question.isRequired ? 'Obligatoria' : 'Opcional'}
                     </Badge>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeQuestion(questionIndex)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={questionIndex === 0}
+                      onClick={() => moveQuestion(questionIndex, 'up')}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={questionIndex === questions.length - 1}
+                      onClick={() => moveQuestion(questionIndex, 'down')}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeQuestion(questionIndex)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

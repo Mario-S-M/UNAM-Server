@@ -84,7 +84,7 @@ services:
     env_file:
       - .env
     ports:
-      - "50002:3001"
+      - "80:3001"
     depends_on:
       - backend
     volumes:
@@ -93,6 +93,19 @@ services:
     networks:
       - unam-net
     restart: unless-stopped
+
+  backup-prod:
+    image: alpine:latest
+    profiles: ["tools"]
+    volumes:
+      - ./backups:/backups
+    command: >
+      sh -c "apk add --no-cache openssh-client sshpass && 
+      sshpass -p '1nclusI0np4p1MEe.' ssh -o StrictHostKeyChecking=no -p 7824 root@132.247.186.91 
+      'docker exec -e PGPASSWORD=MySecretPassword123@ unam-server-db-1 pg_dump -U postgres postgres' > /backups/prod_backup_$$(date +%Y%m%d_%H%M%S).sql &&
+      echo 'Backup completed successfully'"
+    networks:
+      - unam-net
 
 networks:
   unam-net:

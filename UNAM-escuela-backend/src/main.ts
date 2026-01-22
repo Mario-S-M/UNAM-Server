@@ -10,12 +10,12 @@ async function bootstrap() {
   try {
     logger.log('Starting NestJS application...');
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    
+
     // Configurar archivos estáticos para las imágenes
     app.useStaticAssets(join(__dirname, '..', '..', 'Imagenes'), {
       prefix: '/images/',
     });
-    
+
     // Mantener compatibilidad con uploads existentes
     app.useStaticAssets(join(__dirname, '..', 'uploads'), {
       prefix: '/uploads/',

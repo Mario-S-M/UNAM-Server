@@ -103,9 +103,10 @@ services:
       - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      # Certificados montados desde el host (rutas Linux). Usando fullchain con certificados intermedios.
-      - /etc/ssl/certs/fullchain.pem:/etc/ssl/certs/enesmorelia.unam.mx.cer:ro
-      - /etc/ssl/private/llave.key:/etc/ssl/private/llave.key:ro
+      # Certificados montados desde la carpeta del proyecto (Windows compatible).
+      # Coloca aquí el certificado PEM (fullchain) y la llave privada.
+      - ./nginx/certs/fullchain.pem:/etc/ssl/certs/enesmorelia.unam.mx.cer:ro
+      - ./nginx/certs/llave.key:/etc/ssl/private/llave.key:ro
     networks:
       - unam-net
     restart: unless-stopped

@@ -8,6 +8,10 @@ const httpLink = createHttpLink({
   uri: (typeof window === 'undefined' && process.env.SERVER_GRAPHQL_ENDPOINT) 
     ? process.env.SERVER_GRAPHQL_ENDPOINT 
     : (process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:3000/graphql'),
+  credentials: 'include',
+  fetchOptions: {
+    mode: 'cors',
+  },
 });
 
 // Simplified logging link for production

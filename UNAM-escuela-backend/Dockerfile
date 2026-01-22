@@ -5,8 +5,8 @@ COPY package*.json ./
 COPY tsconfig*.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
-# Aumentar memoria para el build (8GB)
-ENV NODE_OPTIONS="--max-old-space-size=8192"
+# Aumentar memoria para el build (4GB)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 FROM node:22-alpine

@@ -23,21 +23,13 @@ async function bootstrap() {
     logger.log('Configuring CORS...');
     app.enableCors({
       origin: [
-        'http://localhost',
         'http://localhost:3000',
         'http://localhost:3001',
-        'http://localhost:11434',
-        'http://132.247.186.91',
-        'http://132.247.186.91:80',
-        'http://132.247.186.91:11434',
-        'http://frontend',
-        'https://132.247.186.91:50001',
         'https://eskani.enesmorelia.unam.mx',
         'https://enesmorelia.unam.mx',
-        /^http:\/\/localhost(:\d+)?$/,
-        /^https?:\/\/132\.247\.186\.91(:\d+)?$/,
-        /^https?:\/\/eskani\.enesmorelia\.unam\.mx$/,
-        /^https?:\/\/enesmorelia\.unam\.mx$/,
+        'http://132.247.186.91',
+        'http://132.247.186.91:50001',
+        'https://132.247.186.91:50001',
       ],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
@@ -48,14 +40,19 @@ async function bootstrap() {
         'X-Requested-With',
         'Accept',
         'Origin',
+        'Access-Control-Allow-Origin',
       ],
-      optionsSuccessStatus: 200,
     });
 
     const port = process.env.PORT || 3000;
     logger.log(`Starting server on port ${port}...`);
     await app.listen(port, '0.0.0.0');
     logger.log(`Server started successfully on http://0.0.0.0:${port}`);
+    
+    // Signal PM2 that the app is ready
+    if (process.send) {
+      process.send('ready');
+    }
   } catch (error) {
     logger.error('Error starting application:', error);
     process.exit(1);

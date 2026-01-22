@@ -15,11 +15,11 @@ module.exports = {
     merge_logs: true,
     pm2_log_path: '/root/.pm2/logs',
     max_memory_restart: '1G',
-    restart_delay: 4000,
-    max_restarts: 10,
-    min_uptime: '10s',
-    kill_timeout: 5000,
+    restart_delay: 8000,
+    max_restarts: 30,
+    min_uptime: '30s',
+    kill_timeout: 15000,
     wait_ready: true,
-    listen_timeout: 8000
+    listen_timeout: 15000
   }]
 };

@@ -81,6 +81,8 @@ services:
       NEXT_PUBLIC_GRAPHQL_ENDPOINT: https://enesmorelia.unam.mx/graphql
       # Para SSR, usar conexión interna de Docker
       SERVER_GRAPHQL_ENDPOINT: http://backend:3000/graphql
+      # Increase Node heap memory for Next.js
+      NODE_OPTIONS: --max-old-space-size=1024
     env_file:
       - .env
     depends_on:
@@ -91,6 +93,12 @@ services:
     networks:
       - unam-net
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
 
   nginx:
     image: nginx:1.25-alpine

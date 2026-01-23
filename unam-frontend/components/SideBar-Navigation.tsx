@@ -107,7 +107,7 @@ export default function AppSidebar() {
                 </Button>
               </div>
               <div className="text-xs text-muted-foreground text-center pt-2">
-                © 2025 UNAM Escuela
+                © 2026 UNAM Escuela
               </div>
             </div>
           )}

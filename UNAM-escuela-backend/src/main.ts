@@ -23,13 +23,21 @@ async function bootstrap() {
     logger.log('Configuring CORS...');
     app.enableCors({
       origin: [
+        'http://localhost',
         'http://localhost:3000',
         'http://localhost:3001',
+        'http://localhost:11434',
+        'http://132.247.186.91',
+        'http://132.247.186.91:80',
+        'http://132.247.186.91:11434',
+        'http://frontend',
+        'https://132.247.186.91:50001',
         'https://eskani.enesmorelia.unam.mx',
         'https://enesmorelia.unam.mx',
-        'http://132.247.186.91',
-        'http://132.247.186.91:50001',
-        'https://132.247.186.91:50001',
+        /^http:\/\/localhost(:\d+)?$/,
+        /^https?:\/\/132\.247\.186\.91(:\d+)?$/,
+        /^https?:\/\/eskani\.enesmorelia\.unam\.mx$/,
+        /^https?:\/\/enesmorelia\.unam\.mx$/,
       ],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
@@ -40,8 +48,8 @@ async function bootstrap() {
         'X-Requested-With',
         'Accept',
         'Origin',
-        'Access-Control-Allow-Origin',
       ],
+      optionsSuccessStatus: 200,
     });
 
     const port = process.env.PORT || 3000;

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateLenguageInput } from './dto/create-lenguage.input';
 import { UpdateLenguageInput } from './dto/update-lenguage.input';
 import { LenguagesFilterArgs } from './dto/args/lenguages-filter.arg';
@@ -27,11 +31,11 @@ export class LenguagesService {
     return this.lenguageRepository.save(newLenguage);
   }
   async findActive(): Promise<Lenguage[]> {
-      return await this.lenguageRepository.find({
-        where: {
-          isActive: true,
-        },
-      });
+    return await this.lenguageRepository.find({
+      where: {
+        isActive: true,
+      },
+    });
   }
 
   async findFeatured(): Promise<Lenguage[]> {
@@ -58,8 +62,6 @@ export class LenguagesService {
     });
   }
 
-
-
   async findAll(): Promise<Lenguage[]> {
     return await this.lenguageRepository.find();
   }
@@ -75,47 +77,66 @@ export class LenguagesService {
     updateLenguageInput: UpdateLenguageInput,
   ): Promise<Lenguage> {
     const lenguage = await this.findOne(id);
-    
-    // Actualizar campos principales
-    if (updateLenguageInput.name !== undefined) lenguage.name = updateLenguageInput.name;
-    if (updateLenguageInput.eslogan_atractivo !== undefined) lenguage.eslogan_atractivo = updateLenguageInput.eslogan_atractivo;
-    if (updateLenguageInput.descripcion_corta !== undefined) lenguage.descripcion_corta = updateLenguageInput.descripcion_corta;
-    if (updateLenguageInput.descripcion_completa !== undefined) lenguage.descripcion_completa = updateLenguageInput.descripcion_completa;
-    if (updateLenguageInput.nivel !== undefined) lenguage.nivel = updateLenguageInput.nivel;
-    if (updateLenguageInput.duracion_total_horas !== undefined) lenguage.duracion_total_horas = updateLenguageInput.duracion_total_horas;
-    if (updateLenguageInput.color_tema !== undefined) lenguage.color_tema = updateLenguageInput.color_tema;
-    if (updateLenguageInput.icono_curso !== undefined) lenguage.icono_curso = updateLenguageInput.icono_curso;
-    if (updateLenguageInput.imagen_hero !== undefined) lenguage.imagen_hero = updateLenguageInput.imagen_hero;
-    if (updateLenguageInput.badge_destacado !== undefined) lenguage.badge_destacado = updateLenguageInput.badge_destacado;
 
-    if (updateLenguageInput.idioma_origen !== undefined) lenguage.idioma_origen = updateLenguageInput.idioma_origen;
-    if (updateLenguageInput.idioma_destino !== undefined) lenguage.idioma_destino = updateLenguageInput.idioma_destino;
-    if (updateLenguageInput.certificado_digital !== undefined) lenguage.certificado_digital = updateLenguageInput.certificado_digital;
-    if (updateLenguageInput.puntuacion_promedio !== undefined) lenguage.puntuacion_promedio = updateLenguageInput.puntuacion_promedio;
-    if (updateLenguageInput.total_estudiantes_inscritos !== undefined) lenguage.total_estudiantes_inscritos = updateLenguageInput.total_estudiantes_inscritos;
-    if (updateLenguageInput.estado !== undefined) lenguage.estado = updateLenguageInput.estado;
-    if (updateLenguageInput.featured !== undefined) lenguage.featured = updateLenguageInput.featured;
-    
+    // Actualizar campos principales
+    if (updateLenguageInput.name !== undefined)
+      lenguage.name = updateLenguageInput.name;
+    if (updateLenguageInput.eslogan_atractivo !== undefined)
+      lenguage.eslogan_atractivo = updateLenguageInput.eslogan_atractivo;
+    if (updateLenguageInput.descripcion_corta !== undefined)
+      lenguage.descripcion_corta = updateLenguageInput.descripcion_corta;
+    if (updateLenguageInput.descripcion_completa !== undefined)
+      lenguage.descripcion_completa = updateLenguageInput.descripcion_completa;
+    if (updateLenguageInput.nivel !== undefined)
+      lenguage.nivel = updateLenguageInput.nivel;
+    if (updateLenguageInput.duracion_total_horas !== undefined)
+      lenguage.duracion_total_horas = updateLenguageInput.duracion_total_horas;
+    if (updateLenguageInput.color_tema !== undefined)
+      lenguage.color_tema = updateLenguageInput.color_tema;
+    if (updateLenguageInput.icono_curso !== undefined)
+      lenguage.icono_curso = updateLenguageInput.icono_curso;
+    if (updateLenguageInput.imagen_hero !== undefined)
+      lenguage.imagen_hero = updateLenguageInput.imagen_hero;
+    if (updateLenguageInput.badge_destacado !== undefined)
+      lenguage.badge_destacado = updateLenguageInput.badge_destacado;
+
+    if (updateLenguageInput.idioma_origen !== undefined)
+      lenguage.idioma_origen = updateLenguageInput.idioma_origen;
+    if (updateLenguageInput.idioma_destino !== undefined)
+      lenguage.idioma_destino = updateLenguageInput.idioma_destino;
+    if (updateLenguageInput.certificado_digital !== undefined)
+      lenguage.certificado_digital = updateLenguageInput.certificado_digital;
+    if (updateLenguageInput.puntuacion_promedio !== undefined)
+      lenguage.puntuacion_promedio = updateLenguageInput.puntuacion_promedio;
+    if (updateLenguageInput.total_estudiantes_inscritos !== undefined)
+      lenguage.total_estudiantes_inscritos =
+        updateLenguageInput.total_estudiantes_inscritos;
+    if (updateLenguageInput.estado !== undefined)
+      lenguage.estado = updateLenguageInput.estado;
+    if (updateLenguageInput.featured !== undefined)
+      lenguage.featured = updateLenguageInput.featured;
+
     // Campos legacy
-    if (updateLenguageInput.icons !== undefined) lenguage.icons = updateLenguageInput.icons;
-    
+    if (updateLenguageInput.icons !== undefined)
+      lenguage.icons = updateLenguageInput.icons;
+
     return await this.lenguageRepository.save(lenguage);
   }
 
   async remove(id: string) {
     const lenguage = await this.findOne(id);
-    
+
     // Verificar si existen niveles asociados a este idioma
     const associatedLevels = await this.levelRepository.count({
-      where: { lenguageId: id }
+      where: { lenguageId: id },
     });
-    
+
     if (associatedLevels > 0) {
       throw new BadRequestException(
-        `No se puede eliminar el idioma "${lenguage.name}" porque tiene ${associatedLevels} nivel(es) asociado(s). Elimine primero los niveles o desactive el idioma.`
+        `No se puede eliminar el idioma "${lenguage.name}" porque tiene ${associatedLevels} nivel(es) asociado(s). Elimine primero los niveles o desactive el idioma.`,
       );
     }
-    
+
     // Guardar una copia antes de eliminar
     const deletedLanguage = { ...lenguage };
     // Borrado completo de la base de datos
@@ -129,17 +150,18 @@ export class LenguagesService {
     return await this.lenguageRepository.save(lenguage);
   }
 
-  async findPaginated(filters: LenguagesFilterArgs): Promise<PaginatedLenguages> {
+  async findPaginated(
+    filters: LenguagesFilterArgs,
+  ): Promise<PaginatedLenguages> {
     const { search, page = 1, limit = 5, isActive } = filters;
 
     const queryBuilder = this.lenguageRepository.createQueryBuilder('lenguage');
 
     // Apply search filter
     if (search) {
-      queryBuilder.where(
-        '(lenguage.name ILIKE :search)',
-        { search: `%${search}%` },
-      );
+      queryBuilder.where('(lenguage.name ILIKE :search)', {
+        search: `%${search}%`,
+      });
     }
 
     // Apply active filter

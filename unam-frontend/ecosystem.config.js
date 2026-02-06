@@ -13,7 +13,7 @@ module.exports = {
     error_file: '/app/logs/frontend/error.log',
     log_file: '/app/logs/frontend/combined.log',
     merge_logs: true,
-    pm2_log_path: '/root/.pm2/logs',
+    pm2_log_path: '/home/node/.pm2/logs',
     max_memory_restart: '1G',
     restart_delay: 8000,
     max_restarts: 30,

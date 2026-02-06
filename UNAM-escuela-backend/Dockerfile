@@ -22,8 +22,12 @@ RUN npm ci --only=production --legacy-peer-deps
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/ecosystem.config.js ./
 
-# Create logs directory
-RUN mkdir -p /app/logs/backend
+# Create logs directory and set permissions
+RUN mkdir -p /app/logs/backend && \
+    mkdir -p /app/uploads && \
+    chown -R node:node /app
+
+USER node
 
 EXPOSE 3000
 

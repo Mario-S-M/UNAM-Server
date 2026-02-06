@@ -82,8 +82,11 @@ RUN echo 'const { createServer } = require("http");' > server.js && \
     echo '    });' >> server.js && \
     echo '});' >> server.js
 
-# Create logs directory
-RUN mkdir -p /app/logs/frontend
+# Create logs directory and set permissions
+RUN mkdir -p /app/logs/frontend && \
+    chown -R node:node /app
+
+USER node
 
 EXPOSE 3001
 

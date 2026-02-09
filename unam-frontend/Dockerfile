@@ -48,10 +48,10 @@ RUN npm ci --only=production && npm cache clean --force
 RUN npm install typescript --save-dev
 
 # Copy built application from builder stage
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/ecosystem.config.js ./
+COPY --chown=node:node --from=builder /app/.next ./.next
+COPY --chown=node:node --from=builder /app/public ./public
+COPY --chown=node:node --from=builder /app/next.config.ts ./
+COPY --chown=node:node --from=builder /app/ecosystem.config.js ./
 
 # Create a simple server.js for Next.js
 RUN echo 'const { createServer } = require("http");' > server.js && \
@@ -86,9 +86,8 @@ RUN echo 'const { createServer } = require("http");' > server.js && \
     echo '    });' >> server.js && \
     echo '});' >> server.js
 
-# Create logs directory and set permissions
-RUN mkdir -p /app/logs/frontend && \
-    chown -R node:node /app
+# Create logs directory
+RUN mkdir -p /app/logs/frontend && chown node:node /app/logs/frontend && chown node:node server.js
 
 USER node
 

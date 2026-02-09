@@ -79,6 +79,7 @@ RUN echo 'const { createServer } = require("http");' > server.js && \
     echo '    })' >> server.js && \
     echo '    .listen(port, hostname, () => {' >> server.js && \
     echo '      console.log(`> Ready on http://${hostname}:${port}`);' >> server.js && \
+    echo '      if (process.send) process.send("ready");' >> server.js && \
     echo '    });' >> server.js && \
     echo '});' >> server.js
 

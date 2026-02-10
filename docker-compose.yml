@@ -99,6 +99,12 @@ services:
           memory: 2G
         reservations:
           memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3001 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
     image: nginx:1.25-alpine

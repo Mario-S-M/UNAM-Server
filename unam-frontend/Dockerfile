@@ -40,7 +40,10 @@ COPY package*.json ./
 RUN npm config set legacy-peer-deps true
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Need to include typescript for next.config.ts support in production if not pre-built to js
+RUN npm ci --only=production --legacy-peer-deps && \
+    npm install typescript --save-dev --legacy-peer-deps && \
+    npm cache clean --force
 
 # Copy built application from builder stage
 COPY --chown=node:node --from=builder /app/.next ./.next

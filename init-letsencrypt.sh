@@ -5,10 +5,10 @@ if ! [ -x "$(command -v docker)" ]; then
   exit 1
 fi
 
-domains=(eskani.site www.eskani.site)
+domains=(eskani.enesmorelia.unam.mx)
 rsa_key_size=4096
 data_path="./nginx/certbot"
-email="admin@eskani.site" # Modificar con tu email real si lo deseas
+email="admin@eskani.enesmorelia.unam.mx" # Modificar con tu email real si lo deseas
 staging=0 # Set to 1 if you're testing your setup to avoid hitting request limits
 
 if [ -d "$data_path" ]; then

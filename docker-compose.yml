@@ -55,7 +55,11 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/graphql', (r) => {process.exit(0)}).on('error', () => process.exit(1))\""]
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''http'').get(''http://localhost:3000/graphql'', (r) => {process.exit(0)}).on(''error'', () => process.exit(1))"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,13 +74,13 @@ services:
       dockerfile: Dockerfile
       args:
         # Para build time, usar el dominio público con HTTPS servido por Nginx
-        NEXT_PUBLIC_BACKEND_URL: https://eskani.site
-        NEXT_PUBLIC_GRAPHQL_ENDPOINT: https://eskani.site/graphql
+        NEXT_PUBLIC_BACKEND_URL: https://eskani.enesmorelia.unam.mx
+        NEXT_PUBLIC_GRAPHQL_ENDPOINT: https://eskani.enesmorelia.unam.mx/graphql
     environment:
       NODE_ENV: production
       # Para runtime, usar el dominio público con HTTPS para el navegador del cliente
-      NEXT_PUBLIC_BACKEND_URL: https://eskani.site
-      NEXT_PUBLIC_GRAPHQL_ENDPOINT: https://eskani.site/graphql
+      NEXT_PUBLIC_BACKEND_URL: https://eskani.enesmorelia.unam.mx
+      NEXT_PUBLIC_GRAPHQL_ENDPOINT: https://eskani.enesmorelia.unam.mx/graphql
       # Para SSR, usar conexión interna de Docker
       SERVER_GRAPHQL_ENDPOINT: http://backend:3000/graphql
       # Increase Node heap memory for Next.js
@@ -89,7 +93,6 @@ services:
       - backend
     volumes:
       - ./logs/frontend:/app/logs/frontend
-      # - ./logs/pm2/frontend:/home/node/.pm2/logs
     networks:
       - unam-net
     restart: unless-stopped
@@ -121,9 +124,6 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/certbot/www:/var/www/certbot:ro
       - ./nginx/certbot/conf:/etc/letsencrypt:ro
-      # Certificados montados desde la carpeta del proyecto (Windows compatible).
-      # Coloca aquí el certificado PEM (fullchain) y la llave privada.
-      - ./nginx/certs:/etc/nginx/certs:ro
     networks:
       - unam-net
     restart: unless-stopped

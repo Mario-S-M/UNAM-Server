@@ -50,8 +50,6 @@ services:
       - "3000:3000" # Backend en puerto 3000
     volumes:
       - ./Markdown:/Markdown
-      - ./logs/backend:/app/logs/backend
-      - ./logs/pm2/backend:/root/.pm2/logs
       - ./UNAM-escuela-backend/uploads:/app/uploads
     depends_on:
       db:

@@ -12,24 +12,21 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 
-# Install PM2 globally and required tools
-RUN apk add --no-cache postgresql-client wget python3 make g++ && \
-    npm install -g pm2
+# Install production dependencies and rebuild native modules
+RUN apk add --no-cache postgresql-client
 
 COPY --from=builder /app/package*.json ./
-# Install production dependencies and rebuild native modules
 RUN npm ci --only=production --legacy-peer-deps
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/ecosystem.config.js ./
 
-# Create logs directory and set permissions
-RUN mkdir -p /app/logs/backend && \
-    mkdir -p /app/uploads && \
+COPY --from=builder /app/dist ./dist
+
+# Create uploads directory and set permissions
+RUN mkdir -p /app/uploads && \
     chown -R node:node /app
 
 USER node
 
 EXPOSE 3000
 
-# Use PM2 to start the application
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+# Start the application directly
+CMD ["node", "dist/main"]

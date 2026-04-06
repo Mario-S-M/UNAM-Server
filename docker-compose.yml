@@ -135,20 +135,11 @@ services:
       - nginx
     environment:
       CERTBOT_EMAIL: ${CERTBOT_EMAIL}
-    entrypoint: >
-      /bin/sh -c "
-        sleep 15 &&
-        if [ ! -f /etc/letsencrypt/live/eskani.enesmorelia.unam.mx/fullchain.pem ]; then
-          certbot certonly --webroot --webroot-path=/var/www/certbot
-            --email $$CERTBOT_EMAIL --agree-tos --no-eff-email
-            -d eskani.enesmorelia.unam.mx;
-        fi &&
-        trap exit TERM;
-        while :; do certbot renew --quiet; sleep 12h & wait $${!}; done
-      "
+    entrypoint: ["/bin/sh", "/certbot-entrypoint.sh"]
     volumes:
       - ./nginx/certbot/www:/var/www/certbot:rw
       - ./nginx/certbot/conf:/etc/letsencrypt:rw
+      - ./nginx/certbot-entrypoint.sh:/certbot-entrypoint.sh:ro
     restart: unless-stopped
 
   backup-prod:

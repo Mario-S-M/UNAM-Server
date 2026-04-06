@@ -65,8 +65,8 @@ export async function handleFileUpload(request: NextRequest) {
     const uploadDir = createDirectoryStructure(idioma, nivel, skill, contenido);
     
     // Generar nombre único para el archivo
-    const fileExtension = path.extname(file.name);
-    const fileName = `${crypto.randomUUID()}${fileExtension}`;
+    const ext = path.extname(file.name);
+    const fileName = `${crypto.randomUUID()}${ext}`;
     const filePath = path.join(uploadDir, fileName);
     
     // Guardar archivo

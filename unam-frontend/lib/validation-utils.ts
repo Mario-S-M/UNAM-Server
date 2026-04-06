@@ -58,7 +58,7 @@ export class ValidationUtils {
   /**
    * Valida parámetros de paginación
    */
-  static validatePagination(params: unknown): ValidationResult<{ page: number; limit: number }> {
+  static validatePagination(params: unknown): ValidationResult<{ page?: number; limit?: number; }> {
     return ValidationMiddleware.validate(CommonSchemas.pagination, params, false);
   }
 
@@ -68,7 +68,7 @@ export class ValidationUtils {
   static validateSearchFilters(filters: unknown): ValidationResult<{
     search?: string;
     sortBy?: string;
-    sortOrder: 'asc' | 'desc';
+    sortOrder?: 'asc' | 'desc';
   }> {
     return ValidationMiddleware.validate(CommonSchemas.searchFilters, filters, false);
   }

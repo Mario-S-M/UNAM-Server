@@ -135,8 +135,8 @@ services:
       - nginx
     environment:
       CERTBOT_EMAIL: ${CERTBOT_EMAIL}
-    command: >
-      sh -c "
+    entrypoint: >
+      /bin/sh -c "
         sleep 15 &&
         if [ ! -f /etc/letsencrypt/live/eskani.enesmorelia.unam.mx/fullchain.pem ]; then
           certbot certonly --webroot --webroot-path=/var/www/certbot

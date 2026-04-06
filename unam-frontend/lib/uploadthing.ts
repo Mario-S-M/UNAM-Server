@@ -4,15 +4,33 @@ import fs from 'fs';
 import { writeFile } from 'fs/promises';
 import crypto from 'crypto';
 
+const UPLOAD_BASE = path.resolve(process.cwd(), 'public');
+
+const ALLOWED_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg',
+  '.mp4', '.webm', '.ogg', '.mp3', '.wav', '.flac',
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+]);
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+/** Permite solo alfanuméricos, guiones y guiones bajos. Trunca a 50 caracteres. */
+const sanitizePathComponent = (value: string): string =>
+  value.replace(/[^a-zA-Z0-9\-_]/g, '_').slice(0, 50) || 'default';
+
 // Función para crear la estructura de carpetas
 const createDirectoryStructure = (idioma: string, nivel: string, skill: string, contenido: string) => {
-  const basePath = path.join(process.cwd(), 'public');
-  const fullPath = path.join(basePath, idioma, nivel, skill, contenido);
-  
+  const fullPath = path.resolve(UPLOAD_BASE, idioma, nivel, skill, contenido);
+
+  // Prevent path traversal — resolved path must stay inside public/
+  if (!fullPath.startsWith(UPLOAD_BASE + path.sep)) {
+    throw new Error('Invalid upload path');
+  }
+
   if (!fs.existsSync(fullPath)) {
     fs.mkdirSync(fullPath, { recursive: true });
   }
-  
+
   return fullPath;
 };
 
@@ -21,16 +39,27 @@ export async function handleFileUpload(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    
+
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Obtener metadata de los headers
-    const idioma = request.headers.get('x-idioma') || 'default';
-    const nivel = request.headers.get('x-nivel') || 'default';
-    const skill = request.headers.get('x-skill') || 'default';
-    const contenido = request.headers.get('x-contenido') || 'default';
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File too large (max 50 MB)' }, { status: 413 });
+    }
+
+    // Validate file extension
+    const fileExtension = path.extname(file.name).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.has(fileExtension)) {
+      return NextResponse.json({ error: 'File type not allowed' }, { status: 415 });
+    }
+
+    // Sanitize metadata from headers — never use raw header values in paths
+    const idioma = sanitizePathComponent(request.headers.get('x-idioma') || 'default');
+    const nivel = sanitizePathComponent(request.headers.get('x-nivel') || 'default');
+    const skill = sanitizePathComponent(request.headers.get('x-skill') || 'default');
+    const contenido = sanitizePathComponent(request.headers.get('x-contenido') || 'default');
 
     // Crear estructura de directorios
     const uploadDir = createDirectoryStructure(idioma, nivel, skill, contenido);

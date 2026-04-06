@@ -6,13 +6,13 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const {
-    apiKey: key,
     model = 'gpt-4o-mini',
     prompt,
     system,
   } = await req.json();
 
-  const apiKey = key || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  // API key must come from server environment only — never from the client
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(

@@ -15,11 +15,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Validar que la ruta esté dentro del directorio público permitido
-    const publicDir = path.join(process.cwd(), 'public');
-    const fullPath = path.join(publicDir, filePath);
-    
-    // Verificar que el archivo esté dentro del directorio público
-    if (!fullPath.startsWith(publicDir)) {
+    const publicDir = path.resolve(process.cwd(), 'public');
+    const fullPath = path.resolve(publicDir, filePath);
+
+    // Verificar que el archivo esté dentro del directorio público (usar resolve para manejar .. correctamente)
+    if (!fullPath.startsWith(publicDir + path.sep)) {
       return NextResponse.json(
         { error: 'Ruta no permitida' },
         { status: 403 }

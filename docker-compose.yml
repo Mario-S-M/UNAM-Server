@@ -140,10 +140,16 @@ services:
     volumes:
       - ./backups:/backups
     command: >
-      sh -c "apk add --no-cache openssh-client sshpass && 
-      sshpass -p '1nclusI0np4p1MEe.' ssh -o StrictHostKeyChecking=no -p 7824 root@132.247.186.91 
-      'docker exec -e PGPASSWORD=MySecretPassword123@ unam-server-db-1 pg_dump -U postgres postgres' > /backups/prod_backup_$$(date +%Y%m%d_%H%M%S).sql &&
+      sh -c "apk add --no-cache openssh-client sshpass &&
+      sshpass -p \"$$SSH_PASSWORD\" ssh -o StrictHostKeyChecking=no -p $$SSH_PORT $$SSH_USER@$$SSH_HOST
+      'docker exec -e PGPASSWORD=$$DB_PASSWORD unam-server-db-1 pg_dump -U postgres postgres' > /backups/prod_backup_$$(date +%Y%m%d_%H%M%S).sql &&
       echo 'Backup completed successfully'"
+    environment:
+      SSH_HOST: ${SSH_HOST}
+      SSH_PORT: ${SSH_PORT}
+      SSH_USER: ${SSH_USER}
+      SSH_PASSWORD: ${SSH_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD}
     networks:
       - unam-net
 

@@ -23,7 +23,7 @@ import { BaseEditorKit } from '@/components/editor/editor-base-kit';
 import { markdownJoinerTransform } from '@/lib/markdown-joiner-transform';
 
 export async function POST(req: NextRequest) {
-  const { apiKey: key, ctx, messages: messagesRaw } = await req.json();
+  const { ctx, messages: messagesRaw } = await req.json();
 
   const { children, selection, toolName: toolNameParam } = ctx;
 
@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
     value: children,
   });
 
-  const apiKey = key || process.env.OPENAI_API_KEY;
+  // API key must come from server environment only — never from the client
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(

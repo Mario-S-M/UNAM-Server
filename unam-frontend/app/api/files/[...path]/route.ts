@@ -3,14 +3,26 @@ import path from 'path';
 import fs from 'fs';
 import { readFile } from 'fs/promises';
 
+const ALLOWED_DIR = path.resolve(process.cwd(), 'public');
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path: pathSegments } = await params;
   try {
-    const filePath = path.join(process.cwd(), 'public', ...pathSegments);
-    
+    // Sanitize each segment to prevent path traversal
+    const sanitizedSegments = pathSegments.map((segment) =>
+      segment.replace(/\.\./g, '').replace(/[^\w\-. ]/g, '')
+    );
+
+    const filePath = path.resolve(ALLOWED_DIR, ...sanitizedSegments);
+
+    // Ensure the resolved path stays within the public directory
+    if (!filePath.startsWith(ALLOWED_DIR + path.sep) && filePath !== ALLOWED_DIR) {
+      return new NextResponse('Forbidden', { status: 403 });
+    }
+
     // Verificar que el archivo existe
     if (!fs.existsSync(filePath)) {
       return new NextResponse('File not found', { status: 404 });

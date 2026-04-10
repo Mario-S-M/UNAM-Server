@@ -104,10 +104,8 @@ services:
           memory: 1G
     security_opt:
       - no-new-privileges:true
-    read_only: true
     tmpfs:
       - /tmp
-      - /app/.next/cache
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:3001 || exit 1"]
       interval: 10s

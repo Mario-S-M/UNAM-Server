@@ -1,83 +1,90 @@
+import fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
-import fs from 'fs';
-import { readFile } from 'fs/promises';
 
 const ALLOWED_DIR = path.resolve(process.cwd(), 'public');
+
+const CONTENT_TYPES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogg': 'video/ogg',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.flac': 'audio/flac',
+};
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path: pathSegments } = await params;
+
   try {
-    // Sanitize each segment to prevent path traversal
     const sanitizedSegments = pathSegments.map((segment) =>
       segment.replace(/\.\./g, '').replace(/[^\w\-. ]/g, '')
     );
 
     const filePath = path.resolve(ALLOWED_DIR, ...sanitizedSegments);
 
-    // Ensure the resolved path stays within the public directory
-    if (!filePath.startsWith(ALLOWED_DIR + path.sep) && filePath !== ALLOWED_DIR) {
+    if (
+      !filePath.startsWith(ALLOWED_DIR + path.sep) &&
+      filePath !== ALLOWED_DIR
+    ) {
       return new NextResponse('Forbidden', { status: 403 });
     }
 
-    // Verificar que el archivo existe
     if (!fs.existsSync(filePath)) {
       return new NextResponse('File not found', { status: 404 });
     }
-    
-    // Leer el archivo
-    const fileBuffer = await readFile(filePath);
-    
-    // Determinar el tipo de contenido basado en la extensión
+
     const ext = path.extname(filePath).toLowerCase();
-    let contentType = 'application/octet-stream';
-    
-    switch (ext) {
-      case '.jpg':
-      case '.jpeg':
-        contentType = 'image/jpeg';
-        break;
-      case '.png':
-        contentType = 'image/png';
-        break;
-      case '.gif':
-        contentType = 'image/gif';
-        break;
-      case '.webp':
-        contentType = 'image/webp';
-        break;
-      case '.avif':
-        contentType = 'image/avif';
-        break;
-      case '.svg':
-        contentType = 'image/svg+xml';
-        break;
-      case '.mp4':
-        contentType = 'video/mp4';
-        break;
-      case '.webm':
-        contentType = 'video/webm';
-        break;
-      case '.ogg':
-        contentType = 'video/ogg';
-        break;
-      case '.mp3':
-        contentType = 'audio/mpeg';
-        break;
-      case '.wav':
-        contentType = 'audio/wav';
-        break;
-      case '.flac':
-        contentType = 'audio/flac';
-        break;
+    const contentType = CONTENT_TYPES[ext] ?? 'application/octet-stream';
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const rangeHeader = request.headers.get('range');
+
+    // Range request — needed for video seeking in the browser
+    if (rangeHeader) {
+      const [startStr, endStr] = rangeHeader.replace(/bytes=/, '').split('-');
+      const start = parseInt(startStr, 10);
+      const end = endStr ? parseInt(endStr, 10) : fileSize - 1;
+
+      if (start >= fileSize || end >= fileSize || start > end) {
+        return new NextResponse('Range Not Satisfiable', {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${fileSize}` },
+        });
+      }
+
+      const chunkSize = end - start + 1;
+      const stream = fs.createReadStream(filePath, { start, end });
+
+      return new NextResponse(stream as unknown as ReadableStream, {
+        status: 206,
+        headers: {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': String(chunkSize),
+          'Content-Type': contentType,
+        },
+      });
     }
-    
-    return new NextResponse(new Uint8Array(fileBuffer), {
+
+    // Full file response
+    const stream = fs.createReadStream(filePath);
+
+    return new NextResponse(stream as unknown as ReadableStream, {
       headers: {
         'Content-Type': contentType,
+        'Content-Length': String(fileSize),
+        'Accept-Ranges': 'bytes',
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });

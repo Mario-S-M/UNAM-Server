@@ -124,7 +124,10 @@ export const PlaceholderElement = withHOC(
     React.useEffect(() => {
       if (!uploadedFile) return;
 
-      const path = editor.api.findPath(element);
+      // Find node by id (more reliable than reference equality)
+      const nodeEntry = editor.api.node({ at: [], id: element.id as string });
+      if (!nodeEntry) return;
+      const [, path] = nodeEntry;
 
       const getNodeType = (mimeType?: string, fallback?: string): string => {
         if (mimeType?.startsWith('video/')) return KEYS.video;
@@ -135,25 +138,23 @@ export const PlaceholderElement = withHOC(
 
       const nodeType = getNodeType(uploadedFile.mimeType, element.mediaType!);
 
+      const node = {
+        children: [{ text: '' }],
+        initialHeight: imageRef.current?.height,
+        initialWidth: imageRef.current?.width,
+        isUpload: true,
+        name: nodeType === KEYS.file ? uploadedFile.name : '',
+        placeholderId: element.id as string,
+        type: nodeType,
+        url: uploadedFile.url,
+      };
+
       editor.tf.withoutSaving(() => {
         editor.tf.removeNodes({ at: path });
-
-        const node = {
-          children: [{ text: '' }],
-          initialHeight: imageRef.current?.height,
-          initialWidth: imageRef.current?.width,
-          isUpload: true,
-          name: nodeType === KEYS.file ? uploadedFile.name : '',
-          placeholderId: element.id as string,
-          type: nodeType,
-          url: uploadedFile.url,
-        };
-
         editor.tf.insertNodes(node, { at: path });
-
-        updateUploadHistory(editor, node);
       });
 
+      updateUploadHistory(editor, node);
       api.placeholder.removeUploadingFile(element.id as string);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uploadedFile, element.id]);
@@ -176,6 +177,35 @@ export const PlaceholderElement = withHOC(
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isReplaced]);
+
+    const isAudio = element.mediaType === KEYS.audio;
+    const isVideo = element.mediaType === KEYS.video;
+
+    // Show inline player immediately after upload while node replacement runs
+    if (uploadedFile) {
+      const mimeType = uploadedFile.mimeType ?? '';
+      const showAsAudio = mimeType.startsWith('audio/') || isAudio;
+      const showAsVideo = mimeType.startsWith('video/') || isVideo;
+
+      return (
+        <PlateElement className="my-1" {...props}>
+          <div contentEditable={false} className="w-full">
+            {showAsVideo && (
+              <video src={uploadedFile.url} controls className="w-full rounded-sm" />
+            )}
+            {showAsAudio && !showAsVideo && (
+              <audio src={uploadedFile.url} controls className="w-full" />
+            )}
+            {!showAsVideo && !showAsAudio && (
+              <a href={uploadedFile.url} className="text-sm text-blue-500 underline">
+                {uploadedFile.name}
+              </a>
+            )}
+          </div>
+          {props.children}
+        </PlateElement>
+      );
+    }
 
     return (
       <PlateElement className="my-1" {...props}>

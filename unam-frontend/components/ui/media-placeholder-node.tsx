@@ -55,17 +55,17 @@ export const PlaceholderElement = withHOC(
 
     const { api } = useEditorPlugin(PlaceholderPlugin);
 
-    const { isUploading, uploadProgress } = useFileUpload();
+    const { uploadProgress } = useFileUpload();
     const [uploadingFile, setUploadingFile] = React.useState<File | null>(null);
-    const [uploadedFile, setUploadedFile] = React.useState<{ name: string; url: string } | null>(null);
+    const [uploadedFile, setUploadedFile] = React.useState<{ name: string; url: string; mimeType?: string } | null>(null);
     const progress = uploadProgress;
 
-    const uploadFile = async (file: File) => {
+    const uploadFile = React.useCallback(async (file: File) => {
       setUploadingFile(file);
       try {
         const formData = new FormData();
         formData.append('file', file);
-        
+
         const response = await fetch('/api/uploadthing', {
           method: 'POST',
           headers: {
@@ -76,19 +76,21 @@ export const PlaceholderElement = withHOC(
           },
           body: formData,
         });
-        
+
         if (response.ok) {
           const result = await response.json();
-          setUploadedFile({ name: result.name, url: result.url });
+          setUploadedFile({ name: result.name, url: result.url, mimeType: result.type });
+        } else {
+          console.error('Upload failed:', response.status, await response.text());
         }
       } catch (error) {
         console.error('Upload failed:', error);
       } finally {
         setUploadingFile(null);
       }
-    };
+    }, []);
 
-    const loading = isUploading && uploadingFile;
+    const loading = uploadingFile !== null;
 
     const currentContent = CONTENT[element.mediaType];
 
@@ -124,6 +126,15 @@ export const PlaceholderElement = withHOC(
 
       const path = editor.api.findPath(element);
 
+      const getNodeType = (mimeType?: string, fallback?: string): string => {
+        if (mimeType?.startsWith('video/')) return KEYS.video;
+        if (mimeType?.startsWith('audio/')) return KEYS.audio;
+        if (mimeType?.startsWith('image/')) return KEYS.img;
+        return fallback ?? KEYS.file;
+      };
+
+      const nodeType = getNodeType(uploadedFile.mimeType, element.mediaType!);
+
       editor.tf.withoutSaving(() => {
         editor.tf.removeNodes({ at: path });
 
@@ -132,9 +143,9 @@ export const PlaceholderElement = withHOC(
           initialHeight: imageRef.current?.height,
           initialWidth: imageRef.current?.width,
           isUpload: true,
-          name: element.mediaType === KEYS.file ? uploadedFile.name : '',
+          name: nodeType === KEYS.file ? uploadedFile.name : '',
           placeholderId: element.id as string,
-          type: element.mediaType!,
+          type: nodeType,
           url: uploadedFile.url,
         };
 

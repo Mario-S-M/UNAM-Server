@@ -8,8 +8,8 @@ COPY package*.json ./
 # Configure npm for legacy peer deps
 RUN npm config set legacy-peer-deps true
 
-# Install dependencies
-RUN npm ci
+# Install dependencies - ignore-scripts prevents postinstall malware from running
+RUN npm ci --ignore-scripts
 
 # Copy source code
 COPY . .
@@ -41,8 +41,8 @@ RUN npm config set legacy-peer-deps true
 
 # Install only production dependencies
 # Need to include typescript for next.config.ts support in production if not pre-built to js
-RUN npm ci --only=production --legacy-peer-deps && \
-    npm install typescript --save-dev --legacy-peer-deps && \
+RUN npm ci --only=production --legacy-peer-deps --ignore-scripts && \
+    npm install typescript --save-dev --legacy-peer-deps --ignore-scripts && \
     npm cache clean --force
 
 # Copy built application from builder stage

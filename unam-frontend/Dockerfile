@@ -50,8 +50,8 @@ COPY --chown=node:node --from=builder /app/.next ./.next
 COPY --chown=node:node --from=builder /app/public ./public
 COPY --chown=node:node --from=builder /app/next.config.ts ./
 
-# Create logs directory
-RUN mkdir -p /app/logs/frontend && chown node:node /app/logs/frontend
+# Create uploads and logs directories
+RUN mkdir -p /app/uploads /app/logs/frontend && chown node:node /app/uploads /app/logs/frontend
 
 USER node
 

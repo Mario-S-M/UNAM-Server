@@ -51,7 +51,7 @@ services:
     volumes:
       - ./Markdown:/Markdown
       - ./UNAM-escuela-backend/uploads:/app/uploads
-      - ./uploads:/app/uploads  # Bind mount para compartir archivos subidos con el volumen del frontend
+      - ./uploads:/app/uploads # Bind mount para compartir archivos subidos con el volumen del frontend
     depends_on:
       db:
         condition: service_healthy
@@ -95,7 +95,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./uploads:/app/uploads  # Volumen persistente compartido para archivos subidos (audios, imágenes, videos del editor)
+      - ./uploads:/app/uploads # Volumen persistente compartido para archivos subidos (audios, imágenes, videos del editor)
       - ./logs/frontend:/app/logs/frontend
     networks:
       - unam-net

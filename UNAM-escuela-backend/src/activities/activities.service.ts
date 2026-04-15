@@ -102,7 +102,17 @@ export class ActivitiesService {
       // Cargar la actividad con las relaciones para retornar los datos completos
       const activityWithRelations = await this.activitiesRepository.findOne({
         where: { id: savedActivity.id },
-        relations: ['form', 'form.questions', 'form.questions.options']
+        relations: ['form', 'form.questions', 'form.questions.options'],
+        order: {
+          form: {
+            questions: {
+              orderIndex: 'ASC',
+              options: {
+                orderIndex: 'ASC',
+              },
+            },
+          },
+        },
       });
       
       if (!activityWithRelations) {
@@ -114,7 +124,17 @@ export class ActivitiesService {
   
   async findAll():Promise<Activity[]> {
     return await this.activitiesRepository.find({
-      relations: ['form', 'form.questions', 'form.questions.options']
+      relations: ['form', 'form.questions', 'form.questions.options'],
+      order: {
+        form: {
+          questions: {
+            orderIndex: 'ASC',
+            options: {
+              orderIndex: 'ASC',
+            },
+          },
+        },
+      },
     });
   }
 
@@ -135,7 +155,17 @@ export class ActivitiesService {
   async findByContent(contentId: string):Promise<Activity[]> {
     return await this.activitiesRepository.find({
       where: {contentId},
-      relations: ['form', 'form.questions', 'form.questions.options']
+      relations: ['form', 'form.questions', 'form.questions.options'],
+      order: {
+        form: {
+          questions: {
+            orderIndex: 'ASC',
+            options: {
+              orderIndex: 'ASC',
+            },
+          },
+        },
+      },
     });
   }
 
@@ -166,7 +196,17 @@ export class ActivitiesService {
   async findOne(id: string):Promise<Activity> {
     const activity = await this.activitiesRepository.findOne({
       where: {id},
-      relations: ['form', 'form.questions', 'form.questions.options']
+      relations: ['form', 'form.questions', 'form.questions.options'],
+      order: {
+        form: {
+          questions: {
+            orderIndex: 'ASC',
+            options: {
+              orderIndex: 'ASC',
+            },
+          },
+        },
+      },
     });
     if (!activity) throw new NotFoundException('Actividad no encontrada');
     return activity;
@@ -307,7 +347,7 @@ export class ActivitiesService {
     await this.timeCalculationService.recalculateTimesForActivity(savedActivity.id);
     
     console.log('=== END UPDATE ACTIVITY DEBUG ===');
-    return savedActivity;
+    return this.findOne(savedActivity.id);
   }
 
   async remove(id: string):Promise<Activity> {

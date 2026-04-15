@@ -146,14 +146,19 @@ export default function ActivityQuestionsPage() {
       
       if (activityData.activity.form?.questions) {
   
-        const processedQuestions = activityData.activity.form.questions.map((q: any) => {
-  
-          return {
-            ...q,
-            allowMultiline: q.allowMultiline || false,
-            options: q.options || []
-          };
-        });
+        const processedQuestions = [...activityData.activity.form.questions]
+          .sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+          .map((q: any) => {
+            const orderedOptions = [...(q.options || [])].sort(
+              (a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+            );
+
+            return {
+              ...q,
+              allowMultiline: q.allowMultiline || false,
+              options: orderedOptions,
+            };
+          });
   
         setQuestions(processedQuestions);
       } else {

@@ -88,8 +88,6 @@ services:
       SERVER_GRAPHQL_ENDPOINT: http://backend:3000/graphql
       # Increase Node heap memory for Next.js
       NODE_OPTIONS: --max-old-space-size=1024
-    env_file:
-      - .env
     ports:
       - "3001:3001"
     depends_on:
@@ -108,8 +106,12 @@ services:
           memory: 1G
     security_opt:
       - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:rw,noexec,nosuid,nodev,size=256m
+      - /var/tmp:rw,noexec,nosuid,nodev,size=128m
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:3001 || exit 1"]
       interval: 10s

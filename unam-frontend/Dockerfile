@@ -59,5 +59,5 @@ USER node
 
 EXPOSE 3001
 
-# Use Next.js directly to start the application
-CMD ["npm", "start"]
+# Start Next.js directly to avoid npm lifecycle script surface at runtime
+CMD ["node", "node_modules/next/dist/bin/next", "start", "-p", "3001"]

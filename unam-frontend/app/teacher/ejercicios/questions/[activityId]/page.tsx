@@ -1,23 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, ArrowLeft, Save, Upload, Volume2, X, ArrowUp, ArrowDown } from 'lucide-react';
-import { toast } from 'sonner';
-import { useQuery, useMutation } from '@apollo/client';
-import { gql } from '@apollo/client';
-import { useAutoSave } from '@/lib/hooks/useAutoSave';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import {
+  Trash2,
+  Plus,
+  ArrowLeft,
+  Save,
+  Upload,
+  Volume2,
+  X,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useQuery, useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useAutoSave } from "@/lib/hooks/useAutoSave";
+import { useAuth } from "@/contexts/AuthContext";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 const GET_ACTIVITY = gql`
   query GetActivity($id: ID!) {
     activity(id: $id) {
@@ -92,7 +115,15 @@ const UPDATE_ACTIVITY = gql`
   }
 `;
 
-interface QuestionOption {  id?: string;  optionText: string;  optionValue?: string;  orderIndex: number;  imageUrl?: string;  color?: string;  isCorrect?: boolean;}
+interface QuestionOption {
+  id?: string;
+  optionText: string;
+  optionValue?: string;
+  orderIndex: number;
+  imageUrl?: string;
+  color?: string;
+  isCorrect?: boolean;
+}
 
 interface Question {
   id?: string;
@@ -118,11 +149,11 @@ interface Question {
 }
 
 const QUESTION_TYPES = [
-  { value: 'MULTIPLE_CHOICE', label: 'Opción múltiple' },
-  { value: 'SINGLE_CHOICE', label: 'Opción única' },
-  { value: 'OPEN_TEXT', label: 'Texto abierto' },
-  { value: 'YES_NO', label: 'Sí/No' },
-  { value: 'WORD_SEARCH', label: 'Sopa de letras' },
+  { value: "MULTIPLE_CHOICE", label: "Opción múltiple" },
+  { value: "SINGLE_CHOICE", label: "Opción única" },
+  { value: "OPEN_TEXT", label: "Texto abierto" },
+  { value: "YES_NO", label: "Sí/No" },
+  { value: "WORD_SEARCH", label: "Sopa de letras" },
 ];
 
 export default function ActivityQuestionsPage() {
@@ -130,9 +161,9 @@ export default function ActivityQuestionsPage() {
   const router = useRouter();
   const { token } = useAuth();
   const activityId = params.activityId as string;
-  
+
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [activityName, setActivityName] = useState('');
+  const [activityName, setActivityName] = useState("");
 
   const { data: activityData, loading } = useQuery(GET_ACTIVITY, {
     variables: { id: activityId },
@@ -140,17 +171,14 @@ export default function ActivityQuestionsPage() {
 
   useEffect(() => {
     if (activityData?.activity) {
-      
-      
       setActivityName(activityData.activity.name);
-      
+
       if (activityData.activity.form?.questions) {
-  
         const processedQuestions = [...activityData.activity.form.questions]
           .sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
           .map((q: any) => {
             const orderedOptions = [...(q.options || [])].sort(
-              (a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+              (a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0),
             );
 
             return {
@@ -159,14 +187,11 @@ export default function ActivityQuestionsPage() {
               options: orderedOptions,
             };
           });
-  
+
         setQuestions(processedQuestions);
       } else {
-  
         setQuestions([]);
       }
-      
-  
     }
   }, [activityData]);
 
@@ -177,9 +202,9 @@ export default function ActivityQuestionsPage() {
       // toast.success('Preguntas guardadas exitosamente');
     },
     onError: (error) => {
-      console.error('Error updating activity:', error);
-      toast.error('Error al guardar las preguntas');
-    }
+      console.error("Error updating activity:", error);
+      toast.error("Error al guardar las preguntas");
+    },
   });
 
   // Función para guardar las preguntas
@@ -189,37 +214,37 @@ export default function ActivityQuestionsPage() {
       questionType: question.questionType,
       orderIndex: index,
       isRequired: question.isRequired,
-      description: question.description || '',
-      placeholder: question.placeholder || '',
-      imageUrl: question.imageUrl || '',
-      audioUrl: question.audioUrl || '',
+      description: question.description || "",
+      placeholder: question.placeholder || "",
+      imageUrl: question.imageUrl || "",
+      audioUrl: question.audioUrl || "",
       minValue: question.minValue || 0,
       maxValue: question.maxValue || 0,
-      minLabel: question.minLabel || '',
-      maxLabel: question.maxLabel || '',
+      minLabel: question.minLabel || "",
+      maxLabel: question.maxLabel || "",
       maxLength: question.maxLength || 0,
       allowMultiline: question.allowMultiline,
-      correctAnswer: question.correctAnswer || '',
-      explanation: question.explanation || '',
-      incorrectFeedback: question.incorrectFeedback || '',
+      correctAnswer: question.correctAnswer || "",
+      explanation: question.explanation || "",
+      incorrectFeedback: question.incorrectFeedback || "",
       points: question.points || 0,
       options: question.options.map((option, optionIndex) => ({
         optionText: option.optionText,
-        optionValue: option.optionValue || '',
+        optionValue: option.optionValue || "",
         orderIndex: optionIndex,
-        imageUrl: option.imageUrl || '',
-        color: option.color || '',
-        isCorrect: option.isCorrect || false
-      }))
+        imageUrl: option.imageUrl || "",
+        color: option.color || "",
+        isCorrect: option.isCorrect || false,
+      })),
     }));
 
     await updateActivity({
       variables: {
         updateActivityInput: {
           id: activityId,
-          questions: questionsInput
-        }
-      }
+          questions: questionsInput,
+        },
+      },
     });
   };
 
@@ -228,45 +253,45 @@ export default function ActivityQuestionsPage() {
     data: questions,
     onSave: saveQuestions,
     delay: 10000, // 10 segundos de delay para ser más discreto
-    enabled: questions.length > 0 && !loading // Solo habilitar si hay preguntas y no está cargando
+    enabled: questions.length > 0 && !loading, // Solo habilitar si hay preguntas y no está cargando
   });
 
   const addQuestion = () => {
     const newQuestion: Question = {
-      questionText: '',
-      questionType: 'MULTIPLE_CHOICE',
+      questionText: "",
+      questionType: "MULTIPLE_CHOICE",
       orderIndex: questions.length,
       isRequired: false,
       allowMultiline: false,
-      options: []
+      options: [],
     };
     setQuestions([...questions, newQuestion]);
   };
 
   const removeQuestion = async (index: number) => {
     const questionToRemove = questions[index];
-    
+
     // Si la pregunta tiene audio, eliminarlo del servidor
     if (questionToRemove.audioUrl) {
       try {
-        const filename = questionToRemove.audioUrl.split('/').pop();
+        const filename = questionToRemove.audioUrl.split("/").pop();
         if (filename) {
           await fetch(`${API_BASE}/uploads/audio/public/${filename}`, {
-            method: 'DELETE',
+            method: "DELETE",
           });
         }
       } catch (error) {
-        console.error('Error deleting audio file:', error);
+        console.error("Error deleting audio file:", error);
         // No mostramos error al usuario para no interrumpir la eliminación de la pregunta
       }
     }
-    
+
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const moveQuestion = (index: number, direction: 'up' | 'down') => {
+  const moveQuestion = (index: number, direction: "up" | "down") => {
     setQuestions((prevQuestions) => {
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
 
       if (targetIndex < 0 || targetIndex >= prevQuestions.length) {
         return prevQuestions;
@@ -289,38 +314,48 @@ export default function ActivityQuestionsPage() {
   const addOption = (questionIndex: number) => {
     const updatedQuestions = [...questions];
     const newOption: QuestionOption = {
-      optionText: '',
+      optionText: "",
       orderIndex: updatedQuestions[questionIndex].options.length,
-      isCorrect: false
+      isCorrect: false,
     };
-    const updatedOptions = [...updatedQuestions[questionIndex].options, newOption];
+    const updatedOptions = [
+      ...updatedQuestions[questionIndex].options,
+      newOption,
+    ];
     updatedQuestions[questionIndex] = {
       ...updatedQuestions[questionIndex],
-      options: updatedOptions
+      options: updatedOptions,
     };
     setQuestions(updatedQuestions);
   };
 
   const removeOption = (questionIndex: number, optionIndex: number) => {
     const updatedQuestions = [...questions];
-    const updatedOptions = updatedQuestions[questionIndex].options.filter((_, i) => i !== optionIndex);
+    const updatedOptions = updatedQuestions[questionIndex].options.filter(
+      (_, i) => i !== optionIndex,
+    );
     updatedQuestions[questionIndex] = {
       ...updatedQuestions[questionIndex],
-      options: updatedOptions
+      options: updatedOptions,
     };
     setQuestions(updatedQuestions);
   };
 
-  const updateOption = (questionIndex: number, optionIndex: number, field: keyof QuestionOption, value: any) => {
+  const updateOption = (
+    questionIndex: number,
+    optionIndex: number,
+    field: keyof QuestionOption,
+    value: any,
+  ) => {
     const updatedQuestions = [...questions];
     const updatedOptions = [...updatedQuestions[questionIndex].options];
     updatedOptions[optionIndex] = {
       ...updatedOptions[optionIndex],
-      [field]: value
+      [field]: value,
     };
     updatedQuestions[questionIndex] = {
       ...updatedQuestions[questionIndex],
-      options: updatedOptions
+      options: updatedOptions,
     };
     setQuestions(updatedQuestions);
   };
@@ -328,42 +363,45 @@ export default function ActivityQuestionsPage() {
   const handleSave = async () => {
     try {
       await forceSave();
-      toast.success('Preguntas guardadas exitosamente');
+      toast.success("Preguntas guardadas exitosamente");
     } catch (error) {
-      console.error('Error saving questions:', error);
-      toast.error('Error al guardar las preguntas');
+      console.error("Error saving questions:", error);
+      toast.error("Error al guardar las preguntas");
     }
   };
 
   const needsOptions = (questionType: string) => {
-    return ['MULTIPLE_CHOICE', 'SINGLE_CHOICE'].includes(questionType);
+    return ["MULTIPLE_CHOICE", "SINGLE_CHOICE"].includes(questionType);
   };
 
   const deleteAudio = async (questionIndex: number, audioUrl: string) => {
     try {
       // Extraer el nombre del archivo de la URL
-      const filename = audioUrl.split('/').pop();
+      const filename = audioUrl.split("/").pop();
       if (!filename) {
-        throw new Error('No se pudo obtener el nombre del archivo');
+        throw new Error("No se pudo obtener el nombre del archivo");
       }
 
-      toast.loading('Eliminando archivo de audio...');
-      
-      const response = await fetch(`${API_BASE}/uploads/audio/public/${filename}`, {
-        method: 'DELETE',
-      });
-      
+      toast.loading("Eliminando archivo de audio...");
+
+      const response = await fetch(
+        `${API_BASE}/uploads/audio/public/${filename}`,
+        {
+          method: "DELETE",
+        },
+      );
+
       if (response.ok) {
-        updateQuestion(questionIndex, 'audioUrl', '');
+        updateQuestion(questionIndex, "audioUrl", "");
         toast.dismiss();
-        toast.success('Archivo de audio eliminado exitosamente');
+        toast.success("Archivo de audio eliminado exitosamente");
       } else {
-        throw new Error('Error al eliminar el archivo');
+        throw new Error("Error al eliminar el archivo");
       }
     } catch (error) {
       toast.dismiss();
-      toast.error('Error al eliminar el archivo de audio');
-      console.error('Error deleting audio:', error);
+      toast.error("Error al eliminar el archivo de audio");
+      console.error("Error deleting audio:", error);
     }
   };
 
@@ -384,7 +422,7 @@ export default function ActivityQuestionsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push('/teacher/ejercicios')}
+            onClick={() => router.push("/teacher/ejercicios")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
@@ -410,7 +448,9 @@ export default function ActivityQuestionsPage() {
         {questions.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">No hay preguntas creadas</p>
+              <p className="text-muted-foreground mb-4">
+                No hay preguntas creadas
+              </p>
               <Button onClick={addQuestion}>
                 <Plus className="h-4 w-4 mr-2" />
                 Crear primera pregunta
@@ -423,9 +463,13 @@ export default function ActivityQuestionsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">Pregunta {questionIndex + 1}</Badge>
-                    <Badge variant={question.isRequired ? 'default' : 'secondary'}>
-                      {question.isRequired ? 'Obligatoria' : 'Opcional'}
+                    <Badge variant="outline">
+                      Pregunta {questionIndex + 1}
+                    </Badge>
+                    <Badge
+                      variant={question.isRequired ? "default" : "secondary"}
+                    >
+                      {question.isRequired ? "Obligatoria" : "Opcional"}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2">
@@ -433,7 +477,7 @@ export default function ActivityQuestionsPage() {
                       variant="outline"
                       size="icon"
                       disabled={questionIndex === 0}
-                      onClick={() => moveQuestion(questionIndex, 'up')}
+                      onClick={() => moveQuestion(questionIndex, "up")}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -441,7 +485,7 @@ export default function ActivityQuestionsPage() {
                       variant="outline"
                       size="icon"
                       disabled={questionIndex === questions.length - 1}
-                      onClick={() => moveQuestion(questionIndex, 'down')}
+                      onClick={() => moveQuestion(questionIndex, "down")}
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>
@@ -458,19 +502,31 @@ export default function ActivityQuestionsPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor={`question-text-${questionIndex}`}>Texto de la pregunta</Label>
+                    <Label htmlFor={`question-text-${questionIndex}`}>
+                      Texto de la pregunta
+                    </Label>
                     <Textarea
                       id={`question-text-${questionIndex}`}
                       value={question.questionText}
-                      onChange={(e) => updateQuestion(questionIndex, 'questionText', e.target.value)}
+                      onChange={(e) =>
+                        updateQuestion(
+                          questionIndex,
+                          "questionText",
+                          e.target.value,
+                        )
+                      }
                       placeholder="Escribe tu pregunta aquí..."
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`question-type-${questionIndex}`}>Tipo de pregunta</Label>
+                    <Label htmlFor={`question-type-${questionIndex}`}>
+                      Tipo de pregunta
+                    </Label>
                     <Select
                       value={question.questionType}
-                      onValueChange={(value) => updateQuestion(questionIndex, 'questionType', value)}
+                      onValueChange={(value) =>
+                        updateQuestion(questionIndex, "questionType", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -487,18 +543,28 @@ export default function ActivityQuestionsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor={`description-${questionIndex}`}>Indicación individual</Label>
+                  <Label htmlFor={`description-${questionIndex}`}>
+                    Indicación individual
+                  </Label>
                   <Textarea
                     id={`description-${questionIndex}`}
-                    value={question.description || ''}
-                    onChange={(e) => updateQuestion(questionIndex, 'description', e.target.value)}
+                    value={question.description || ""}
+                    onChange={(e) =>
+                      updateQuestion(
+                        questionIndex,
+                        "description",
+                        e.target.value,
+                      )
+                    }
                     placeholder="Instrucciones específicas para esta pregunta..."
                     rows={2}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor={`audio-${questionIndex}`}>Audio de la pregunta</Label>
+                  <Label htmlFor={`audio-${questionIndex}`}>
+                    Audio de la pregunta
+                  </Label>
                   <div className="flex items-center space-x-2">
                     {!question.audioUrl ? (
                       <Input
@@ -509,28 +575,37 @@ export default function ActivityQuestionsPage() {
                           const file = e.target.files?.[0];
                           if (file) {
                             try {
-                              toast.loading('Subiendo archivo de audio...');
-                              
+                              toast.loading("Subiendo archivo de audio...");
+
                               const formData = new FormData();
-                              formData.append('audio', file);
-                              
-                              const response = await fetch(`${API_BASE}/uploads/audio/public`, {
-                                method: 'POST',
-                                body: formData,
-                              });
-                              
+                              formData.append("audio", file);
+
+                              const response = await fetch(
+                                `${API_BASE}/uploads/audio/public`,
+                                {
+                                  method: "POST",
+                                  body: formData,
+                                },
+                              );
+
                               if (response.ok) {
                                 const result = await response.json();
-                                updateQuestion(questionIndex, 'audioUrl', result.url);
+                                updateQuestion(
+                                  questionIndex,
+                                  "audioUrl",
+                                  result.url,
+                                );
                                 toast.dismiss();
-                                toast.success('Archivo de audio subido exitosamente');
+                                toast.success(
+                                  "Archivo de audio subido exitosamente",
+                                );
                               } else {
-                                throw new Error('Error al subir el archivo');
+                                throw new Error("Error al subir el archivo");
                               }
                             } catch (error) {
                               toast.dismiss();
-                              toast.error('Error al subir el archivo de audio');
-                              console.error('Error uploading audio:', error);
+                              toast.error("Error al subir el archivo de audio");
+                              console.error("Error uploading audio:", error);
                             }
                           }
                         }}
@@ -541,13 +616,15 @@ export default function ActivityQuestionsPage() {
                         <div className="flex items-center space-x-2 flex-1 p-2 border rounded-md bg-muted">
                           <Volume2 className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground truncate">
-                            {question.audioUrl.split('/').pop()}
+                            {question.audioUrl.split("/").pop()}
                           </span>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => deleteAudio(questionIndex, question.audioUrl!)}
+                          onClick={() =>
+                            deleteAudio(questionIndex, question.audioUrl!)
+                          }
                           className="shrink-0"
                         >
                           <X className="h-4 w-4" />
@@ -561,56 +638,86 @@ export default function ActivityQuestionsPage() {
                   <Checkbox
                     id={`required-${questionIndex}`}
                     checked={question.isRequired}
-                    onCheckedChange={(checked) => updateQuestion(questionIndex, 'isRequired', checked)}
+                    onCheckedChange={(checked) =>
+                      updateQuestion(questionIndex, "isRequired", checked)
+                    }
                   />
-                  <Label htmlFor={`required-${questionIndex}`}>Pregunta obligatoria</Label>
+                  <Label htmlFor={`required-${questionIndex}`}>
+                    Pregunta obligatoria
+                  </Label>
                 </div>
 
-                {question.questionType === 'OPEN_TEXT' && (
+                {question.questionType === "OPEN_TEXT" && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor={`placeholder-${questionIndex}`}>Texto de ayuda</Label>
+                        <Label htmlFor={`placeholder-${questionIndex}`}>
+                          Texto de ayuda
+                        </Label>
                         <Input
                           id={`placeholder-${questionIndex}`}
-                          value={question.placeholder || ''}
-                          onChange={(e) => updateQuestion(questionIndex, 'placeholder', e.target.value)}
+                          value={question.placeholder || ""}
+                          onChange={(e) =>
+                            updateQuestion(
+                              questionIndex,
+                              "placeholder",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Texto de ayuda para el usuario"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor={`max-length-${questionIndex}`}>Longitud máxima</Label>
+                        <Label htmlFor={`max-length-${questionIndex}`}>
+                          Longitud máxima
+                        </Label>
                         <Input
                           id={`max-length-${questionIndex}`}
                           type="number"
-                          value={question.maxLength || ''}
-                          onChange={(e) => updateQuestion(questionIndex, 'maxLength', parseInt(e.target.value) || 0)}
+                          value={question.maxLength || ""}
+                          onChange={(e) =>
+                            updateQuestion(
+                              questionIndex,
+                              "maxLength",
+                              parseInt(e.target.value) || 0,
+                            )
+                          }
                           placeholder="0"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor={`correct-answer-${questionIndex}`}>Respuesta correcta</Label>
+                      <Label htmlFor={`correct-answer-${questionIndex}`}>
+                        Respuesta correcta
+                      </Label>
                       <Textarea
                         id={`correct-answer-${questionIndex}`}
-                        value={question.correctAnswer || ''}
-                        onChange={(e) => updateQuestion(questionIndex, 'correctAnswer', e.target.value)}
+                        value={question.correctAnswer || ""}
+                        onChange={(e) =>
+                          updateQuestion(
+                            questionIndex,
+                            "correctAnswer",
+                            e.target.value,
+                          )
+                        }
                         placeholder="Escribe la respuesta correcta esperada"
                       />
                     </div>
                   </div>
                 )}
 
-
-
                 {/* Configuración para sopa de letras */}
-                {question.questionType === 'WORD_SEARCH' && (
+                {question.questionType === "WORD_SEARCH" && (
                   <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-                    <Label className="text-base font-medium">Configuración de Sopa de Letras</Label>
-                    
+                    <Label className="text-base font-medium">
+                      Configuración de Sopa de Letras
+                    </Label>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor={`grid-rows-${questionIndex}`}>Filas de la cuadrícula</Label>
+                        <Label htmlFor={`grid-rows-${questionIndex}`}>
+                          Filas de la cuadrícula
+                        </Label>
                         <Input
                           id={`grid-rows-${questionIndex}`}
                           type="number"
@@ -618,7 +725,9 @@ export default function ActivityQuestionsPage() {
                           max="20"
                           value={(() => {
                             try {
-                              const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+                              const data = question.correctAnswer
+                                ? JSON.parse(question.correctAnswer)
+                                : null;
                               return data?.gridSize || 8;
                             } catch {
                               return 8;
@@ -627,19 +736,34 @@ export default function ActivityQuestionsPage() {
                           onChange={(e) => {
                             const size = parseInt(e.target.value) || 8;
                             try {
-                              const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''] };
-                              const updatedData = { ...currentData, gridSize: size };
-                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                              const currentData = question.correctAnswer
+                                ? JSON.parse(question.correctAnswer)
+                                : { words: [""] };
+                              const updatedData = {
+                                ...currentData,
+                                gridSize: size,
+                              };
+                              updateQuestion(
+                                questionIndex,
+                                "correctAnswer",
+                                JSON.stringify(updatedData),
+                              );
                             } catch {
-                              const newData = { words: [''], gridSize: size };
-                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                              const newData = { words: [""], gridSize: size };
+                              updateQuestion(
+                                questionIndex,
+                                "correctAnswer",
+                                JSON.stringify(newData),
+                              );
                             }
                           }}
                           placeholder="8"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor={`grid-cols-${questionIndex}`}>Columnas de la cuadrícula</Label>
+                        <Label htmlFor={`grid-cols-${questionIndex}`}>
+                          Columnas de la cuadrícula
+                        </Label>
                         <Input
                           id={`grid-cols-${questionIndex}`}
                           type="number"
@@ -647,7 +771,9 @@ export default function ActivityQuestionsPage() {
                           max="20"
                           value={(() => {
                             try {
-                              const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
+                              const data = question.correctAnswer
+                                ? JSON.parse(question.correctAnswer)
+                                : null;
                               return data?.gridSize || 8;
                             } catch {
                               return 8;
@@ -656,19 +782,32 @@ export default function ActivityQuestionsPage() {
                           onChange={(e) => {
                             const size = parseInt(e.target.value) || 8;
                             try {
-                              const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''] };
-                              const updatedData = { ...currentData, gridSize: size };
-                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                              const currentData = question.correctAnswer
+                                ? JSON.parse(question.correctAnswer)
+                                : { words: [""] };
+                              const updatedData = {
+                                ...currentData,
+                                gridSize: size,
+                              };
+                              updateQuestion(
+                                questionIndex,
+                                "correctAnswer",
+                                JSON.stringify(updatedData),
+                              );
                             } catch {
-                              const newData = { words: [''], gridSize: size };
-                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                              const newData = { words: [""], gridSize: size };
+                              updateQuestion(
+                                questionIndex,
+                                "correctAnswer",
+                                JSON.stringify(newData),
+                              );
                             }
                           }}
                           placeholder="8"
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>Palabras a buscar</Label>
@@ -678,13 +817,29 @@ export default function ActivityQuestionsPage() {
                           size="sm"
                           onClick={() => {
                             try {
-                              const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''], gridSize: 8 };
-                              const newWords = [...(currentData.words || ['']), ''];
-                              const updatedData = { ...currentData, words: newWords };
-                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                              const currentData = question.correctAnswer
+                                ? JSON.parse(question.correctAnswer)
+                                : { words: [""], gridSize: 8 };
+                              const newWords = [
+                                ...(currentData.words || [""]),
+                                "",
+                              ];
+                              const updatedData = {
+                                ...currentData,
+                                words: newWords,
+                              };
+                              updateQuestion(
+                                questionIndex,
+                                "correctAnswer",
+                                JSON.stringify(updatedData),
+                              );
                             } catch {
-                              const newData = { words: ['', ''], gridSize: 8 };
-                              updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                              const newData = { words: ["", ""], gridSize: 8 };
+                              updateQuestion(
+                                questionIndex,
+                                "correctAnswer",
+                                JSON.stringify(newData),
+                              );
                             }
                           }}
                         >
@@ -692,62 +847,122 @@ export default function ActivityQuestionsPage() {
                           Agregar palabra
                         </Button>
                       </div>
-                      
+
                       <div className="space-y-2">
                         {(() => {
                           try {
-                            const data = question.correctAnswer ? JSON.parse(question.correctAnswer) : null;
-                            const words = data?.words || [''];
-                            return words.map((word: string, wordIndex: number) => (
-                              <div key={wordIndex} className="flex items-center gap-2">
-                                <Input
-                                  value={word}
-                                  onChange={(e) => {
-                                    try {
-                                      const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''], gridSize: 8 };
-                                      const newWords = [...(currentData.words || [])];
-                                      newWords[wordIndex] = e.target.value;
-                                      const updatedData = { ...currentData, words: newWords };
-                                      updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
-                                    } catch {
-                                      const newWords = [''];
-                                      newWords[wordIndex] = e.target.value;
-                                      const newData = { words: newWords, gridSize: 8 };
-                                      updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
-                                    }
-                                  }}
-                                  placeholder={`Palabra ${wordIndex + 1}`}
-                                />
-                                {words.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
+                            const data = question.correctAnswer
+                              ? JSON.parse(question.correctAnswer)
+                              : null;
+                            const words = data?.words || [""];
+                            return words.map(
+                              (word: string, wordIndex: number) => (
+                                <div
+                                  key={wordIndex}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Input
+                                    value={word}
+                                    onChange={(e) => {
                                       try {
-                                        const currentData = question.correctAnswer ? JSON.parse(question.correctAnswer) : { words: [''], gridSize: 8 };
-                                        const newWords = (currentData.words || ['']).filter((_: any, i: number) => i !== wordIndex);
-                                        const updatedData = { ...currentData, words: newWords.length > 0 ? newWords : [''] };
-                                        updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(updatedData));
+                                        const currentData =
+                                          question.correctAnswer
+                                            ? JSON.parse(question.correctAnswer)
+                                            : { words: [""], gridSize: 8 };
+                                        const newWords = [
+                                          ...(currentData.words || []),
+                                        ];
+                                        newWords[wordIndex] = e.target.value;
+                                        const updatedData = {
+                                          ...currentData,
+                                          words: newWords,
+                                        };
+                                        updateQuestion(
+                                          questionIndex,
+                                          "correctAnswer",
+                                          JSON.stringify(updatedData),
+                                        );
                                       } catch {
-                                        const newData = { words: [''], gridSize: 8 };
-                                        updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                                        const newWords = [""];
+                                        newWords[wordIndex] = e.target.value;
+                                        const newData = {
+                                          words: newWords,
+                                          gridSize: 8,
+                                        };
+                                        updateQuestion(
+                                          questionIndex,
+                                          "correctAnswer",
+                                          JSON.stringify(newData),
+                                        );
                                       }
                                     }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            ));
+                                    placeholder={`Palabra ${wordIndex + 1}`}
+                                  />
+                                  {words.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        try {
+                                          const currentData =
+                                            question.correctAnswer
+                                              ? JSON.parse(
+                                                  question.correctAnswer,
+                                                )
+                                              : { words: [""], gridSize: 8 };
+                                          const newWords = (
+                                            currentData.words || [""]
+                                          ).filter(
+                                            (_: any, i: number) =>
+                                              i !== wordIndex,
+                                          );
+                                          const updatedData = {
+                                            ...currentData,
+                                            words:
+                                              newWords.length > 0
+                                                ? newWords
+                                                : [""],
+                                          };
+                                          updateQuestion(
+                                            questionIndex,
+                                            "correctAnswer",
+                                            JSON.stringify(updatedData),
+                                          );
+                                        } catch {
+                                          const newData = {
+                                            words: [""],
+                                            gridSize: 8,
+                                          };
+                                          updateQuestion(
+                                            questionIndex,
+                                            "correctAnswer",
+                                            JSON.stringify(newData),
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              ),
+                            );
                           } catch {
                             return (
                               <div className="flex items-center gap-2">
                                 <Input
                                   value=""
                                   onChange={(e) => {
-                                    const newData = { words: [e.target.value], gridSize: 8 };
-                                    updateQuestion(questionIndex, 'correctAnswer', JSON.stringify(newData));
+                                    const newData = {
+                                      words: [e.target.value],
+                                      gridSize: 8,
+                                    };
+                                    updateQuestion(
+                                      questionIndex,
+                                      "correctAnswer",
+                                      JSON.stringify(newData),
+                                    );
                                   }}
                                   placeholder="Palabra 1"
                                 />
@@ -759,8 +974,6 @@ export default function ActivityQuestionsPage() {
                     </div>
                   </div>
                 )}
-
-
 
                 {needsOptions(question.questionType) && (
                   <div className="space-y-4">
@@ -778,32 +991,62 @@ export default function ActivityQuestionsPage() {
                     <div className="space-y-2">
                       {question.options && question.options.length > 0 ? (
                         question.options.map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex items-center gap-2">
+                          <div
+                            key={optionIndex}
+                            className="flex items-center gap-2"
+                          >
                             <Input
-                              value={option.optionText || ''}
-                              onChange={(e) => updateOption(questionIndex, optionIndex, 'optionText', e.target.value)}
+                              value={option.optionText || ""}
+                              onChange={(e) =>
+                                updateOption(
+                                  questionIndex,
+                                  optionIndex,
+                                  "optionText",
+                                  e.target.value,
+                                )
+                              }
                               placeholder={`Opción ${optionIndex + 1}`}
                             />
-                            {(question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'SINGLE_CHOICE') && (
+                            {(question.questionType === "MULTIPLE_CHOICE" ||
+                              question.questionType === "SINGLE_CHOICE") && (
                               <div className="flex items-center space-x-2">
                                 <Checkbox
                                   id={`correct-${questionIndex}-${optionIndex}`}
                                   checked={option.isCorrect || false}
                                   onCheckedChange={(checked) => {
-                                    if (question.questionType === 'MULTIPLE_CHOICE') {
+                                    if (
+                                      question.questionType ===
+                                      "MULTIPLE_CHOICE"
+                                    ) {
                                       // Para opción múltiple, múltiples opciones pueden ser correctas
-                                      updateOption(questionIndex, optionIndex, 'isCorrect', checked);
+                                      updateOption(
+                                        questionIndex,
+                                        optionIndex,
+                                        "isCorrect",
+                                        checked,
+                                      );
                                     } else {
                                       // Para selección única, solo una opción puede ser correcta
-                                      const updatedOptions = question.options.map((opt, idx) => ({
-                                        ...opt,
-                                        isCorrect: idx === optionIndex ? checked : false
-                                      }));
-                                      updateQuestion(questionIndex, 'options', updatedOptions);
+                                      const updatedOptions =
+                                        question.options.map((opt, idx) => ({
+                                          ...opt,
+                                          isCorrect:
+                                            idx === optionIndex
+                                              ? checked
+                                              : false,
+                                        }));
+                                      updateQuestion(
+                                        questionIndex,
+                                        "options",
+                                        updatedOptions,
+                                      );
                                     }
                                   }}
                                 />
-                                <Label htmlFor={`correct-${questionIndex}-${optionIndex}`} className="text-sm">
+                                <Label
+                                  htmlFor={`correct-${questionIndex}-${optionIndex}`}
+                                  className="text-sm"
+                                >
                                   Correcta
                                 </Label>
                               </div>
@@ -811,7 +1054,9 @@ export default function ActivityQuestionsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => removeOption(questionIndex, optionIndex)}
+                              onClick={() =>
+                                removeOption(questionIndex, optionIndex)
+                              }
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -819,7 +1064,8 @@ export default function ActivityQuestionsPage() {
                         ))
                       ) : (
                         <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-md text-center">
-                          No hay opciones configuradas. Haz clic en "Agregar opción" para crear la primera opción.
+                          No hay opciones configuradas. Haz clic en "Agregar
+                          opción" para crear la primera opción.
                         </div>
                       )}
                     </div>
@@ -828,11 +1074,19 @@ export default function ActivityQuestionsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor={`explanation-${questionIndex}`}>Explicación (opcional)</Label>
+                    <Label htmlFor={`explanation-${questionIndex}`}>
+                      Explicación (opcional)
+                    </Label>
                     <Textarea
                       id={`explanation-${questionIndex}`}
-                      value={question.explanation || ''}
-                      onChange={(e) => updateQuestion(questionIndex, 'explanation', e.target.value)}
+                      value={question.explanation || ""}
+                      onChange={(e) =>
+                        updateQuestion(
+                          questionIndex,
+                          "explanation",
+                          e.target.value,
+                        )
+                      }
                       placeholder="Explicación de la respuesta correcta"
                     />
                   </div>
@@ -842,8 +1096,14 @@ export default function ActivityQuestionsPage() {
                       id={`points-${questionIndex}`}
                       type="number"
                       step="0.1"
-                      value={question.points || ''}
-                      onChange={(e) => updateQuestion(questionIndex, 'points', parseFloat(e.target.value) || 0)}
+                      value={question.points || ""}
+                      onChange={(e) =>
+                        updateQuestion(
+                          questionIndex,
+                          "points",
+                          parseFloat(e.target.value) || 0,
+                        )
+                      }
                       placeholder="0"
                     />
                   </div>

@@ -13,7 +13,6 @@ import { Content } from '../contents/entities/content.entity';
 
 @Injectable()
 export class ActivitiesService {
-
   constructor(
     @InjectRepository(Activity)
     private readonly activitiesRepository: Repository<Activity>,
@@ -28,101 +27,108 @@ export class ActivitiesService {
     private readonly timeCalculationService: TimeCalculationService,
   ) {}
 
-    async create(createActivityInput: CreateActivityInput): Promise<Activity> {
-      let formId = createActivityInput.formId;
+  async create(createActivityInput: CreateActivityInput): Promise<Activity> {
+    let formId = createActivityInput.formId;
 
-      // Si se proporcionan preguntas, crear un formulario automáticamente
-      if (createActivityInput.questions && createActivityInput.questions.length > 0) {
-        const form = this.formRepository.create({
-          title: `Formulario para ${createActivityInput.name}`,
-          description: `Formulario generado automáticamente para la actividad: ${createActivityInput.name}`,
-          status: 'published',
-          allowAnonymous: true,
-          allowMultipleResponses: true,
-          contentId: createActivityInput.contentId,
-          // userId se omite para formularios del sistema
+    // Si se proporcionan preguntas, crear un formulario automáticamente
+    if (
+      createActivityInput.questions &&
+      createActivityInput.questions.length > 0
+    ) {
+      const form = this.formRepository.create({
+        title: `Formulario para ${createActivityInput.name}`,
+        description: `Formulario generado automáticamente para la actividad: ${createActivityInput.name}`,
+        status: 'published',
+        allowAnonymous: true,
+        allowMultipleResponses: true,
+        contentId: createActivityInput.contentId,
+        // userId se omite para formularios del sistema
+      });
+
+      const savedForm = await this.formRepository.save(form);
+      formId = savedForm.id;
+
+      // Crear las preguntas
+      for (const questionInput of createActivityInput.questions) {
+        const question = this.formQuestionRepository.create({
+          questionText: questionInput.questionText,
+          questionType: questionInput.questionType,
+          orderIndex: questionInput.orderIndex,
+          isRequired: questionInput.isRequired,
+          description: questionInput.description,
+          placeholder: questionInput.placeholder,
+          imageUrl: questionInput.imageUrl,
+          audioUrl: questionInput.audioUrl,
+          minValue: questionInput.minValue,
+          maxValue: questionInput.maxValue,
+          minLabel: questionInput.minLabel,
+          maxLabel: questionInput.maxLabel,
+          maxLength: questionInput.maxLength,
+          allowMultiline: questionInput.allowMultiline,
+          correctAnswer: questionInput.correctAnswer,
+          explanation: questionInput.explanation,
+          incorrectFeedback: questionInput.incorrectFeedback,
+          points: questionInput.points,
+          form: savedForm,
         });
 
-        const savedForm = await this.formRepository.save(form);
-        formId = savedForm.id;
+        const savedQuestion = await this.formQuestionRepository.save(question);
 
-        // Crear las preguntas
-        for (const questionInput of createActivityInput.questions) {
-          const question = this.formQuestionRepository.create({
-            questionText: questionInput.questionText,
-            questionType: questionInput.questionType,
-            orderIndex: questionInput.orderIndex,
-            isRequired: questionInput.isRequired,
-            description: questionInput.description,
-            placeholder: questionInput.placeholder,
-            imageUrl: questionInput.imageUrl,
-            audioUrl: questionInput.audioUrl,
-            minValue: questionInput.minValue,
-            maxValue: questionInput.maxValue,
-            minLabel: questionInput.minLabel,
-            maxLabel: questionInput.maxLabel,
-            maxLength: questionInput.maxLength,
-            allowMultiline: questionInput.allowMultiline,
-            correctAnswer: questionInput.correctAnswer,
-            explanation: questionInput.explanation,
-            incorrectFeedback: questionInput.incorrectFeedback,
-            points: questionInput.points,
-            form: savedForm,
-          });
-
-          const savedQuestion = await this.formQuestionRepository.save(question);
-
-          // Crear las opciones si se proporcionaron
-          if (questionInput.options && questionInput.options.length > 0) {
-            for (const optionInput of questionInput.options) {
-              const option = this.formQuestionOptionRepository.create({
-                optionText: optionInput.optionText,
-                optionValue: optionInput.optionValue,
-                orderIndex: optionInput.orderIndex,
-                imageUrl: optionInput.imageUrl,
-                color: optionInput.color,
-                isCorrect: optionInput.isCorrect,
-                question: savedQuestion,
-              });
-              await this.formQuestionOptionRepository.save(option);
-            }
+        // Crear las opciones si se proporcionaron
+        if (questionInput.options && questionInput.options.length > 0) {
+          for (const optionInput of questionInput.options) {
+            const option = this.formQuestionOptionRepository.create({
+              optionText: optionInput.optionText,
+              optionValue: optionInput.optionValue,
+              orderIndex: optionInput.orderIndex,
+              imageUrl: optionInput.imageUrl,
+              color: optionInput.color,
+              isCorrect: optionInput.isCorrect,
+              question: savedQuestion,
+            });
+            await this.formQuestionOptionRepository.save(option);
           }
         }
       }
+    }
 
-      const newActivity = this.activitiesRepository.create({
-        ...createActivityInput,
-        formId,
-      });
-      const savedActivity = await this.activitiesRepository.save(newActivity);
-      
-      // Recalcular tiempos en cascada
-      await this.timeCalculationService.recalculateTimesForActivity(savedActivity.id);
-      
-      // Cargar la actividad con las relaciones para retornar los datos completos
-      const activityWithRelations = await this.activitiesRepository.findOne({
-        where: { id: savedActivity.id },
-        relations: ['form', 'form.questions', 'form.questions.options'],
-        order: {
-          form: {
-            questions: {
+    const newActivity = this.activitiesRepository.create({
+      ...createActivityInput,
+      formId,
+    });
+    const savedActivity = await this.activitiesRepository.save(newActivity);
+
+    // Recalcular tiempos en cascada
+    await this.timeCalculationService.recalculateTimesForActivity(
+      savedActivity.id,
+    );
+
+    // Cargar la actividad con las relaciones para retornar los datos completos
+    const activityWithRelations = await this.activitiesRepository.findOne({
+      where: { id: savedActivity.id },
+      relations: ['form', 'form.questions', 'form.questions.options'],
+      order: {
+        form: {
+          questions: {
+            orderIndex: 'ASC',
+            options: {
               orderIndex: 'ASC',
-              options: {
-                orderIndex: 'ASC',
-              },
             },
           },
         },
-      });
-      
-      if (!activityWithRelations) {
-        throw new NotFoundException(`Activity with ID ${savedActivity.id} not found`);
-      }
-      
-      return activityWithRelations;
+      },
+    });
+
+    if (!activityWithRelations) {
+      throw new NotFoundException(
+        `Activity with ID ${savedActivity.id} not found`,
+      );
     }
-  
-  async findAll():Promise<Activity[]> {
+
+    return activityWithRelations;
+  }
+
+  async findAll(): Promise<Activity[]> {
     return await this.activitiesRepository.find({
       relations: ['form', 'form.questions', 'form.questions.options'],
       order: {
@@ -145,16 +151,21 @@ export class ActivitiesService {
       .leftJoinAndSelect('form.questions', 'questions')
       .leftJoinAndSelect('questions.options', 'options')
       .innerJoin('contents', 'content', 'content.id::text = activity.contentId')
-      .innerJoin('content_teachers', 'ct', 'ct.contentId = content.id AND ct.teacherId = :teacherId::uuid', { teacherId })
+      .innerJoin(
+        'content_teachers',
+        'ct',
+        'ct.contentId = content.id AND ct.teacherId = :teacherId::uuid',
+        { teacherId },
+      )
       .orderBy('activity.createdAt', 'ASC')
       .addOrderBy('questions.orderIndex', 'ASC')
       .addOrderBy('options.orderIndex', 'ASC')
       .getMany();
   }
 
-  async findByContent(contentId: string):Promise<Activity[]> {
+  async findByContent(contentId: string): Promise<Activity[]> {
     return await this.activitiesRepository.find({
-      where: {contentId},
+      where: { contentId },
       relations: ['form', 'form.questions', 'form.questions.options'],
       order: {
         form: {
@@ -169,10 +180,10 @@ export class ActivitiesService {
     });
   }
 
-  async findExercisesByContent(contentId: string):Promise<Activity[]> {
+  async findExercisesByContent(contentId: string): Promise<Activity[]> {
     return await this.activitiesRepository.find({
       where: {
-        contentId
+        contentId,
         // Temporalmente removido el filtro de status 'published'
         // form: {
         //   status: 'published'
@@ -185,17 +196,17 @@ export class ActivitiesService {
           questions: {
             orderIndex: 'ASC',
             options: {
-              orderIndex: 'ASC'
-            }
-          }
-        }
-      }
+              orderIndex: 'ASC',
+            },
+          },
+        },
+      },
     });
   }
 
-  async findOne(id: string):Promise<Activity> {
+  async findOne(id: string): Promise<Activity> {
     const activity = await this.activitiesRepository.findOne({
-      where: {id},
+      where: { id },
       relations: ['form', 'form.questions', 'form.questions.options'],
       order: {
         form: {
@@ -212,21 +223,29 @@ export class ActivitiesService {
     return activity;
   }
 
-  async update(id: string, updateActivityInput: UpdateActivityInput):Promise<Activity> {
+  async update(
+    id: string,
+    updateActivityInput: UpdateActivityInput,
+  ): Promise<Activity> {
     console.log('=== UPDATE ACTIVITY DEBUG ===');
     console.log('Activity ID:', id);
     console.log('Update input:', JSON.stringify(updateActivityInput, null, 2));
-    
+
     const activity = await this.findOne(id);
     console.log('Current activity:', JSON.stringify(activity, null, 2));
-    
+
     if (updateActivityInput.name) activity.name = updateActivityInput.name;
-    if (updateActivityInput.description) activity.description = updateActivityInput.description;
-    if (updateActivityInput.indication) activity.indication = updateActivityInput.indication;
-    if (updateActivityInput.example) activity.example = updateActivityInput.example;
-    if (updateActivityInput.formId !== undefined) activity.formId = updateActivityInput.formId;
-    if (updateActivityInput.estimatedTime !== undefined) activity.estimatedTime = updateActivityInput.estimatedTime;
-    
+    if (updateActivityInput.description)
+      activity.description = updateActivityInput.description;
+    if (updateActivityInput.indication)
+      activity.indication = updateActivityInput.indication;
+    if (updateActivityInput.example)
+      activity.example = updateActivityInput.example;
+    if (updateActivityInput.formId !== undefined)
+      activity.formId = updateActivityInput.formId;
+    if (updateActivityInput.estimatedTime !== undefined)
+      activity.estimatedTime = updateActivityInput.estimatedTime;
+
     // Marcar la actividad como sin validar ante cualquier actualización
     activity.validationStatus = 'sin validar';
 
@@ -262,27 +281,33 @@ export class ActivitiesService {
 
       if (form) {
         console.log('Existing questions count:', form.questions?.length || 0);
-        
+
         // Eliminar opciones de preguntas existentes primero
         if (form.questions && form.questions.length > 0) {
           for (const question of form.questions) {
             if (question.options && question.options.length > 0) {
               console.log('Deleting options for question:', question.id);
               await this.formQuestionOptionRepository.delete(
-                question.options.map(o => o.id)
+                question.options.map((o) => o.id),
               );
             }
           }
-          
+
           // Luego eliminar las preguntas
-          console.log('Deleting existing questions:', form.questions.map(q => q.id));
+          console.log(
+            'Deleting existing questions:',
+            form.questions.map((q) => q.id),
+          );
           await this.formQuestionRepository.delete(
-            form.questions.map(q => q.id)
+            form.questions.map((q) => q.id),
           );
         }
 
         // Crear nuevas preguntas
-        console.log('Creating new questions:', updateActivityInput.questions.length);
+        console.log(
+          'Creating new questions:',
+          updateActivityInput.questions.length,
+        );
         for (const questionInput of updateActivityInput.questions) {
           console.log('Creating question:', questionInput.questionText);
           const question = this.formQuestionRepository.create({
@@ -307,12 +332,18 @@ export class ActivitiesService {
             form: form,
           });
 
-          const savedQuestion = await this.formQuestionRepository.save(question);
+          const savedQuestion =
+            await this.formQuestionRepository.save(question);
           console.log('Saved question with ID:', savedQuestion.id);
 
           // Crear opciones si se proporcionaron
           if (questionInput.options && questionInput.options.length > 0) {
-            console.log('Creating options for question:', savedQuestion.id, 'Count:', questionInput.options.length);
+            console.log(
+              'Creating options for question:',
+              savedQuestion.id,
+              'Count:',
+              questionInput.options.length,
+            );
             for (const optionInput of questionInput.options) {
               const option = this.formQuestionOptionRepository.create({
                 optionText: optionInput.optionText,
@@ -323,7 +354,8 @@ export class ActivitiesService {
                 isCorrect: optionInput.isCorrect,
                 question: savedQuestion,
               });
-              const savedOption = await this.formQuestionOptionRepository.save(option);
+              const savedOption =
+                await this.formQuestionOptionRepository.save(option);
               console.log('Saved option with ID:', savedOption.id);
             }
           }
@@ -334,7 +366,7 @@ export class ActivitiesService {
     console.log('Saving activity with formId:', activity.formId);
     const savedActivity = await this.activitiesRepository.save(activity);
     console.log('Activity saved successfully with ID:', savedActivity.id);
-    
+
     // Invalidar el contenido asociado para requerir validación de administrador
     if (savedActivity.contentId) {
       await this.contentsRepository.update(savedActivity.contentId, {
@@ -342,20 +374,22 @@ export class ActivitiesService {
         updatedAt: new Date().toISOString(),
       });
     }
-    
+
     // Recalcular tiempos en cascada
-    await this.timeCalculationService.recalculateTimesForActivity(savedActivity.id);
-    
+    await this.timeCalculationService.recalculateTimesForActivity(
+      savedActivity.id,
+    );
+
     console.log('=== END UPDATE ACTIVITY DEBUG ===');
     return this.findOne(savedActivity.id);
   }
 
-  async remove(id: string):Promise<Activity> {
+  async remove(id: string): Promise<Activity> {
     const activity = await this.findOne(id);
     const contentId = activity.contentId;
-    
+
     await this.activitiesRepository.remove(activity);
-    
+
     // Recalcular tiempos en cascada después de eliminar la actividad
     if (contentId) {
       // Invalidar el contenido asociado para requerir validación de administrador
@@ -367,14 +401,14 @@ export class ActivitiesService {
       await this.timeCalculationService.updateContentCalculatedTime(contentId);
       // El servicio de tiempo se encargará de propagar los cambios hacia arriba
     }
-    
+
     return { ...activity, id };
   }
 
   async removeByContentId(contentId: string): Promise<void> {
     const activities = await this.activitiesRepository.find({
       where: { contentId },
-      relations: ['form']
+      relations: ['form'],
     });
 
     // Eliminar formularios asociados si existen
@@ -383,7 +417,7 @@ export class ActivitiesService {
         // Eliminar preguntas y opciones del formulario
         const questions = await this.formQuestionRepository.find({
           where: { formId: activity.form.id },
-          relations: ['options']
+          relations: ['options'],
         });
 
         for (const question of questions) {

@@ -3,7 +3,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -12,14 +18,30 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, CheckCircle, Clock, BookOpen, FileText, Loader2, XCircle, RotateCcw, AlertCircle, Volume2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  Clock,
+  BookOpen,
+  FileText,
+  Loader2,
+  XCircle,
+  RotateCcw,
+  AlertCircle,
+  Volume2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ValidationErrorDialog } from "@/components/ValidationErrorDialog";
 import { UserProgressCard } from "@/components/UserProgressCard";
 import { UserActivityHistoryComponent } from "@/components/UserActivityHistory";
 import { UserOverallProgressCard } from "@/components/UserOverallProgressCard";
-import { useUserProgress, useUserActivityHistory, useUserOverallProgress } from "@/lib/hooks/useUserProgress";
+import {
+  useUserProgress,
+  useUserActivityHistory,
+  useUserOverallProgress,
+} from "@/lib/hooks/useUserProgress";
 import { WordSearchGame } from "@/components/WordSearchGame";
 import { InteractiveWordSearchGame } from "@/components/InteractiveWordSearchGame";
 import { SentencePhraseWordSearch } from "@/components/SentencePhraseWordSearch";
@@ -150,7 +172,9 @@ const GET_EXERCISES_BY_CONTENT = gql`
 `;
 
 const SUBMIT_FORM_RESPONSE = gql`
-  mutation SubmitFormResponse($createFormResponseInput: CreateFormResponseInput!) {
+  mutation SubmitFormResponse(
+    $createFormResponseInput: CreateFormResponseInput!
+  ) {
     submitFormResponse(createFormResponseInput: $createFormResponseInput) {
       id
       respondentName
@@ -221,8 +245,18 @@ function UserProgressSection({ contentId }: { contentId: string }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
       {progress && <UserProgressCard progress={progress} />}
-      {overallProgress && <UserOverallProgressCard overallProgress={overallProgress} loading={overallLoading} />}
-      {activities && <UserActivityHistoryComponent activities={activities} loading={activitiesLoading} />}
+      {overallProgress && (
+        <UserOverallProgressCard
+          overallProgress={overallProgress}
+          loading={overallLoading}
+        />
+      )}
+      {activities && (
+        <UserActivityHistoryComponent
+          activities={activities}
+          loading={activitiesLoading}
+        />
+      )}
     </div>
   );
 }
@@ -244,7 +278,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const [completedActivities, setCompletedActivities] = useState<string[]>([]);
   const [allActivitiesCompleted, setAllActivitiesCompleted] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [shuffledOptions, setShuffledOptions] = useState<Record<string, ActivityOption[]>>({});
+  const [shuffledOptions, setShuffledOptions] = useState<
+    Record<string, ActivityOption[]>
+  >({});
   const [validationDialog, setValidationDialog] = useState<{
     open: boolean;
     title: string;
@@ -252,7 +288,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     onConfirm?: () => void;
     confirmText?: string;
     showCancel?: boolean;
-  }>({ open: false, title: '', message: '' });
+  }>({ open: false, title: "", message: "" });
 
   // Detectar automáticamente el modo basado en si el usuario está logueado
   const isAnonymousMode = !user;
@@ -268,7 +304,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   // Función para evaluar respuestas de texto de manera estricta
-  const evaluateTextAnswer = (userAnswer: string, correctAnswer: string): boolean => {
+  const evaluateTextAnswer = (
+    userAnswer: string,
+    correctAnswer: string,
+  ): boolean => {
     // Validación de entrada
     if (!userAnswer || !correctAnswer) {
       return false;
@@ -276,116 +315,135 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
     const userText = userAnswer.toLowerCase().trim();
     const correctText = correctAnswer.toLowerCase().trim();
-    
+
     // Solo comparación exacta para preguntas de texto abierto
     // Esto asegura que la respuesta sea exactamente la esperada
     return userText === correctText;
   };
 
-  
-  const { data, loading, error } = useQuery<{ exercisesByContent: ActivityExercise[] }>(
-    GET_EXERCISES_BY_CONTENT,
-    {
-      variables: { contentId },
-      skip: !contentId,
-      onCompleted: (data) => {
-        // Validar estructura de datos completa
-        if (data?.exercisesByContent) {
-          const hasIncompleteData = data.exercisesByContent.some(exercise => {
-            if (!exercise.form || !exercise.form.questions) {
-              console.warn('Ejercicio con datos de formulario incompletos:', exercise.id);
-              return true;
-            }
-            
-            const hasInvalidQuestions = exercise.form.questions.some(question => {
-              if (!question.id || !question.questionText || typeof question.orderIndex !== 'number') {
-                console.warn('Pregunta con estructura inconsistente:', question);
+  const { data, loading, error } = useQuery<{
+    exercisesByContent: ActivityExercise[];
+  }>(GET_EXERCISES_BY_CONTENT, {
+    variables: { contentId },
+    skip: !contentId,
+    onCompleted: (data) => {
+      // Validar estructura de datos completa
+      if (data?.exercisesByContent) {
+        const hasIncompleteData = data.exercisesByContent.some((exercise) => {
+          if (!exercise.form || !exercise.form.questions) {
+            console.warn(
+              "Ejercicio con datos de formulario incompletos:",
+              exercise.id,
+            );
+            return true;
+          }
+
+          const hasInvalidQuestions = exercise.form.questions.some(
+            (question) => {
+              if (
+                !question.id ||
+                !question.questionText ||
+                typeof question.orderIndex !== "number"
+              ) {
+                console.warn(
+                  "Pregunta con estructura inconsistente:",
+                  question,
+                );
                 return true;
               }
               return false;
-            });
-            
-            return hasInvalidQuestions;
-          });
-          
-          if (hasIncompleteData) {
-            toast.error('Se detectaron inconsistencias en la estructura de las preguntas');
-          }
-        }
-      },
-      onError: (error) => {
-        console.error('ExamView: ❌ Query failed:', error);
-        
-        // Manejo específico de errores de autenticación
-        if (error.message.includes('Unauthorized') || error.message.includes('Authentication')) {
-          setAuthError(true);
-          toast.error('Error de autenticación. Por favor, inicia sesión nuevamente.');
-          return;
-        }
-        
-        // Manejo de otros errores de red o servidor
-        if (error.networkError) {
-          toast.error('Error de conexión. Verifica tu conexión a internet.');
-        } else if (error.graphQLErrors?.length > 0) {
-          toast.error('Error del servidor. Intenta nuevamente más tarde.');
-        } else {
-          toast.error('Error inesperado al cargar los ejercicios.');
+            },
+          );
+
+          return hasInvalidQuestions;
+        });
+
+        if (hasIncompleteData) {
+          toast.error(
+            "Se detectaron inconsistencias en la estructura de las preguntas",
+          );
         }
       }
-    }
-  );
-  
+    },
+    onError: (error) => {
+      console.error("ExamView: ❌ Query failed:", error);
+
+      // Manejo específico de errores de autenticación
+      if (
+        error.message.includes("Unauthorized") ||
+        error.message.includes("Authentication")
+      ) {
+        setAuthError(true);
+        toast.error(
+          "Error de autenticación. Por favor, inicia sesión nuevamente.",
+        );
+        return;
+      }
+
+      // Manejo de otros errores de red o servidor
+      if (error.networkError) {
+        toast.error("Error de conexión. Verifica tu conexión a internet.");
+      } else if (error.graphQLErrors?.length > 0) {
+        toast.error("Error del servidor. Intenta nuevamente más tarde.");
+      } else {
+        toast.error("Error inesperado al cargar los ejercicios.");
+      }
+    },
+  });
+
   // Debug adicional
   if (data?.exercisesByContent) {
   } else {
   }
   if (data) {
-
   }
 
   const exercises = data?.exercisesByContent || [];
   const currentActivity = exercises[currentActivityIndex];
-  
+
   // Usar useMemo para evitar recalcular originalQuestions en cada render
   const originalQuestions = useMemo(() => {
     // Validar que currentActivity?.form?.questions existe
     if (!currentActivity?.form?.questions) {
       return [];
     }
-    
+
     const questions = currentActivity.form.questions;
-    
+
     // Validar que questions no es null o undefined
     if (!questions || !Array.isArray(questions)) {
       return [];
     }
-    
+
     // Validar que todos los elementos tienen orderIndex definido
-    const validQuestions = questions.filter(q => q && typeof q.orderIndex === 'number');
-    
+    const validQuestions = questions.filter(
+      (q) => q && typeof q.orderIndex === "number",
+    );
+
     if (validQuestions.length !== questions.length) {
-      console.warn('Algunas preguntas no tienen orderIndex definido');
+      console.warn("Algunas preguntas no tienen orderIndex definido");
     }
-    
+
     // Crear una copia del array antes de ordenarlo para evitar mutación
     return [...validQuestions].sort((a, b) => a.orderIndex - b.orderIndex);
   }, [currentActivity?.form?.questions, currentActivityIndex]);
-  
+
   // Usar las preguntas originales ordenadas (no aleatorizadas)
   const displayQuestions = originalQuestions; // Mostrar preguntas en orden
   const currentQuestion = displayQuestions[currentQuestionIndex];
   const totalQuestions = originalQuestions.length;
   const totalActivities = exercises.length;
-  const allQuestions = exercises.flatMap(exercise => exercise.form?.questions || []);
-  
+  const allQuestions = exercises.flatMap(
+    (exercise) => exercise.form?.questions || [],
+  );
+
   // Aleatorizar solo las opciones cuando cambie el ejercicio
   useEffect(() => {
-    
     // Aleatorizar solo las opciones si hay preguntas
     if (originalQuestions.length > 0) {
       // Aleatorizar opciones para cada pregunta
       const randomizedOptions: Record<string, ActivityOption[]> = {};
-      originalQuestions.forEach(question => {
+      originalQuestions.forEach((question) => {
         if (question.options && question.options.length > 0) {
           randomizedOptions[question.id] = shuffleArray(question.options);
         }
@@ -396,14 +454,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
       setShuffledOptions({});
     }
   }, [currentActivityIndex, originalQuestions.length]);
-  
+
   // Debug de variables calculadas
-  
+
   // Generar ID único para usuario anónimo (siempre el mismo)
-  const anonymousUserId = 'anonymous-user-001';
-  const anonymousUserName = 'Usuario Anónimo';
-  const anonymousUserEmail = 'anonimo@sistema.local';
-  
+  const anonymousUserId = "anonymous-user-001";
+  const anonymousUserName = "Usuario Anónimo";
+  const anonymousUserEmail = "anonimo@sistema.local";
 
   const goToQuestion = (index: number) => {
     if (index >= 0 && index < displayQuestions.length) {
@@ -428,13 +485,17 @@ export function ExamView({ contentId }: ActivityViewProps) {
         setTimeElapsed(0);
       });
 
-      toast.info(`Iniciando ejercicio ${newActivityIndex + 1} de ${totalActivities}`);
+      toast.info(
+        `Iniciando ejercicio ${newActivityIndex + 1} de ${totalActivities}`,
+      );
     } else {
       // Todos los ejercicios completados en este contenido
       setAllActivitiesCompleted(true);
       setShowActivityCompletion(false);
       setShowResults(true);
-      toast.success('Ha completado este contenido con éxito. Elija otro para continuar.');
+      toast.success(
+        "Ha completado este contenido con éxito. Elija otro para continuar.",
+      );
     }
   };
 
@@ -453,43 +514,48 @@ export function ExamView({ contentId }: ActivityViewProps) {
     setShowResults(true);
   };
 
-  const [submitFormResponse, { loading: submitLoading }] = useMutation(SUBMIT_FORM_RESPONSE, {
-    onCompleted: (data) => {
-      setExamSubmitted(true);
-      setExamResults(data.submitFormResponse);
-      // Mostrar retroalimentación después de completar el ejercicio
-      setShowFeedback(true);
-      // Solo mostrar resultados finales si es el último ejercicio
-      const isLastActivity = currentActivityIndex >= exercises.length - 1;
-      if (isLastActivity) {
-        setShowResults(true);
-      }
-      if (user) {
-        toast.success('Ejercicio completado y progreso guardado');
-      } else {
-        toast.success('Ejercicio completado');
-      }
+  const [submitFormResponse, { loading: submitLoading }] = useMutation(
+    SUBMIT_FORM_RESPONSE,
+    {
+      onCompleted: (data) => {
+        setExamSubmitted(true);
+        setExamResults(data.submitFormResponse);
+        // Mostrar retroalimentación después de completar el ejercicio
+        setShowFeedback(true);
+        // Solo mostrar resultados finales si es el último ejercicio
+        const isLastActivity = currentActivityIndex >= exercises.length - 1;
+        if (isLastActivity) {
+          setShowResults(true);
+        }
+        if (user) {
+          toast.success("Ejercicio completado y progreso guardado");
+        } else {
+          toast.success("Ejercicio completado");
+        }
+      },
+      onError: (error) => {
+        console.error("❌ Error al enviar respuestas:", error);
+        toast.error("Error al guardar las respuestas. Inténtalo de nuevo.");
+      },
     },
-    onError: (error) => {
-      console.error('❌ Error al enviar respuestas:', error);
-      toast.error('Error al guardar las respuestas. Inténtalo de nuevo.');
-    }
-  });
+  );
 
   const handleSubmitExam = async () => {
     // Validar preguntas obligatorias
-    const requiredQuestions = displayQuestions.filter(q => q.isRequired);
-    const answeredQuestionIds = answers.map(a => a.questionId);
-    
-    const unansweredRequired = requiredQuestions.filter(q => !answeredQuestionIds.includes(q.id));
-    
+    const requiredQuestions = displayQuestions.filter((q) => q.isRequired);
+    const answeredQuestionIds = answers.map((a) => a.questionId);
+
+    const unansweredRequired = requiredQuestions.filter(
+      (q) => !answeredQuestionIds.includes(q.id),
+    );
+
     if (unansweredRequired.length > 0) {
       const questionText = unansweredRequired[0].questionText;
       setValidationDialog({
         open: true,
-        title: 'Pregunta obligatoria',
+        title: "Pregunta obligatoria",
         message: `La pregunta "${questionText}" es obligatoria y debe ser respondida antes de continuar.`,
-        confirmText: 'Entendido'
+        confirmText: "Entendido",
       });
       return;
     }
@@ -499,11 +565,11 @@ export function ExamView({ contentId }: ActivityViewProps) {
       const unanswered = totalQuestions - answers.length;
       setValidationDialog({
         open: true,
-        title: 'Preguntas sin responder',
-        message: `Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas completar el ejercicio?`,
-        confirmText: 'Completar ejercicio',
+        title: "Preguntas sin responder",
+        message: `Tienes ${unanswered} pregunta${unanswered > 1 ? "s" : ""} sin responder. ¿Deseas completar el ejercicio?`,
+        confirmText: "Completar ejercicio",
         showCancel: true,
-        onConfirm: () => submitExam()
+        onConfirm: () => submitExam(),
       });
       return;
     }
@@ -514,18 +580,21 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const submitExam = async () => {
     try {
       // Preparar las respuestas para enviar según el DTO del backend
-      const formAnswers = answers.map(answer => {
-        const question = displayQuestions.find((q: ActivityQuestion) => q.id === answer.questionId);
+      const formAnswers = answers.map((answer) => {
+        const question = displayQuestions.find(
+          (q: ActivityQuestion) => q.id === answer.questionId,
+        );
         // Para preguntas de selección única, convertir selectedOptionId a array
-        const selectedOptionIds = answer.selectedOptionIds || 
+        const selectedOptionIds =
+          answer.selectedOptionIds ||
           (answer.selectedOptionId ? [answer.selectedOptionId] : null);
-        
+
         return {
           questionId: answer.questionId,
           textAnswer: answer.textAnswer || null,
           selectedOptionIds: selectedOptionIds,
           numericAnswer: null,
-          booleanAnswer: null
+          booleanAnswer: null,
         };
       });
 
@@ -535,59 +604,77 @@ export function ExamView({ contentId }: ActivityViewProps) {
         respondentName: user ? user.fullName : anonymousUserName,
         respondentEmail: user ? user.email : anonymousUserEmail,
         isAnonymous: !user,
-        answers: formAnswers
+        answers: formAnswers,
       };
 
       await submitFormResponse({
         variables: {
-          createFormResponseInput: formResponseInput
-        }
+          createFormResponseInput: formResponseInput,
+        },
       });
 
       // Marcar ejercicio como completado
-      const activityId = currentActivity?.id || '';
-      setCompletedActivities(prev => [...prev, activityId]);
+      const activityId = currentActivity?.id || "";
+      setCompletedActivities((prev) => [...prev, activityId]);
       setExamSubmitted(true);
-      
+
       // Mostrar pantalla de completación de ejercicio (no avanzar automáticamente)
       setShowActivityCompletion(true);
-      toast.success(`Ejercicio "${currentActivity?.name}" completado con éxito.`);
-      
+      toast.success(
+        `Ejercicio "${currentActivity?.name}" completado con éxito.`,
+      );
     } catch (error) {
-      console.error('Error al procesar envío:', error);
-      toast.error('Error al guardar las respuestas. Inténtalo de nuevo.');
+      console.error("Error al procesar envío:", error);
+      toast.error("Error al guardar las respuestas. Inténtalo de nuevo.");
     }
   };
 
   const calculateScore = () => {
     let correctAnswers = 0;
     let totalAnswered = 0;
-    
-    allQuestions.forEach(question => {
-      const userAnswer = answers.find(a => a.questionId === question.id);
+
+    allQuestions.forEach((question) => {
+      const userAnswer = answers.find((a) => a.questionId === question.id);
       if (userAnswer) {
         totalAnswered++;
-        
-        if (question.questionType === 'multiple_choice' || question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'CHECKBOX') {
+
+        if (
+          question.questionType === "multiple_choice" ||
+          question.questionType === "MULTIPLE_CHOICE" ||
+          question.questionType === "CHECKBOX"
+        ) {
           // Para preguntas de selección múltiple, verificar si todas las opciones correctas están seleccionadas
-          const correctOptions = question.options.filter(opt => opt.isCorrect);
-          const selectedOptions = userAnswer.selectedOptionIds || [];
-          const correctSelectedOptions = selectedOptions.filter(id => 
-            question.options.find(opt => opt.id === id)?.isCorrect
+          const correctOptions = question.options.filter(
+            (opt) => opt.isCorrect,
           );
-          
+          const selectedOptions = userAnswer.selectedOptionIds || [];
+          const correctSelectedOptions = selectedOptions.filter(
+            (id) => question.options.find((opt) => opt.id === id)?.isCorrect,
+          );
+
           // Respuesta correcta si seleccionó todas las correctas y ninguna incorrecta
-          if (correctSelectedOptions.length === correctOptions.length && 
-              selectedOptions.length === correctOptions.length) {
+          if (
+            correctSelectedOptions.length === correctOptions.length &&
+            selectedOptions.length === correctOptions.length
+          ) {
             correctAnswers++;
           }
-        } else if (question.questionType === 'single_choice') {
+        } else if (question.questionType === "single_choice") {
           // Para preguntas de selección única
-          const selectedOption = question.options.find(opt => opt.id === userAnswer.selectedOptionId);
+          const selectedOption = question.options.find(
+            (opt) => opt.id === userAnswer.selectedOptionId,
+          );
           if (selectedOption?.isCorrect) {
             correctAnswers++;
           }
-        } else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
+        } else if (
+          (question.questionType === "TEXT" ||
+            question.questionType === "OPEN_TEXT" ||
+            question.questionType === "open_text" ||
+            question.questionType === "TEXTAREA") &&
+          userAnswer.textAnswer &&
+          question.correctAnswer
+        ) {
           // Para preguntas de texto
           const userText = userAnswer.textAnswer.toLowerCase().trim();
           const correctText = question.correctAnswer.toLowerCase().trim();
@@ -597,8 +684,10 @@ export function ExamView({ contentId }: ActivityViewProps) {
         }
       }
     });
-    
-    return totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+
+    return totalAnswered > 0
+      ? Math.round((correctAnswers / totalAnswered) * 100)
+      : 0;
   };
 
   // Timer effect
@@ -606,7 +695,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
     let interval: NodeJS.Timeout;
     if (examStarted && !showResults) {
       interval = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
+        setTimeElapsed((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -615,13 +704,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleAnswerSelect = (questionId: string, optionId: string) => {
     if (!currentQuestion) return;
-    setAnswers(prev => {
-      const existingIndex = prev.findIndex(a => a.questionId === questionId);
+    setAnswers((prev) => {
+      const existingIndex = prev.findIndex((a) => a.questionId === questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
         updated[existingIndex] = { questionId, selectedOptionId: optionId };
@@ -632,33 +721,43 @@ export function ExamView({ contentId }: ActivityViewProps) {
     });
   };
 
-  const handleMultipleAnswerSelect = (questionId: string, optionId: string, checked: boolean) => {
+  const handleMultipleAnswerSelect = (
+    questionId: string,
+    optionId: string,
+    checked: boolean,
+  ) => {
     if (!currentQuestion) return;
-    setAnswers(prev => {
-      const existingIndex = prev.findIndex(a => a.questionId === questionId);
+    setAnswers((prev) => {
+      const existingIndex = prev.findIndex((a) => a.questionId === questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
-        const currentSelectedIds = updated[existingIndex].selectedOptionIds || [];
+        const currentSelectedIds =
+          updated[existingIndex].selectedOptionIds || [];
         if (checked) {
           // Agregar opción si no está ya seleccionada
           if (!currentSelectedIds.includes(optionId)) {
-            updated[existingIndex] = { 
-              questionId, 
-              selectedOptionIds: [...currentSelectedIds, optionId] 
+            updated[existingIndex] = {
+              questionId,
+              selectedOptionIds: [...currentSelectedIds, optionId],
             };
           }
         } else {
           // Remover opción
-          updated[existingIndex] = { 
-            questionId, 
-            selectedOptionIds: currentSelectedIds.filter(id => id !== optionId) 
+          updated[existingIndex] = {
+            questionId,
+            selectedOptionIds: currentSelectedIds.filter(
+              (id) => id !== optionId,
+            ),
           };
         }
         return updated;
       }
       // Crear nueva respuesta si no existe
       if (checked) {
-        const newAnswers = [...prev, { questionId, selectedOptionIds: [optionId] }];
+        const newAnswers = [
+          ...prev,
+          { questionId, selectedOptionIds: [optionId] },
+        ];
         return newAnswers;
       }
       return prev;
@@ -667,12 +766,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const handleTextAnswerChange = (questionId: string, textValue: string) => {
     if (!currentQuestion) return;
-    setAnswers(prev => {
-      const existingIndex = prev.findIndex(a => a.questionId === questionId);
+    setAnswers((prev) => {
+      const existingIndex = prev.findIndex((a) => a.questionId === questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
         // Preservar las propiedades existentes y solo actualizar textAnswer
-        updated[existingIndex] = { ...updated[existingIndex], textAnswer: textValue };
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          textAnswer: textValue,
+        };
         return updated;
       }
       const newAnswers = [...prev, { questionId, textAnswer: textValue }];
@@ -681,12 +783,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   const getSelectedAnswer = (questionId: string) => {
-    const selectedAnswer = answers.find(a => a.questionId === questionId)?.selectedOptionId;
+    const selectedAnswer = answers.find(
+      (a) => a.questionId === questionId,
+    )?.selectedOptionId;
     return selectedAnswer;
   };
 
   const getSelectedAnswers = (questionId: string) => {
-    const selectedAnswers = answers.find(a => a.questionId === questionId)?.selectedOptionIds || [];
+    const selectedAnswers =
+      answers.find((a) => a.questionId === questionId)?.selectedOptionIds || [];
     return selectedAnswers;
   };
 
@@ -696,13 +801,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
   };
 
   const getTextAnswer = (questionId: string) => {
-    const textAnswer = answers.find(a => a.questionId === questionId)?.textAnswer;
-    return textAnswer || '';
+    const textAnswer = answers.find(
+      (a) => a.questionId === questionId,
+    )?.textAnswer;
+    return textAnswer || "";
   };
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex(prev => {
+      setCurrentQuestionIndex((prev) => {
         return prev + 1;
       });
     }
@@ -710,7 +817,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => {
+      setCurrentQuestionIndex((prev) => {
         return prev - 1;
       });
     }
@@ -719,12 +826,16 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const handleFinishActivity = () => {
     if (answers.length < totalQuestions) {
       const unanswered = totalQuestions - answers.length;
-      if (!confirm(`Tienes ${unanswered} pregunta${unanswered > 1 ? 's' : ''} sin responder. ¿Deseas finalizar el ejercicio?`)) {
+      if (
+        !confirm(
+          `Tienes ${unanswered} pregunta${unanswered > 1 ? "s" : ""} sin responder. ¿Deseas finalizar el ejercicio?`,
+        )
+      ) {
         return;
       }
     }
     setShowFeedback(true);
-    toast.success('Ejercicio finalizado - Revisando respuestas');
+    toast.success("Ejercicio finalizado - Revisando respuestas");
   };
 
   const calculateResults = () => {
@@ -732,13 +843,14 @@ export function ExamView({ contentId }: ActivityViewProps) {
     let total = 0;
 
     // Solo usar las preguntas del ejercicio actual completado
-    const currentActivityQuestions = exercises[currentActivityIndex]?.form?.questions || [];
-    
-    currentActivityQuestions.forEach(question => {
-      const userAnswer = answers.find(a => a.questionId === question.id);
+    const currentActivityQuestions =
+      exercises[currentActivityIndex]?.form?.questions || [];
+
+    currentActivityQuestions.forEach((question) => {
+      const userAnswer = answers.find((a) => a.questionId === question.id);
       if (userAnswer) {
         total++;
-        
+
         // Usar la misma lógica que getQuestionResult para consistencia
         const result = getQuestionResult(question);
         if (result.isCorrect) {
@@ -747,17 +859,22 @@ export function ExamView({ contentId }: ActivityViewProps) {
       }
     });
 
-    return { correct, total, percentage: total > 0 ? Math.round((correct / total) * 100) : 0 };
+    return {
+      correct,
+      total,
+      percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
+    };
   };
 
   const startActivity = () => {
     setExamStarted(true);
     setTimeElapsed(0);
-    toast.info(`Iniciando ejercicio ${currentActivityIndex + 1} de ${totalActivities}`);
+    toast.info(
+      `Iniciando ejercicio ${currentActivityIndex + 1} de ${totalActivities}`,
+    );
   };
 
   const resetActivity = () => {
-    
     // Limpiar todos los estados de la interfaz
     setCurrentQuestionIndex(0);
     setAnswers([]);
@@ -768,8 +885,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
     setExamStarted(false);
     setExamSubmitted(false);
     setShuffledOptions({});
-    
-    toast.info('Ejercicio reiniciado. ¡Puedes comenzar de nuevo!');
+
+    toast.info("Ejercicio reiniciado. ¡Puedes comenzar de nuevo!");
   };
 
   if (loading) {
@@ -782,7 +899,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Cargando ejercicios...</p>
+              <p className="text-sm text-muted-foreground">
+                Cargando ejercicios...
+              </p>
             </div>
           </div>
         </CardContent>
@@ -799,7 +918,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
         <CardContent>
           <div className="text-center py-8">
             <p className="text-red-500">Error al cargar los ejercicios</p>
-            <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {error.message}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -818,14 +939,13 @@ export function ExamView({ contentId }: ActivityViewProps) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 space-y-4">
-            <p className="text-red-500">No tienes permisos para acceder a este contenido</p>
+            <p className="text-red-500">
+              No tienes permisos para acceder a este contenido
+            </p>
             <p className="text-sm text-muted-foreground">
               Por favor, inicia sesión con una cuenta válida para continuar.
             </p>
-            <Button 
-              onClick={() => router.push('/login')}
-              className="mt-4"
-            >
+            <Button onClick={() => router.push("/login")} className="mt-4">
               Ir a Iniciar Sesión
             </Button>
           </div>
@@ -840,12 +960,16 @@ export function ExamView({ contentId }: ActivityViewProps) {
       <Card>
         <CardHeader>
           <CardTitle>Ejercicios</CardTitle>
-          <CardDescription>No hay ejercicios disponibles para este contenido</CardDescription>
+          <CardDescription>
+            No hay ejercicios disponibles para este contenido
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Este contenido aún no tiene ejercicios configurados.</p>
+            <p className="text-muted-foreground">
+              Este contenido aún no tiene ejercicios configurados.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -857,20 +981,26 @@ export function ExamView({ contentId }: ActivityViewProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{currentActivity.form?.title || currentActivity.name}</CardTitle>
-          <CardDescription>Este ejercicio no tiene preguntas configuradas</CardDescription>
+          <CardTitle>
+            {currentActivity.form?.title || currentActivity.name}
+          </CardTitle>
+          <CardDescription>
+            Este ejercicio no tiene preguntas configuradas
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Este ejercicio aún no tiene preguntas configuradas.</p>
+            <p className="text-muted-foreground">
+              Este ejercicio aún no tiene preguntas configuradas.
+            </p>
             {currentActivityIndex < exercises.length - 1 && (
-              <Button 
+              <Button
                 onClick={() => {
-                  setCurrentActivityIndex(prev => prev + 1);
+                  setCurrentActivityIndex((prev) => prev + 1);
                   setCurrentQuestionIndex(0);
-                  toast.info('Pasando al siguiente ejercicio');
-                }} 
+                  toast.info("Pasando al siguiente ejercicio");
+                }}
                 className="mt-4"
               >
                 Ir al siguiente ejercicio
@@ -885,14 +1015,24 @@ export function ExamView({ contentId }: ActivityViewProps) {
   const getQuestionResult = (question: ActivityQuestion) => {
     // Priorizar los resultados del backend si están disponibles
     if (examResults?.answers) {
-      const backendAnswer = examResults.answers.find((a: any) => a.questionId === question.id);
-      
-      if (backendAnswer && typeof backendAnswer.isCorrect === 'boolean') {
-        const userAnswer = answers.find(a => a.questionId === question.id);
-        const selectedOption = userAnswer?.selectedOptionId ? question.options.find(opt => opt.id === userAnswer.selectedOptionId) : null;
-        const selectedOptions = userAnswer?.selectedOptionIds ? question.options.filter(opt => userAnswer.selectedOptionIds!.includes(opt.id)) : [];
-        const correctOptions = question.options.filter(opt => opt.isCorrect);
-        
+      const backendAnswer = examResults.answers.find(
+        (a: any) => a.questionId === question.id,
+      );
+
+      if (backendAnswer && typeof backendAnswer.isCorrect === "boolean") {
+        const userAnswer = answers.find((a) => a.questionId === question.id);
+        const selectedOption = userAnswer?.selectedOptionId
+          ? question.options.find(
+              (opt) => opt.id === userAnswer.selectedOptionId,
+            )
+          : null;
+        const selectedOptions = userAnswer?.selectedOptionIds
+          ? question.options.filter((opt) =>
+              userAnswer.selectedOptionIds!.includes(opt.id),
+            )
+          : [];
+        const correctOptions = question.options.filter((opt) => opt.isCorrect);
+
         return {
           userAnswer,
           selectedOption,
@@ -901,69 +1041,107 @@ export function ExamView({ contentId }: ActivityViewProps) {
           isCorrect: backendAnswer.isCorrect,
           wasAnswered: !!userAnswer,
           textAnswer: userAnswer?.textAnswer,
-          backendFeedback: backendAnswer.feedback
+          backendFeedback: backendAnswer.feedback,
         };
       }
     }
 
     // Fallback a evaluación local si no hay resultados del backend
-    const userAnswer = answers.find(a => a.questionId === question.id);
-    const selectedOption = userAnswer?.selectedOptionId ? question.options.find(opt => opt.id === userAnswer.selectedOptionId) : null;
-    const selectedOptions = userAnswer?.selectedOptionIds ? question.options.filter(opt => userAnswer.selectedOptionIds!.includes(opt.id)) : [];
-    const correctOptions = question.options.filter(opt => opt.isCorrect);
-    
-    
+    const userAnswer = answers.find((a) => a.questionId === question.id);
+    const selectedOption = userAnswer?.selectedOptionId
+      ? question.options.find((opt) => opt.id === userAnswer.selectedOptionId)
+      : null;
+    const selectedOptions = userAnswer?.selectedOptionIds
+      ? question.options.filter((opt) =>
+          userAnswer.selectedOptionIds!.includes(opt.id),
+        )
+      : [];
+    const correctOptions = question.options.filter((opt) => opt.isCorrect);
+
     let isCorrect = false;
     if (userAnswer) {
       // Para preguntas de selección múltiple con opciones
-      if ((question.questionType === 'multiple_choice' || question.questionType === 'CHECKBOX') && userAnswer.selectedOptionIds && question.options.length > 0) {
-        const correctSelectedOptions = userAnswer.selectedOptionIds.filter(id => 
-          question.options.find(opt => opt.id === id)?.isCorrect
+      if (
+        (question.questionType === "multiple_choice" ||
+          question.questionType === "CHECKBOX") &&
+        userAnswer.selectedOptionIds &&
+        question.options.length > 0
+      ) {
+        const correctSelectedOptions = userAnswer.selectedOptionIds.filter(
+          (id) => question.options.find((opt) => opt.id === id)?.isCorrect,
         );
         // Respuesta correcta si seleccionó todas las correctas y ninguna incorrecta
-        isCorrect = correctSelectedOptions.length === correctOptions.length && 
-                   userAnswer.selectedOptionIds.length === correctOptions.length;
-        
+        isCorrect =
+          correctSelectedOptions.length === correctOptions.length &&
+          userAnswer.selectedOptionIds.length === correctOptions.length;
       }
       // Para preguntas de selección única con opciones
-      else if (question.questionType === 'single_choice' && userAnswer.selectedOptionId && question.options.length > 0) {
+      else if (
+        question.questionType === "single_choice" &&
+        userAnswer.selectedOptionId &&
+        question.options.length > 0
+      ) {
         isCorrect = selectedOption?.isCorrect || false;
-        
       }
       // Para preguntas MULTIPLE_CHOICE (mayúsculas) con selección única
-      else if (question.questionType === 'MULTIPLE_CHOICE' && userAnswer.selectedOptionId && question.options.length > 0) {
+      else if (
+        question.questionType === "MULTIPLE_CHOICE" &&
+        userAnswer.selectedOptionId &&
+        question.options.length > 0
+      ) {
         isCorrect = selectedOption?.isCorrect || false;
-        
       }
       // Para preguntas de texto con respuesta correcta definida
-      else if ((question.questionType === 'TEXT' || question.questionType === 'OPEN_TEXT' || question.questionType === 'open_text' || question.questionType === 'TEXTAREA') && userAnswer.textAnswer && question.correctAnswer) {
-        isCorrect = evaluateTextAnswer(userAnswer.textAnswer, question.correctAnswer);
+      else if (
+        (question.questionType === "TEXT" ||
+          question.questionType === "OPEN_TEXT" ||
+          question.questionType === "open_text" ||
+          question.questionType === "TEXTAREA") &&
+        userAnswer.textAnswer &&
+        question.correctAnswer
+      ) {
+        isCorrect = evaluateTextAnswer(
+          userAnswer.textAnswer,
+          question.correctAnswer,
+        );
       }
       // Para preguntas mal configuradas: MULTIPLE_CHOICE sin opciones pero con textAnswer y correctAnswer
-       else if ((question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
-                question.options.length === 0 && 
-                userAnswer.textAnswer && 
-                question.correctAnswer) {
-         isCorrect = evaluateTextAnswer(userAnswer.textAnswer, question.correctAnswer);
-       }
-       // Caso específico para MULTIPLE_CHOICE con correctAnswer vacío pero textAnswer presente
-       else if ((question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'multiple_choice') && 
-                question.options.length === 0 && 
-                userAnswer.textAnswer && 
-                (!question.correctAnswer || question.correctAnswer === '')) {
-         // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
-         isCorrect = true;
-       }
-      // Para preguntas de texto sin respuesta correcta definida
-      else if (question.options.length === 0 && userAnswer.textAnswer && !question.correctAnswer) {
+      else if (
+        (question.questionType === "MULTIPLE_CHOICE" ||
+          question.questionType === "multiple_choice") &&
+        question.options.length === 0 &&
+        userAnswer.textAnswer &&
+        question.correctAnswer
+      ) {
+        isCorrect = evaluateTextAnswer(
+          userAnswer.textAnswer,
+          question.correctAnswer,
+        );
+      }
+      // Caso específico para MULTIPLE_CHOICE con correctAnswer vacío pero textAnswer presente
+      else if (
+        (question.questionType === "MULTIPLE_CHOICE" ||
+          question.questionType === "multiple_choice") &&
+        question.options.length === 0 &&
+        userAnswer.textAnswer &&
+        (!question.correctAnswer || question.correctAnswer === "")
+      ) {
         // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
         isCorrect = true;
       }
-      else {
+      // Para preguntas de texto sin respuesta correcta definida
+      else if (
+        question.options.length === 0 &&
+        userAnswer.textAnswer &&
+        !question.correctAnswer
+      ) {
+        // Si no hay respuesta correcta definida, consideramos que cualquier respuesta es válida
+        isCorrect = true;
+      } else {
       }
     } else {
     }
-    
+
     const result = {
       userAnswer,
       selectedOption,
@@ -971,15 +1149,14 @@ export function ExamView({ contentId }: ActivityViewProps) {
       correctOptions,
       isCorrect,
       wasAnswered: !!userAnswer,
-      textAnswer: userAnswer?.textAnswer
+      textAnswer: userAnswer?.textAnswer,
     };
-    
-    
+
     return result;
   };
 
   // Debug de estados de renderizado
-  
+
   if (showResults) {
     const results = calculateResults();
 
@@ -1015,7 +1192,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <Card>
                 <CardContent className="pt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-green-600">{results.correct}</div>
+                    <div className="text-2xl font-semibold text-green-600">
+                      {results.correct}
+                    </div>
                     <p className="text-sm text-muted-foreground">Correctas</p>
                   </div>
                 </CardContent>
@@ -1023,7 +1202,9 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <Card>
                 <CardContent className="pt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-red-600">{results.total - results.correct}</div>
+                    <div className="text-2xl font-semibold text-red-600">
+                      {results.total - results.correct}
+                    </div>
                     <p className="text-sm text-muted-foreground">Incorrectas</p>
                   </div>
                 </CardContent>
@@ -1031,15 +1212,22 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <Card>
                 <CardContent className="pt-4">
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-blue-600">{formatTime(timeElapsed)}</div>
-                    <p className="text-sm text-muted-foreground">Tiempo total</p>
+                    <div className="text-2xl font-semibold text-blue-600">
+                      {formatTime(timeElapsed)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Tiempo total
+                    </p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="flex justify-center">
-              <Button onClick={resetActivity} className="flex items-center gap-2">
+              <Button
+                onClick={resetActivity}
+                className="flex items-center gap-2"
+              >
                 <RotateCcw className="h-4 w-4" />
                 Reintentar Ejercicio
               </Button>
@@ -1057,84 +1245,104 @@ export function ExamView({ contentId }: ActivityViewProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Solo mostrar preguntas del ejercicio actual completado */}
-            {(exercises[currentActivityIndex]?.form?.questions || []).map((question, index) => {
-              const result = getQuestionResult(question);
-              return (
-                <Card key={question.id} className={`border-l-4 ${
-                  !result.wasAnswered ? 'border-l-gray-400' :
-                  result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
-                }`}>
-                  <CardContent className="pt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
-                          {!result.wasAnswered ? (
-                            <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center">
-                              <span className="text-white text-sm font-bold">?</span>
-                            </div>
-                          ) : result.isCorrect ? (
-                            <CheckCircle className="w-6 h-6 text-green-500" />
-                          ) : (
-                            <XCircle className="w-6 h-6 text-red-500" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-2">
-                            Pregunta {index + 1}: {question.questionText}
-                          </h4>
-                          
-                          {!result.wasAnswered ? (
-                            <p className="text-gray-600 text-sm mb-2">
-                              <strong>No respondida</strong>
-                            </p>
-                          ) : (
-                            <p className="text-sm mb-2">
-                            <strong>Tu respuesta:</strong> {
-                              result.textAnswer || 
-                              (result.selectedOptions.length > 0 ? 
-                                result.selectedOptions.map(opt => opt.optionText).join(', ') : 
-                                result.selectedOption?.optionText)
-                            }
-                          </p>
-                          )}
-                          
-                          <p className="text-sm mb-2">
-                            <strong>Respuesta correcta:</strong> {
-                              question.correctAnswer || 
-                              (result.correctOptions.length > 0 ? 
-                                result.correctOptions.map(opt => opt.optionText).join(', ') : 
-                                'No definida')
-                            }
-                          </p>
-                          
-                          {result.wasAnswered ? (
-                            result.isCorrect ? (
-                              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <p className="text-green-800 text-sm">
-                                  <strong>¡Correcto!</strong> {(result as any).backendFeedback || question.explanation || 'Excelente trabajo.'}
-                                </p>
+            {(exercises[currentActivityIndex]?.form?.questions || []).map(
+              (question, index) => {
+                const result = getQuestionResult(question);
+                return (
+                  <Card
+                    key={question.id}
+                    className={`border-l-4 ${
+                      !result.wasAnswered
+                        ? "border-l-gray-400"
+                        : result.isCorrect
+                          ? "border-l-green-500"
+                          : "border-l-red-500"
+                    }`}
+                  >
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            {!result.wasAnswered ? (
+                              <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center">
+                                <span className="text-white text-sm font-bold">
+                                  ?
+                                </span>
                               </div>
+                            ) : result.isCorrect ? (
+                              <CheckCircle className="w-6 h-6 text-green-500" />
                             ) : (
-                              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-red-800 text-sm">
-                                  <strong>Incorrecto.</strong> {(result as any).backendFeedback || question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
+                              <XCircle className="w-6 h-6 text-red-500" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold mb-2">
+                              Pregunta {index + 1}: {question.questionText}
+                            </h4>
+
+                            {!result.wasAnswered ? (
+                              <p className="text-gray-600 text-sm mb-2">
+                                <strong>No respondida</strong>
+                              </p>
+                            ) : (
+                              <p className="text-sm mb-2">
+                                <strong>Tu respuesta:</strong>{" "}
+                                {result.textAnswer ||
+                                  (result.selectedOptions.length > 0
+                                    ? result.selectedOptions
+                                        .map((opt) => opt.optionText)
+                                        .join(", ")
+                                    : result.selectedOption?.optionText)}
+                              </p>
+                            )}
+
+                            <p className="text-sm mb-2">
+                              <strong>Respuesta correcta:</strong>{" "}
+                              {question.correctAnswer ||
+                                (result.correctOptions.length > 0
+                                  ? result.correctOptions
+                                      .map((opt) => opt.optionText)
+                                      .join(", ")
+                                  : "No definida")}
+                            </p>
+
+                            {result.wasAnswered ? (
+                              result.isCorrect ? (
+                                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                  <p className="text-green-800 text-sm">
+                                    <strong>¡Correcto!</strong>{" "}
+                                    {(result as any).backendFeedback ||
+                                      question.explanation ||
+                                      "Excelente trabajo."}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                  <p className="text-red-800 text-sm">
+                                    <strong>Incorrecto.</strong>{" "}
+                                    {(result as any).backendFeedback ||
+                                      question.incorrectFeedback ||
+                                      question.explanation ||
+                                      "Revisa el material de estudio para esta pregunta."}
+                                  </p>
+                                </div>
+                              )
+                            ) : (
+                              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                <p className="text-gray-800 text-sm">
+                                  <strong>No respondida.</strong> Esta pregunta
+                                  no fue contestada.
                                 </p>
                               </div>
-                            )
-                          ) : (
-                            <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                              <p className="text-gray-800 text-sm">
-                                <strong>No respondida.</strong> Esta pregunta no fue contestada.
-                              </p>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              },
+            )}
           </CardContent>
           <CardContent className="pt-0">
             <div className="flex justify-center gap-4 mt-6">
@@ -1154,8 +1362,6 @@ export function ExamView({ contentId }: ActivityViewProps) {
     );
   }
 
-
-
   // Vista de completación de actividad
   if (showActivityCompletion) {
     const completedActivity = exercises[currentActivityIndex];
@@ -1170,7 +1376,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
             Ejercicio Completado
           </CardTitle>
           <CardDescription>
-            Has completado exitosamente el ejercicio {currentActivityIndex + 1} de {exercises.length}
+            Has completado exitosamente el ejercicio {currentActivityIndex + 1}{" "}
+            de {exercises.length}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -1180,19 +1387,21 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 ¡Excelente trabajo!
               </h3>
               <p className="text-green-700">
-                Has completado: {completedActivity?.form?.title || completedActivity?.name}
+                Has completado:{" "}
+                {completedActivity?.form?.title || completedActivity?.name}
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-center">
-                <Progress 
-                  value={(completedActivities.length / exercises.length) * 100} 
-                  className="w-full max-w-md" 
+                <Progress
+                  value={(completedActivities.length / exercises.length) * 100}
+                  className="w-full max-w-md"
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Progreso: {completedActivities.length} de {exercises.length} ejercicios completados
+                Progreso: {completedActivities.length} de {exercises.length}{" "}
+                ejercicios completados
               </p>
             </div>
           </div>
@@ -1207,7 +1416,8 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 {nextActivity?.description}
               </p>
               <Badge variant="outline" className="mt-2">
-                {nextActivity?.form?.questions?.length || 0} pregunta{(nextActivity?.form?.questions?.length || 0) > 1 ? 's' : ''}
+                {nextActivity?.form?.questions?.length || 0} pregunta
+                {(nextActivity?.form?.questions?.length || 0) > 1 ? "s" : ""}
               </Badge>
             </div>
           )}
@@ -1238,16 +1448,20 @@ export function ExamView({ contentId }: ActivityViewProps) {
         <CardHeader>
           <CardTitle>Ejercicios</CardTitle>
           <CardDescription>
-            Prepárate para responder {totalQuestions} pregunta{totalQuestions > 1 ? 's' : ''}
+            Prepárate para responder {totalQuestions} pregunta
+            {totalQuestions > 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
             <BookOpen className="h-16 w-16 mx-auto mb-4 text-blue-500" />
-            <h3 className="text-lg font-semibold mb-2">¿Listo para comenzar?</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              ¿Listo para comenzar?
+            </h3>
             <p className="text-muted-foreground mb-6">
-              Este ejercicio contiene {totalQuestions} pregunta{totalQuestions > 1 ? 's' : ''} de opción múltiple.
-              Tómate tu tiempo y lee cada pregunta cuidadosamente.
+              Este ejercicio contiene {totalQuestions} pregunta
+              {totalQuestions > 1 ? "s" : ""} de opción múltiple. Tómate tu
+              tiempo y lee cada pregunta cuidadosamente.
             </p>
           </div>
 
@@ -1257,8 +1471,12 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 <CardContent className="pt-4">
                   <div className="text-center">
                     <FileText className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                    <div className="text-2xl font-semibold">{totalQuestions}</div>
-                    <p className="text-sm text-muted-foreground">Pregunta{totalQuestions > 1 ? 's' : ''}</p>
+                    <div className="text-2xl font-semibold">
+                      {totalQuestions}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Pregunta{totalQuestions > 1 ? "s" : ""}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -1275,8 +1493,12 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 <CardContent className="pt-4">
                   <div className="text-center">
                     <CheckCircle className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                    <div className="text-2xl font-semibold">{exercises.length}</div>
-                    <p className="text-sm text-muted-foreground">Ejercicio{exercises.length > 1 ? 's' : ''}</p>
+                    <div className="text-2xl font-semibold">
+                      {exercises.length}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Ejercicio{exercises.length > 1 ? "s" : ""}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -1287,39 +1509,56 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <div className="space-y-2">
                 {exercises.map((ex, idx) => {
                   const qCount = ex.form?.questions?.length || 0;
-                    const estimatedMinutes = ex.estimatedTime || (qCount > 0 ? qCount : 0); // ~1 min por pregunta
+                  const estimatedMinutes =
+                    ex.estimatedTime || (qCount > 0 ? qCount : 0); // ~1 min por pregunta
                   const isCurrent = idx === currentActivityIndex;
                   return (
                     <div
                       key={ex.id}
-                        className={`p-3 rounded-lg border ${isCurrent ? 'bg-blue-50 border-blue-200' : 'bg-card/40'} `}
+                      className={`p-3 rounded-lg border ${isCurrent ? "bg-blue-50 border-blue-200" : "bg-card/40"} `}
                     >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <span className={`text-sm px-2 py-1 rounded ${isCurrent ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>#{idx + 1}</span>
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium">{ex.form?.title || ex.name}</p>
-                              {ex.description && (
-                                <p className="text-xs text-muted-foreground">{ex.description}</p>
-                              )}
-                              {ex.indication && (
-                                <div className="text-xs rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-900">
-                                  <span className="font-medium">Indicaciones:</span> {ex.indication}
-                                </div>
-                              )}
-                              {ex.example && (
-                                <div className="text-xs rounded-md border border-emerald-200 bg-emerald-50 p-2 text-emerald-900">
-                                  <span className="font-medium">Ejemplo:</span> {ex.example}
-                                </div>
-                              )}
-                            </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`text-sm px-2 py-1 rounded ${isCurrent ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}
+                          >
+                            #{idx + 1}
+                          </span>
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">
+                              {ex.form?.title || ex.name}
+                            </p>
+                            {ex.description && (
+                              <p className="text-xs text-muted-foreground">
+                                {ex.description}
+                              </p>
+                            )}
+                            {ex.indication && (
+                              <div className="text-xs rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-900">
+                                <span className="font-medium">
+                                  Indicaciones:
+                                </span>{" "}
+                                {ex.indication}
+                              </div>
+                            )}
+                            {ex.example && (
+                              <div className="text-xs rounded-md border border-emerald-200 bg-emerald-50 p-2 text-emerald-900">
+                                <span className="font-medium">Ejemplo:</span>{" "}
+                                {ex.example}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                          <div className="flex items-center gap-4">
-                            <Badge variant="outline">{qCount} pregunta{qCount !== 1 ? 's' : ''}</Badge>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Clock className="h-4 w-4" />
-                              {estimatedMinutes > 0 ? `${estimatedMinutes} min` : '—'}
-                            </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant="outline">
+                            {qCount} pregunta{qCount !== 1 ? "s" : ""}
+                          </Badge>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            {estimatedMinutes > 0
+                              ? `${estimatedMinutes} min`
+                              : "—"}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1330,11 +1569,15 @@ export function ExamView({ contentId }: ActivityViewProps) {
           </div>
 
           <div className="flex justify-center">
-             <Button onClick={startActivity} size="lg" className="flex items-center gap-2">
-               <BookOpen className="h-4 w-4" />
-               Comenzar Ejercicio
-             </Button>
-           </div>
+            <Button
+              onClick={startActivity}
+              size="lg"
+              className="flex items-center gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              Comenzar Ejercicio
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -1353,76 +1596,95 @@ export function ExamView({ contentId }: ActivityViewProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Solo mostrar preguntas de la actividad actual completada */}
-            {(exercises[currentActivityIndex]?.form?.questions || []).map((question, index) => {
-              const result = getQuestionResult(question);
-              return (
-                <Card key={question.id} className={`border-l-4 ${
-                  !result.wasAnswered ? 'border-l-gray-400' :
-                  result.isCorrect ? 'border-l-green-500' : 'border-l-red-500'
-                }`}>
-                  <CardContent className="pt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0">
-                          {!result.wasAnswered ? (
-                            <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center">
-                              <span className="text-white text-sm font-bold">?</span>
-                            </div>
-                          ) : result.isCorrect ? (
-                            <CheckCircle className="w-6 h-6 text-green-500" />
-                          ) : (
-                            <XCircle className="w-6 h-6 text-red-500" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-2">
-                            Pregunta {index + 1}: {question.questionText}
-                          </h4>
-                          
-                          {!result.wasAnswered ? (
-                            <p className="text-gray-600 text-sm mb-2">
-                              <strong>No respondida</strong>
-                            </p>
-                          ) : (
+            {(exercises[currentActivityIndex]?.form?.questions || []).map(
+              (question, index) => {
+                const result = getQuestionResult(question);
+                return (
+                  <Card
+                    key={question.id}
+                    className={`border-l-4 ${
+                      !result.wasAnswered
+                        ? "border-l-gray-400"
+                        : result.isCorrect
+                          ? "border-l-green-500"
+                          : "border-l-red-500"
+                    }`}
+                  >
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            {!result.wasAnswered ? (
+                              <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center">
+                                <span className="text-white text-sm font-bold">
+                                  ?
+                                </span>
+                              </div>
+                            ) : result.isCorrect ? (
+                              <CheckCircle className="w-6 h-6 text-green-500" />
+                            ) : (
+                              <XCircle className="w-6 h-6 text-red-500" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold mb-2">
+                              Pregunta {index + 1}: {question.questionText}
+                            </h4>
+
+                            {!result.wasAnswered ? (
+                              <p className="text-gray-600 text-sm mb-2">
+                                <strong>No respondida</strong>
+                              </p>
+                            ) : (
+                              <p className="text-sm mb-2">
+                                <strong>Tu respuesta:</strong>{" "}
+                                {result.textAnswer ||
+                                  (result.selectedOptions.length > 0
+                                    ? result.selectedOptions
+                                        .map((opt) => opt.optionText)
+                                        .join(", ")
+                                    : result.selectedOption?.optionText)}
+                              </p>
+                            )}
+
                             <p className="text-sm mb-2">
-                            <strong>Tu respuesta:</strong> {
-                              result.textAnswer || 
-                              (result.selectedOptions.length > 0 ? 
-                                result.selectedOptions.map(opt => opt.optionText).join(', ') : 
-                                result.selectedOption?.optionText)
-                            }
-                          </p>
-                          )}
-                          
-                          <p className="text-sm mb-2">
-                            <strong>Respuesta correcta:</strong> {
-                              question.correctAnswer || 
-                              (result.correctOptions.length > 0 ? 
-                                result.correctOptions.map(opt => opt.optionText).join(', ') : 
-                                'No definida')
-                            }
-                          </p>
-                          
-                          {result.isCorrect ? (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <p className="text-green-800 text-sm">
-                                <strong>¡Correcto!</strong> {(result as any).backendFeedback || question.explanation || 'Excelente trabajo.'}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                              <p className="text-red-800 text-sm">
-                                <strong>Incorrecto.</strong> {(result as any).backendFeedback || question.incorrectFeedback || question.explanation || 'Revisa el material de estudio para esta pregunta.'}
-                              </p>
-                            </div>
-                          )}
+                              <strong>Respuesta correcta:</strong>{" "}
+                              {question.correctAnswer ||
+                                (result.correctOptions.length > 0
+                                  ? result.correctOptions
+                                      .map((opt) => opt.optionText)
+                                      .join(", ")
+                                  : "No definida")}
+                            </p>
+
+                            {result.isCorrect ? (
+                              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-green-800 text-sm">
+                                  <strong>¡Correcto!</strong>{" "}
+                                  {(result as any).backendFeedback ||
+                                    question.explanation ||
+                                    "Excelente trabajo."}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-red-800 text-sm">
+                                  <strong>Incorrecto.</strong>{" "}
+                                  {(result as any).backendFeedback ||
+                                    question.incorrectFeedback ||
+                                    question.explanation ||
+                                    "Revisa el material de estudio para esta pregunta."}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    </CardContent>
+                  </Card>
+                );
+              },
+            )}
           </CardContent>
           <CardContent className="pt-0">
             <div className="flex justify-center gap-4 mt-6">
@@ -1446,451 +1708,607 @@ export function ExamView({ contentId }: ActivityViewProps) {
 
   return (
     <>
-    {/* Componentes de progreso del usuario */}
-    {user && (user.roles.includes('mortal') || user.roles.includes('alumno')) && (
-      <UserProgressSection contentId={contentId} />
-    )}
-    
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>{currentActivity?.form?.title || currentActivity?.name}</CardTitle>
-            <CardDescription>
-              Ejercicio {currentActivityIndex + 1} de {exercises.length} • Pregunta {currentQuestionIndex + 1} de {displayQuestions.length}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-mono">{formatTime(timeElapsed)}</span>
+      {/* Componentes de progreso del usuario */}
+      {user &&
+        (user.roles.includes("mortal") || user.roles.includes("alumno")) && (
+          <UserProgressSection contentId={contentId} />
+        )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>
+                {currentActivity?.form?.title || currentActivity?.name}
+              </CardTitle>
+              <CardDescription>
+                Ejercicio {currentActivityIndex + 1} de {exercises.length} •
+                Pregunta {currentQuestionIndex + 1} de {displayQuestions.length}
+              </CardDescription>
             </div>
-            <Badge variant="outline">
-              {answers.length}/{displayQuestions.length} respondidas
-            </Badge>
-          </div>
-        </div>
-        <Progress value={(currentQuestionIndex + 1) / displayQuestions.length * 100} className="mt-4" />
-        <div className="mt-4 space-y-2 text-sm">
-          {currentActivity?.description && (
-            <p className="text-muted-foreground">{currentActivity.description}</p>
-          )}
-          {currentActivity?.indication && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-900">
-              <span className="font-medium">Indicaciones:</span> {currentActivity.indication}
-            </div>
-          )}
-          {currentActivity?.example && (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
-              <span className="font-medium">Ejemplo:</span> {currentActivity.example}
-            </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {currentQuestion && (
-          <>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">
-                  {currentQuestionIndex + 1}. {currentQuestion.questionText}
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <Badge variant={currentQuestion.isRequired ? 'default' : 'outline'}>
-                    {currentQuestion.isRequired ? 'Obligatoria' : 'Opcional'}
-                  </Badge>
-                  {typeof currentQuestion.points === 'number' && currentQuestion.points > 0 && (
-                    <Badge variant="secondary">{currentQuestion.points} punto(s)</Badge>
-                  )}
-                  <Badge variant="outline">Tipo: {currentQuestion.questionType}</Badge>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-mono">
+                  {formatTime(timeElapsed)}
+                </span>
               </div>
-
-              {currentQuestion.imageUrl && (
-                <div className="rounded-lg border p-2 bg-muted/30">
-                  <img
-                    src={currentQuestion.imageUrl}
-                    alt={`Imagen de la pregunta ${currentQuestionIndex + 1}`}
-                    className="max-h-80 w-auto rounded mx-auto"
-                  />
-                </div>
-              )}
-              
-              {/* Instrucciones individuales de la pregunta */}
-              {currentQuestion.description && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Instrucciones:</strong> {currentQuestion.description}
-                  </p>
-                </div>
-              )}
-              
-              {/* Reproductor de audio */}
-              {currentQuestion.audioUrl && (
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Volume2 className="h-4 w-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Audio de la pregunta:</span>
-                  </div>
-                  <audio 
-                    controls 
-                    className="w-full" 
-                    preload="metadata"
-                  >
-                    <source src={currentQuestion.audioUrl} type="audio/mpeg" />
-                    <source src={currentQuestion.audioUrl} type="audio/wav" />
-                    <source src={currentQuestion.audioUrl} type="audio/ogg" />
-                    Tu navegador no soporta el elemento de audio.
-                  </audio>
-                </div>
-              )}
-              
-              {/* Renderizado condicional según el tipo de pregunta */}
-              {(currentQuestion.questionType === 'TEXT' || currentQuestion.questionType === 'OPEN_TEXT' || currentQuestion.questionType === 'open_text') && (
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder={currentQuestion.placeholder || 'Ingresa tu respuesta...'}
-                    value={getTextAnswer(currentQuestion.id)}
-                    onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
-                    maxLength={currentQuestion.maxLength || 1000}
-                    rows={6}
-                    disabled={examSubmitted}
-                    className="w-full resize-none"
-                  />
-                  <div className="text-xs text-muted-foreground text-right">
-                    {getTextAnswer(currentQuestion.id).length}/{currentQuestion.maxLength || 1000} caracteres
-                  </div>
-                </div>
-              )}
-              
-              {currentQuestion.questionType === 'TEXTAREA' && (
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder={currentQuestion.placeholder || 'Ingresa tu respuesta...'}
-                    value={getTextAnswer(currentQuestion.id)}
-                    onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
-                    maxLength={currentQuestion.maxLength || 500}
-                    rows={4}
-                    disabled={examSubmitted}
-                    className="w-full"
-                  />
-                </div>
-              )}
-
-              {(typeof currentQuestion.minValue === 'number' || typeof currentQuestion.maxValue === 'number' || currentQuestion.minLabel || currentQuestion.maxLabel) && (
-                <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                  <div className="flex flex-wrap gap-3">
-                    {typeof currentQuestion.minValue === 'number' && <span>Mínimo: {currentQuestion.minValue}</span>}
-                    {typeof currentQuestion.maxValue === 'number' && <span>Máximo: {currentQuestion.maxValue}</span>}
-                    {currentQuestion.minLabel && <span>Etiqueta mínima: {currentQuestion.minLabel}</span>}
-                    {currentQuestion.maxLabel && <span>Etiqueta máxima: {currentQuestion.maxLabel}</span>}
-                  </div>
-                </div>
-              )}
-              
-              {/* Sopa de letras */}
-              {currentQuestion.questionType === 'WORD_SEARCH' && (
-                <div className="space-y-4">
-                  {(() => {
-                    try {
-                      const wordSearchData = currentQuestion.correctAnswer ? JSON.parse(currentQuestion.correctAnswer) : {};
-                      
-                      // Si tiene pares pregunta-respuesta, usar el nuevo componente
-                      if (wordSearchData.questionAnswerPairs) {
-                        const sentences = wordSearchData.questionAnswerPairs.map((pair: any) => pair.question).filter((q: string) => q.trim() !== '');
-                        const phrases = wordSearchData.questionAnswerPairs.map((pair: any) => pair.answer).filter((a: string) => a.trim() !== '');
-                        return (
-                          <SentencePhraseWordSearch
-                            sentences={sentences}
-                            phrases={phrases}
-                            gridSize={wordSearchData.gridSize || 12}
-                            onPhrasesFound={(foundPhrases) => {
-                              handleTextAnswerChange(currentQuestion.id, foundPhrases.join(', '));
-                              if (foundPhrases.length > 0) {
-                                toast.success(`¡Encontraste ${foundPhrases.length} palabra(s)!`);
-                              }
-                            }}
-                            disabled={examSubmitted}
-                          />
-                        );
-                      }
-                      
-                      // Si tiene oraciones y frases (formato anterior), usar el nuevo componente
-                      if (wordSearchData.sentences && wordSearchData.phrases) {
-                        return (
-                          <SentencePhraseWordSearch
-                            sentences={wordSearchData.sentences || []}
-                            phrases={wordSearchData.phrases || []}
-                            gridSize={wordSearchData.gridSize || 12}
-                            onPhrasesFound={(foundPhrases) => {
-                              handleTextAnswerChange(currentQuestion.id, foundPhrases.join(', '));
-                              if (foundPhrases.length > 0) {
-                                toast.success(`¡Encontraste ${foundPhrases.length} palabra(s)!`);
-                              }
-                            }}
-                            disabled={examSubmitted}
-                          />
-                        );
-                      }
-                      
-                      // Si tiene targetWord, usar el componente interactivo
-                      if (wordSearchData.targetWord) {
-                        return (
-                           <InteractiveWordSearchGame
-                             targetWord={wordSearchData.targetWord}
-                             onWordFound={(found) => {
-                               if (found) {
-                                 handleTextAnswerChange(currentQuestion.id, wordSearchData.targetWord);
-                                 toast.success(`¡Encontraste la palabra: ${wordSearchData.targetWord}!`);
-                               } else {
-                                 toast.error('Palabra incorrecta');
-                               }
-                             }}
-                             disabled={examSubmitted}
-                           />
-                         );
-                      } else {
-                        // Si no tiene targetWord, usar el componente básico
-                        // Extraer las palabras correctamente del objeto JSON
-                        const wordsArray = Array.isArray(wordSearchData.words) 
-                          ? wordSearchData.words 
-                          : (wordSearchData.words ? [wordSearchData.words] : []);
-                        
-                        return (
-                          <WordSearchGame
-                            words={wordsArray}
-                            gridSize={wordSearchData.gridSize || 15}
-                            onWordsFound={(foundWords) => {
-                              handleTextAnswerChange(currentQuestion.id, foundWords.join(', '));
-                            }}
-                            disabled={examSubmitted}
-                          />
-                        );
-                      }
-                    } catch (error) {
-                       console.error('Error parsing WORD_SEARCH data:', error);
-                       return (
-                         <div className="text-red-500 p-4 border border-red-200 rounded">
-                           Error al cargar la sopa de letras
-                         </div>
-                       );
-                     }
-                   })()}
-                 </div>
-               )}
-               
-
-              
-              {/* Preguntas de selección múltiple */}
-              {(currentQuestion.questionType === 'multiple_choice' || currentQuestion.questionType === 'MULTIPLE_CHOICE' || currentQuestion.questionType === 'CHECKBOX') && (
-                <div className="space-y-3">
-                  {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
-                    return (
-                      <div key={option.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                        <Checkbox
-                          id={option.id}
-                          checked={isOptionSelected(currentQuestion.id, option.id)}
-                          onCheckedChange={(checked) => handleMultipleAnswerSelect(currentQuestion.id, option.id, checked as boolean)}
-                          disabled={examSubmitted}
-                        />
-                        <Label htmlFor={option.id} className="ml-2 flex-1 cursor-pointer inline-block">
-                          <span>{option.optionText}</span>
-                          {option.optionValue && (
-                            <span className="block text-xs text-muted-foreground mt-1">Valor: {option.optionValue}</span>
-                          )}
-                          <div className="mt-2 flex items-center gap-2">
-                            {option.color && (
-                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                Color
-                                <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: option.color }} />
-                              </span>
-                            )}
-                            {option.imageUrl && (
-                              <img src={option.imageUrl} alt="Imagen de opción" className="h-10 w-10 rounded object-cover border" />
-                            )}
-                          </div>
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {/* Preguntas de selección única */}
-              {(currentQuestion.questionType === 'single_choice' || (!['TEXT', 'TEXTAREA', 'OPEN_TEXT', 'multiple_choice', 'MULTIPLE_CHOICE', 'CHECKBOX', 'WORD_SEARCH'].includes(currentQuestion.questionType))) && (
-                <RadioGroup
-                  value={getSelectedAnswer(currentQuestion.id) || ""}
-                  onValueChange={(value) => handleAnswerSelect(currentQuestion.id, value)}
-                  className="space-y-3"
-                >
-                  {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
-                    return (
-                      <div key={option.id} className="p-3 border rounded-lg hover:bg-muted/50">
-                        <RadioGroupItem value={option.id} id={option.id} disabled={examSubmitted} />
-                        <Label htmlFor={option.id} className="ml-2 flex-1 cursor-pointer inline-block">
-                          <span>{option.optionText}</span>
-                          {option.optionValue && (
-                            <span className="block text-xs text-muted-foreground mt-1">Valor: {option.optionValue}</span>
-                          )}
-                          <div className="mt-2 flex items-center gap-2">
-                            {option.color && (
-                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                Color
-                                <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: option.color }} />
-                              </span>
-                            )}
-                            {option.imageUrl && (
-                              <img src={option.imageUrl} alt="Imagen de opción" className="h-10 w-10 rounded object-cover border" />
-                            )}
-                          </div>
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </RadioGroup>
-              )}
+              <Badge variant="outline">
+                {answers.length}/{displayQuestions.length} respondidas
+              </Badge>
             </div>
-
-            {/* Navegación de preguntas con paginación */}
-            {totalQuestions > 1 && (
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium">Ir a pregunta:</span>
-                  <div className="flex gap-1 flex-wrap">
-                    {(() => {
-                      const maxVisible = 10;
-                      const current = currentQuestionIndex;
-                      const total = totalQuestions;
-                      
-                      if (total <= maxVisible) {
-                        // Mostrar todas las preguntas si son pocas
-                        return Array.from({ length: total }, (_, index) => (
-                          <Button
-                            key={index}
-                            variant={index === current ? "default" : "outline"}
-                            size="sm"
-                            className="w-8 h-8 p-0"
-                            onClick={() => goToQuestion(index)}
-                          >
-                            {index + 1}
-                          </Button>
-                        ));
-                      } else {
-                        // Paginación inteligente para muchas preguntas
-                        const buttons = [];
-                        const start = Math.max(0, current - 4);
-                        const end = Math.min(total - 1, start + maxVisible - 1);
-                        
-                        // Botón primera pregunta si no está visible
-                        if (start > 0) {
-                          buttons.push(
-                            <Button
-                              key={0}
-                              variant="outline"
-                              size="sm"
-                              className="w-8 h-8 p-0"
-                              onClick={() => goToQuestion(0)}
-                            >
-                              1
-                            </Button>
-                          );
-                          if (start > 1) {
-                            buttons.push(
-                              <span key="ellipsis-start" className="text-sm text-muted-foreground px-1">...</span>
-                            );
-                          }
-                        }
-                        
-                        // Botones del rango visible
-                        for (let i = start; i <= end; i++) {
-                          buttons.push(
-                            <Button
-                              key={i}
-                              variant={i === current ? "default" : "outline"}
-                              size="sm"
-                              className="w-8 h-8 p-0"
-                              onClick={() => goToQuestion(i)}
-                            >
-                              {i + 1}
-                            </Button>
-                          );
-                        }
-                        
-                        // Botón última pregunta si no está visible
-                        if (end < total - 1) {
-                          if (end < total - 2) {
-                            buttons.push(
-                              <span key="ellipsis-end" className="text-sm text-muted-foreground px-1">...</span>
-                            );
-                          }
-                          buttons.push(
-                            <Button
-                              key={total - 1}
-                              variant="outline"
-                              size="sm"
-                              className="w-8 h-8 p-0"
-                              onClick={() => goToQuestion(total - 1)}
-                            >
-                              {total}
-                            </Button>
-                          );
-                        }
-                        
-                        return buttons;
-                      }
-                    })()
-                    }
-                  </div>
-                </div>
+          </div>
+          <Progress
+            value={((currentQuestionIndex + 1) / displayQuestions.length) * 100}
+            className="mt-4"
+          />
+          <div className="mt-4 space-y-2 text-sm">
+            {currentActivity?.description && (
+              <p className="text-muted-foreground">
+                {currentActivity.description}
+              </p>
+            )}
+            {currentActivity?.indication && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-900">
+                <span className="font-medium">Indicaciones:</span>{" "}
+                {currentActivity.indication}
               </div>
             )}
-
-            <div className="flex items-center justify-between pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={handlePreviousQuestion}
-                disabled={currentQuestionIndex === 0 || examSubmitted}
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Anterior
-              </Button>
-              
-              <div className="text-sm text-muted-foreground">
-                {currentQuestionIndex + 1} / {displayQuestions.length}
+            {currentActivity?.example && (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+                <span className="font-medium">Ejemplo:</span>{" "}
+                {currentActivity.example}
               </div>
-              
-              {currentQuestionIndex === displayQuestions.length - 1 ? (
-                !examSubmitted ? (
-                  <Button onClick={handleSubmitExam} disabled={submitLoading}>
-                    {submitLoading ? 'Enviando...' : 'Completar Ejercicio'}
-                  </Button>
-                ) : (
-                  <div className="text-green-600 font-medium">
-                    ✅ Ejercicio Completado
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {currentQuestion && (
+            <>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">
+                    {currentQuestionIndex + 1}. {currentQuestion.questionText}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <Badge
+                      variant={
+                        currentQuestion.isRequired ? "default" : "outline"
+                      }
+                    >
+                      {currentQuestion.isRequired ? "Obligatoria" : "Opcional"}
+                    </Badge>
+                    {typeof currentQuestion.points === "number" &&
+                      currentQuestion.points > 0 && (
+                        <Badge variant="secondary">
+                          {currentQuestion.points} punto(s)
+                        </Badge>
+                      )}
+                    <Badge variant="outline">
+                      Tipo: {currentQuestion.questionType}
+                    </Badge>
                   </div>
-                )
-              ) : (
-                <Button onClick={handleNextQuestion} disabled={examSubmitted}>
-                  Siguiente
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
-              )}
-            </div>
+                </div>
 
-          </>
-        )}
-      </CardContent>
-    </Card>
-    
-    <ValidationErrorDialog
-      open={validationDialog.open}
-      onOpenChange={(open) => setValidationDialog(prev => ({ ...prev, open }))}
-      title={validationDialog.title}
-      message={validationDialog.message}
-      onConfirm={validationDialog.onConfirm}
-      confirmText={validationDialog.confirmText}
-      showCancel={validationDialog.showCancel}
-    />
-     </>
+                {currentQuestion.imageUrl && (
+                  <div className="rounded-lg border p-2 bg-muted/30">
+                    <img
+                      src={currentQuestion.imageUrl}
+                      alt={`Imagen de la pregunta ${currentQuestionIndex + 1}`}
+                      className="max-h-80 w-auto rounded mx-auto"
+                    />
+                  </div>
+                )}
+
+                {/* Instrucciones individuales de la pregunta */}
+                {currentQuestion.description && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Instrucciones:</strong>{" "}
+                      {currentQuestion.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Reproductor de audio */}
+                {currentQuestion.audioUrl && (
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Volume2 className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Audio de la pregunta:
+                      </span>
+                    </div>
+                    <audio controls className="w-full" preload="metadata">
+                      <source
+                        src={currentQuestion.audioUrl}
+                        type="audio/mpeg"
+                      />
+                      <source src={currentQuestion.audioUrl} type="audio/wav" />
+                      <source src={currentQuestion.audioUrl} type="audio/ogg" />
+                      Tu navegador no soporta el elemento de audio.
+                    </audio>
+                  </div>
+                )}
+
+                {/* Renderizado condicional según el tipo de pregunta */}
+                {(currentQuestion.questionType === "TEXT" ||
+                  currentQuestion.questionType === "OPEN_TEXT" ||
+                  currentQuestion.questionType === "open_text") && (
+                  <div className="space-y-2">
+                    <Textarea
+                      placeholder={
+                        currentQuestion.placeholder || "Ingresa tu respuesta..."
+                      }
+                      value={getTextAnswer(currentQuestion.id)}
+                      onChange={(e) =>
+                        handleTextAnswerChange(
+                          currentQuestion.id,
+                          e.target.value,
+                        )
+                      }
+                      maxLength={currentQuestion.maxLength || 1000}
+                      rows={6}
+                      disabled={examSubmitted}
+                      className="w-full resize-none"
+                    />
+                    <div className="text-xs text-muted-foreground text-right">
+                      {getTextAnswer(currentQuestion.id).length}/
+                      {currentQuestion.maxLength || 1000} caracteres
+                    </div>
+                  </div>
+                )}
+
+                {currentQuestion.questionType === "TEXTAREA" && (
+                  <div className="space-y-2">
+                    <Textarea
+                      placeholder={
+                        currentQuestion.placeholder || "Ingresa tu respuesta..."
+                      }
+                      value={getTextAnswer(currentQuestion.id)}
+                      onChange={(e) =>
+                        handleTextAnswerChange(
+                          currentQuestion.id,
+                          e.target.value,
+                        )
+                      }
+                      maxLength={currentQuestion.maxLength || 500}
+                      rows={4}
+                      disabled={examSubmitted}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
+                {(typeof currentQuestion.minValue === "number" ||
+                  typeof currentQuestion.maxValue === "number" ||
+                  currentQuestion.minLabel ||
+                  currentQuestion.maxLabel) && (
+                  <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap gap-3">
+                      {typeof currentQuestion.minValue === "number" && (
+                        <span>Mínimo: {currentQuestion.minValue}</span>
+                      )}
+                      {typeof currentQuestion.maxValue === "number" && (
+                        <span>Máximo: {currentQuestion.maxValue}</span>
+                      )}
+                      {currentQuestion.minLabel && (
+                        <span>Etiqueta mínima: {currentQuestion.minLabel}</span>
+                      )}
+                      {currentQuestion.maxLabel && (
+                        <span>Etiqueta máxima: {currentQuestion.maxLabel}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sopa de letras */}
+                {currentQuestion.questionType === "WORD_SEARCH" && (
+                  <div className="space-y-4">
+                    {(() => {
+                      try {
+                        const wordSearchData = currentQuestion.correctAnswer
+                          ? JSON.parse(currentQuestion.correctAnswer)
+                          : {};
+
+                        // Si tiene pares pregunta-respuesta, usar el nuevo componente
+                        if (wordSearchData.questionAnswerPairs) {
+                          const sentences = wordSearchData.questionAnswerPairs
+                            .map((pair: any) => pair.question)
+                            .filter((q: string) => q.trim() !== "");
+                          const phrases = wordSearchData.questionAnswerPairs
+                            .map((pair: any) => pair.answer)
+                            .filter((a: string) => a.trim() !== "");
+                          return (
+                            <SentencePhraseWordSearch
+                              sentences={sentences}
+                              phrases={phrases}
+                              gridSize={wordSearchData.gridSize || 12}
+                              onPhrasesFound={(foundPhrases) => {
+                                handleTextAnswerChange(
+                                  currentQuestion.id,
+                                  foundPhrases.join(", "),
+                                );
+                                if (foundPhrases.length > 0) {
+                                  toast.success(
+                                    `¡Encontraste ${foundPhrases.length} palabra(s)!`,
+                                  );
+                                }
+                              }}
+                              disabled={examSubmitted}
+                            />
+                          );
+                        }
+
+                        // Si tiene oraciones y frases (formato anterior), usar el nuevo componente
+                        if (
+                          wordSearchData.sentences &&
+                          wordSearchData.phrases
+                        ) {
+                          return (
+                            <SentencePhraseWordSearch
+                              sentences={wordSearchData.sentences || []}
+                              phrases={wordSearchData.phrases || []}
+                              gridSize={wordSearchData.gridSize || 12}
+                              onPhrasesFound={(foundPhrases) => {
+                                handleTextAnswerChange(
+                                  currentQuestion.id,
+                                  foundPhrases.join(", "),
+                                );
+                                if (foundPhrases.length > 0) {
+                                  toast.success(
+                                    `¡Encontraste ${foundPhrases.length} palabra(s)!`,
+                                  );
+                                }
+                              }}
+                              disabled={examSubmitted}
+                            />
+                          );
+                        }
+
+                        // Si tiene targetWord, usar el componente interactivo
+                        if (wordSearchData.targetWord) {
+                          return (
+                            <InteractiveWordSearchGame
+                              targetWord={wordSearchData.targetWord}
+                              onWordFound={(found) => {
+                                if (found) {
+                                  handleTextAnswerChange(
+                                    currentQuestion.id,
+                                    wordSearchData.targetWord,
+                                  );
+                                  toast.success(
+                                    `¡Encontraste la palabra: ${wordSearchData.targetWord}!`,
+                                  );
+                                } else {
+                                  toast.error("Palabra incorrecta");
+                                }
+                              }}
+                              disabled={examSubmitted}
+                            />
+                          );
+                        } else {
+                          // Si no tiene targetWord, usar el componente básico
+                          // Extraer las palabras correctamente del objeto JSON
+                          const wordsArray = Array.isArray(wordSearchData.words)
+                            ? wordSearchData.words
+                            : wordSearchData.words
+                              ? [wordSearchData.words]
+                              : [];
+
+                          return (
+                            <WordSearchGame
+                              words={wordsArray}
+                              gridSize={wordSearchData.gridSize || 15}
+                              onWordsFound={(foundWords) => {
+                                handleTextAnswerChange(
+                                  currentQuestion.id,
+                                  foundWords.join(", "),
+                                );
+                              }}
+                              disabled={examSubmitted}
+                            />
+                          );
+                        }
+                      } catch (error) {
+                        console.error("Error parsing WORD_SEARCH data:", error);
+                        return (
+                          <div className="text-red-500 p-4 border border-red-200 rounded">
+                            Error al cargar la sopa de letras
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                )}
+
+                {/* Preguntas de selección múltiple */}
+                {(currentQuestion.questionType === "multiple_choice" ||
+                  currentQuestion.questionType === "MULTIPLE_CHOICE" ||
+                  currentQuestion.questionType === "CHECKBOX") && (
+                  <div className="space-y-3">
+                    {(
+                      shuffledOptions[currentQuestion.id] ||
+                      currentQuestion.options
+                    ).map((option) => {
+                      return (
+                        <div
+                          key={option.id}
+                          className="p-3 border rounded-lg hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            id={option.id}
+                            checked={isOptionSelected(
+                              currentQuestion.id,
+                              option.id,
+                            )}
+                            onCheckedChange={(checked) =>
+                              handleMultipleAnswerSelect(
+                                currentQuestion.id,
+                                option.id,
+                                checked as boolean,
+                              )
+                            }
+                            disabled={examSubmitted}
+                          />
+                          <Label
+                            htmlFor={option.id}
+                            className="ml-2 flex-1 cursor-pointer inline-block"
+                          >
+                            <span>{option.optionText}</span>
+                            {option.optionValue && (
+                              <span className="block text-xs text-muted-foreground mt-1">
+                                Valor: {option.optionValue}
+                              </span>
+                            )}
+                            <div className="mt-2 flex items-center gap-2">
+                              {option.color && (
+                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                  Color
+                                  <span
+                                    className="h-3 w-3 rounded-full border"
+                                    style={{ backgroundColor: option.color }}
+                                  />
+                                </span>
+                              )}
+                              {option.imageUrl && (
+                                <img
+                                  src={option.imageUrl}
+                                  alt="Imagen de opción"
+                                  className="h-10 w-10 rounded object-cover border"
+                                />
+                              )}
+                            </div>
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Preguntas de selección única */}
+                {(currentQuestion.questionType === "single_choice" ||
+                  ![
+                    "TEXT",
+                    "TEXTAREA",
+                    "OPEN_TEXT",
+                    "multiple_choice",
+                    "MULTIPLE_CHOICE",
+                    "CHECKBOX",
+                    "WORD_SEARCH",
+                  ].includes(currentQuestion.questionType)) && (
+                  <RadioGroup
+                    value={getSelectedAnswer(currentQuestion.id) || ""}
+                    onValueChange={(value) =>
+                      handleAnswerSelect(currentQuestion.id, value)
+                    }
+                    className="space-y-3"
+                  >
+                    {(
+                      shuffledOptions[currentQuestion.id] ||
+                      currentQuestion.options
+                    ).map((option) => {
+                      return (
+                        <div
+                          key={option.id}
+                          className="p-3 border rounded-lg hover:bg-muted/50"
+                        >
+                          <RadioGroupItem
+                            value={option.id}
+                            id={option.id}
+                            disabled={examSubmitted}
+                          />
+                          <Label
+                            htmlFor={option.id}
+                            className="ml-2 flex-1 cursor-pointer inline-block"
+                          >
+                            <span>{option.optionText}</span>
+                            {option.optionValue && (
+                              <span className="block text-xs text-muted-foreground mt-1">
+                                Valor: {option.optionValue}
+                              </span>
+                            )}
+                            <div className="mt-2 flex items-center gap-2">
+                              {option.color && (
+                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                  Color
+                                  <span
+                                    className="h-3 w-3 rounded-full border"
+                                    style={{ backgroundColor: option.color }}
+                                  />
+                                </span>
+                              )}
+                              {option.imageUrl && (
+                                <img
+                                  src={option.imageUrl}
+                                  alt="Imagen de opción"
+                                  className="h-10 w-10 rounded object-cover border"
+                                />
+                              )}
+                            </div>
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </RadioGroup>
+                )}
+              </div>
+
+              {/* Navegación de preguntas con paginación */}
+              {totalQuestions > 1 && (
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium">Ir a pregunta:</span>
+                    <div className="flex gap-1 flex-wrap">
+                      {(() => {
+                        const maxVisible = 10;
+                        const current = currentQuestionIndex;
+                        const total = totalQuestions;
+
+                        if (total <= maxVisible) {
+                          // Mostrar todas las preguntas si son pocas
+                          return Array.from({ length: total }, (_, index) => (
+                            <Button
+                              key={index}
+                              variant={
+                                index === current ? "default" : "outline"
+                              }
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => goToQuestion(index)}
+                            >
+                              {index + 1}
+                            </Button>
+                          ));
+                        } else {
+                          // Paginación inteligente para muchas preguntas
+                          const buttons = [];
+                          const start = Math.max(0, current - 4);
+                          const end = Math.min(
+                            total - 1,
+                            start + maxVisible - 1,
+                          );
+
+                          // Botón primera pregunta si no está visible
+                          if (start > 0) {
+                            buttons.push(
+                              <Button
+                                key={0}
+                                variant="outline"
+                                size="sm"
+                                className="w-8 h-8 p-0"
+                                onClick={() => goToQuestion(0)}
+                              >
+                                1
+                              </Button>,
+                            );
+                            if (start > 1) {
+                              buttons.push(
+                                <span
+                                  key="ellipsis-start"
+                                  className="text-sm text-muted-foreground px-1"
+                                >
+                                  ...
+                                </span>,
+                              );
+                            }
+                          }
+
+                          // Botones del rango visible
+                          for (let i = start; i <= end; i++) {
+                            buttons.push(
+                              <Button
+                                key={i}
+                                variant={i === current ? "default" : "outline"}
+                                size="sm"
+                                className="w-8 h-8 p-0"
+                                onClick={() => goToQuestion(i)}
+                              >
+                                {i + 1}
+                              </Button>,
+                            );
+                          }
+
+                          // Botón última pregunta si no está visible
+                          if (end < total - 1) {
+                            if (end < total - 2) {
+                              buttons.push(
+                                <span
+                                  key="ellipsis-end"
+                                  className="text-sm text-muted-foreground px-1"
+                                >
+                                  ...
+                                </span>,
+                              );
+                            }
+                            buttons.push(
+                              <Button
+                                key={total - 1}
+                                variant="outline"
+                                size="sm"
+                                className="w-8 h-8 p-0"
+                                onClick={() => goToQuestion(total - 1)}
+                              >
+                                {total}
+                              </Button>,
+                            );
+                          }
+
+                          return buttons;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={handlePreviousQuestion}
+                  disabled={currentQuestionIndex === 0 || examSubmitted}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Anterior
+                </Button>
+
+                <div className="text-sm text-muted-foreground">
+                  {currentQuestionIndex + 1} / {displayQuestions.length}
+                </div>
+
+                {currentQuestionIndex === displayQuestions.length - 1 ? (
+                  !examSubmitted ? (
+                    <Button onClick={handleSubmitExam} disabled={submitLoading}>
+                      {submitLoading ? "Enviando..." : "Completar Ejercicio"}
+                    </Button>
+                  ) : (
+                    <div className="text-green-600 font-medium">
+                      ✅ Ejercicio Completado
+                    </div>
+                  )
+                ) : (
+                  <Button onClick={handleNextQuestion} disabled={examSubmitted}>
+                    Siguiente
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <ValidationErrorDialog
+        open={validationDialog.open}
+        onOpenChange={(open) =>
+          setValidationDialog((prev) => ({ ...prev, open }))
+        }
+        title={validationDialog.title}
+        message={validationDialog.message}
+        onConfirm={validationDialog.onConfirm}
+        confirmText={validationDialog.confirmText}
+        showCancel={validationDialog.showCancel}
+      />
+    </>
   );
 }

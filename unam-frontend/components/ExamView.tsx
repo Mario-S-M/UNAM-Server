@@ -29,6 +29,8 @@ interface ActivityOption {
   optionText: string;
   optionValue?: string;
   orderIndex: number;
+  imageUrl?: string;
+  color?: string;
   isCorrect: boolean;
 }
 
@@ -44,13 +46,25 @@ interface ActivityQuestion {
   points?: number;
   maxLength?: number;
   description?: string;
+  placeholder?: string;
+  imageUrl?: string;
   audioUrl?: string;
+  minValue?: number;
+  maxValue?: number;
+  minLabel?: string;
+  maxLabel?: string;
+  allowMultiline?: boolean;
   options: ActivityOption[];
 }
 
 interface ActivityForm {
   id: string;
   title: string;
+  description?: string;
+  status?: string;
+  allowAnonymous?: boolean;
+  allowMultipleResponses?: boolean;
+  successMessage?: string;
   questions: ActivityQuestion[];
 }
 
@@ -61,6 +75,7 @@ interface ActivityExercise {
   indication: string;
   example: string;
   contentId: string;
+  estimatedTime?: number;
   form?: ActivityForm;
   createdAt: string;
   updatedAt: string;
@@ -88,15 +103,29 @@ const GET_EXERCISES_BY_CONTENT = gql`
       indication
       example
       contentId
+      estimatedTime
       form {
         id
         title
+        description
+        status
+        allowAnonymous
+        allowMultipleResponses
+        successMessage
         questions {
           id
           questionText
           questionType
           orderIndex
           isRequired
+          placeholder
+          imageUrl
+          minValue
+          maxValue
+          minLabel
+          maxLabel
+          maxLength
+          allowMultiline
           correctAnswer
           explanation
           incorrectFeedback
@@ -108,6 +137,8 @@ const GET_EXERCISES_BY_CONTENT = gql`
             optionText
             optionValue
             orderIndex
+            imageUrl
+            color
             isCorrect
           }
         }
@@ -1256,25 +1287,39 @@ export function ExamView({ contentId }: ActivityViewProps) {
               <div className="space-y-2">
                 {exercises.map((ex, idx) => {
                   const qCount = ex.form?.questions?.length || 0;
-                  const estimatedMinutes = qCount > 0 ? qCount : 0; // ~1 min por pregunta
+                    const estimatedMinutes = ex.estimatedTime || (qCount > 0 ? qCount : 0); // ~1 min por pregunta
                   const isCurrent = idx === currentActivityIndex;
                   return (
                     <div
                       key={ex.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${isCurrent ? 'bg-blue-50 border-blue-200' : 'bg-card/40'} `}
+                        className={`p-3 rounded-lg border ${isCurrent ? 'bg-blue-50 border-blue-200' : 'bg-card/40'} `}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={`text-sm px-2 py-1 rounded ${isCurrent ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>#{idx + 1}</span>
-                        <div>
-                          <p className="text-sm font-medium">{ex.form?.title || ex.name}</p>
-                          <p className="text-xs text-muted-foreground">{ex.description}</p>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3">
+                            <span className={`text-sm px-2 py-1 rounded ${isCurrent ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>#{idx + 1}</span>
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">{ex.form?.title || ex.name}</p>
+                              {ex.description && (
+                                <p className="text-xs text-muted-foreground">{ex.description}</p>
+                              )}
+                              {ex.indication && (
+                                <div className="text-xs rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-900">
+                                  <span className="font-medium">Indicaciones:</span> {ex.indication}
+                                </div>
+                              )}
+                              {ex.example && (
+                                <div className="text-xs rounded-md border border-emerald-200 bg-emerald-50 p-2 text-emerald-900">
+                                  <span className="font-medium">Ejemplo:</span> {ex.example}
+                                </div>
+                              )}
+                            </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <Badge variant="outline">{qCount} pregunta{qCount !== 1 ? 's' : ''}</Badge>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Clock className="h-4 w-4" />
-                          {estimatedMinutes > 0 ? `${estimatedMinutes} min` : '—'}
+                          <div className="flex items-center gap-4">
+                            <Badge variant="outline">{qCount} pregunta{qCount !== 1 ? 's' : ''}</Badge>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Clock className="h-4 w-4" />
+                              {estimatedMinutes > 0 ? `${estimatedMinutes} min` : '—'}
+                            </div>
                         </div>
                       </div>
                     </div>
@@ -1426,14 +1471,50 @@ export function ExamView({ contentId }: ActivityViewProps) {
           </div>
         </div>
         <Progress value={(currentQuestionIndex + 1) / displayQuestions.length * 100} className="mt-4" />
+        <div className="mt-4 space-y-2 text-sm">
+          {currentActivity?.description && (
+            <p className="text-muted-foreground">{currentActivity.description}</p>
+          )}
+          {currentActivity?.indication && (
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-blue-900">
+              <span className="font-medium">Indicaciones:</span> {currentActivity.indication}
+            </div>
+          )}
+          {currentActivity?.example && (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
+              <span className="font-medium">Ejemplo:</span> {currentActivity.example}
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {currentQuestion && (
           <>
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                {currentQuestionIndex + 1}. {currentQuestion.questionText}
-              </h3>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">
+                  {currentQuestionIndex + 1}. {currentQuestion.questionText}
+                </h3>
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <Badge variant={currentQuestion.isRequired ? 'default' : 'outline'}>
+                    {currentQuestion.isRequired ? 'Obligatoria' : 'Opcional'}
+                  </Badge>
+                  {typeof currentQuestion.points === 'number' && currentQuestion.points > 0 && (
+                    <Badge variant="secondary">{currentQuestion.points} punto(s)</Badge>
+                  )}
+                  <Badge variant="outline">Tipo: {currentQuestion.questionType}</Badge>
+                </div>
+              </div>
+
+              {currentQuestion.imageUrl && (
+                <div className="rounded-lg border p-2 bg-muted/30">
+                  <img
+                    src={currentQuestion.imageUrl}
+                    alt={`Imagen de la pregunta ${currentQuestionIndex + 1}`}
+                    className="max-h-80 w-auto rounded mx-auto"
+                  />
+                </div>
+              )}
               
               {/* Instrucciones individuales de la pregunta */}
               {currentQuestion.description && (
@@ -1468,7 +1549,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
               {(currentQuestion.questionType === 'TEXT' || currentQuestion.questionType === 'OPEN_TEXT' || currentQuestion.questionType === 'open_text') && (
                 <div className="space-y-2">
                   <Textarea
-                    placeholder="Ingresa tu respuesta..."
+                    placeholder={currentQuestion.placeholder || 'Ingresa tu respuesta...'}
                     value={getTextAnswer(currentQuestion.id)}
                     onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
                     maxLength={currentQuestion.maxLength || 1000}
@@ -1485,7 +1566,7 @@ export function ExamView({ contentId }: ActivityViewProps) {
               {currentQuestion.questionType === 'TEXTAREA' && (
                 <div className="space-y-2">
                   <Textarea
-                    placeholder="Ingresa tu respuesta..."
+                    placeholder={currentQuestion.placeholder || 'Ingresa tu respuesta...'}
                     value={getTextAnswer(currentQuestion.id)}
                     onChange={(e) => handleTextAnswerChange(currentQuestion.id, e.target.value)}
                     maxLength={currentQuestion.maxLength || 500}
@@ -1493,6 +1574,17 @@ export function ExamView({ contentId }: ActivityViewProps) {
                     disabled={examSubmitted}
                     className="w-full"
                   />
+                </div>
+              )}
+
+              {(typeof currentQuestion.minValue === 'number' || typeof currentQuestion.maxValue === 'number' || currentQuestion.minLabel || currentQuestion.maxLabel) && (
+                <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap gap-3">
+                    {typeof currentQuestion.minValue === 'number' && <span>Mínimo: {currentQuestion.minValue}</span>}
+                    {typeof currentQuestion.maxValue === 'number' && <span>Máximo: {currentQuestion.maxValue}</span>}
+                    {currentQuestion.minLabel && <span>Etiqueta mínima: {currentQuestion.minLabel}</span>}
+                    {currentQuestion.maxLabel && <span>Etiqueta máxima: {currentQuestion.maxLabel}</span>}
+                  </div>
                 </div>
               )}
               
@@ -1594,15 +1686,29 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 <div className="space-y-3">
                   {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
                     return (
-                      <div key={option.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                      <div key={option.id} className="p-3 border rounded-lg hover:bg-muted/50">
                         <Checkbox
                           id={option.id}
                           checked={isOptionSelected(currentQuestion.id, option.id)}
                           onCheckedChange={(checked) => handleMultipleAnswerSelect(currentQuestion.id, option.id, checked as boolean)}
                           disabled={examSubmitted}
                         />
-                        <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                          {option.optionText}
+                        <Label htmlFor={option.id} className="ml-2 flex-1 cursor-pointer inline-block">
+                          <span>{option.optionText}</span>
+                          {option.optionValue && (
+                            <span className="block text-xs text-muted-foreground mt-1">Valor: {option.optionValue}</span>
+                          )}
+                          <div className="mt-2 flex items-center gap-2">
+                            {option.color && (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                Color
+                                <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: option.color }} />
+                              </span>
+                            )}
+                            {option.imageUrl && (
+                              <img src={option.imageUrl} alt="Imagen de opción" className="h-10 w-10 rounded object-cover border" />
+                            )}
+                          </div>
                         </Label>
                       </div>
                     );
@@ -1619,10 +1725,24 @@ export function ExamView({ contentId }: ActivityViewProps) {
                 >
                   {(shuffledOptions[currentQuestion.id] || currentQuestion.options).map((option) => {
                     return (
-                      <div key={option.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                      <div key={option.id} className="p-3 border rounded-lg hover:bg-muted/50">
                         <RadioGroupItem value={option.id} id={option.id} disabled={examSubmitted} />
-                        <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                          {option.optionText}
+                        <Label htmlFor={option.id} className="ml-2 flex-1 cursor-pointer inline-block">
+                          <span>{option.optionText}</span>
+                          {option.optionValue && (
+                            <span className="block text-xs text-muted-foreground mt-1">Valor: {option.optionValue}</span>
+                          )}
+                          <div className="mt-2 flex items-center gap-2">
+                            {option.color && (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                Color
+                                <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: option.color }} />
+                              </span>
+                            )}
+                            {option.imageUrl && (
+                              <img src={option.imageUrl} alt="Imagen de opción" className="h-10 w-10 rounded object-cover border" />
+                            )}
+                          </div>
                         </Label>
                       </div>
                     );

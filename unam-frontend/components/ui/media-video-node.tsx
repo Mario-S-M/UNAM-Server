@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import LiteYouTubeEmbed from 'react-lite-youtube-embed';
-import ReactPlayer from 'react-player';
 
 import type { TResizableProps, TVideoElement } from 'platejs';
 import type { PlateElementProps } from 'platejs/react';
@@ -11,7 +10,7 @@ import { useDraggable } from '@platejs/dnd';
 import { parseTwitterUrl, parseVideoUrl } from '@platejs/media';
 import { useMediaState } from '@platejs/media/react';
 import { ResizableProvider, useResizableValue } from '@platejs/resizable';
-import { PlateElement, useEditorMounted, withHOC } from 'platejs/react';
+import { PlateElement, withHOC } from 'platejs/react';
 
 import { cn } from '@/lib/utils';
 
@@ -39,13 +38,12 @@ export const VideoElement = withHOC(
     });
     const width = useResizableValue('width');
 
-    const isEditorMounted = useEditorMounted();
-
-    const isTweet = true;
-
     const { isDragging, handleRef } = useDraggable({
       element: props.element,
     });
+
+    // Show video player for uploaded files OR any non-embed URL
+    const showVideoPlayer = isUpload || (!isYoutube && !!unsafeUrl);
 
     return (
       <PlateElement className="py-2.5" {...props}>
@@ -55,8 +53,8 @@ export const VideoElement = withHOC(
             align={align}
             options={{
               align,
-              maxWidth: isTweet ? 550 : '100%',
-              minWidth: isTweet ? 300 : 100,
+              maxWidth: '100%',
+              minWidth: 100,
               readOnly,
             }}
           >
@@ -96,10 +94,10 @@ export const VideoElement = withHOC(
                 </div>
               )}
 
-              {isUpload && isEditorMounted && (
+              {showVideoPlayer && (
                 <div ref={handleRef} className="w-full">
                   <video
-                    className="w-full"
+                    className="w-full rounded-sm"
                     src={unsafeUrl ?? undefined}
                     controls
                   />

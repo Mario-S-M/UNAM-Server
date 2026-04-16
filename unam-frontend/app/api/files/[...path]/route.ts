@@ -2,7 +2,7 @@ import fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 
-const ALLOWED_DIR = path.resolve(process.cwd(), 'public');
+const ALLOWED_DIR = path.resolve(process.cwd(), 'uploads');
 
 const CONTENT_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -15,9 +15,17 @@ const CONTENT_TYPES: Record<string, string> = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.ogg': 'video/ogg',
+  '.mov': 'video/quicktime',
+  '.avi': 'video/x-msvideo',
+  '.mkv': 'video/x-matroska',
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav',
   '.flac': 'audio/flac',
+  '.m4a': 'audio/mp4',
+  '.aac': 'audio/aac',
+  '.opus': 'audio/opus',
+  '.oga': 'audio/ogg',
+  '.weba': 'audio/webm',
 };
 
 export async function GET(

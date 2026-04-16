@@ -4,11 +4,12 @@ import fs from 'fs';
 import { writeFile } from 'fs/promises';
 import crypto from 'crypto';
 
-const UPLOAD_BASE = path.resolve(process.cwd(), 'public');
+const UPLOAD_BASE = path.resolve(process.cwd(), 'uploads');
 
 const ALLOWED_EXTENSIONS = new Set([
   '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg',
-  '.mp4', '.webm', '.ogg', '.mp3', '.wav', '.flac',
+  '.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv',
+  '.mp3', '.wav', '.flac', '.m4a', '.aac', '.opus', '.oga', '.weba',
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
 ]);
 
@@ -75,7 +76,7 @@ export async function handleFileUpload(request: NextRequest) {
     await writeFile(filePath, buffer);
     
     // Generar URL pública usando la ruta API
-    const publicPath = path.relative(path.join(process.cwd(), 'public'), filePath);
+    const publicPath = path.relative(path.join(process.cwd(), 'uploads'), filePath);
     const publicUrl = `/api/files/${publicPath.replace(/\\/g, '/')}`;
     
     return NextResponse.json({

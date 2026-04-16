@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import crypto from 'crypto';
 
 const UPLOAD_BASE = path.resolve(process.cwd(), 'uploads');
@@ -20,28 +20,26 @@ const sanitizePathComponent = (value: string): string =>
   value.replace(/[^a-zA-Z0-9\-_]/g, '_').slice(0, 50) || 'default';
 
 // Función para crear la estructura de carpetas
-const createDirectoryStructure = (idioma: string, nivel: string, skill: string, contenido: string) => {
-  const fullPath = path.resolve(UPLOAD_BASE, idioma, nivel, skill, contenido);
-
-  // Prevent path traversal — resolved path must stay inside public/
-  if (!fullPath.startsWith(UPLOAD_BASE + path.sep)) {
+const ensureDirectory = async (fullPath: string) => {
+  // Prevent path traversal — resolved path must stay inside UPLOAD_BASE
+  if (!fullPath.startsWith(UPLOAD_BASE + path.sep) && fullPath !== UPLOAD_BASE) {
     throw new Error('Invalid upload path');
   }
 
-  if (!fs.existsSync(fullPath)) {
-    fs.mkdirSync(fullPath, { recursive: true });
-  }
-
-  return fullPath;
+  await mkdir(fullPath, { recursive: true });
 };
 
 // Función para manejar la subida de archivos
 export async function handleFileUpload(request: NextRequest) {
+  let step = 'init';
   try {
+    step = 'formData';
     const formData = await request.formData();
+
+    step = 'getFile';
     const file = formData.get('file') as File;
 
-    if (!file) {
+    if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
@@ -53,7 +51,7 @@ export async function handleFileUpload(request: NextRequest) {
     // Validate file extension
     const fileExtension = path.extname(file.name).toLowerCase();
     if (!ALLOWED_EXTENSIONS.has(fileExtension)) {
-      return NextResponse.json({ error: 'File type not allowed' }, { status: 415 });
+      return NextResponse.json({ error: `File type not allowed: ${fileExtension}` }, { status: 415 });
     }
 
     // Sanitize metadata from headers — never use raw header values in paths
@@ -62,23 +60,27 @@ export async function handleFileUpload(request: NextRequest) {
     const skill = sanitizePathComponent(request.headers.get('x-skill') || 'default');
     const contenido = sanitizePathComponent(request.headers.get('x-contenido') || 'default');
 
-    // Crear estructura de directorios
-    const uploadDir = createDirectoryStructure(idioma, nivel, skill, contenido);
-    
+    const uploadDir = path.resolve(UPLOAD_BASE, idioma, nivel, skill, contenido);
+
+    step = 'mkdir';
+    await ensureDirectory(uploadDir);
+
     // Generar nombre único para el archivo
     const ext = path.extname(file.name);
     const fileName = `${crypto.randomUUID()}${ext}`;
     const filePath = path.join(uploadDir, fileName);
-    
-    // Guardar archivo
+
+    step = 'readFile';
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+
+    step = 'writeFile';
     await writeFile(filePath, buffer);
-    
+
     // Generar URL pública usando la ruta API
-    const publicPath = path.relative(path.join(process.cwd(), 'uploads'), filePath);
+    const publicPath = path.relative(UPLOAD_BASE, filePath);
     const publicUrl = `/api/files/${publicPath.replace(/\\/g, '/')}`;
-    
+
     return NextResponse.json({
       key: fileName,
       name: fileName,
@@ -96,7 +98,11 @@ export async function handleFileUpload(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error uploading file:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Error uploading file at step [${step}]:`, error);
+    return NextResponse.json(
+      { error: 'Upload failed', detail: message, step },
+      { status: 500 }
+    );
   }
 }

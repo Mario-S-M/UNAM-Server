@@ -13,6 +13,7 @@ import {
 import { AudioLines, FileUp, Film, ImageIcon, Loader2Icon } from 'lucide-react';
 import { KEYS } from 'platejs';
 import { PlateElement, useEditorPlugin, withHOC } from 'platejs/react';
+import { toast } from 'sonner';
 import { useFilePicker } from 'use-file-picker';
 
 import { cn } from '@/lib/utils';
@@ -81,10 +82,19 @@ export const PlaceholderElement = withHOC(
           const result = await response.json();
           setUploadedFile({ name: result.name, url: result.url, mimeType: result.type });
         } else {
-          console.error('Upload failed:', response.status, await response.text());
+          let detail = '';
+          try {
+            const errJson = await response.json();
+            detail = errJson.detail ? ` (${errJson.step}: ${errJson.detail})` : '';
+            console.error('Upload failed:', response.status, errJson);
+          } catch {
+            console.error('Upload failed:', response.status);
+          }
+          toast.error(`Error al subir el archivo${detail}. Inténtalo de nuevo.`);
         }
       } catch (error) {
         console.error('Upload failed:', error);
+        toast.error('Error de red al subir el archivo. Inténtalo de nuevo.');
       } finally {
         setUploadingFile(null);
       }
@@ -154,7 +164,11 @@ export const PlaceholderElement = withHOC(
         editor.tf.insertNodes(node, { at: path });
       });
 
-      updateUploadHistory(editor, node);
+      try {
+        updateUploadHistory(editor, node);
+      } catch {
+        // Placeholder was not inserted via insert.media (e.g., loaded from backend)
+      }
       api.placeholder.removeUploadingFile(element.id as string);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uploadedFile, element.id]);

@@ -6,6 +6,7 @@ import ApolloProviderWrapper from "@/components/providers/ApolloProvider";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityContext";
 import { AccessibilityButton } from "@/components/accessibility/AccessibilityButton";
 import AccessibilityMenu from "@/components/accessibility/AccessibilityMenu";
+import AccessibilityTutorial from "@/components/accessibility/AccessibilityTutorial";
 import { InfoButton } from "@/components/InfoButton";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -41,6 +42,7 @@ export default function RootLayout({
             <ApolloProviderWrapper>
               {children}
               <AccessibilityButton />
+              <AccessibilityTutorial />
               <InfoButton />
               <FeedbackButton />
               <AccessibilityMenu />

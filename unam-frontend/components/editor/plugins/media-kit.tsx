@@ -35,31 +35,31 @@ export const MediaKit = [
       uploadConfig: {
         audio: {
           maxFileCount: 1,
-          maxFileSize: '50MB',
+          maxFileSize: '32MB',
           mediaType: KEYS.audio,
           minFileCount: 1,
         },
         video: {
           maxFileCount: 1,
-          maxFileSize: '50MB',
+          maxFileSize: '32MB',
           mediaType: KEYS.video,
           minFileCount: 1,
         },
         image: {
           maxFileCount: 3,
-          maxFileSize: '10MB',
+          maxFileSize: '8MB',
           mediaType: KEYS.img,
           minFileCount: 1,
         },
         blob: {
           maxFileCount: 1,
-          maxFileSize: '50MB',
+          maxFileSize: '32MB',
           mediaType: KEYS.file,
           minFileCount: 1,
         },
         pdf: {
           maxFileCount: 1,
-          maxFileSize: '10MB',
+          maxFileSize: '8MB',
           mediaType: KEYS.file,
           minFileCount: 1,
         },

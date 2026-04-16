@@ -50,8 +50,7 @@ services:
       - "3000:3000" # Backend en puerto 3000
     volumes:
       - ./Markdown:/Markdown
-      - ./UNAM-escuela-backend/uploads:/app/uploads
-      - ./uploads:/app/uploads # Bind mount para compartir archivos subidos con el volumen del frontend
+      - uploads-data:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -93,7 +92,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./uploads:/app/uploads # Volumen persistente compartido para archivos subidos (audios, imágenes, videos del editor)
+      - uploads-data:/app/uploads # Named volume compartido con backend (permisos correctos para usuario node)
       - ./logs/frontend:/app/logs/frontend
     networks:
       - unam-net
@@ -174,3 +173,7 @@ services:
 networks:
   unam-net:
     driver: bridge
+
+volumes:
+  uploads-data:
+    driver: local

@@ -208,7 +208,7 @@ export default function ContentDetail() {
       <div className="flex items-center gap-4 mb-6">
         <div className="flex items-center gap-2">
           <FileText className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold">Detalle del Contenido</h1>
+          <h1 className="text-2xl font-bold">{content.name}</h1>
         </div>
       </div>
 
@@ -238,16 +238,7 @@ export default function ContentDetail() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2">Descripción</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {content.description}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
+            <CardContent />
           </Card>
 
           {/* Información de la Skill */}
